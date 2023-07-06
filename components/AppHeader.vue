@@ -1,12 +1,22 @@
 <template>
-  <ul>
-    <li>
-      <a href="/">Home</a>
-    </li>
-    <li>
-      <a href="/about">About</a>
-    </li>
-  </ul>
+  <header>
+    <nav>
+      <ul>
+        <li>
+          <NuxtLink href="/">Home</NuxtLink>
+        </li>
+        <li>
+          <NuxtLink href="/about">About</NuxtLink>
+        </li>
+        <li>
+          <NuxtLink href="/login">Log in</NuxtLink>
+        </li>
+        <li>
+          <NuxtLink href="/user/new">Sign up</NuxtLink>
+        </li>
+      </ul>
+    </nav>
+  </header>
 </template>
 
 <style scoped lang="scss">
