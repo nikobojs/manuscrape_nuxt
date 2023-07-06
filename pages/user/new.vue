@@ -4,12 +4,12 @@
       <h2>Create account</h2>
     </div>
     <div class="container form">
-      <label for="uname"><b>Username</b></label>
+      <label for="uname"><b>Email</b></label>
       <input
-        v-model="user.username"
-        type="text"
+        v-model="user.email"
+        type="email"
         class="input"
-        placeholder="Enter Username"
+        placeholder="Enter email"
         name="uname"
         required
       />
@@ -30,7 +30,7 @@
 </template>
 <script lang="ts" setup>
   const user = ref({
-    username: '',
+    email: '',
     password: '',
   });
 

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { compare } from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
 
-  prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       email: email,
     },
@@ -25,9 +26,23 @@ export default defineEventHandler(async (event) => {
       email: true,
       password: true,
     },
-  })
+  });
 
-  console.log(`recieved login request for email '${email}'`)
-  event.context.user = {id: 1, email: 'boje@karl.dk'}
-  return {msg: 'Hello auth'}
+  if (!user) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User does not exist'
+    })
+  }
+
+  const passwordOk = await compare(password, user.password);
+  if (!passwordOk) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Wrong password'
+    })
+  }
+
+  event.context.user = user
+  return {msg: `Hello ${user.email} !`}
 })

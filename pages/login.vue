@@ -4,12 +4,12 @@
       <h2>Login</h2>
     </div>
     <div class="container form">
-      <label for="uname"><b>Username</b></label>
+      <label for="uname"><b>Email</b></label>
       <input
-        v-model="user.username"
-        type="text"
+        v-model="user.email"
+        type="email"
         class="input"
-        placeholder="Enter Username"
+        placeholder="Enter email"
         name="uname"
         required
       />
@@ -30,16 +30,19 @@
 </template>
 <script lang="ts" setup>
   const user = ref({
-    username: '',
+    email: '',
     password: '',
   });
 
   const login = async () => {
-    const response = await useFetch('/api/auth', {
+    const response = await $fetch('/api/auth', {
       method: 'POST',
-      body: user,
+      body: JSON.stringify(user.value),
+      headers: {
+        'Content-Type': 'application/json'
+      }
     })
 
-    console.log('LOGIN RESPONSE!!!!!:', response.data.value?.msg)
+    console.log('LOGIN RESPONSE!!!!!:', response)
   };
 </script>
