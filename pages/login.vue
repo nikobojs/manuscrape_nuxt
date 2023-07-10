@@ -4,45 +4,59 @@
       <h2>Login</h2>
     </div>
     <div class="container form">
-      <label for="uname"><b>Email</b></label>
-      <input
-        v-model="user.email"
-        type="email"
-        class="input"
-        placeholder="Enter email"
-        name="uname"
-        required
-      />
+      <form @submit.prevent="handleLogin">
+        <label for="email-input">
+          Email
+        </label>
+        <input
+          v-model="form.email"
+          type="email"
+          class="input"
+          placeholder="Enter email"
+          id="email-input"
+          required
+        />
 
-      <label for="psw"><b>Password</b></label>
-      <input
-        v-model="user.password"
-        type="password"
-        class="input"
-        placeholder="Enter Password"
-        name="psw"
-        required
-      />
+        <br />
 
-      <button @click.prevent="login" class="button">Login</button>
+        <label for="password-input">
+          Password
+        </label>
+        <input
+          v-model="form.password"
+          type="password"
+          class="input"
+          placeholder="Enter Password"
+          id="password-input"
+          required
+        />
+
+        <br />
+        <br />
+
+        <input type="submit" value="Log in" :disabled="loading == true"  />
+        <span v-text="form.error"></span>
+      </form>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-  const user = ref({
+  const form = ref({
     email: '',
     password: '',
+    error: '',
   });
 
-  const login = async () => {
-    const response = await $fetch('/api/auth', {
-      method: 'POST',
-      body: JSON.stringify(user.value),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+  const { login } = await useAuth();
+  const loading = ref(false);
 
-    console.log('LOGIN RESPONSE!!!!!:', response)
-  };
+  async function handleLogin() {
+    loading.value = true;
+    setTimeout(() => {
+      login(form.value.email, form.value.password).catch(err => {
+        form.value.error = (err?.statusMessage || err?.message).toString();
+      }).finally(() => loading.value = false);
+    }, 200);
+  }
+
 </script>

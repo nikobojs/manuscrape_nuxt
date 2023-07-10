@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { compare } from 'bcrypt';
+import jwt from 'jsonwebtoken';
+const config = useRuntimeConfig();
 
 const prisma = new PrismaClient();
 
@@ -23,6 +25,7 @@ export default defineEventHandler(async (event) => {
       email: email,
     },
     select: {
+      id: true,
       email: true,
       password: true,
     },
@@ -42,7 +45,17 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Wrong password'
     })
   }
+  const expires = new Date(new Date().setDate(new Date().getDate() + 365))
 
-  event.context.user = user
-  return {msg: `Hello ${user.email} !`}
+  event.context.user = user;
+  const token = await jwt.sign({ id: user.id }, config.app.tokenSecret);
+
+  setCookie(event, 'authcookie', token, {
+    expires,
+    httpOnly: true,
+    domain: config.app.COOKIE_DOMAIN,
+    sameSite: 'strict'
+  });
+
+  return { token }
 })

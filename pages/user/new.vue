@@ -39,7 +39,5 @@
       method: 'POST',
       body: user,
     })
-
-    console.log('CREATE USER RESPONSE!!!!!:', response.data.value)
   };
 </script>

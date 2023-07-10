@@ -2,17 +2,23 @@
   <header>
     <nav>
       <ul>
-        <li>
+        <li v-show="isLoggedIn">
           <NuxtLink href="/">Home</NuxtLink>
         </li>
         <li>
           <NuxtLink href="/about">About</NuxtLink>
         </li>
-        <li>
+        <li v-show="!isLoggedIn">
           <NuxtLink href="/login">Log in</NuxtLink>
         </li>
-        <li>
+        <li v-show="!isLoggedIn">
           <NuxtLink href="/user/new">Sign up</NuxtLink>
+        </li>
+        <li v-show="isLoggedIn">
+          <NuxtLink href="/logout">Log out</NuxtLink>
+        </li>
+        <li v-show="isLoggedIn">
+          Welcome {{ user?.email }}
         </li>
       </ul>
     </nav>
@@ -33,3 +39,7 @@
     }
   }
 </style>
+
+<script setup lang="ts">
+  const { isLoggedIn, user } = await useAuth();
+</script>

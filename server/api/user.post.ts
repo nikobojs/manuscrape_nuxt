@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
+
 const config = useRuntimeConfig();
 
 const prisma = new PrismaClient();
@@ -40,9 +41,6 @@ export default defineEventHandler(async (event) => {
       password: hashedPassword,
     }
   })
-
-  console.log('CREASTED USER, GOT RESULT:');
-  console.table(result)
 
   return {
     id: result.id,

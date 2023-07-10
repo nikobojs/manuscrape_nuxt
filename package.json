@@ -12,12 +12,14 @@
     "@nuxt/devtools": "latest",
     "@prisma/client": "^4.16.2",
     "@types/bcrypt": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^18",
     "nuxt": "^3.6.1",
     "prisma": "^4.16.2",
     "sass": "^1.63.6"
   },
   "dependencies": {
-    "bcrypt": "^5.1.0"
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.1"
   }
 }

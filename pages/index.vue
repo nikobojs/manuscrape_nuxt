@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Welcome to the homepage</h1>
+    <h1>Welcome, {{ user?.email }}!</h1>
     <AppAlert>
       This is an auto-imported component
     </AppAlert>
@@ -8,7 +8,5 @@
 </template>
 
 <script lang="ts" setup>
-  definePageMeta({
-    middleware: 'auth' // this should match the name of the file inside the middleware directory 
-  })
+  const { user } = await useAuth();
 </script>

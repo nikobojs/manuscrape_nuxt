@@ -8,7 +8,9 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     app : {
-      hello: process.env.BCRYPT_SALT_ROUNDS,
+      saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10'),
+      tokenSecret: process.env.TOKEN_SECRET,
+      cookieDomain: process.env.COOKIE_DOMAIN,
     }
   }
 })
