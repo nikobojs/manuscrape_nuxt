@@ -1,25 +1,15 @@
 <template>
   <header>
-    <nav>
-      <ul>
-        <li v-show="isLoggedIn">
-          <NuxtLink href="/">Home</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink href="/about">About</NuxtLink>
-        </li>
-        <li v-show="!isLoggedIn">
-          <NuxtLink href="/login">Log in</NuxtLink>
-        </li>
-        <li v-show="!isLoggedIn">
-          <NuxtLink href="/user/new">Sign up</NuxtLink>
-        </li>
-        <li v-show="isLoggedIn">
-          <NuxtLink href="/logout">Log out</NuxtLink>
-        </li>
-        <li v-show="isLoggedIn">
-          Welcome {{ user?.email }}
-        </li>
+    <nav v-show="hasFetched">
+      <ul v-show="!!user">
+          <li><NuxtLink href="/">Home</NuxtLink></li>
+          <li><NuxtLink href="/logout">Log out</NuxtLink></li>
+          <li>{{ user?.email || '' }}</li>
+      </ul>
+      <ul v-show="!user">
+          <li><NuxtLink href="/login">Log in</NuxtLink></li>
+          <li><NuxtLink href="/user/new">Sign up</NuxtLink></li>
+          <li></li>
       </ul>
     </nav>
   </header>
@@ -41,5 +31,8 @@
 </style>
 
 <script setup lang="ts">
-  const { isLoggedIn, user } = await useAuth();
+  const { ensureUserFetched } = await useAuth();
+  await ensureUserFetched();
+  const { user, hasFetched } = await useUser();
+  console.log('user:::', user.value)
 </script>

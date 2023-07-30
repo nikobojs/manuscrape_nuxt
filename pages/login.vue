@@ -40,6 +40,8 @@
     </div>
   </div>
 </template>
+
+
 <script lang="ts" setup>
   const form = ref({
     email: '',
@@ -47,13 +49,19 @@
     error: '',
   });
 
-  const { login } = await useAuth();
+  const { login, ensureUserFetched } = await useAuth();
+  await ensureUserFetched()
   const loading = ref(false);
 
   async function handleLogin() {
     loading.value = true;
     setTimeout(() => {
-      login(form.value.email, form.value.password).catch(err => {
+      login(form.value.email, form.value.password).then(async (response) => {
+          if (response?.token) {
+              window.location.href = '/';
+          }            
+      })
+      .catch(err => {
         form.value.error = (err?.statusMessage || err?.message).toString();
       }).finally(() => loading.value = false);
     }, 200);

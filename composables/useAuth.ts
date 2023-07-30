@@ -1,33 +1,6 @@
-const useUser = async () => {
-    const state = useState<CurrentUser | null>('user', () => null);
-
-    const {
-        refresh: refreshUser,
-        pending: loading,
-    } = await useFetch<CurrentUser>('/api/user', {
-        method: 'GET',
-        default: () => null,
-        immediate: !state.value,
-        
-        onResponse: (context) => {
-            if (context.response.status === 200) {
-                state.value = context.response._data;
-            } else {
-                state.value = null;
-            }
-        }
-    });
-
-    return {
-        user: state,
-        refreshUser,
-        loading,
-    };
-}
-
 export const useAuth = async () => {
 
-    const { user, refreshUser } = await useUser();
+    const { user, refreshUser, hasFetched } = await useUser();
 
     const login = async (email: string, password: string) => {
         return $fetch('/api/auth', {
@@ -39,28 +12,37 @@ export const useAuth = async () => {
         }).catch(err => {
             console.error('login catch err:', err);
             throw err;
-        }).then(async (response) => {
-            if (response?.token) {
-                await refreshUser();
-                await navigateTo('/')
-            }            
-        })
+        });
     };
 
     const signOut = async () => {
         await $fetch('/api/auth', { method: 'DELETE' });
-        user.value = null;
+        await navigateTo('/login');
+        user.value = undefined;
     }
 
-    const isLoggedIn = computed(() => {
-        return !!user.value;
-    });
+    const ensureLoggedIn = async () => {
+        await ensureUserFetched();
+        if (!user.value) {
+            await navigateTo('/login');
+        }
+    }
+
+    const ensureUserFetched = async () => {
+        if (!hasFetched.value) {
+            hasFetched.value = true
+            const res = await refreshUser()
+            return res;
+        }
+    }
 
     return {
-        isLoggedIn,
         refreshUser,
         signOut,
         login,
         user,
+        ensureLoggedIn,
+        ensureUserFetched,
+        hasFetched,
     }
 };
