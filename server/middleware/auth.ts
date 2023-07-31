@@ -6,7 +6,7 @@ const config = useRuntimeConfig();
 const prisma = new PrismaClient();
 
 function isOpenUrl (event: H3Event): boolean {
-    const openPostUrls = ['/api/user', '/api/auth'];
+    const openPostUrls = ['/api/user', '/api/auth', '/api/token_auth'];
     const openGetUrls = ['/user/new', '/login'];
     const isPostRequest = event.req.method === 'POST';
     const isGetRequest = event.req.method === 'GET';
