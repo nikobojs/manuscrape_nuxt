@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   sourcemap: true,
   modules: [
+    '@nuxthq/ui'
   ],
   typescript: {
     strict: true

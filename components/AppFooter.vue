@@ -1,6 +1,8 @@
 <template>
   <footer>
-    ManuScrape v0.1.0
+    <UContainer>
+      ManuScrape v0.1.0
+    </UContainer>
   </footer>
 </template>
 

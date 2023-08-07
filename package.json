@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
+    "@nuxthq/ui": "^2.7.0",
     "@prisma/client": "^5.0.0",
     "@types/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.2",

@@ -1,14 +1,12 @@
 <template>
-  <h2>Project list</h2>
-  <ul v-if="!loading">
-    <li v-for="project in projects" :key="project.id">
-        {{ project.id }}
-        {{ project.name }}
-    </li>
-  </ul>
-  <ul v-else>
-    loading...
-  </ul>
+  <h2 class="text-3xl mb-3">Project list</h2>
+  <UCard>
+    <UTable v-if="!loading" :rows="projects">
+    </UTable>
+    <ul v-else>
+      loading...
+    </ul>
+  </UCard>
 </template>
 
 <script setup lang="ts">

@@ -1,43 +1,44 @@
 <template>
   <div>
+    <UContainer class="flex flex-col">
     <div class="title">
-      <h2>Login</h2>
+      <h2 class="text-3xl mb-8">Sign in to manuscrape</h2>
     </div>
-    <div class="container form">
-      <form @submit.prevent="handleLogin">
-        <label for="email-input">
-          Email
-        </label>
-        <input
-          v-model="form.email"
-          type="email"
-          class="input"
-          placeholder="Enter email"
-          id="email-input"
-          required
-        />
+      <div class="w-80">
+        <form @submit.prevent="handleLogin">
+          <label for="email-input">
+            Email
+          </label>
+          <UInput
+            v-model="form.email"
+            type="email"
+            class="input"
+            placeholder="Enter email"
+            id="email-input"
+            required
+          />
 
-        <br />
+          <br />
 
-        <label for="password-input">
-          Password
-        </label>
-        <input
-          v-model="form.password"
-          type="password"
-          class="input"
-          placeholder="Enter Password"
-          id="password-input"
-          required
-        />
+          <label for="password-input">
+            Password
+          </label>
+          <UInput
+            v-model="form.password"
+            type="password"
+            class="input"
+            placeholder="Enter Password"
+            id="password-input"
+            required
+          />
 
-        <br />
-        <br />
-
-        <input type="submit" value="Log in" :disabled="loading == true"  />
-        <span v-text="form.error"></span>
-      </form>
-    </div>
+          <UButton class="mt-5" type="submit" :disabled="loading == true">
+            Log in
+          </UButton>
+          <span v-text="form.error"></span>
+        </form>
+      </div>
+    </UContainer>
   </div>
 </template>
 

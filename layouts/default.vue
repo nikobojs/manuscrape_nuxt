@@ -1,11 +1,13 @@
 <template>
-  <div v-show="true">
+  <div>
     <AppHeader />
-    <slot />
+    <main class="mt-20">
+      <slot />
+    </main>
     <AppFooter />
   </div>
 </template>
 
 <script lang="ts" setup>
-const { hasFetched } = await useAuth();
+  await useAuth();
 </script>
