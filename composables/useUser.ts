@@ -1,6 +1,6 @@
 export const useUser = async () => {
   const user = useState<CurrentUser | undefined>('user', () => undefined);
-  const projects = useState<Project[]>('projects', () => []);
+  const projects = useState<FullProject[]>('projects', () => []);
   const hasFetched = useState('hasFetched', () => !!user.value)
 
   const {

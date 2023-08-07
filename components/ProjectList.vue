@@ -1,14 +1,26 @@
 <template>
-  <h2 class="text-3xl mb-3">Project list</h2>
-  <UCard>
-    <UTable v-if="!loading" :rows="projects">
-    </UTable>
-    <ul v-else>
+    <h2 class="text-3xl mb-3">Projects</h2>
+    <div v-if="!loading" class="grid grid-cols-5 gap-5">
+      <div
+        v-for="project in projects"
+        class="group border rounded-md border-gray-800 bg-gray-900 p-4 cursor-pointer"
+        @click="() => openProject(project)"
+      >
+        <div class="group-hover:underline text-lg mb-2">{{ project.name }}</div>
+        <div class="text-sm">{{ project.fields.length }} fields</div>
+        <div class="text-sm text-gray-500">Created {{ dateOnly(project.createdAt) }}</div>
+      </div>
+    </div>
+    <ul v-if="loading">
       loading...
     </ul>
-  </UCard>
 </template>
 
 <script setup lang="ts">
   const { loading, projects } = await useProjects();
+  const dateOnly = (d: Date | string) => new Date(d).toLocaleDateString();
+
+  function openProject(project: FullProject) {
+    navigateTo('/projects/' + project.id)
+  }
 </script>

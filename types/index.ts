@@ -1,21 +1,18 @@
+import { Project, ProjectField, User } from "@prisma/client";
+
 export {};
 
 declare global {
-    interface CurrentUser {
-        id: number;
-        email: string;
-        createdAt: string;
-        projects: Project[]
+    interface CurrentUser extends User {
+        projects: FullProject[]
     }
 
-    interface Project {
-        id: number;
-        name: string;
-        fields: ProjectField[];
+    interface FullProject extends Project {
+        fields: Field[];
     }
 
-    interface ProjectField {
-        label: string;
-        type: string;
+    interface Field extends ProjectField {
     }
+
+    type NewField = Omit<Omit<Omit<Omit<ProjectField, 'id'>, 'projectId'>, 'dynamicFields0'>, 'dynamicFields1'>
 }
