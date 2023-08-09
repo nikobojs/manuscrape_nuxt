@@ -2,7 +2,7 @@
   "name": "nuxt-app",
   "private": true,
   "scripts": {
-	"start": "node .output/server/index.mjs",
+    "start": "node .output/server/index.mjs",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -17,6 +17,7 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^18",
     "nuxt": "^3.6.1",
+    "pm2": "^5.3.0",
     "prisma": "^5.1.1",
     "sass": "^1.63.6"
   },
