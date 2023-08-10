@@ -1,4 +1,5 @@
-import { ProjectField } from "@prisma/client";
+import { Observation, ProjectField } from "@prisma/client";
+import { requireNumber } from "./helpers";
 
 export const useProjects = async () => {
   const { refreshUser, loading, projects } = await useUser();
@@ -6,11 +7,7 @@ export const useProjects = async () => {
   const getProjectById = (
     projectId: number | string | undefined | null | string[]
   ): FullProject => {
-    if (!projectId) {
-      throw new Error('No projectId was provided')
-    } else if (typeof projectId === 'string') {
-      projectId = parseInt(projectId)
-    }
+    projectId = requireNumber(projectId, 'projectId')
     if (!projects.value?.length) {
       throw new Error('No projects are in state');
     }
@@ -20,6 +17,38 @@ export const useProjects = async () => {
       throw new Error('Project does not exist');
     } else {
       return result;
+    }
+  }
+
+  const getObservationById = (
+    project: FullProject,
+    observationId: number | string | string[]
+  ): Observation => {
+    observationId = requireNumber(observationId, 'projectId');
+    const obs = project?.observations?.find?.(o => o.id == observationId);
+    if (!obs) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Observation could not be found'
+      })
+    } else {
+      return obs;
+    }
+  }
+
+  const getObservationDraftById = (
+    project: FullProject,
+    observationDraftId: number | string | string[]
+  ): Observation => {
+    observationDraftId = requireNumber(observationDraftId, 'projectId');
+    const obs = project?.observationDrafts?.find?.(o => o.id == observationDraftId);
+    if (!obs) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Observation draft could not be found'
+      })
+    } else {
+      return obs;
     }
   }
 
@@ -41,15 +70,29 @@ export const useProjects = async () => {
     })
   };
 
+  const createObservationDraft = async (
+    projectId: number,
+  ) => {
+    return $fetch(`/api/projects/${projectId}/observation_drafts`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+    }).catch(err => {
+      console.error('login catch err:', err);
+      throw err;
+    }).then(async (response) => {
+      await refreshUser();
+      return response;
+    })
+  };
+
+
   const hasOwnership = (
     projectId: number | string,
     projects: FullProject[]
   ): boolean => {
-    if (!projectId) {
-      throw new Error('No projectId was provided')
-    } else if (typeof projectId === 'string') {
-      projectId = parseInt(projectId)
-    }
+    projectId = requireNumber(projectId, 'projectId')
     if (!projects.length) {
       return false;
     }
@@ -89,5 +132,8 @@ export const useProjects = async () => {
     hasOwnership,
     ensureHasOwnership,
     getProjectById,
+    getObservationById,
+    getObservationDraftById,
+    createObservationDraft,
   };
 };

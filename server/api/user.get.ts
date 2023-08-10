@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
                     id: true,
                     createdAt: true,
                     name: true,
-                    fields: true
+                    fields: true,
+                    observations: true,
+                    observationDrafts: true,
                 }
             }
         }

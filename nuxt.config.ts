@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxthq/ui'
   ],
   typescript: {
-    strict: true
+    strict: true,
+    typeCheck: true,
   },
   runtimeConfig: {
     app: {

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 export default defineEventHandler(async (event) => {
   const { email, password } = await readBody(event);
 
-  // TODO: validate with yup?
+  // TODO: validate with zod?
   if (
     typeof email !== 'string' ||
     typeof password !== 'string'

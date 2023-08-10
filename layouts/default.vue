@@ -6,6 +6,7 @@
     </main>
     <AppFooter />
   </div>
+  <UNotifications />
 </template>
 
 <script lang="ts" setup>

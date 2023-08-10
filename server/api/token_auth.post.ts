@@ -36,8 +36,8 @@ export default defineEventHandler(async (event) => {
         return { 'success': true }
       } else {
         return createError({
-          status: 401,
-          statusText: 'Session is valid but user does not exist'
+          statusCode: 401,
+          statusMessage: 'Session is valid but user does not exist'
         })
       }
     }

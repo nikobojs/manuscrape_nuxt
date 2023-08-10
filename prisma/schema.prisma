@@ -26,6 +26,7 @@ model User {
   createdAt          DateTime  @default(now()) @db.Timestamp(6)
   projects           Project[]
   observations       Observation[]
+  observationDrafts  ObservationDraft[]
 }
 
 model Project {
@@ -37,6 +38,7 @@ model Project {
   fields             ProjectField[]
   dynamicFields      DynamicProjectField[]
   observations       Observation[]
+  observationDrafts  ObservationDraft[]
 }
 
 model ProjectField {
@@ -64,6 +66,16 @@ model DynamicProjectField {
 }
 
 model Observation {
+  id                 Int         @id @default(autoincrement())
+  createdAt          DateTime    @default(now()) @db.Timestamp(6)
+  projectId          Int
+  project            Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId             Int
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data               Json
+}
+
+model ObservationDraft {
   id                 Int         @id @default(autoincrement())
   createdAt          DateTime    @default(now()) @db.Timestamp(6)
   projectId          Int

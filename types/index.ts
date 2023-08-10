@@ -1,4 +1,6 @@
-import { Project, ProjectField, User } from "@prisma/client";
+import { UInput } from ".nuxt/components";
+import { Observation, ObservationDraft, Project, ProjectField, User } from "@prisma/client";
+import { Raw } from "nuxt/dist/app/compat/capi";
 
 export {};
 
@@ -8,11 +10,24 @@ declare global {
     }
 
     interface FullProject extends Project {
-        fields: Field[];
+        fields: ProjectField[];
+        observations: Observation[];
+        observationDrafts: ObservationDraft[];
     }
 
-    interface Field extends ProjectField {
-    }
-
+    // TODO: extract type from zod validation object instead
     type NewField = Omit<Omit<Omit<Omit<ProjectField, 'id'>, 'projectId'>, 'dynamicFields0'>, 'dynamicFields1'>
+
+    interface CMSInputProps {
+        type: string;
+        name: string;
+        placeholder: string;
+        step?: number;
+    }
+
+    interface CMSInput {
+        field: ProjectField;
+        props: CMSInputProps;
+        element: Raw<typeof UInput>;
+    }
 }
