@@ -62,7 +62,7 @@ export const useProjects = async () => {
           'Content-Type': 'application/json'
       }
     }).catch(err => {
-      console.error('login catch err:', err);
+      console.error('create project err:', err);
       throw err;
     }).then(async (response) => {
       await refreshUser();
@@ -79,7 +79,27 @@ export const useProjects = async () => {
           'Content-Type': 'application/json'
       }
     }).catch(err => {
-      console.error('login catch err:', err);
+      console.error('create observation draft err:', err);
+      throw err;
+    }).then(async (response) => {
+      await refreshUser();
+      return response;
+    })
+  };
+
+
+  const createObservation = async (
+    projectId: number,
+    data: any,
+  ) => {
+    return $fetch(`/api/projects/${projectId}/observations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+          'Content-Type': 'application/json'
+      }
+    }).catch(err => {
+      console.error('create observation err:', err);
       throw err;
     }).then(async (response) => {
       await refreshUser();
@@ -128,6 +148,7 @@ export const useProjects = async () => {
   return {
     projects,
     createProject,
+    createObservation,
     loading,
     hasOwnership,
     ensureHasOwnership,

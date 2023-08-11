@@ -62,7 +62,6 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types';
     if (state.email.split('').filter((c: string) => c == '.').length !== 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
     if (!state.password) errors.push({ path: 'password', message: 'Required' });
     if (state.password.length < 6) errors.push({ path: 'password', message: 'Needs to be longer than 6 characters'})
-    console.log('validated! errors len:', errors.length)
     return errors;
   }
 
@@ -72,7 +71,6 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types';
     await signUp(state.value.email, state.value.password).then(() => {
       window.location.href = '/';
     }).catch(err => {
-      console.log({ err })
       if (err.statusText) {
         errorMessage.value = err.statusText;
       }

@@ -55,6 +55,7 @@
   const loading = ref(false);
   const error = ref('');
   const fieldLabel = ref('');
+  const toast = useToast();
 
   const fieldType = ref(undefined as NewField | undefined);
 
@@ -84,7 +85,7 @@
 
   async function handleSubmit() {
     loading.value = true;
-    await createProject(
+    const res = await createProject(
       form.name,
       form.fields,
     ).then(() => {
@@ -94,6 +95,13 @@
     }).finally(
       () => loading.value = false
     );
+    if (runsInElectron()) {
+      window.electronAPI.projectCreated(res);
+    } else {
+      toast.add({
+        title: 'Project was saved.'
+      });
+    }
   }
 
   async function addField() {

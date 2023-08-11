@@ -23,6 +23,7 @@
   const state = ref({} as any);
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
+  const { createObservation } = await useProjects();
   const props = defineProps({
     project: Object as PropType<FullProject>,
     draft: Object as PropType<ObservationDraft>,
@@ -36,7 +37,6 @@
   });
 
   function validate(state: any): FormError[] {
-    console.log('validating form', { state });
     if (!props.project) {
       throw createError({
         statusMessage: 'Project does not exist',
@@ -122,10 +122,7 @@
   });
 
   function buildForm(project: FullProject) {
-    console.log('building form with project', {...project})
-
     for (const field of project.fields) {
-      console.log('building field', {...field})
       const inputArgs: CMSInputProps = {
         placeholder: 'Enter ' + field.label,
         name: field.label,
@@ -155,14 +152,27 @@
   async function submit() {
     try {
       await form.value!.validate();
-      console.log('submit form!', {...state.value})
-      toast.add({
-        title: 'Observation was NOT saved.',
-        description: '... but passed all validation [WIP]'
-      });
     } catch(e) {
       // Do nothing as library takes care of errors
       // NOTE: this is to avoid uncaught rejected promises
+      return;
+    }
+
+    if (props.project?.id) {
+      const res = await createObservation(props.project?.id, state.value);
+      if (runsInElectron()) {
+        window.electronAPI.observationCreated(res);
+      } else {
+        toast.add({
+          title: 'Observation was saved.'
+        });
+      }
+      navigateTo(`/projects/${props.project.id}`)
+    } else {
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Project does not exist',
+      })
     }
   }
 </script>

@@ -30,4 +30,9 @@ declare global {
         props: CMSInputProps;
         element: Raw<typeof UInput>;
     }
+
+
+    interface Window {
+      electronAPI?: any
+    }
 }
