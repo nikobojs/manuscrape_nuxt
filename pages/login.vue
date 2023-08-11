@@ -32,10 +32,11 @@
             required
           />
 
-          <UButton class="mt-5" type="submit" :disabled="loading == true">
+          <span class="block mt-3 text-red-500" v-if="form.error" v-text="form.error"></span>
+
+          <UButton class="mt-5" type="submit" :disabled="loading" :loading="loading">
             Log in
           </UButton>
-          <span v-text="form.error"></span>
         </form>
       </div>
     </UContainer>
