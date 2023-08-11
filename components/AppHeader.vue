@@ -2,7 +2,7 @@
   <header class="py-2 bg-slate-700">
     <UContainer>
       <div class="flex justify-between items-center">
-        <div class="font-sans text-xl">
+        <div class="font-sans text-xl cursor-pointer" @click="onLogoClick">
           ManuScrape
         </div>
         <nav v-show="hasFetched" class="flex justify-end">
@@ -45,6 +45,10 @@
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
+
+  function onLogoClick() {
+    navigateTo('/');
+  }
   
   const settingsItems: DropdownItem[][] = [
     [
