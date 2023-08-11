@@ -1,5 +1,5 @@
 import { UInput } from ".nuxt/components";
-import { Observation, ObservationDraft, Project, ProjectField, User } from "@prisma/client";
+import type { Observation, ObservationDraft, Project, ProjectField, User } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
 
 export {};

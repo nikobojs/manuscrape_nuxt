@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { PrismaClient, FieldType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 
 const config = useRuntimeConfig();
