@@ -21,6 +21,19 @@ export const useAuth = async () => {
         user.value = undefined;
     }
 
+    const signUp = async (email: string, password: string) => {
+        return $fetch('/api/user', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).catch(err => {
+            console.error('signUp catch err:', err);
+            throw err;
+        });
+    }
+
     const ensureLoggedIn = async () => {
         await ensureUserFetched();
         if (!user.value) {
@@ -39,6 +52,7 @@ export const useAuth = async () => {
     return {
         refreshUser,
         signOut,
+        signUp,
         login,
         user,
         ensureLoggedIn,

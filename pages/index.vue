@@ -1,8 +1,6 @@
 <template>
   <UContainer>
-    <div class="mb-10">
-      <ProjectList />
-    </div>
+    <ProjectList />
     <div class="mb-10">
       <ProjectForm />
     </div>

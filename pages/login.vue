@@ -58,9 +58,9 @@
     loading.value = true;
     setTimeout(() => {
       login(form.value.email, form.value.password).then(async (response) => {
-          if (response?.token) {
-              window.location.href = '/';
-          }            
+        if (response?.token) {
+          window.location.href = '/';
+        }
       })
       .catch(err => {
         form.value.error = (err?.statusMessage || err?.message).toString();

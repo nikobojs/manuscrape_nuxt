@@ -10,7 +10,6 @@ export const useUser = async () => {
     method: 'GET',
     immediate: false,
     server: true,
-    
     onResponse: async (context) => {
       if (context.response.status === 200) {
         user.value = context.response._data;

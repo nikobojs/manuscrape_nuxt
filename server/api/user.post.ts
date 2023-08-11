@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
+import { authorize } from '../utils/authorize';
 
 const config = useRuntimeConfig();
 
@@ -35,15 +36,17 @@ export default defineEventHandler(async (event) => {
   const hashedPassword = await hash(password, saltRounds);
 
 
-  const result = await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email: email,
       password: hashedPassword,
     }
   })
 
+  const { token } = await authorize(event, user)
+
   return {
-    id: result.id,
-    msg: 'user created!'
+    id: user.id,
+    token,
   }
 })

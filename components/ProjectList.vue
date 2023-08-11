@@ -1,6 +1,6 @@
 <template>
-    <h2 class="text-3xl mb-3">Projects</h2>
-    <div v-if="!loading" class="grid grid-cols-5 gap-5">
+    <h2 v-if="projects && projects.length > 0" class="text-3xl mb-3">Projects</h2>
+    <div v-if="!loading" class="grid grid-cols-5 gap-5 mb-10">
       <div
         v-for="project in projects"
         class="group border rounded-md border-gray-800 bg-gray-900 p-4 cursor-pointer"

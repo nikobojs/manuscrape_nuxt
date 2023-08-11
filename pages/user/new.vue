@@ -3,42 +3,81 @@
     <div class="title">
       <h2 class="text-3xl mb-8">Create account</h2>
     </div>
-    <div class="w-80">
-      <label for="uname"><b>Email</b></label>
-      <UInput
-        v-model="user.email"
-        type="email"
-        placeholder="Enter email"
-        required
-      />
+    <UForm
+      class="w-80"
+      @submit.prevent="submit"
+      :validate="validate"
+      :state="state"
+      ref="form"
+    >
+      <UFormGroup label="Email" name="email">
+        <UInput
+          v-model="state.email"
+          type="text"
+          placeholder="Enter email"
+          required
+        />
+      </UFormGroup>
 
       <br />
 
-      <label for="psw"><b>Password</b></label>
-      <UInput
-        v-model="user.password"
-        type="password"
-        placeholder="Enter Password"
-        required
-      />
+      <UFormGroup label="Password" name="password">
+        <UInput
+          v-model="state.password"
+          type="password"
+          placeholder="Enter Password"
+          required
+        />
+      </UFormGroup>
 
-      <UButton type="submit" @click.prevent="login" class="mt-5">
+      <span class="block mt-3 text-red-500" v-if="errorMessage" v-text="errorMessage"></span>
+
+      <UButton :disabled="loading" :loading="loading" type="submit" class="mt-5">
         Create and login
       </UButton>
-    </div>
+    </UForm>
   </UContainer>
 </template>
 
 <script lang="ts" setup>
-  const user = ref({
+import type { FormError } from '@nuxthq/ui/dist/runtime/types';
+
+  const state = ref({
     email: '',
     password: '',
   });
 
-  const login = async () => {
-    const response = await useFetch('/api/user', {
-      method: 'POST',
-      body: user,
-    })
+  const errorMessage = ref('');
+
+  const form = ref();
+  const loading = ref(false);
+
+  const { signUp, ensureUserFetched } = await useAuth();
+  await ensureUserFetched()
+
+  function validate(state: any): FormError[] {
+    const errors = [] as FormError[];
+    if (!state.email) errors.push({ path: 'email', message: 'Required' });
+    if (state.email.split('').filter((c: string) => c == '@').length !== 1) errors.push({ path: 'email', message: 'Should contain exactly one \'@\''});
+    if (state.email.split('').filter((c: string) => c == '.').length !== 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
+    if (!state.password) errors.push({ path: 'password', message: 'Required' });
+    if (state.password.length < 6) errors.push({ path: 'password', message: 'Needs to be longer than 6 characters'})
+    console.log('validated! errors len:', errors.length)
+    return errors;
+  }
+
+  async function submit() {
+    await form.value!.validate();
+    loading.value = true;
+    await signUp(state.value.email, state.value.password).then(() => {
+      window.location.href = '/';
+    }).catch(err => {
+      console.log({ err })
+      if (err.statusText) {
+        errorMessage.value = err.statusText;
+      }
+    }).finally(() => {
+      loading.value = false;
+    });
   };
 </script>
