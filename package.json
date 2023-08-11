@@ -1,6 +1,7 @@
 {
   "name": "nuxt-app",
   "private": true,
+  "version": "0.1.1",
   "scripts": {
     "start": "node .output/server/index.mjs",
     "build": "nuxt build",
