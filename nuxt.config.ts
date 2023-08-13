@@ -16,4 +16,7 @@ export default defineNuxtConfig({
       cookieDomain: process.env.COOKIE_DOMAIN,
     }
   },
+  colorMode: {
+    preference: 'dark',
+  }
 })
