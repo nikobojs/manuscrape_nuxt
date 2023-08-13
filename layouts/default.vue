@@ -10,5 +10,8 @@
 </template>
 
 <script lang="ts" setup>
+  const colorMode = useColorMode();
+  colorMode.value = 'dark'
+  colorMode.forced = true
   await useAuth();
 </script>
