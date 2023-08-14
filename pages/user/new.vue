@@ -59,7 +59,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types';
     const errors = [] as FormError[];
     if (!state.email) errors.push({ path: 'email', message: 'Required' });
     if (state.email.split('').filter((c: string) => c == '@').length !== 1) errors.push({ path: 'email', message: 'Should contain exactly one \'@\''});
-    if (state.email.split('').filter((c: string) => c == '.').length !== 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
+    if (state.email.split('').filter((c: string) => c == '.').length < 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
     if (!state.password) errors.push({ path: 'password', message: 'Required' });
     if (state.password.length < 6) errors.push({ path: 'password', message: 'Needs to be longer than 6 characters'})
     return errors;
