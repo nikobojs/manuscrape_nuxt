@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
@@ -8,7 +9,7 @@ const tokenAuthBody = yup.object({
   token: yup.string().required(),
 }).required()
 
-export default defineEventHandler(async (event) => {
+export default safeResponseHandler(async (event) => {
     const body = await readBody(event);
     const { token } = await tokenAuthBody.validate(body)
 

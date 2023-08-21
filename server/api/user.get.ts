@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
+import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const prisma = new PrismaClient();
 
-export default defineEventHandler(async (event) => {
+export default safeResponseHandler(async (event) => {
     if (!event.context.auth?.id) {
         throw createError({
             statusMessage: 'Invalid auth token value',

@@ -16,7 +16,16 @@ declare global {
     }
 
     // TODO: extract type from zod validation object instead
-    type NewField = Omit<Omit<Omit<Omit<ProjectField, 'id'>, 'projectId'>, 'dynamicFields0'>, 'dynamicFields1'>
+    type NewField = Omit<
+        Omit<
+            Omit<
+                Omit<
+                    Omit<ProjectField,'id'>,
+                    'createdAt'
+                >, 'projectId'
+            >, 'dynamicFields0'
+        >, 'dynamicFields1'
+    >;
 
     interface CMSInputProps {
         type: string;
@@ -31,8 +40,11 @@ declare global {
         element: Raw<typeof UInput>;
     }
 
-
     interface Window {
-      electronAPI?: any
+      electronAPI?: any;
+    }
+
+    interface TokenResponse {
+      token: string;
     }
 }

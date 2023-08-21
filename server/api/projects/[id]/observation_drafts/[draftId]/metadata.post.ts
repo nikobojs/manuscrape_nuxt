@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default defineEventHandler(async (event) => {
+export default safeResponseHandler(async (event) => {
   if (!event.context.auth?.id) {
       throw createError({
           statusMessage: 'Invalid auth token value',
@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
     
   const param = event.context.params
   const projectId = parseInt(param?.id || '');
+  const draftId = parseInt(param?.draftId || '');
 
   if (isNaN(projectId)) {
     return createError({
@@ -19,15 +20,24 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Invalid project id',
     });
   }
+  if (isNaN(draftId)) {
+    return createError({
+      statusCode: 400,
+      statusMessage: 'Invalid observation draft id',
+    });
+  }
 
-  const data = await readBody(event);
+  const body = await readBody(event);
 
+  // TODO: validate patch with zod
 
-  // TODO: validate with zod?
-
-  const result = await prisma.observation.create({
-    data: {
-      data,
+  const result = await prisma.observationDraft.update({
+    select: {
+      id: true,
+    }, where: {
+      id: draftId,
+    }, data: {
+      data: body,
       userId: event.context.auth.id,
       projectId: projectId,
     }
@@ -35,6 +45,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     id: result.id,
-    msg: 'observation created!'
+    msg: 'observation draft patched!'
   }
 })

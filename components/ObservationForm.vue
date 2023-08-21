@@ -1,14 +1,16 @@
 
 <template>
   <UCard>
+    <div class="mb-4 font-bold">Observation metadata</div>
     <div>
       <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
         <div v-for="({ props, element, field }) in inputs" class="mb-4">
-          <UFormGroup :name="field.label" :label="`Enter ${field.label}:`">
+          <UFormGroup :name="field.label" :label="field.label">
+          <!-- <UFormGroup :name="field.label" :label="formLabel" :label="`Enter ${field.label}:`"> -->
             <component :is="element" v-model="state[field.label]" v-bind="props" />
           </UFormGroup>
         </div>
-        <UButton class="mt-4" type="submit">Save observation</UButton>
+        <UButton class="mt-4" type="submit">Save observation draft</UButton>
       </UForm>
     </div>
   </UCard>
@@ -23,7 +25,7 @@
   const state = ref({} as any);
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
-  const { createObservation } = await useProjects();
+  const { updateDraftMetadata } = await useProjects();
   const props = defineProps({
     project: Object as PropType<FullProject>,
     draft: Object as PropType<ObservationDraft>,
@@ -36,8 +38,15 @@
     [FieldType.FLOAT]: 'number',
   });
 
+
   function validate(state: any): FormError[] {
     if (!props.project) {
+      throw createError({
+        statusMessage: 'Project does not exist',
+        statusCode: 400,
+      });
+    }
+    if (!props.draft) {
       throw createError({
         statusMessage: 'Project does not exist',
         statusCode: 400,
@@ -108,18 +117,18 @@
     return errors;
   }
 
-  onMounted(() => {
-    if (!props.project) {
-      toast.add({
-        title: 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-      navigateTo('/');
-    } else {
+  if (!props.draft || !props.project) {
+    toast.add({
+      title: props.draft ? 'Observation draft does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red'
+    });
+    navigateTo('/');
+  } else {
+    if (inputs.value.length == 0) {
       buildForm(props.project);
     }
-  });
+  }
 
   function buildForm(project: FullProject) {
     for (const field of project.fields) {
@@ -158,20 +167,23 @@
       return;
     }
 
-    if (props.project?.id) {
-      const res = await createObservation(props.project?.id, state.value);
-      if (runsInElectron()) {
-        window.electronAPI.observationCreated(res);
-      } else {
+    if (props.project?.id && props.draft?.id) {
+      // const res = await createObservation(props.project?.id, state.value);
+      const res = await updateDraftMetadata(
+        props.project.id,
+        props.draft?.id,
+        state.value
+      );
+      if (!runsInElectron()) {
         toast.add({
-          title: 'Observation was saved.'
+          title: 'Observation metadata was added to draft.'
         });
       }
-      navigateTo(`/projects/${props.project.id}`)
+      navigateTo(`/projects/${props.project.id}/observation_drafts/${props.draft.id}/uploadImage`);
     } else {
       throw createError({
         statusCode: 500,
-        statusMessage: 'Project does not exist',
+        statusMessage: 'Project or observation does not exist',
       })
     }
   }

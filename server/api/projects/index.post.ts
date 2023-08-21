@@ -1,5 +1,6 @@
 import { PrismaClient, FieldType } from '@prisma/client';
 import * as yup from 'yup';
+import { safeResponseHandler } from '../../utils/safeResponseHandler';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,7 @@ const newProjectSchema = yup.object({
   ).required()
 }).required()
 
-export default defineEventHandler(async (event) => {
+export default safeResponseHandler(async (event) => {
   if (!event.context.auth?.id) {
     throw createError({
       statusMessage: 'Invalid auth token value',

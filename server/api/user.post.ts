@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { authorize } from '../utils/authorize';
+import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const config = useRuntimeConfig();
 
 const prisma = new PrismaClient();
 
-export default defineEventHandler(async (event) => {
+export default safeResponseHandler(async (event) => {
   const { email, password } = await readBody(event);
 
   // TODO: validate with zod?

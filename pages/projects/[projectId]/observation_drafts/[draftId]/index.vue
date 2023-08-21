@@ -1,8 +1,16 @@
 <template>
   <UContainer>
-    <h3 class="text-2xl">Add observation</h3>
-    <div class="text-sm mb-4">Project: {{ project?.name }}</div>
-    <ObservationForm v-if="draft" :project="project" :draft="draft" />
+    <h3 class="text-2xl">Create observation in "{{project.name}}"</h3>
+    <div class="text-sm mb-4">STEP 1 OF 3</div>
+    <div class="grid grid-cols-4">
+      <ObservationForm
+        class="col-span-1"
+        v-if="draft"
+        :project="project"
+        :draft="draft"
+      />
+      <div class="col-span-3"></div>
+    </div>
   </UContainer>
 </template>
 

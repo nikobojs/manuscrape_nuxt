@@ -3,7 +3,7 @@ export const useAuth = async () => {
     const { user, refreshUser, hasFetched } = await useUser();
 
     const login = async (email: string, password: string) => {
-        return $fetch('/api/auth', {
+        return $fetch<TokenResponse>('/api/auth', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
             headers: {
@@ -22,7 +22,7 @@ export const useAuth = async () => {
     }
 
     const signUp = async (email: string, password: string) => {
-        return $fetch('/api/user', {
+        return $fetch<TokenResponse>('/api/user', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
             headers: {

@@ -3,7 +3,7 @@ import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 
 const prisma = new PrismaClient();
 
-export default safeResponseHandler(async (event: any) => {
+export default safeResponseHandler(async (event) => {
   if (!event.context.auth?.id) {
       throw createError({
           statusMessage: 'Invalid auth token value',
@@ -21,21 +21,21 @@ export default safeResponseHandler(async (event: any) => {
     });
   }
 
-  const body = await readBody(event);
+  const data = await readBody(event);
 
-  // TODO: validate body using zod
 
-  const result = await prisma.observationDraft.create({
+  // TODO: validate with zod?
+
+  const result = await prisma.observation.create({
     data: {
-      projectId,
-      userId: event.context.auth?.id,
-      uploadInProgress: !!body?.addFile,
-      data: {},
+      data,
+      userId: event.context.auth.id,
+      projectId: projectId,
     }
   });
 
   return {
     id: result.id,
-    msg: 'observation draft created!'
+    msg: 'observation created!'
   }
 })

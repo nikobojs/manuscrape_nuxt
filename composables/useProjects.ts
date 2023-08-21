@@ -1,4 +1,4 @@
-import { Observation, ProjectField } from "@prisma/client";
+import { Observation, ObservationDraft, ProjectField } from "@prisma/client";
 import { requireNumber } from "./helpers";
 
 export const useProjects = async () => {
@@ -39,7 +39,7 @@ export const useProjects = async () => {
   const getObservationDraftById = (
     project: FullProject,
     observationDraftId: number | string | string[]
-  ): Observation => {
+  ): ObservationDraft => {
     observationDraftId = requireNumber(observationDraftId, 'projectId');
     const obs = project?.observationDrafts?.find?.(o => o.id == observationDraftId);
     if (!obs) {
@@ -107,6 +107,54 @@ export const useProjects = async () => {
     })
   };
 
+  const updateDraftMetadata = async (
+    projectId: number,
+    draftId: number,
+    data: any,
+  ) => {
+    return $fetch(`/api/projects/${projectId}/observation_drafts/${draftId}/metadata`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+          'Content-Type': 'application/json'
+      }
+    }).catch(err => {
+      console.error('create observation err:', err);
+      throw err;
+    }).then(async (response) => {
+      await refreshUser();
+      return response;
+    })
+  }
+
+
+  const upsertDraftImage = async (
+    projectId: number,
+    draftId: number,
+    file: File,
+  ) => {
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const uploadRes = await useAsyncData('file', () =>
+        $fetch(`/api/projects/${projectId}/observation_drafts/${draftId}/image`, {
+          method: 'PUT',
+          body: form,
+        }),
+      );
+
+      console.log('UPLOAD IMAGE RESPONSE WAS:', uploadRes)
+
+      const userRes = await refreshUser();
+      return userRes;
+
+    } catch(err: any) {
+      console.error('upload image to observation draft err:', err);
+      throw err;
+    }
+  }
+
 
   const hasOwnership = (
     projectId: number | string,
@@ -156,5 +204,7 @@ export const useProjects = async () => {
     getObservationById,
     getObservationDraftById,
     createObservationDraft,
+    updateDraftMetadata,
+    upsertDraftImage,
   };
 };
