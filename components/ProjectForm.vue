@@ -85,22 +85,34 @@
 
   async function handleSubmit() {
     loading.value = true;
-    const res = await createProject(
-      form.name,
-      form.fields,
-    ).then(() => {
+    try {
+      const res = await createProject(
+        form.name,
+        form.fields,
+      );
+
       error.value = '';
-    }).catch(err => {
+      loading.value = false;
+
+      if (!res?.id) {
+        console.error(`Unable to read 'id' from createProject api response`);
+        toast.add({
+          title: 'Server error :(',
+          description: `We're working to fix this as soon as possible`
+        });
+        // TODO: capture error
+      }
+
+      if (runsInElectron()) {
+        window.electronAPI.projectCreated(res);
+      } else {
+        toast.add({
+          title: 'Project was saved.'
+        });
+        navigateTo(`/projects/${res.id}`)
+      }
+    } catch (err: any) {
       error.value = (err?.statusMessage || err?.message).toString();
-    }).finally(
-      () => loading.value = false
-    );
-    if (runsInElectron()) {
-      window.electronAPI.projectCreated(res);
-    } else {
-      toast.add({
-        title: 'Project was saved.'
-      });
     }
   }
 

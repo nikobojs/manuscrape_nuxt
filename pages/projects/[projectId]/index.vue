@@ -22,19 +22,19 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
-  const { ensureHasOwnership, getProjectById, projects, createObservation } = await useProjects();
+  const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
+  const { createObservation } = await useObservations();
+
   ensureHasOwnership(params?.projectId, projects.value);
-  const project = computed(() => {
-    const p = getProjectById(params?.projectId);
-    return p;
-  });
+
+  const project = requireProjectFromParams(params);
 
   async function addObservationClick () {
-    const res = await createObservation(project.value.id).catch(
+    const res = await createObservation(project.id).catch(
       (err) => error.value = err?.message
     );
     if (res?.id) {
-      navigateTo(`/projects/${project.value.id}/observations/${res.id}`);
+      navigateTo(`/projects/${project.id}/observations/${res.id}`);
     }
   }
 </script>

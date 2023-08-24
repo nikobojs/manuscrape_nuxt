@@ -2,19 +2,25 @@ import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { authorize } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
+import * as yup from 'yup';
 
 const config = useRuntimeConfig();
 
 const prisma = new PrismaClient();
 
-export default safeResponseHandler(async (event) => {
-  const { email, password } = await readBody(event);
+const SignUpRequestSchema = yup.object({
+  email: yup.string().required(),
+  password: yup.string().required(),
+}).required();
 
-  // TODO: validate with zod?
-  if (
-    typeof email !== 'string' ||
-    typeof password !== 'string'
-  ) {
+export default safeResponseHandler(async (event) => {
+  const body = await readBody(event);
+  let parsed: {email: string; password: string} | undefined;
+
+  // validate with yup
+  try {
+    parsed = await SignUpRequestSchema.validate(body)
+  } catch(e: any) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing required body parameters'
@@ -22,7 +28,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   const existingUser = await prisma.user.findFirst({
-    where: { email },
+    where: { email: parsed.email },
     select: { id: true }
   });
 
@@ -34,12 +40,12 @@ export default safeResponseHandler(async (event) => {
   }
 
   const saltRounds = config.app.saltRounds ?? 10;
-  const hashedPassword = await hash(password, saltRounds);
+  const hashedPassword = await hash(parsed.password, saltRounds);
 
 
   const user = await prisma.user.create({
     data: {
-      email: email,
+      email: parsed.email,
       password: hashedPassword,
     }
   })

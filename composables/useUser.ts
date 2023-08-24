@@ -13,7 +13,7 @@ export const useUser = async () => {
     onResponse: async (context) => {
       if (context.response.status === 200) {
         user.value = context.response._data;
-        projects.value = context.response._data.projects;
+        projects.value = context.response._data.projectAccess.map((p: any) => p.project);
       } else if (context.response.status === 401) {
         user.value = undefined;
         projects.value = [];

@@ -1,29 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
+import { parseIntParam } from '../../../../utils/request';
+import { requireUser } from '../../../../utils/authorize';
 
 const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
-  if (!event.context.auth?.id) {
-      throw createError({
-          statusMessage: 'Invalid auth token value',
-          statusCode: 401,
-      });
-  }
-    
-  const param = event.context.params
-  const projectId = parseInt(param?.id || '');
-
-  if (isNaN(projectId)) {
-    return createError({
-      statusCode: 400,
-      statusMessage: 'Invalid project id',
-    });
-  }
+  const user = requireUser(event);
+  const projectId = parseIntParam(event.context.params?.projectId);
 
   const result = await prisma.observation.create({
     data: {
-      userId: event.context.auth.id,
+      userId: user.id,
       projectId: projectId,
       isDraft: true,
       data: {}

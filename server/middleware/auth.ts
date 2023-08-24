@@ -1,72 +1,71 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-import { H3Event } from 'h3';
+import type { H3Event, EventHandlerRequest } from 'h3';
+import { ensureURLResourceAccess, getObservationsByProject } from '../utils/authorize';
+import { isOpenUrl, parseIntParam } from '../utils/request';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
 
-function isOpenUrl (event: H3Event): boolean {
-    const openPostUrls = ['/api/user', '/api/auth', '/api/token_auth'];
-    const openGetUrls = ['/user/new', '/login'];
-    const isPostRequest = event.req.method === 'POST';
-    const isGetRequest = event.req.method === 'GET';
-    const isOpenUrl = (
-        isGetRequest && openGetUrls.includes(event.path) ||
-        isPostRequest && openPostUrls.includes(event.path)
-    );
-    return isOpenUrl;
-}
-
+// TODO: refactor and improve readability
 export default defineEventHandler(async (event) => {
     const cookieValue = getCookie(event, 'authcookie');
     const authToken = event.req.headers.authentication || cookieValue;
     let loginSuccesfull = false;
 
-    async function onNotAuthed (
-        msg: string = 'You are not logged in. Please log in and try again'
-    ): Promise<void> {
-        const isApiUrl = event.path.startsWith('/api/');
-
-        deleteCookie(event, 'authcookie');
-
-        if (!isOpenUrl(event) && isApiUrl) {
-            throw createError({
-                statusCode: 401,
-                statusMessage: msg,
-            });
-        } else if (!isOpenUrl(event) && !isApiUrl) {
-            await sendRedirect(event, '/login', 302);
-        }
-    }
-    
     if (!authToken && !isOpenUrl(event)) {
-        return onNotAuthed();
+        return onNotAuthed(event);
     }
+
     else if (typeof authToken == 'string' && authToken.length > 0) {
         const decoded = await jwt.verify(authToken, config.app.tokenSecret);
-
         if (typeof decoded !== 'string' && decoded?.id) {
             const user = await prisma.user.findFirst({
                 where: { id: decoded.id },
                 select: {
                     id: true,
+                    projectAccess: {
+                      select: {
+                        projectId: true,
+                        role: true
+                      }
+                    }
                 }
             });
 
             if (user) {
                 loginSuccesfull = true;
-                event.context.auth = {
-                    id: user.id
-                };
+                event.context.user = user as UserInSession;
             } else {
-                return onNotAuthed('Session is valid but user does not exist')
+                return onNotAuthed(event, 'Session is valid but user does not exist')
             }
         } else {
-            return onNotAuthed('Your did not provide any authorization ');
+            return onNotAuthed(event, 'Your did not provide any authorization ');
         }
     }
 
     if (loginSuccesfull && ['/user/new', '/login'].includes(event.path) && event.req.method === 'GET') {
         await sendRedirect(event, '/', 302);
     }
-})
+
+    ensureURLResourceAccess(event);
+});
+
+
+async function onNotAuthed (
+  event: H3Event<EventHandlerRequest>,
+  msg: string = 'You are not logged in. Please log in and try again'
+): Promise<void> {
+    const isApiUrl = event.path.startsWith('/api/');
+
+    deleteCookie(event, 'authcookie');
+
+    if (!isOpenUrl(event) && isApiUrl) {
+        throw createError({
+            statusCode: 401,
+            statusMessage: msg,
+        });
+    } else if (!isOpenUrl(event) && !isApiUrl) {
+        await sendRedirect(event, '/login', 302);
+    }
+}

@@ -1,9 +1,7 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { type File } from 'formidable'
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import fs from 'fs'
 
 const config = useRuntimeConfig()?.app || {};
-console.log(config)
 
 if (!config.s3AccessKey) throw new Error('s3AccessKey environment variable not set');
 if (!config.s3SecretAccessKey) throw new Error('s3SecretAccessKey environment variable not set');
@@ -14,7 +12,7 @@ const bucketName = config.s3BucketName as string;
 
 
 // a client can be shared by different commands
-export const s3 = new S3Client({
+const s3 = new S3Client({
   region: 'us-west-2',
   credentials: {
     accessKeyId: config.s3AccessKey as string,
@@ -26,12 +24,25 @@ export const s3 = new S3Client({
 
 
 // upload a file to configured s3
-export function uploadFile(key: string, file: File) {
+export async function uploadS3File(key: string, filepath: string) {
+  const contents = fs.readFileSync(filepath);
+
   return s3.send(
     new PutObjectCommand({
       Bucket: bucketName,
       Key: key,
-      Body: file.toString(),
+      Body: contents,
+    })
+  )
+}
+
+
+// upload a file to configured s3
+export async function deleteS3Files(key: string) {
+  return s3.send(
+    new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: key,
     })
   )
 }

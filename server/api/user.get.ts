@@ -1,29 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
+import { requireUser } from '../utils/authorize';
 
 const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
-    if (!event.context.auth?.id) {
-        throw createError({
-            statusMessage: 'Invalid auth token value',
-            statusCode: 401,
-        });
-    }
+    const { id } = requireUser(event);
     
     const user = await prisma.user.findFirst({
-        where: { id: event.context.auth.id },
+        where: { id: id },
         select: {
             id: true,
             email: true,
             createdAt: true,
-            projects: {
+            projectAccess: {
                 select: {
-                    id: true,
-                    createdAt: true,
-                    name: true,
-                    fields: true,
-                    observations: true,
+                    project: {
+                        select: {
+                            id: true,
+                            createdAt: true,
+                            name: true,
+                            fields: true,
+                            dynamicFields: true,
+                        }
+                    },
+                    role: true,
                 }
             }
         }

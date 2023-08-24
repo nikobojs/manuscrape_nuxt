@@ -3,7 +3,7 @@
   <UCard>
     <div class="mb-4 font-bold">Observation metadata</div>
     <div>
-      <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
+      <UForm ref="form" :state="state" @submit.prevent="submit">
         <input type="file" :on:change="onFilePicked" />
         <UButton class="mt-4" type="submit">Upload image</UButton>
       </UForm>
@@ -12,7 +12,6 @@
 </template>
 
 <script lang="ts" setup>
-  import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   import { Observation } from '@prisma/client';
 
 
@@ -26,21 +25,12 @@
   const state = ref({
     file: null as (File | null)
   });
+
   const toast = useToast();
-  const { upsertObservationImage } = await useProjects();
+  const { upsertObservationImage } = await useObservations();
+  const { refreshUser } = await useUser();
+
   const file = ref()
-
-  function validate(state: any): FormError[] {
-    if (!props.project) {
-      throw createError({
-        statusMessage: 'Project does not exist',
-        statusCode: 400,
-      });
-    }
-
-    const errors = [] as FormError[];
-    return errors;
-  }
 
   function onFilePicked(event: any) {
     const files = event?.target?.files || [];
@@ -51,57 +41,38 @@
     }
 
     file.value = event.target.files[0] as File;
-
-    console.log('file picked event:', event)
   }
 
 
   async function submit() {
+    if (!file.value) {
+      throw new Error('Image file has not been selected');
+    }
+  
     try {
       await form.value!.validate();
-      if (!file.value) {
-        throw new Error('Image file has not been selected');
-      }
-      console.log('UPLOAD OK!!!!!!!!!!!')
+    } catch {
+      // ignore because form dependency takes care of visualising errors
+    }
 
+    try {
       if (props.observation && props.project) {
         await upsertObservationImage(
           props.project?.id,
           props.observation?.id,
           file.value
         )
-
-        console.log('GOT IMAGE UPLOAD RESPONSE:::::::')
-        // const json = await res.json();
-        // console.log('GOT JSON RESPONSE FROM IMAGE UPLOAD:', json)
+        await refreshUser();
+        toast.add({
+          title: 'File was uploaded to observation',
+        });
       } else {
-        throw new Error('Project or observation id was not found')
+        throw new Error('Project or observation id was not found');
       }
-
-    } catch(e) {
-      // Do nothing as library takes care of errors
-      // NOTE: this is to avoid uncaught rejected promises
-      return;
+    } catch(err) {
+      console.log('Upload image submit error:', err);
+      throw err;
     }
-
-    // if (props.project?.id) {
-    //   const res = await createObservation(props.project?.id, state.value);
-    //   if (runsInElectron()) {
-    //     window.electronAPI.observationCreated(res);
-    //   } else {
-    //     toast.add({
-    //       title: 'Observation was saved.'
-    //     });
-    //   }
-    //   navigateTo(`/projects/${props.project.id}`)
-    // } else {
-    //   throw createError({
-    //     statusCode: 500,
-    //     statusMessage: 'Project does not exist',
-    //   })
-    // }
-    toast.add({
-      title: 'File was uploaded'
-    });
+    
   }
 </script>

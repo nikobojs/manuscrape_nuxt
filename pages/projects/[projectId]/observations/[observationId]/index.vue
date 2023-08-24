@@ -5,9 +5,9 @@
     <div class="grid grid-cols-4">
       <ObservationForm
         class="col-span-1"
-        v-if="draft"
+        v-if="observation"
         :project="project"
-        :draft="draft"
+        :observation="observation"
       />
       <div class="col-span-3"></div>
     </div>
@@ -19,15 +19,10 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
-  const { ensureHasOwnership, getProjectById, getObservationById, projects } = await useProjects();
+  const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
+  const { requireObservationFromParams } = await useObservations();
+
   ensureHasOwnership(params?.projectId, projects.value);
-  const project = computed(() => {
-    const p = getProjectById(params?.projectId)
-    return p;
-  });
-  const draft = computed(() => {
-    if (!project) return null;
-    const o = getObservationById(project.value, params?.observationId);
-    return o;
-  })
+  const project = requireProjectFromParams(params);
+  const observation = requireObservationFromParams(params, project.id);
 </script>

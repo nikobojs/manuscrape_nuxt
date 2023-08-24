@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as yup from 'yup';
+import { requireUser } from '../../../../../utils/authorize';
+import { parseIntParam } from '../../../../../utils/request';
 
 const prisma = new PrismaClient();
 const patchObservationSchema = yup.object({
@@ -9,29 +11,9 @@ const patchObservationSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  if (!event.context.auth?.id) {
-      throw createError({
-          statusMessage: 'Invalid auth token value',
-          statusCode: 401,
-      });
-  }
-    
-  const param = event.context.params
-  const projectId = parseInt(param?.id || '');
-  const observationId = parseInt(param?.observationId || '');
-
-  if (isNaN(projectId)) {
-    return createError({
-      statusCode: 400,
-      statusMessage: 'Invalid project id',
-    });
-  }
-  if (isNaN(observationId)) {
-    return createError({
-      statusCode: 400,
-      statusMessage: 'Invalid observation draft id',
-    });
-  }
+  requireUser(event);
+  const params = event.context.params
+  const observationId = parseIntParam(params?.observationId);
 
   const body = await readBody(event);
   let patch = await patchObservationSchema.validate(body);

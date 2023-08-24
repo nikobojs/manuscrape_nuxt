@@ -24,7 +24,7 @@
   const state = ref({} as any);
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
-  const { patchObservation } = await useProjects();
+  const { patchObservation } = await useObservations();
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<Observation>,

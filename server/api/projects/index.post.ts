@@ -1,6 +1,7 @@
 import { PrismaClient, FieldType } from '@prisma/client';
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
+import { requireUser } from '../../utils/authorize';
 
 const prisma = new PrismaClient();
 
@@ -17,12 +18,7 @@ const newProjectSchema = yup.object({
 }).required()
 
 export default safeResponseHandler(async (event) => {
-  if (!event.context.auth?.id) {
-    throw createError({
-      statusMessage: 'Invalid auth token value',
-      statusCode: 401,
-    });
-  }
+  const user = requireUser(event);
 
   const body = await readBody(event);
   const newProject = await newProjectSchema.validate(body)
@@ -30,8 +26,14 @@ export default safeResponseHandler(async (event) => {
   const createdProject = await prisma.project.create({
     data: {
       name: newProject.name,
-      authorId: event.context.auth?.id,
-      createdAt: new Date(),
+      authorId: user.id,
+    }
+  });
+
+  await prisma.projectAccess.create({
+    data: {
+      userId: user.id,
+      projectId: createdProject.id,
     }
   });
 
@@ -44,5 +46,5 @@ export default safeResponseHandler(async (event) => {
   await prisma.projectField.createMany({ data: newProjectFields });
 
   setResponseStatus(event, 201);
-  return { project: { createdProject } };
+  return createdProject;
 });

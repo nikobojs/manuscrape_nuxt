@@ -60,7 +60,7 @@ model ProjectField {
   createdAt          DateTime               @default(now()) @db.Timestamp(6)
   label              String
   projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: NoAction)
   type               FieldType
   dynamicFields0s    DynamicProjectField[]  @relation("field0_id")
   dynamicFields1s    DynamicProjectField[]  @relation("field1_id")
@@ -71,7 +71,7 @@ model DynamicProjectField {
   createdAt          DateTime               @default(now()) @db.Timestamp(6)
   label              String
   projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: NoAction)
   operator           FieldOperator
   field0Id           Int
   field1Id           Int
@@ -87,19 +87,21 @@ model Observation {
   updatedAt          DateTime               @default(now()) @db.Timestamp(6)
   deletedAt          DateTime?
   projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: NoAction)
   userId             Int
-  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User                   @relation(fields: [userId], references: [id], onDelete: NoAction)
   data               Json
-  observationImages  ObservationImage[]
+  imageId            Int?                   @unique
+  image              ImageUpload?           @relation(fields: [imageId], references: [id], onDelete: Cascade)
   uploadInProgress   Boolean                @default(false)
   isDraft            Boolean                @default(true)
 }
 
-model ObservationImage {
+model ImageUpload {
   id                 Int                    @id @default(autoincrement())
   createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  observationId      Int
-  observation        Observation            @relation(fields: [observationId], references: [id])
   s3Path             String                 @unique
+  mimetype           String
+  originalName       String
+  observation        Observation?           
 }

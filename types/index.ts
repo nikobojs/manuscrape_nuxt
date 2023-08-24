@@ -1,18 +1,25 @@
 import { UInput } from ".nuxt/components";
-import type { Observation, ObservationDraft, Project, ProjectField, User } from "@prisma/client";
+import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
 
 export {};
 
 declare global {
     interface CurrentUser extends User {
-        projects: FullProject[]
+        projectAccess: ExtendedProjectAccess[]
+    }
+
+    interface ExtendedProjectAccess extends Omit<ProjectAccess, 'userId'> {
+        project: Project,
+    }
+
+    interface FullObservation extends Observation {
+        image: ImageUpload,
     }
 
     interface FullProject extends Project {
         fields: ProjectField[];
         observations: Observation[];
-        observationDrafts: ObservationDraft[];
     }
 
     // TODO: extract type from zod validation object instead
@@ -47,4 +54,13 @@ declare global {
     interface TokenResponse {
       token: string;
     }
+
+    interface UserInSession {
+    id: number;
+    projectAccess: {
+        projectId: number,
+        role: ProjectRole
+    }[]
+    }
+
 }

@@ -1,5 +1,6 @@
 import { Observation } from "@prisma/client";
 import { requireNumber } from "./helpers";
+import { type RouteParams } from "vue-router";
 
 export const useProjects = async () => {
   const { refreshUser, loading, projects } = await useUser();
@@ -20,104 +21,20 @@ export const useProjects = async () => {
     }
   }
 
-  const getObservationById = (
-    project: FullProject,
-    observationId: number | string | string[]
-  ): Observation => {
-    observationId = requireNumber(observationId, 'projectId');
-    const obs = project?.observations?.find?.(o => o.id == observationId);
-    if (!obs) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Observation could not be found'
-      })
-    } else {
-      return obs;
-    }
-  }
-
   const createProject = async (
     name: string, fields: NewField[]
-  ) => {
+  ): Promise<FullProject> => {
     return $fetch('/api/projects', {
       method: 'POST',
       body: JSON.stringify({ name, fields }),
       headers: {
           'Content-Type': 'application/json'
       }
-    }).catch(err => {
-      console.error('create project err:', err);
-      throw err;
     }).then(async (response) => {
       await refreshUser();
       return response;
     })
   };
-
-  const createObservation = async (
-    projectId: number,
-  ) => {
-    return $fetch(`/api/projects/${projectId}/observations`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      }
-    }).catch(err => {
-      console.error('create observation err:', err);
-      throw err;
-    }).then(async (response) => {
-      await refreshUser();
-      return response;
-    })
-  };
-
-  const patchObservation = async (
-    projectId: number,
-    observationId: number,
-    data: any,
-  ) => {
-    return $fetch(`/api/projects/${projectId}/observations/${observationId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-      headers: {
-          'Content-Type': 'application/json'
-      }
-    }).catch(err => {
-      console.error('create observation err:', err);
-      throw err;
-    }).then(async (response) => {
-      await refreshUser();
-      return response;
-    })
-  }
-
-  const upsertObservationImage = async (
-    projectId: number,
-    observationId: number,
-    file: File,
-  ) => {
-    const form = new FormData();
-    form.append('file', file);
-
-    try {
-      const uploadRes = await useAsyncData('file', () =>
-        $fetch(`/api/projects/${projectId}/observations/${observationId}/image`, {
-          method: 'PUT',
-          body: form,
-        }),
-      );
-
-      console.log('UPLOAD IMAGE RESPONSE WAS:', uploadRes)
-
-      const userRes = await refreshUser();
-      return userRes;
-
-    } catch(err: any) {
-      console.error('upload image to observation err:', err);
-      throw err;
-    }
-  }
-
 
   const hasOwnership = (
     projectId: number | string,
@@ -156,16 +73,18 @@ export const useProjects = async () => {
     }
   }
 
+  const requireProjectFromParams = (params: RouteParams) => {
+    const p = getProjectById(params?.projectId)
+    return p;
+  }
+
   return {
     projects,
     createProject,
-    createObservation,
     loading,
     hasOwnership,
     ensureHasOwnership,
     getProjectById,
-    getObservationById,
-    patchObservation,
-    upsertObservationImage,
+    requireProjectFromParams,
   };
 };

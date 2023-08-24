@@ -9,6 +9,7 @@ const tokenAuthBody = yup.object({
   token: yup.string().required(),
 }).required()
 
+// TODO: decide on token or cookie based auth
 export default safeResponseHandler(async (event) => {
     const body = await readBody(event);
     const { token } = await tokenAuthBody.validate(body)
