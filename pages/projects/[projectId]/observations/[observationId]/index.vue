@@ -19,7 +19,7 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
-  const { ensureHasOwnership, getProjectById, getObservationDraftById, projects } = await useProjects();
+  const { ensureHasOwnership, getProjectById, getObservationById, projects } = await useProjects();
   ensureHasOwnership(params?.projectId, projects.value);
   const project = computed(() => {
     const p = getProjectById(params?.projectId)
@@ -27,7 +27,7 @@
   });
   const draft = computed(() => {
     if (!project) return null;
-    const o = getObservationDraftById(project.value, params?.draftId);
+    const o = getObservationById(project.value, params?.observationId);
     return o;
   })
 </script>

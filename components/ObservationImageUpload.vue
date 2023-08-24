@@ -5,7 +5,7 @@
     <div>
       <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
         <input type="file" :on:change="onFilePicked" />
-        <UButton class="mt-4" type="submit">Save observation draft</UButton>
+        <UButton class="mt-4" type="submit">Upload image</UButton>
       </UForm>
     </div>
   </UCard>
@@ -13,12 +13,12 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
-  import { ObservationDraft } from '@prisma/client';
+  import { Observation } from '@prisma/client';
 
 
   const props = defineProps({
     project: Object as PropType<FullProject>,
-    draft: Object as PropType<ObservationDraft>,
+    observation: Object as PropType<Observation>,
   });
 
 
@@ -27,7 +27,7 @@
     file: null as (File | null)
   });
   const toast = useToast();
-  const { upsertDraftImage } = await useProjects();
+  const { upsertObservationImage } = await useProjects();
   const file = ref()
 
   function validate(state: any): FormError[] {
@@ -64,10 +64,10 @@
       }
       console.log('UPLOAD OK!!!!!!!!!!!')
 
-      if (props.draft && props.project) {
-        await upsertDraftImage(
+      if (props.observation && props.project) {
+        await upsertObservationImage(
           props.project?.id,
-          props.draft?.id,
+          props.observation?.id,
           file.value
         )
 

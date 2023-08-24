@@ -1,4 +1,4 @@
-import { Observation, ObservationDraft, ProjectField } from "@prisma/client";
+import { Observation } from "@prisma/client";
 import { requireNumber } from "./helpers";
 
 export const useProjects = async () => {
@@ -36,22 +36,6 @@ export const useProjects = async () => {
     }
   }
 
-  const getObservationDraftById = (
-    project: FullProject,
-    observationDraftId: number | string | string[]
-  ): ObservationDraft => {
-    observationDraftId = requireNumber(observationDraftId, 'projectId');
-    const obs = project?.observationDrafts?.find?.(o => o.id == observationDraftId);
-    if (!obs) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Observation draft could not be found'
-      })
-    } else {
-      return obs;
-    }
-  }
-
   const createProject = async (
     name: string, fields: NewField[]
   ) => {
@@ -70,31 +54,11 @@ export const useProjects = async () => {
     })
   };
 
-  const createObservationDraft = async (
-    projectId: number,
-  ) => {
-    return $fetch(`/api/projects/${projectId}/observation_drafts`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      }
-    }).catch(err => {
-      console.error('create observation draft err:', err);
-      throw err;
-    }).then(async (response) => {
-      await refreshUser();
-      return response;
-    })
-  };
-
-
   const createObservation = async (
     projectId: number,
-    data: any,
   ) => {
     return $fetch(`/api/projects/${projectId}/observations`, {
       method: 'POST',
-      body: JSON.stringify(data),
       headers: {
           'Content-Type': 'application/json'
       }
@@ -107,13 +71,13 @@ export const useProjects = async () => {
     })
   };
 
-  const updateDraftMetadata = async (
+  const patchObservation = async (
     projectId: number,
-    draftId: number,
+    observationId: number,
     data: any,
   ) => {
-    return $fetch(`/api/projects/${projectId}/observation_drafts/${draftId}/metadata`, {
-      method: 'POST',
+    return $fetch(`/api/projects/${projectId}/observations/${observationId}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
       headers: {
           'Content-Type': 'application/json'
@@ -127,10 +91,9 @@ export const useProjects = async () => {
     })
   }
 
-
-  const upsertDraftImage = async (
+  const upsertObservationImage = async (
     projectId: number,
-    draftId: number,
+    observationId: number,
     file: File,
   ) => {
     const form = new FormData();
@@ -138,7 +101,7 @@ export const useProjects = async () => {
 
     try {
       const uploadRes = await useAsyncData('file', () =>
-        $fetch(`/api/projects/${projectId}/observation_drafts/${draftId}/image`, {
+        $fetch(`/api/projects/${projectId}/observations/${observationId}/image`, {
           method: 'PUT',
           body: form,
         }),
@@ -150,7 +113,7 @@ export const useProjects = async () => {
       return userRes;
 
     } catch(err: any) {
-      console.error('upload image to observation draft err:', err);
+      console.error('upload image to observation err:', err);
       throw err;
     }
   }
@@ -202,9 +165,7 @@ export const useProjects = async () => {
     ensureHasOwnership,
     getProjectById,
     getObservationById,
-    getObservationDraftById,
-    createObservationDraft,
-    updateDraftMetadata,
-    upsertDraftImage,
+    patchObservation,
+    upsertObservationImage,
   };
 };

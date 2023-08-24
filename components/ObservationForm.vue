@@ -6,11 +6,10 @@
       <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
         <div v-for="({ props, element, field }) in inputs" class="mb-4">
           <UFormGroup :name="field.label" :label="field.label">
-          <!-- <UFormGroup :name="field.label" :label="formLabel" :label="`Enter ${field.label}:`"> -->
             <component :is="element" v-model="state[field.label]" v-bind="props" />
           </UFormGroup>
         </div>
-        <UButton class="mt-4" type="submit">Save observation draft</UButton>
+        <UButton class="mt-4" type="submit">Save observation</UButton>
       </UForm>
     </div>
   </UCard>
@@ -18,17 +17,17 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
-  import { FieldType, type ObservationDraft } from '@prisma/client';
+  import { FieldType, type Observation } from '@prisma/client';
   import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
 
   const form = ref();
   const state = ref({} as any);
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
-  const { updateDraftMetadata } = await useProjects();
+  const { patchObservation } = await useProjects();
   const props = defineProps({
     project: Object as PropType<FullProject>,
-    draft: Object as PropType<ObservationDraft>,
+    observation: Object as PropType<Observation>,
   });
 
   const inputTypes: Record<FieldType, string> = Object.freeze({
@@ -46,7 +45,7 @@
         statusCode: 400,
       });
     }
-    if (!props.draft) {
+    if (!props.observation) {
       throw createError({
         statusMessage: 'Project does not exist',
         statusCode: 400,
@@ -117,9 +116,9 @@
     return errors;
   }
 
-  if (!props.draft || !props.project) {
+  if (!props.observation || !props.project) {
     toast.add({
-      title: props.draft ? 'Observation draft does not exist' : 'Project does not exist',
+      title: props.observation ? 'Observation does not exist' : 'Project does not exist',
       icon: 'i-heroicons-exclamation-triangle',
       color: 'red'
     });
@@ -167,19 +166,21 @@
       return;
     }
 
-    if (props.project?.id && props.draft?.id) {
+    if (props.project?.id && props.observation?.id) {
       // const res = await createObservation(props.project?.id, state.value);
-      const res = await updateDraftMetadata(
+      const res = await patchObservation(
         props.project.id,
-        props.draft?.id,
+        props.observation?.id,
         state.value
       );
+
+      // TODO: make this more safe
       if (!runsInElectron()) {
         toast.add({
-          title: 'Observation metadata was added to draft.'
+          title: 'Observation metadata was saved.'
         });
       }
-      navigateTo(`/projects/${props.project.id}/observation_drafts/${props.draft.id}/uploadImage`);
+      navigateTo(`/projects/${props.project.id}/observation/${props.observation.id}/uploadImage`);
     } else {
       throw createError({
         statusCode: 500,

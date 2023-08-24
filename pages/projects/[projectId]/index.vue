@@ -7,7 +7,7 @@
         <UButton
           icon="i-heroicons-pencil-square"
           variant="outline"
-          @click="addObservationDraftClick"
+          @click="addObservationClick"
         >
           Add observation
         </UButton>
@@ -22,19 +22,19 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
-  const { ensureHasOwnership, getProjectById, projects, createObservationDraft } = await useProjects();
+  const { ensureHasOwnership, getProjectById, projects, createObservation } = await useProjects();
   ensureHasOwnership(params?.projectId, projects.value);
   const project = computed(() => {
     const p = getProjectById(params?.projectId);
     return p;
   });
 
-  async function addObservationDraftClick () {
-    const res = await createObservationDraft(project.value.id).catch(
+  async function addObservationClick () {
+    const res = await createObservation(project.value.id).catch(
       (err) => error.value = err?.message
     );
     if (res?.id) {
-      navigateTo(`/projects/${project.value.id}/observation_drafts/${res.id}`);
+      navigateTo(`/projects/${project.value.id}/observations/${res.id}`);
     }
   }
 </script>

@@ -24,7 +24,6 @@ export default safeResponseHandler(async (event) => {
                     name: true,
                     fields: true,
                     observations: true,
-                    observationDrafts: true,
                 }
             }
         }

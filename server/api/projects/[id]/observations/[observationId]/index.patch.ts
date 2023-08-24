@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import * as yup from 'yup';
 
 const prisma = new PrismaClient();
+const patchObservationSchema = yup.object({
+  isDraft: yup.bool().optional(),
+  data: yup.object().optional(),
+}).required()
+
 
 export default safeResponseHandler(async (event) => {
   if (!event.context.auth?.id) {
@@ -12,7 +18,7 @@ export default safeResponseHandler(async (event) => {
     
   const param = event.context.params
   const projectId = parseInt(param?.id || '');
-  const draftId = parseInt(param?.draftId || '');
+  const observationId = parseInt(param?.observationId || '');
 
   if (isNaN(projectId)) {
     return createError({
@@ -20,7 +26,7 @@ export default safeResponseHandler(async (event) => {
       statusMessage: 'Invalid project id',
     });
   }
-  if (isNaN(draftId)) {
+  if (isNaN(observationId)) {
     return createError({
       statusCode: 400,
       statusMessage: 'Invalid observation draft id',
@@ -28,18 +34,17 @@ export default safeResponseHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  let patch = await patchObservationSchema.validate(body);
+  patch = removeKeysByUndefinedValue(patch);
 
-  // TODO: validate patch with zod
-
-  const result = await prisma.observationDraft.update({
+  const result = await prisma.observation.update({
     select: {
       id: true,
     }, where: {
-      id: draftId,
+      id: observationId,
     }, data: {
-      data: body,
-      userId: event.context.auth.id,
-      projectId: projectId,
+      ...patch,
+      updatedAt: new Date().toISOString(),
     }
   });
 
@@ -48,3 +53,16 @@ export default safeResponseHandler(async (event) => {
     msg: 'observation draft patched!'
   }
 })
+
+
+function removeKeysByUndefinedValue(
+  obj: Record<string, any>
+): Record<string, any> {
+  const result = {} as Record<string, any>;
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) {
+      result[key] = val;
+    }
+  }
+  return result;
+}

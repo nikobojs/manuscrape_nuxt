@@ -21,16 +21,12 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const data = await readBody(event);
-
-
-  // TODO: validate with zod?
-
   const result = await prisma.observation.create({
     data: {
-      data,
       userId: event.context.auth.id,
       projectId: projectId,
+      isDraft: true,
+      data: {}
     }
   });
 
