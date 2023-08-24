@@ -19,71 +19,87 @@ enum FieldOperator {
   SUM
 }
 
+enum ProjectRole {
+  FULL_ACCESS
+}
+
 model User {
-  id                Int                   @id @default(autoincrement())
-  email             String                @unique
-  password          String
-  createdAt         DateTime              @default(now()) @db.Timestamp(6)
-  projects          Project[]
-  observations      Observation[]
+  id                 Int                    @id @default(autoincrement())
+  email              String                 @unique
+  password           String
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  observations       Observation[]
+  ownedProjects      Project[]              @relation("author")
+  projectAccess      ProjectAccess[]        @relation("contributor")
+}
+
+model ProjectAccess {
+  role               ProjectRole            @default(value: FULL_ACCESS)
+  userId             Int
+  projectId          Int
+  user               User                   @relation("contributor", fields: [userId], references: [id], onDelete: NoAction)
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: NoAction)
+
+  @@id([projectId, userId])
 }
 
 model Project {
-  id                Int                   @id @default(autoincrement())
-  name              String
-  createdAt         DateTime              @default(now()) @db.Timestamp(6)
-  authorId          Int
-  author            User                  @relation(fields: [authorId], references: [id], onDelete: NoAction)
-  fields            ProjectField[]
-  dynamicFields     DynamicProjectField[]
-  observations      Observation[]
+  id                 Int                    @id @default(autoincrement())
+  name               String
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  authorId           Int
+  author             User                   @relation("author", fields: [authorId], references: [id], onDelete: NoAction)
+  fields             ProjectField[]
+  dynamicFields      DynamicProjectField[]
+  observations       Observation[]
+  contributors       ProjectAccess[]
 }
 
 model ProjectField {
-  id              Int                     @id @default(autoincrement())
-  createdAt       DateTime                @default(now()) @db.Timestamp(6)
-  label           String
-  projectId       Int
-  project         Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  type            FieldType
-  dynamicFields0s DynamicProjectField[]   @relation("field0_id")
-  dynamicFields1s DynamicProjectField[]   @relation("field1_id")
+  id                 Int                    @id @default(autoincrement())
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  label              String
+  projectId          Int
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type               FieldType
+  dynamicFields0s    DynamicProjectField[]  @relation("field0_id")
+  dynamicFields1s    DynamicProjectField[]  @relation("field1_id")
 }
 
 model DynamicProjectField {
-  id        Int                           @id @default(autoincrement())
-  createdAt DateTime                      @default(now()) @db.Timestamp(6)
-  label     String
-  projectId Int
-  project   Project                       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  operator  FieldOperator
-  field0Id  Int
-  field1Id  Int
-  field0    ProjectField                  @relation("field0_id", fields: [field0Id], references: [id])
-  field1    ProjectField                  @relation("field1_id", fields: [field1Id], references: [id])
+  id                 Int                    @id @default(autoincrement())
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  label              String
+  projectId          Int
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  operator           FieldOperator
+  field0Id           Int
+  field1Id           Int
+  field0             ProjectField           @relation("field0_id", fields: [field0Id], references: [id])
+  field1             ProjectField           @relation("field1_id", fields: [field1Id], references: [id])
 
   @@unique([field0Id, field1Id, operator])
 }
 
 model Observation {
-  id                Int                   @id @default(autoincrement())
-  createdAt         DateTime              @default(now()) @db.Timestamp(6)
-  updatedAt         DateTime              @default(now()) @db.Timestamp(6)
-  deletedAt         DateTime?
-  projectId         Int
-  project           Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  userId            Int
-  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  data              Json
-  observationImages ObservationImage[]
-  uploadInProgress  Boolean               @default(false)
-  isDraft           Boolean               @default(true)
+  id                 Int                    @id @default(autoincrement())
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime               @default(now()) @db.Timestamp(6)
+  deletedAt          DateTime?
+  projectId          Int
+  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId             Int
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data               Json
+  observationImages  ObservationImage[]
+  uploadInProgress   Boolean                @default(false)
+  isDraft            Boolean                @default(true)
 }
 
 model ObservationImage {
-  id            Int                       @id @default(autoincrement())
-  createdAt     DateTime                  @default(now()) @db.Timestamp(6)
-  observationId Int
-  observation   Observation               @relation(fields: [observationId], references: [id])
-  s3Path        String                    @unique
+  id                 Int                    @id @default(autoincrement())
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  observationId      Int
+  observation        Observation            @relation(fields: [observationId], references: [id])
+  s3Path             String                 @unique
 }
