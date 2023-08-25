@@ -18,6 +18,10 @@ export default defineNuxtConfig({
       s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
       s3Endpoint: process.env.S3_ENDPOINT || '',
       s3BucketName: process.env.S3_BUCKET_NAME || '',
+    },
+    public: {
+      s3Endpoint: process.env.S3_ENDPOINT || '',
+      baseUrl: process.env.BASE_URL || '',
     }
   },
   colorMode: {

@@ -1,9 +1,10 @@
 <template>
   <h3 class="text-lg mb-3">Observations:</h3>
-  <UTable :rows="props.project.observations"></UTable>
+  <UTable :rows="props.observations"></UTable>
 </template>
-<script setup>
+
+<script lang="ts" setup>
   const props = defineProps({
-    project: Object
+    observations: Object as PropType<FullObservation[]>,
   })
 </script>

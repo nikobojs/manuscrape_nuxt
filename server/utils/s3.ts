@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import fs from 'fs'
 
 const config = useRuntimeConfig()?.app || {};
@@ -45,4 +45,15 @@ export async function deleteS3Files(key: string) {
       Key: key,
     })
   )
+}
+
+export async function getS3Upload(key: string) {
+  const result = await s3.send(
+    new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    }),
+  );
+
+  return result;
 }

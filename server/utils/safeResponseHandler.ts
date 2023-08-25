@@ -1,3 +1,4 @@
+import { PrismaClientValidationError } from '@prisma/client/runtime/library'
 import type { EventHandler, H3Event } from 'h3'
 import { ValidationError } from 'yup'
 
@@ -9,25 +10,28 @@ export const safeResponseHandler = (handler: EventHandler) =>
       // do something after the route handler
       return response
     } catch (err) {
-      // Error handling
-      console.error('----------------  Safe response handler caught error! --------------')
-      console.error(err)
-      console.error('----------------     -     ---------------     -     ---------------');
-
       let msg = 'Unexpected server error';
-      let status = 500;
+      let status = event.res.statusCode === 200 ? 500 : event.res.statusCode;
+      let longMsg;
 
       if (err instanceof ValidationError) {
         msg = err.errors[0];
         status = 400;
+      } else if (err instanceof PrismaClientValidationError) {
+        status = 400;
+        msg = 'Database error. Your input values can probably not be written to database.';
+        longMsg = err.message
+      } else {
+        // Error handling
+        console.error('----------------  Safe response handler caught error! --------------')
+        console.error(err)
+        console.error('----------------     -     ---------------     -     ---------------');
       }
-
-      console.log('STATUS CODE:::::', event.res.statusCode)
-      // TODO: set correct status code (dont allow 2xx codes)
 
       throw createError({
         statusCode: status,
         statusMessage: msg,
+        message: longMsg || msg,
       });
     }
   })

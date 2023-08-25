@@ -24,5 +24,5 @@
 
   ensureHasOwnership(params?.projectId, projects.value);
   const project = requireProjectFromParams(params);
-  const observation = requireObservationFromParams(params, project.id);
+  const observation = await requireObservationFromParams(params);
 </script>

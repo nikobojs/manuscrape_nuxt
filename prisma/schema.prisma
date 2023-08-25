@@ -103,5 +103,5 @@ model ImageUpload {
   s3Path             String                 @unique
   mimetype           String
   originalName       String
-  observation        Observation?           
+  observation        Observation?
 }

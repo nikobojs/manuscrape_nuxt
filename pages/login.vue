@@ -59,8 +59,6 @@
     loading.value = true;
     setTimeout(() => {
       login(form.value.email, form.value.password).then(async (res) => {
-        console.log('GOT FOLLOWING RESPONSE:', res)
-        console.log('GOT FOLLOWING token:', res.token)
         if (res?.token) {
           window.location.href = '/';
         }

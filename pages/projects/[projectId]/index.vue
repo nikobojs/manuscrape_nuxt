@@ -2,7 +2,7 @@
   <UContainer>
     <h2 class="text-3xl mb-3">{{ project?.name }}</h2>
     <UCard class="mb-4">
-      <ObservationList :project="project" />
+      <ObservationList :observations="observations" />
       <div class="text-right">
         <UButton
           icon="i-heroicons-pencil-square"
@@ -17,24 +17,28 @@
 </template>
 
 <script lang="ts" setup>
-  const error = ref(null);
+  const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
-  await useUser();
+  const { refreshUser, user } = await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
-  const { createObservation } = await useObservations();
+  const { createObservation, refreshObservations, observations } = await useObservations();
 
   ensureHasOwnership(params?.projectId, projects.value);
 
   const project = requireProjectFromParams(params);
 
+  // TODO: optimize this to run through SSR
+  await refreshObservations(project.id);
+
   async function addObservationClick () {
     const res = await createObservation(project.id).catch(
       (err) => error.value = err?.message
-    );
-    if (res?.id) {
-      navigateTo(`/projects/${project.id}/observations/${res.id}`);
-    }
+    ).then((res) => {
+      if (res?.id) {
+        navigateTo(`/projects/${project.id}/observations/${res.id}`);
+      }
+    });
   }
 </script>

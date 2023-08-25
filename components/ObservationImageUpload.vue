@@ -5,19 +5,16 @@
     <div>
       <UForm ref="form" :state="state" @submit.prevent="submit">
         <input type="file" :on:change="onFilePicked" />
-        <UButton class="mt-4" type="submit">Upload image</UButton>
+        <UButton class="mt-4" type="submit" :disabled="!file">Upload image</UButton>
       </UForm>
     </div>
   </UCard>
 </template>
 
 <script lang="ts" setup>
-  import { Observation } from '@prisma/client';
-
-
   const props = defineProps({
     project: Object as PropType<FullProject>,
-    observation: Object as PropType<Observation>,
+    observation: Object as PropType<FullObservation>,
   });
 
 
@@ -27,8 +24,7 @@
   });
 
   const toast = useToast();
-  const { upsertObservationImage } = await useObservations();
-  const { refreshUser } = await useUser();
+  const { upsertObservationImage, refreshObservations } = await useObservations();
 
   const file = ref()
 
@@ -48,6 +44,14 @@
     if (!file.value) {
       throw new Error('Image file has not been selected');
     }
+
+    if (props.observation?.image) {
+      // TODO: create nice confirm box
+      const res = confirm('Are you sure you want to overwrite the existing file?');
+      if (!res) {
+        return;
+      }
+    }
   
     try {
       await form.value!.validate();
@@ -58,13 +62,13 @@
     try {
       if (props.observation && props.project) {
         await upsertObservationImage(
-          props.project?.id,
-          props.observation?.id,
+          props.project.id,
+          props.observation.id,
           file.value
         )
-        await refreshUser();
+        await refreshObservations(props.project.id);
         toast.add({
-          title: 'File was uploaded to observation',
+          title: 'Image saved on observation',
         });
       } else {
         throw new Error('Project or observation id was not found');

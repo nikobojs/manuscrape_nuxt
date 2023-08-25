@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
-import { ensureURLResourceAccess, getObservationsByProject } from '../utils/authorize';
-import { isOpenUrl, parseIntParam } from '../utils/request';
+import { ensureURLResourceAccess } from '../utils/authorize';
+import { isOpenUrl } from '../utils/request';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();

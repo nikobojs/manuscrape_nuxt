@@ -1,26 +1,56 @@
 import { RouteParams } from ".nuxt/vue-router";
-import { Observation } from "@prisma/client";
 
 export const useObservations = async () => {
-  const { getProjectById } = await useProjects();
+  const observations = useState<FullObservation[]>('observations', () => []);
+  const projectId = useState<number | null>('currentProjectId', () => null);
+  const hasRefreshedOnce = ref(false)
 
-  const getObservationById = (
-    projectId: number,
-    observationId: number | string | string[]
-  ): Observation => {
-    observationId = requireNumber(observationId, 'observationId');
-    const project = getProjectById(projectId);
-    const obs = project?.observations?.find?.(o => o.id == observationId);
+  const {
+    refresh: _refreshObservations,
+    pending: loading,
+  } = await useFetch<FullObservation[]>(
+    () => `/api/projects/${projectId.value}/observations`,
+    {
+      method: 'GET',
+      immediate: false,
+      server: true,
+      onResponse: async (context) => {
+        if (context.response.status === 200) {
+          observations.value = context.response._data?.observations;
+        } else if (context.response.status === 401) {
+          observations.value = [];
+          await navigateTo('/login', { replace: true })
+        }
+      },
+      onResponseError: async (context) => {
+        if (context.response.status === 401) {
+          observations.value = [];
+          await navigateTo('/login', { replace: true })
+        }
+      }
+    }
+  );
+
+  const refreshObservations = async (_projectId: number) => {
+    projectId.value = _projectId;
+    hasRefreshedOnce.value = true
+    await _refreshObservations();
+  }
+
+  const getObservationById = async (
+    obsId: number | string | string[] | null
+  ): Promise<FullObservation> => {
+    obsId = requireNumber(obsId, 'observationId');
+    const obs = observations.value?.find?.(o => o.id == obsId);
     if (!obs) {
       throw createError({
         statusCode: 404,
         statusMessage: 'Observation could not be found'
       })
     } else {
-      return obs;
+      return obs as FullObservation;
     }
   }
-
 
   const createObservation = async (
     projectId: number,
@@ -28,35 +58,30 @@ export const useObservations = async () => {
     return $fetch(`/api/projects/${projectId}/observations`, {
       method: 'POST',
       headers: {
-          'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       }
     }).catch(err => {
       console.error('create observation err:', err);
       throw err;
-    }).then(async (response) => {
-      await refreshUser();
-      return response;
     })
   };
 
   const patchObservation = async (
     projectId: number,
-    observationId: number,
+    obsId: number,
     data: any,
   ) => {
-    return $fetch(`/api/projects/${projectId}/observations/${observationId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-      headers: {
+    const res = await $fetch(
+      `/api/projects/${projectId}/observations/${obsId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+        headers: {
           'Content-Type': 'application/json'
+        },
       }
-    }).catch(err => {
-      console.error('create observation err:', err);
-      throw err;
-    }).then(async (response) => {
-      await refreshUser();
-      return response;
-    })
+    );
+    await refreshObservations(projectId);
   }
 
   const upsertObservationImage = async (
@@ -76,20 +101,24 @@ export const useObservations = async () => {
       );
 
       console.log('UPLOAD IMAGE RESPONSE WAS:', uploadRes)
-
-      const userRes = await refreshUser();
-      return userRes;
-
+      if (uploadRes.status.value !== 'success') {
+        throw new Error('It seems that the fileupload failed :(')
+      }
     } catch(err: any) {
       console.error('upload image to observation err:', err);
       throw err;
     }
   }
 
-  const requireObservationFromParams = (params: RouteParams, projectId: number) => {
-    const observationId = requireNumber(params?.observationId, 'observationId');
-    const p = getObservationById(observationId, projectId);
-    return p;
+
+  const requireObservationFromParams = async (params: RouteParams): Promise<FullObservation> => {
+    const _observationId = requireNumber(params?.observationId, 'observationId');
+    const _projectId = requireNumber(params?.projectId, 'projectId');
+    if (!hasRefreshedOnce.value || projectId.value !== _projectId) {
+      await refreshObservations(_projectId);
+    }
+
+    return getObservationById(_observationId);
   }
 
   return {
@@ -98,9 +127,8 @@ export const useObservations = async () => {
     patchObservation,
     createObservation,
     getObservationById,
+    refreshObservations,
+    observations,
+    loading,
   }
 };
-
-function refreshUser() {
-  throw new Error("Function not implemented.");
-}

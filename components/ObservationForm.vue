@@ -171,7 +171,7 @@
       const res = await patchObservation(
         props.project.id,
         props.observation?.id,
-        state.value
+        { data: state.value }
       );
 
       // TODO: make this more safe
@@ -180,7 +180,7 @@
           title: 'Observation metadata was saved.'
         });
       }
-      navigateTo(`/projects/${props.project.id}/observation/${props.observation.id}/uploadImage`);
+      navigateTo(`/projects/${props.project.id}/observations/${props.observation.id}/uploadImage`);
     } else {
       throw createError({
         statusCode: 500,
