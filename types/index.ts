@@ -1,4 +1,4 @@
-import { UInput } from ".nuxt/components";
+import { UInput } from "#build/components";
 import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
 
@@ -10,11 +10,11 @@ declare global {
     }
 
     interface ExtendedProjectAccess extends Omit<ProjectAccess, 'userId'> {
-        project: Project,
+        project: Project;
     }
 
     interface FullObservation extends Observation {
-        image: ImageUpload,
+        image: ImageUpload;
     }
 
     interface FullProject extends Project {
@@ -56,11 +56,16 @@ declare global {
     }
 
     interface UserInSession {
-    id: number;
-    projectAccess: {
-        projectId: number,
-        role: ProjectRole
-    }[]
+        id: number;
+        projectAccess: {
+            projectId: number;
+            role: ProjectRole;
+        }[]
+    }
+
+    interface Breadcrumb {
+        url: string;
+        text: string;
     }
 
 }

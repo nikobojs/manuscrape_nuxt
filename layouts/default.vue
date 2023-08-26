@@ -1,7 +1,8 @@
 <template>
   <div>
-    <AppHeader />
-    <main class="mt-20">
+    <AppHeader v-if="!hideNav" />
+    <Breadcrumb v-if="!hideNav" />
+    <main class="mt-9">
       <slot />
     </main>
     <AppFooter />
@@ -13,5 +14,7 @@
   const colorMode = useColorMode();
   colorMode.value = 'dark'
   colorMode.forced = true
+  const route = useRoute();
+  const hideNav = route.query['electron'] == '1';
   await useAuth();
 </script>

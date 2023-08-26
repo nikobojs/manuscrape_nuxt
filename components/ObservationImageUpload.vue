@@ -15,6 +15,7 @@
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
+    onSubmit: Function as PropType<Function>,
   });
 
 
@@ -70,6 +71,7 @@
         toast.add({
           title: 'Image saved on observation',
         });
+        props.onSubmit?.();
       } else {
         throw new Error('Project or observation id was not found');
       }

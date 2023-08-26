@@ -1,16 +1,10 @@
 <template>
   <UContainer>
-    <h3 class="text-2xl">Create observation in "{{project.name}}"</h3>
-    <div class="text-sm mb-4">STEP 1 OF 3</div>
-    <div class="grid grid-cols-4">
-      <ObservationForm
-        class="col-span-1"
-        v-if="observation"
-        :project="project"
-        :observation="observation"
-      />
-      <div class="col-span-3"></div>
-    </div>
+    <ObservationForm
+      :project="project"
+      :observation="observation"
+      :onObservationPublished="onSubmit"
+    />
   </UContainer>
 </template>
 
@@ -20,9 +14,22 @@
   await ensureLoggedIn();
   const { params } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
-  const { requireObservationFromParams } = await useObservations();
-
+  const { requireObservationFromParams, observations, publishObservation } = await useObservations();
   ensureHasOwnership(params?.projectId, projects.value);
   const project = requireProjectFromParams(params);
-  const observation = await requireObservationFromParams(params);
+  const _observation = await requireObservationFromParams(params);
+  const observation = ref(_observation);
+
+  watch(() => observations, async () => {
+    const _observation = await requireObservationFromParams(params);
+    observation.value = _observation;
+  }, { deep: true });
+
+  async function onSubmit() {
+    if (runsInElectron()) {
+      window.electronAPI.observationCreated?.();
+    } else {
+      navigateTo(`/projects/${project.id}`);
+    }
+  }
 </script>

@@ -1,4 +1,4 @@
-import { RouteParams } from ".nuxt/vue-router";
+import type { RouteParams } from "vue-router";
 
 export const useObservations = async () => {
   const observations = useState<FullObservation[]>('observations', () => []);
@@ -82,7 +82,17 @@ export const useObservations = async () => {
       }
     );
     await refreshObservations(projectId);
+    return res;
   }
+
+  const publishObservation = (
+    projectId: number,
+    obsId: number,
+  ) => patchObservation(
+    projectId,
+    obsId,
+    { isDraft: false }
+  );
 
   const upsertObservationImage = async (
     projectId: number,
@@ -100,7 +110,6 @@ export const useObservations = async () => {
         }),
       );
 
-      console.log('UPLOAD IMAGE RESPONSE WAS:', uploadRes)
       if (uploadRes.status.value !== 'success') {
         throw new Error('It seems that the fileupload failed :(')
       }
@@ -130,5 +139,6 @@ export const useObservations = async () => {
     refreshObservations,
     observations,
     loading,
+    publishObservation,
   }
 };

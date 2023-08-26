@@ -2,16 +2,19 @@
   <UContainer>
     <h2 class="text-3xl mb-3">{{ project?.name }}</h2>
     <UCard class="mb-4">
-      <ObservationList :observations="observations" />
-      <div class="text-right">
-        <UButton
-          icon="i-heroicons-pencil-square"
-          variant="outline"
-          @click="addObservationClick"
-        >
-          Add observation
-        </UButton>
+      <div class="flex justify-between w-full">
+        <h3 class="text-lg mb-3">Observations</h3>
+        <div class="text-right">
+          <UButton
+            icon="i-heroicons-pencil-square"
+            variant="outline"
+            @click="addObservationClick"
+          >
+            Add observation
+          </UButton>
+        </div>
       </div>
+      <ObservationList :observations="observations" :project="project" />
     </UCard>
   </UContainer>
 </template>
