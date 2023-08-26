@@ -1,8 +1,8 @@
 <template>
   <div v-if="step === 0">
-    <h3 class="text-2xl">Create observation in "{{project?.name}}"</h3>
+    <h3 class="text-2xl">Create observation</h3>
     <div class="text-sm mb-4">STEP 1 OF 3</div>
-    <div class="grid grid-cols-4">
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 sm:grid-cols-1 grid-cols-1">
       <ObservationDataForm
         class="col-span-1"
         v-if="observation"
@@ -14,9 +14,9 @@
     </div>
   </div>
   <div v-if="step === 1">
-    <h3 class="text-2xl">Upload raw png image:</h3>
-    <div class="text-sm mb-4">STEP 2 OF 3 (can be skipped using <a href="https;//github.com/nikobojs/manuscrape_electron">manuscrape_electron</a>)</div>
-    <div class="grid grid-cols-4" v-if="observation">
+    <h3 class="text-2xl">Upload image</h3>
+    <div class="text-sm mb-4">STEP 2 OF 3</div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 sm:grid-cols-1 grid-cols-1 gap-y-10" v-if="observation">
       <ObservationImageUpload
         class="col-span-1"
         :project="project"
@@ -24,11 +24,10 @@
         :onSubmit="onImageUploaded"
       />
       <ObservationImageView
-        class="col-span-2"
+        class="col-span-1"
         :project="project"
         :observation="observation"
       />
-      <div class="col-span-3"></div>
     </div>
   </div>
 </template>
