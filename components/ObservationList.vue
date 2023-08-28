@@ -10,15 +10,26 @@
       <span>{{ row.user.email }}</span>
     </template>
     <template #actions-data="{ row }">
-      <div class="w-full text-right">
+      <div class="w-full justify-end flex gap-x-3">
+        <div
+          v-if="typeof row.imageId === 'number'"
+          @click="() => openObservationImage(row)"
+        >
+          <span class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
+        </div>
         <NuxtLink
           :href="`/projects/${project?.id}/observations/${row.id}`"  
         >
-          <span class="i-heroicons-arrow-top-right-on-square text-lg -mt-1 -mb-1"></span>
+          <span class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"></span>
         </NuxtLink>
       </div>
     </template>
   </UTable>
+  <UModal v-model="openImageDialog" on>
+    <div v-if="(typeof selectedObservation?.id === 'number') && (typeof project?.id === 'number')">
+      <img :src="`/api/projects/${project.id}/observations/${selectedObservation.id}/image`" />
+    </div>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
@@ -45,8 +56,22 @@
       class: 'text-right'
     },
   ];
+
+  const openImageDialog = ref<boolean>(false);
+  const selectedObservation = ref<null | FullObservation>(null);
+
   const props = defineProps({
     observations: Object as PropType<FullObservation[]>,
     project: Object as PropType<FullProject>,
-  })
+  });
+
+  function openObservationImage(row: any) {
+    if (typeof row?.imageId !== 'number') {
+      throw new Error('Image id is not a number')
+    } else {
+      selectedObservation.value = row;
+      openImageDialog.value = true;
+    }
+    console.log('OPEN OBSERVATION IMAGE FOR', row)
+  }
 </script>
