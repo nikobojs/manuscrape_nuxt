@@ -1,5 +1,6 @@
 export const runsInElectron = (): boolean => {
-  const electronUserAgent = navigator.userAgent.indexOf('Electron') != -1;
+  if (!process.client) return false;
+  const electronUserAgent = window.navigator.userAgent.indexOf('Electron') != -1;
   const electronAPI = !!window.electronAPI;
 
   if (electronUserAgent !== electronAPI) {
