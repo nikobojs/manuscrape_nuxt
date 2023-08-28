@@ -42,7 +42,12 @@ export default safeResponseHandler(async (event) => {
   const [_fields, files] = await form.parse(event.req)
   
   // validate file was sent and save into variable 'file'
-  if (!Object.keys(files).includes('file') || files['file'].length !== 1) {
+  if (!Object.keys(files).includes('file')) {
+    return createError({
+      statusCode: 400,
+      statusMessage: 'No file was sent'
+    })
+  } else if (files['file'].length !== 1) {
     return createError({
       statusCode: 400,
       statusMessage: 'Only one file is allowed'
