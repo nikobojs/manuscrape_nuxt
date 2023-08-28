@@ -6,6 +6,9 @@
     <template #createdAt-data="{ row }">
       <span>{{ prettyDate(row.createdAt) }}</span>
     </template>
+    <template #user-data="{ row }">
+      <span>{{ row.user.email }}</span>
+    </template>
     <template #actions-data="{ row }">
       <div class="w-full text-right">
         <NuxtLink
@@ -28,7 +31,7 @@
     {
       label: 'Created by',
       sortable: true,
-      key: 'user.email',
+      key: 'user',
     },
     {
       label: 'Draft',

@@ -30,6 +30,11 @@ export default safeResponseHandler(async (event) => {
           mimetype: true,
           originalName: true,
         }
+      },
+      user: {
+        select: {
+          email: true
+        }
       }
     }
   });
