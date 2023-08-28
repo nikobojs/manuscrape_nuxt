@@ -42,6 +42,11 @@
     // remove empty items from split
     split = split.filter((x) => !!x);
 
+    // remove query params
+    if (split.length) {
+      split[split.length - 1] = split[split.length - 1].split('?')[0]
+    }
+
     // set initial url (used in loop)
     let url = '/';
 
