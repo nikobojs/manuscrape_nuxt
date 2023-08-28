@@ -8,7 +8,7 @@
         v-if="observation"
         :project="project"
         :observation="observation"
-        :onSubmit="() => gotoStep(1)"
+        :onSubmit="onDataSubmitted"
       />
       <div class="col-span-3"></div>
     </div>
@@ -22,11 +22,13 @@
         :project="project"
         :observation="observation"
         :onSubmit="onImageUploaded"
+        :uploadInProgress="uploadInProgress"
       />
       <ObservationImageView
         class="col-span-1"
         :project="project"
         :observation="observation"
+        :uploadInProgress="uploadInProgress"
       />
     </div>
   </div>
@@ -38,10 +40,20 @@
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
-    onObservationPublished: Function as PropType<Function>
+    onObservationPublished: Function as PropType<Function>,
+    uploadInProgress: Boolean as PropType<Boolean>,
   });
 
+  const route = useRoute();
+  const metadataDone = ref(false)
   const step = ref(0);
+
+  async function onDataSubmitted() {
+    metadataDone.value = true;
+    await new Promise((r) => setTimeout(r, 150));
+    gotoStep(1);
+  }
+
   function gotoStep(n: number) {
     step.value = n;
   }
@@ -59,5 +71,22 @@
       props.onObservationPublished?.();
     }
   }
+
+  // listen if image was automatically uploaded and the rest is done
+  watch([
+    () => props.uploadInProgress,
+    () => route.query.uploading,
+    () => metadataDone.value
+  ], () => {
+    if (
+      runsInElectron() &&
+      props.uploadInProgress === false &&
+      route.query.uploading === '1' &&
+      metadataDone.value === true
+    ) {
+      onImageUploaded();
+    }
+
+  }, { deep: true, immediate: true })
 
 </script>

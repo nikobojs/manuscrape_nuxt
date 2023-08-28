@@ -1,8 +1,8 @@
 
 <template>
-  <UCard>
+  <UCard v-if="!uploadInProgress">
     <div class="mb-4 font-bold">Observation metadata</div>
-    <div>
+    <div v-if="!uploadInProgress">
       <UForm ref="form" :state="state" @submit.prevent="submit">
         <input type="file" :on:change="onFilePicked" />
         <UButton class="mt-4" type="submit" :disabled="!file">Upload image</UButton>
@@ -16,6 +16,7 @@
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<Function>,
+    uploadInProgress: Boolean as PropType<Boolean>,
   });
 
 
@@ -39,6 +40,17 @@
 
     file.value = event.target.files[0] as File;
   }
+
+  onMounted(() => {
+    if (props.uploadInProgress) {
+      setTimeout(() => {
+        toast.add({
+          title: 'Uploading takes longer than usual',
+          description: 'This could indicate something went wrong :('
+        });
+      }, 20000)
+    }
+  })
 
 
   async function submit() {
@@ -79,6 +91,5 @@
       console.log('Upload image submit error:', err);
       throw err;
     }
-    
   }
 </script>

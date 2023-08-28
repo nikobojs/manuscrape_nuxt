@@ -3,8 +3,11 @@
     <div v-if="imageSrc">
       <img :src="imageSrc" />
     </div>
-    <div v-if="!imageSrc">
+    <div v-if="!imageSrc && !uploadInProgress">
       Observation has no image
+    </div>
+    <div v-if="uploadInProgress">
+      Processing and uploading picture...
     </div>
   </div>
 </template>
@@ -13,6 +16,7 @@
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
+    uploadInProgress: Boolean as PropType<Boolean>,
   });
 
   const { public: config } = useRuntimeConfig();
