@@ -1,6 +1,6 @@
 <template>
   <UContainer>
-    <ObservationForm
+    <ObservationFormContainer
       :project="project"
       :observation="observation"
       :onObservationPublished="onSubmit"

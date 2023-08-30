@@ -1,25 +1,31 @@
 <template>
-  <div>
-    <div v-if="imageSrc">
-      <img :src="imageSrc" />
-    </div>
-    <div v-if="!imageSrc && !uploadInProgress">
-      Observation has no image
-    </div>
-    <div v-if="uploadInProgress">
-      Processing and uploading picture...
-    </div>
-  </div>
+  <UModal
+    v-bind:model-value="open"
+    v-on:close="closeObservationImage"
+  >
+      <div v-if="imageSrc">
+        <img :src="imageSrc" />
+      </div>
+      <div v-if="!imageSrc">
+        Observation has no image
+      </div>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
-    uploadInProgress: Boolean as PropType<Boolean>,
+    open: Boolean as PropType<boolean>,
+    onClose: Function as PropType<() => void>,
   });
 
   const { public: config } = useRuntimeConfig();
+
+  function closeObservationImage() {
+    props.onClose?.();
+  }
+
   
   function getImageSrc(observation: FullObservation) {
     let result;

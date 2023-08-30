@@ -25,11 +25,13 @@
       </div>
     </template>
   </UTable>
-  <UModal v-model="openImageDialog" on>
-    <div v-if="(typeof selectedObservation?.id === 'number') && (typeof project?.id === 'number')">
-      <img :src="`/api/projects/${project.id}/observations/${selectedObservation.id}/image`" />
-    </div>
-  </UModal>
+  <ObservationImageDialog
+    v-if="selectedObservation"
+    :open="openImageDialog"
+    :observation="selectedObservation"
+    :project="project"
+    :on-close="() => openImageDialog = false"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -72,6 +74,5 @@
       selectedObservation.value = row;
       openImageDialog.value = true;
     }
-    console.log('OPEN OBSERVATION IMAGE FOR', row)
   }
 </script>

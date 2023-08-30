@@ -2,8 +2,9 @@
   <UContainer>
     <h2 class="text-3xl mb-3">{{ project?.name }}</h2>
     <UCard class="mb-4">
-      <div class="flex justify-between w-full">
-        <h3 class="text-lg mb-3">Observations</h3>
+      <template #header>
+      <div class="flex items-center justify-between w-full">
+        Observations
         <div class="text-right">
           <UButton
             icon="i-heroicons-pencil-square"
@@ -14,6 +15,7 @@
           </UButton>
         </div>
       </div>
+      </template>
       <ObservationList :observations="observations" :project="project" />
     </UCard>
   </UContainer>
@@ -22,7 +24,6 @@
 <script lang="ts" setup>
   const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
-  const { refreshUser, user } = await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
