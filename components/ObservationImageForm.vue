@@ -85,6 +85,8 @@
     }
   }
 
+  const pageOpened = ref(new Date());
+
   // TODO: improve error handling and implement for ordinary file upload
   onMounted(() => {
     const pageLoadedAt = new Date();
@@ -104,7 +106,9 @@
         if (!props.project?.id) throw new Error('Project is not defined');
         await refreshObservations(props.project.id);
         if (props.observation?.image?.createdAt) {
-          if (new Date(props.observation.image.createdAt) > pageLoadedAt) {
+          const createdAt = new Date(props.observation.image.createdAt)
+          console.log({ createdAt, pageLoadedAt, pageOpened: pageOpened.value })
+          if (createdAt.getTime() > (pageOpened.value.getTime() - 500)) {
             router.replace({ query: { uploading: 0, electron: route.query.electron || 0 } })
             clearInterval(uploadChecker.value);
             clearTimeout(timeout);

@@ -1,15 +1,14 @@
 <template>
   <div
-    class="grid md:grid-cols-2 lg:grid-cols-3 sm:grid-cols-1 grid-cols-1 gap-y-4 gap-x-4"
+    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-y-4 gap-x-4"
     v-if="observation"
   >
-    <UCard class="col-span-2">
+    <UCard>
       <template #header>
         Insert metadata
         <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="metadataDone"></span>
       </template>
       <ObservationForm
-        class="col-span-1"
         v-if="observation"
         :project="project"
         :observation="observation"
@@ -17,7 +16,7 @@
       />
     </UCard>
 
-    <UCard class="col-span-1">
+    <UCard>
       <template #header>
           Upload image
           <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="imageUploaded"></span>
@@ -49,19 +48,15 @@
   });
 
   const route = useRoute();
-  const metadataDone = ref(!!props.observation?.data && !!Object.keys(props.observation.data).length);
-  const imageUploaded = ref(!!props.observation?.image);
+  const metadataDone = computed(() => !!props.observation?.data && !!Object.keys(props.observation.data).length);
+  const imageUploaded = computed(() => !!props.observation?.image);
 
   async function onDataSubmitted() {
-    metadataDone.value = true;
-    // TODO: make this more safe
     if (!runsInElectron()) {
       toast.add({
         title: 'Observation data was saved.'
       });
     }
-    
-    await new Promise((r) => setTimeout(r, 150));
   }
 
   async function onImageUploaded() {
@@ -75,7 +70,6 @@
       toast.add({
         title: 'Image uploaded successfully',
       });
-      imageUploaded.value = true;
     }
   }
 
