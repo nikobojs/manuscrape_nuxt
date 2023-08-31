@@ -3,21 +3,22 @@
   <div v-if="!uploadInProgress">
     <label class="block">
       <UInput class="hidden" type="file" :on:change="onFilePicked" />
-      <div class="text-sm" v-if="!file">
+      <div class="text-sm">
         <div class="underline text-green-500 cursor-pointer">
           {{ observation?.imageId ? 'Change image' : 'Choose image' }}
         </div>
       </div>
     </label>
-    <div v-if="!file && uploaded">
-      <div>Existing image:</div>
-      <ObservationImage" :image="uploaded" />
-    </div>
-    <div v-if="file">
-      <div>Edit image:</div>
-      <ObservationCanvas
-        :image="file"
-        :on-save="() => onImageSaved(!uploaded)"
+    <div v-if="uploaded">
+      <div v-if="observation?.imageId" class="text-sm underline text-green-500 cursor-pointer">
+        Edit image
+      </div>
+      <ObservationImageThumbnail
+        class="mt-6 mb-4"
+        :image="uploaded"
+        :observation="observation"
+        :project="project"
+        :last-update="lastImageUpdate"
       />
     </div>
   </div>
@@ -32,17 +33,21 @@
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
-    uploadInProgress: Boolean as PropType<Boolean>,
   });
 
   const toast = useToast();
-
+  const { upsertObservationImage, refreshObservations } = await useObservations();
   const file = ref<File | undefined>();
-  const uploaded = computed(() => props.observation?.image.id)
-
-  async function onImageSaved(isFirstImage: boolean) {
-    props?.onSubmit?.(isFirstImage);
-  }
+  const uploadChecker = ref();
+  const route = useRoute();
+  const router = useRouter();
+  const uploaded = computed(() => props.observation?.image)
+  const uploadInProgress = computed(() => route.query.uploading === '1');
+  const lastImageUpdate = computed(() => {
+    return (
+      props?.observation?.image?.createdAt && new Date(props.observation.image.createdAt)
+    ) || undefined;
+  });
 
   async function onFilePicked(event: any) {
     const files = event?.target?.files || [];
@@ -55,27 +60,58 @@
     if (props.observation?.image) {
       // TODO: create nice confirm box
       const res = confirm('Are you sure you want to overwrite the existing image?');
-      console.log({ res })
       if (!res) {
         return;
       }
     }
 
     file.value = event.target.files[0] as File;
+    try {
+      if (props.observation && props.project) {
+        await upsertObservationImage(
+          props.project.id,
+          props.observation.id,
+          file.value
+        )
+        const isFirstImage = !!uploaded.value
+        await refreshObservations(props.project.id);
+        props.onSubmit?.(isFirstImage);
+      } else {
+        throw new Error('Project or observation id was not found');
+      }
+    } catch(err) {
+      console.error('Upload image submit error:', err);
+      throw err;
+    }
   }
 
-  // handle timeout on image upload
   // TODO: improve error handling and implement for ordinary file upload
   onMounted(() => {
-    if (props.uploadInProgress) {
-      setTimeout(() => {
-        if (props.uploadInProgress) {
+    const pageLoadedAt = new Date();
+    if (uploadInProgress.value) {
+      // handle timeout on image upload
+      const timeout = setTimeout(() => {
+        if (uploadInProgress) {
           toast.add({
             title: 'Uploading takes longer than usual',
             description: 'This could indicate something went wrong :('
           });
         }
       }, 20000);
+
+      // check and handle if image was uploaded
+      uploadChecker.value = setInterval(async () => {
+        if (!props.project?.id) throw new Error('Project is not defined');
+        await refreshObservations(props.project.id);
+        if (props.observation?.image?.createdAt) {
+          if (new Date(props.observation.image.createdAt) > pageLoadedAt) {
+            router.replace({ query: { uploading: 0, electron: route.query.electron || 0 } })
+            clearInterval(uploadChecker.value);
+            clearTimeout(timeout);
+            uploadChecker.value = null;
+          }
+        }
+      }, 2000);
     }
-  })
+  });
 </script>

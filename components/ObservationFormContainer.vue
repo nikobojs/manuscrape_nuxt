@@ -3,9 +3,10 @@
     class="grid md:grid-cols-2 lg:grid-cols-3 sm:grid-cols-1 grid-cols-1 gap-y-4 gap-x-4"
     v-if="observation"
   >
-    <UCard>
+    <UCard class="col-span-2">
       <template #header>
         Insert metadata
+        <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="metadataDone"></span>
       </template>
       <ObservationForm
         class="col-span-1"
@@ -14,12 +15,12 @@
         :observation="observation"
         :onSubmit="onDataSubmitted"
       />
-      <span class="pl-1 i-heroicons-check text-lg text-green-500" v-if="imageUploaded"></span>
     </UCard>
 
-    <UCard class="col-span-2">
+    <UCard class="col-span-1">
       <template #header>
           Upload image
+          <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="imageUploaded"></span>
       </template>
       <ObservationImageForm
         :project="project"
@@ -34,13 +35,6 @@
         Add observation
       </UButton>
     </div>
-
-    <ObservationImageDialog
-      :project="project"
-      :observation="observation"
-      :open="openImageDialog"
-      :on-close="() => openImageDialog = false"
-    />
   </div>
 </template>
 
@@ -55,9 +49,8 @@
   });
 
   const route = useRoute();
-  const metadataDone = ref(false)
+  const metadataDone = ref(!!props.observation?.data && !!Object.keys(props.observation.data).length);
   const imageUploaded = ref(!!props.observation?.image);
-  const openImageDialog = ref(false);
 
   async function onDataSubmitted() {
     metadataDone.value = true;
@@ -106,6 +99,7 @@
       route.query.uploading === '1' &&
       metadataDone.value === true
     ) {
+      delete route.query.uploading;
       onImageUploaded();
     }
 

@@ -24,11 +24,11 @@
 <script lang="ts" setup>
   const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
-  await ensureLoggedIn();
-  const { params } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
   const { createObservation, refreshObservations, observations } = await useObservations();
+  const { params } = useRoute();
 
+  await ensureLoggedIn();
   ensureHasOwnership(params?.projectId, projects.value);
 
   const project = requireProjectFromParams(params);

@@ -18,6 +18,7 @@
     observation: Object as PropType<FullObservation>,
     open: Boolean as PropType<boolean>,
     onClose: Function as PropType<() => void>,
+    lastUpdate: Date as PropType<Date>,
   });
 
   const { public: config } = useRuntimeConfig();
@@ -27,11 +28,11 @@
   }
 
   
-  function getImageSrc(observation: FullObservation) {
+  function getImageSrc(observation: FullObservation, lastUpdate: Date) {
     let result;
 
     if (observation && observation?.image?.id && props.project) {
-      result = `${config.baseUrl}/api/projects/${props.project.id}/observations/${observation.id}/image?now=${new Date().getTime()}`;
+      result = `${config.baseUrl}/api/projects/${props.project.id}/observations/${observation.id}/image?now=${lastUpdate.getTime()}`;
     }
 
     return result;
@@ -41,7 +42,7 @@
     if (!props.observation) {
       throw new Error('No observation')
     }
-    const src = getImageSrc(props.observation)
+    const src = getImageSrc(props.observation, new Date());
     return src;
   })
 </script>
