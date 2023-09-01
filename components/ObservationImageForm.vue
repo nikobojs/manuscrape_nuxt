@@ -36,13 +36,14 @@
   });
 
   const toast = useToast();
-  const { upsertObservationImage, refreshObservations } = await useObservations();
+  const { upsertObservationImage, refreshObservations, getObservationById } = await useObservations();
   const file = ref<File | undefined>();
   const uploadChecker = ref();
   const route = useRoute();
   const router = useRouter();
   const uploaded = computed(() => props.observation?.image)
   const uploadInProgress = computed(() => route.query.uploading === '1');
+  const timeout = ref<NodeJS.Timeout | null>(null);
   const lastImageUpdate = computed(() => {
     return (
       props?.observation?.image?.createdAt && new Date(props.observation.image.createdAt)
@@ -87,11 +88,45 @@
 
   const pageOpened = ref(new Date());
 
+  async function handleWhenDoneUploading(): Promise<void> {
+    if (!props.project?.id) throw new Error('Project is not defined');
+    await refreshObservations(props.project.id);
+    setTimeout(async () => {
+      const done = await checkIfDoneUploading();
+      if (done) {
+        router.replace({ query: { uploading: 0, electron: route.query.electron || 0 } })
+        clearInterval(uploadChecker.value);
+        timeout.value !== null && clearTimeout(timeout.value);
+        uploadChecker.value = null;
+      }
+    }, 10);
+  }
+
+  // returns whether we are done waiting for an upload in progress
+  async function checkIfDoneUploading(): Promise<boolean> {
+    if (!props.observation?.id) throw new Error('Observation is not defined');
+    const obs = await getObservationById(props.observation.id);
+
+    if (obs?.image?.createdAt) {
+      const createdAt = new Date(obs.image.createdAt)
+      if (createdAt.getTime() > (pageOpened.value.getTime() - 4500)) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
   // TODO: improve error handling and implement for ordinary file upload
-  onMounted(() => {
-    if (uploadInProgress.value) {
+  onMounted(async () => {
+    const alreadyUploaded = await checkIfDoneUploading();
+    if (alreadyUploaded) {
+      await handleWhenDoneUploading();
+    } else if (uploadInProgress.value) {
       // handle timeout on image upload
-      const timeout = setTimeout(() => {
+      timeout.value = setTimeout(() => {
         if (uploadInProgress) {
           toast.add({
             title: 'Uploading takes longer than usual',
@@ -101,19 +136,7 @@
       }, 20000);
 
       // check and handle if image was uploaded
-      uploadChecker.value = setInterval(async () => {
-        if (!props.project?.id) throw new Error('Project is not defined');
-        await refreshObservations(props.project.id);
-        if (props.observation?.image?.createdAt) {
-          const createdAt = new Date(props.observation.image.createdAt)
-          if (createdAt.getTime() > (pageOpened.value.getTime() - 3000)) {
-            router.replace({ query: { uploading: 0, electron: route.query.electron || 0 } })
-            clearInterval(uploadChecker.value);
-            clearTimeout(timeout);
-            uploadChecker.value = null;
-          }
-        }
-      }, 2000);
+      uploadChecker.value = setInterval(handleWhenDoneUploading, 2000);
     }
   });
 </script>
