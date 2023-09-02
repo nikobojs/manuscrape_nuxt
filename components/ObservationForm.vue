@@ -12,7 +12,6 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
-  import { FieldType } from '@prisma/client';
   import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
 
   const form = ref();
@@ -25,6 +24,13 @@
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<Function>,
   });
+
+  enum FieldType {
+    DATE = 'DATE',
+    STRING = 'STRING',
+    INT = 'INT',
+    FLOAT = 'FLOAT',
+  }
 
   const inputTypes: Record<FieldType, string> = Object.freeze({
     [FieldType.DATE]: 'datetime-local',
@@ -76,9 +82,10 @@
       }
 
       // validate numbers
+      const typ = field.type;
       if (
-        field.type == FieldType.FLOAT ||
-        field.type == FieldType.INT
+        typ == FieldType.FLOAT ||
+        typ == FieldType.INT
       ) {
         const valueFloat = parseFloat(''+value);
         if (isNaN(valueFloat)) {
@@ -89,7 +96,7 @@
       // validate strings
       // TODO: check if field is required or optional
       if (
-        field.type == FieldType.STRING
+        typ == FieldType.STRING
       ) {
         if ((''+value).length === 0) {
           errors.push({ path: key, message: 'Text field is required'})
@@ -100,7 +107,7 @@
       // NOTE: only acceps dates in ISO string
       // TODO: check if field is required or optional
       if (
-        field.type == FieldType.DATE
+        typ == FieldType.DATE
       ) {
         const valueDate = new Date(''+value);
         if (isNaN(valueDate.getTime())) {
@@ -133,14 +140,15 @@
         type: inputTypes[FieldType.STRING],
       };
 
-      if (field.type == FieldType.FLOAT) {
+      const typ = field.type;
+      if (typ == FieldType.FLOAT) {
         inputArgs.type = inputTypes[FieldType.FLOAT]
         inputArgs.step = 0.1;
-      } else if (field.type == FieldType.INT) {
+      } else if (typ == FieldType.INT) {
         inputArgs.type = inputTypes[FieldType.INT]
-      } else if (field.type == FieldType.DATE) {
+      } else if (typ == FieldType.DATE) {
         inputArgs.type = inputTypes[FieldType.DATE]
-      } else if (field.type != FieldType.STRING) {
+      } else if (typ != FieldType.STRING) {
         throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
       }
 

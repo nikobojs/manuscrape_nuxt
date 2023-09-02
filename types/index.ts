@@ -22,6 +22,8 @@ declare global {
         observations: Observation[];
     }
 
+    interface FullImage extends Omit<ImageUpload, 's3Path'> {}
+
     // TODO: extract type from zod validation object instead
     type NewField = Omit<
         Omit<

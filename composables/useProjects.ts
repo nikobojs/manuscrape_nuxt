@@ -1,4 +1,3 @@
-import { Observation } from "@prisma/client";
 import { requireNumber } from "./helpers";
 import { type RouteParams } from "vue-router";
 

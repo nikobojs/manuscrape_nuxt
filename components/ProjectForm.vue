@@ -49,8 +49,6 @@
 </template>
 
 <script setup lang="ts">
-  import { FieldOperator, FieldType } from '@prisma/client';
-
   const { createProject } = await useProjects();
   const loading = ref(false);
   const error = ref('');
@@ -60,15 +58,15 @@
   const fieldType = ref(undefined as NewField | undefined);
 
   const fieldTypes: Record<string, string> = {
-    'Text': FieldType.STRING,
-    'Date': FieldType.DATE,
-    'Whole number': FieldType.INT,
-    'Decimal number': FieldType.FLOAT,
+    'Text': 'STRING',
+    'Date': 'DATE',
+    'Whole number': 'INT',
+    'Decimal number': 'FLOAT',
   }
 
   const operators: Record<string, string> = {
-    'Difference': FieldOperator.DIFF,
-    'Sum': FieldOperator.SUM,
+    'Difference': 'DIFF',
+    'Sum': 'SUM'
   }
 
   const fieldTypeOptions = Object.entries(fieldTypes).map(([key, val]) => ({

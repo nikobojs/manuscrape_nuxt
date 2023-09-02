@@ -19,12 +19,10 @@
 </template>
 
 <script lang="ts" setup>
-  import type { ImageUpload } from '@prisma/client';
-  
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
-    image: Object as PropType<ImageUpload>,
+    image: Object as PropType<FullImage>,
     lastUpdate: Date as PropType<Date>,
   });
 
