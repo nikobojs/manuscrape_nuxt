@@ -1,16 +1,19 @@
-import { PrismaClient, FieldType } from '@prisma/client';
+import Prisma from '@prisma/client'
+const { PrismaClient, FieldType } = Prisma
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';
 
 const prisma = new PrismaClient();
 
+const fieldTypeValues = Object.values(FieldType);
+
 const newProjectSchema = yup.object({
   name: yup.string().required(),
   fields: yup.array(
     yup.object({
       label: yup.string().required(),
-      type: yup.mixed<FieldType>().oneOf(
+      type: yup.mixed<typeof fieldTypeValues[number]>().required().oneOf(
         Object.values(FieldType)
       ).required()
     })
