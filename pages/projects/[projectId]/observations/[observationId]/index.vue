@@ -1,9 +1,15 @@
 <template>
   <UContainer>
+    <h2 class="text-3xl mb-6 flex gap-x-4">
+      {{ header }}
+      <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
+      <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
+    </h2>
     <ObservationFormContainer
       :project="project"
       :observation="observation"
       :onObservationPublished="onSubmit"
+      :disabled="isLocked"
     />
   </UContainer>
 </template>
@@ -24,6 +30,9 @@
     const _observation = await requireObservationFromParams(params);
     observation.value = _observation;
   }, { deep: true });
+
+  const isLocked = computed(() => !observation.value.isDraft);
+  const header = computed(() => isLocked ? 'Observation details' : 'Edit draft');
 
   async function onSubmit() {
     if (runsInElectron()) {

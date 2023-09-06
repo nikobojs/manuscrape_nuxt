@@ -1,17 +1,17 @@
 
 <template>
   <div v-if="!uploadInProgress">
-    <label class="block">
+    <label class="block" v-if="!$props.disabled">
       <UInput class="hidden" type="file" :on:change="onFilePicked" />
       <div class="text-sm">
-        <div class="underline text-green-500 cursor-pointer">
+        <div v-if="!$props.disabled" class="underline text-green-500 cursor-pointer">
           {{ observation?.imageId ? 'Change image' : 'Choose image' }}
         </div>
       </div>
     </label>
     <div v-if="uploaded">
       <NuxtLink
-        v-if="observation?.imageId"
+        v-if="observation?.imageId && !$props.disabled"
         class="text-sm underline text-green-500 cursor-pointer"
         :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image`"
       >
@@ -37,6 +37,7 @@
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
+    disabled: Boolean as PropType<Boolean>,
   });
 
   const toast = useToast();

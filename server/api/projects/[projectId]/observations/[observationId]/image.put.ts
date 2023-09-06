@@ -16,6 +16,7 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       imageId: true,
+      isDraft: true,
     },
     where: {
       id: observationId,
@@ -27,6 +28,14 @@ export default safeResponseHandler(async (event) => {
       statusCode: 404,
       statusMessage: 'Observation was not found',
     })
+  }
+
+  // ensure observation cannot be updated if its not a draft any more
+  if (!observation.isDraft) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'You are not allowed to patch locked observations',
+    });
   }
 
   const existingImageId = observation.imageId;

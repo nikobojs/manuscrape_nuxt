@@ -6,32 +6,34 @@
     <UCard>
       <template #header>
         Insert metadata
-        <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="metadataDone"></span>
+        <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationForm
         v-if="observation"
         :project="project"
         :observation="observation"
         :onSubmit="onDataSubmitted"
+        :disabled="disabled"
       />
     </UCard>
 
     <UCard>
       <template #header>
           Upload image
-          <span class="ml-2 i-heroicons-check text-lg text-green-500" v-if="imageUploaded"></span>
+          <span v-if="!$props.disabled && imageUploaded" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationImageForm
         :project="project"
         :observation="observation"
         :onSubmit="onImageUploaded"
         :uploadInProgress="uploadInProgress"
+        :disabled="disabled"
       />
     </UCard>
 
-    <div>
+    <div v-if="!$props.disabled">
       <UButton class="mt-6" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
-        Add observation
+        Save and lock
       </UButton>
     </div>
   </div>
@@ -45,6 +47,7 @@
     observation: Object as PropType<FullObservation>,
     onObservationPublished: Function as PropType<Function>,
     uploadInProgress: Boolean as PropType<Boolean>,
+    disabled: Boolean as PropType<Boolean>,
   });
 
   const route = useRoute();

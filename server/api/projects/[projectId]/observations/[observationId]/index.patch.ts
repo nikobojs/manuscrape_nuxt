@@ -19,6 +19,33 @@ export default safeResponseHandler(async (event) => {
   let patch = await patchObservationSchema.validate(body);
   patch = removeKeysByUndefinedValue(patch);
 
+  // fetch existing observation
+  const observation = await prisma.observation.findUnique({
+    select: {
+      id: true,
+      isDraft: true,
+    },
+    where: {
+      id: observationId,
+    }
+  });
+
+  // if it does not exist, then throw up
+  if (!observation) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Observation was not found',
+    })
+  }
+
+  // ensure observation cannot be updated if it isn't a draft any more
+  if (!observation.isDraft) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'You are not allowed to patch locked observations',
+    });
+  }
+
   const result = await prisma.observation.update({
     select: {
       id: true,

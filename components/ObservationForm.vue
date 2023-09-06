@@ -3,10 +3,18 @@
   <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
     <div v-for="({ props, element, field }) in inputs" class="mb-4">
       <UFormGroup :name="field.label" :label="field.label">
-        <component :is="element" v-model="state[field.label]" v-bind="props" />
+        <component :is="element" v-model="state[field.label]" v-bind="props" :disabled="!!$props.disabled" />
       </UFormGroup>
     </div>
-    <UButton variant="outline" class="mt-4" type="submit">Save observation</UButton>
+    <UButton
+      v-if="!props.disabled"
+      variant="outline"
+      class="mt-4"
+      type="submit"
+      :disabled="!!$props.disabled"
+    >
+      Save observation
+    </UButton>
   </UForm>
 </template>
 
@@ -22,6 +30,7 @@
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<Function>,
+    disabled: Boolean as PropType<Boolean>,
   });
 
   enum FieldType {
