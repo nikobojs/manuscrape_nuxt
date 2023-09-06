@@ -9,6 +9,9 @@ export default defineNuxtConfig({
     strict: true,
     typeCheck: true,
   },
+  ui: {
+    icons: ['mdi', 'heroicons']
+  },
   runtimeConfig: {
     app: {
       saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10'),
@@ -27,4 +30,4 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   }
-})
+});
