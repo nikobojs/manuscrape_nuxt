@@ -1,7 +1,8 @@
 <template>
   <footer>
-    <UContainer>
-      ManuScrape v0.1.0
+    <UContainer class="pb-8">
+      <div class="border-b border-b-gray-600 w-full mb-8"></div>
+      ManuScrape v{{ version }}
     </UContainer>
   </footer>
 </template>
@@ -12,6 +13,9 @@
     padding-top: 20px;
     color: #888;
     font-size: 0.8rem;
-    text-transform: uppercase;
   }
 </style>
+
+<script setup lang="ts">
+  const { version } = useRuntimeConfig().public;
+</script>

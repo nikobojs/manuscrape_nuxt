@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import pkg from './package.json'
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   sourcemap: true,
@@ -23,8 +25,8 @@ export default defineNuxtConfig({
       s3BucketName: process.env.S3_BUCKET_NAME || '',
     },
     public: {
-      s3Endpoint: process.env.S3_ENDPOINT || '',
       baseUrl: process.env.BASE_URL || '',
+      version: pkg.version,
     }
   },
   colorMode: {
