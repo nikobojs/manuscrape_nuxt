@@ -70,4 +70,5 @@ declare global {
         text: string;
     }
 
+    type Square = [x: number, y: number, w: number, h: number];
 }

@@ -10,9 +10,13 @@
       </div>
     </label>
     <div v-if="uploaded">
-      <div v-if="observation?.imageId" class="text-sm underline text-green-500 cursor-pointer">
+      <NuxtLink
+        v-if="observation?.imageId"
+        class="text-sm underline text-green-500 cursor-pointer"
+        :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image`"
+      >
         Edit image
-      </div>
+      </NuxtLink>
       <ObservationImageThumbnail
         class="mt-6 mb-4"
         :image="uploaded"
