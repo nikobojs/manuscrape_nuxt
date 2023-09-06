@@ -15,7 +15,6 @@
   import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
 
   const form = ref();
-  const state = ref({} as any);
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
   const { patchObservation } = await useObservations();
@@ -39,6 +38,20 @@
     [FieldType.FLOAT]: 'number',
   });
 
+  if (!props.observation || !props.project) {
+    toast.add({
+      title: props.observation ? 'Observation does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red'
+    });
+    navigateTo('/');
+  } else {
+    if (inputs.value.length == 0) {
+      buildForm(props.project);
+    }
+  }
+
+  const state = ref(props.observation?.data as any);
 
   function validate(state: any): FormError[] {
     if (!props.project) {
@@ -117,19 +130,6 @@
     }
 
     return errors;
-  }
-
-  if (!props.observation || !props.project) {
-    toast.add({
-      title: props.observation ? 'Observation does not exist' : 'Project does not exist',
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red'
-    });
-    navigateTo('/');
-  } else {
-    if (inputs.value.length == 0) {
-      buildForm(props.project);
-    }
   }
 
   function buildForm(project: FullProject) {

@@ -13,7 +13,6 @@ export const useProjects = async () => {
     }
     const result = projects.value.find(p => p.id === projectId);
     if (!result) {
-      // navigateTo('/')
       throw new Error('Project does not exist');
     } else {
       return result;
