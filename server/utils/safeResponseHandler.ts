@@ -1,5 +1,5 @@
 import { PrismaClientValidationError } from '@prisma/client/runtime/library'
-import type { EventHandler, H3Event } from 'h3'
+import { type EventHandler, type H3Event, H3Error } from 'h3'
 import { ValidationError } from 'yup'
 import { errors as formidableErrors } from 'formidable';
 
@@ -26,6 +26,9 @@ export const safeResponseHandler = (handler: EventHandler) =>
         status = 400;
         if (err?.message) msg = err?.message;
         if (err?.httpCode) status = err?.httpCode;
+      } else if (err instanceof H3Error) {
+        if (err.statusCode) status = err.statusCode;
+        if (err.statusMessage) msg = err.statusMessage;
       } else {
         // Error handling
         console.error('----------------  Safe response handler caught error! --------------')
@@ -35,10 +38,12 @@ export const safeResponseHandler = (handler: EventHandler) =>
         console.error('----------------     -     ---------------     -     ---------------');
       }
 
-      throw createError({
+      setResponseStatus(event, status);
+      return {
+        url: getRequestURL(event).pathname,
         statusCode: status,
         statusMessage: msg,
         message: longMsg || msg,
-      });
+      }
     }
   })

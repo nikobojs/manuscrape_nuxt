@@ -9,9 +9,6 @@ export const useAuth = async () => {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).catch(err => {
-            console.error('login catch err:', err);
-            throw err;
         });
     };
 
@@ -28,10 +25,7 @@ export const useAuth = async () => {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).catch(err => {
-            console.error('signUp catch err:', err);
-            throw err;
-        });
+        })
     }
 
     const ensureLoggedIn = async () => {

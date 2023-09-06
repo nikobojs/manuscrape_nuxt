@@ -41,6 +41,7 @@
 
 <script lang="ts" setup>
 import type { FormError } from '@nuxthq/ui/dist/runtime/types';
+import { getErrMsg } from '~/utils/getErrMsg';
 
   const state = ref({
     email: '',
@@ -71,9 +72,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types';
     await signUp(state.value.email, state.value.password).then(() => {
       window.location.href = '/';
     }).catch(err => {
-      if (err.statusText) {
-        errorMessage.value = err.statusText;
-      }
+      errorMessage.value = getErrMsg(err)
     }).finally(() => {
       loading.value = false;
     });

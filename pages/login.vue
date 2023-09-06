@@ -45,6 +45,8 @@
 
 
 <script lang="ts" setup>
+  import { getErrMsg } from '~/utils/getErrMsg';
+
   const form = ref({
     email: '',
     password: '',
@@ -64,7 +66,7 @@
         }
       })
       .catch(err => {
-        form.value.error = (err?.statusMessage || err?.message).toString();
+        form.value.error = getErrMsg(err);
       }).finally(() => loading.value = false);
     }, 200);
   }
