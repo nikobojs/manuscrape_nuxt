@@ -91,8 +91,8 @@
       const file = new File([blob], 'image.jpg', { type: 'image/jpeg', lastModified: 0})
 
       await upsertObservationImage(
-        props.project?.id,
-        props.observation?.id,
+        props.project.id,
+        props.observation.id,
         file,
       );
 
@@ -105,6 +105,7 @@
       reloadImage();
       reset();
 
+      navigateTo(`/projects/${props.project.id}/observations/${props.observation.id}`);
     }, 'image/jpeg', 1);
   }
 
