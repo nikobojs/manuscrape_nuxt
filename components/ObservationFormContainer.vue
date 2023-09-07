@@ -26,14 +26,15 @@
         :project="project"
         :observation="observation"
         :onSubmit="onImageUploaded"
-        :uploadInProgress="uploadInProgress"
         :disabled="disabled"
+        :imageUploaded="imageUploaded"
+        :uploadInProgress="uploadInProgress"
       />
     </UCard>
 
     <div v-if="!$props.disabled">
       <UButton class="mt-6" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
-        Save and lock
+        Submit observation
       </UButton>
     </div>
   </div>
@@ -46,13 +47,18 @@
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onObservationPublished: Function as PropType<Function>,
-    uploadInProgress: Boolean as PropType<Boolean>,
-    disabled: Boolean as PropType<Boolean>,
+    disabled: Boolean as PropType<boolean>,
+    awaitImageUpload: Boolean as PropType<boolean>
   });
 
-  const route = useRoute();
   const metadataDone = computed(() => !!props.observation?.data && !!Object.keys(props.observation.data).length);
-  const imageUploaded = computed(() => !!props.observation?.image);
+  const imageUploaded = computed(() => {
+    return typeof props.observation?.image?.id === 'number';
+  });
+
+  const uploadInProgress = computed(() => {
+    return props.awaitImageUpload && !props.observation?.image?.id;
+  })
 
   async function onDataSubmitted() {
     if (!runsInElectron()) {
@@ -83,23 +89,5 @@
     await publishObservation(props.project.id, props.observation.id);
     props.onObservationPublished?.();
   }
-
-  // listen if image was automatically uploaded and the rest is done
-  watch([
-    () => props.uploadInProgress,
-    () => route.query.uploading,
-    () => metadataDone.value
-  ], () => {
-    if (
-      runsInElectron() &&
-      props.uploadInProgress === false &&
-      route.query.uploading === '1' &&
-      metadataDone.value === true
-    ) {
-      delete route.query.uploading;
-      onImageUploaded();
-    }
-
-  }, { deep: true, immediate: true })
 
 </script>

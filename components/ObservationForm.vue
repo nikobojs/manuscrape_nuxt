@@ -13,7 +13,7 @@
       type="submit"
       :disabled="!!$props.disabled"
     >
-      Save observation
+      Save metadata
     </UButton>
   </UForm>
 </template>

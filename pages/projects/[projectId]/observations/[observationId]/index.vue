@@ -10,6 +10,7 @@
       :observation="observation"
       :onObservationPublished="onSubmit"
       :disabled="isLocked"
+      :awaitImageUpload="awaitImageUpload"
     />
   </UContainer>
 </template>
@@ -18,13 +19,14 @@
   const { ensureLoggedIn } = await useAuth();
   await useUser();
   await ensureLoggedIn();
-  const { params } = useRoute();
+  const { params, query } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
   const { requireObservationFromParams, observations } = await useObservations();
   ensureHasOwnership(params?.projectId, projects.value);
   const project = requireProjectFromParams(params);
   const _observation = await requireObservationFromParams(params);
   const observation = ref(_observation);
+  const awaitImageUpload = computed(() => query?.uploading === '1')
 
   watch(() => observations, async () => {
     const _observation = await requireObservationFromParams(params);
