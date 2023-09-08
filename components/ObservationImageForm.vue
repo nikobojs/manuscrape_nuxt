@@ -2,7 +2,7 @@
 <template>
   <div v-if="!uploadInProgress">
     <label class="block" v-if="!$props.disabled">
-      <UInput class="hidden" type="file" :on:change="onFilePicked" />
+      <UInput class="hidden" type="file" accept="image/png, image/jpeg"  :on:change="onFilePicked" />
       <div class="text-sm">
         <div v-if="!$props.disabled" class="underline text-green-500 cursor-pointer">
           {{ observation?.imageId ? 'Change image' : 'Choose image' }}
@@ -33,6 +33,8 @@
 </template>
 
 <script lang="ts" setup>
+import { formatMb } from '~/utils/formatMb';
+
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
@@ -50,6 +52,7 @@
   const router = useRouter();
   const uploaded = computed(() => props.observation?.image?.id && props.observation.image)
   const timeout = ref<null | number>(null);
+  const config = useRuntimeConfig().public;
   const lastImageUpdate = computed(() => {
     return (
       props?.observation?.image?.createdAt && new Date(props.observation.image.createdAt)
@@ -64,6 +67,18 @@
       throw new Error('Only one file can be uploaded at a time')
     }
 
+    // ensure size is ok
+    if (files[0].size > config.maxImageSize) {
+      toast.add({
+        title: 'Image file is too big',
+        description: 'Maximum size allowed is ' + formatMb(config.maxImageSize),
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'red'
+      });
+      return;
+    }
+
+    // ensure overwriting of image is confirmed by user
     if (props.observation?.image) {
       // TODO: create nice confirm box
       const res = confirm('Are you sure you want to overwrite the existing image?');
@@ -72,17 +87,33 @@
       }
     }
 
-    file.value = event.target.files[0] as File;
+    file.value = files[0] as File;
+
     try {
       if (props.observation && props.project) {
         await upsertObservationImage(
           props.project.id,
           props.observation.id,
           file.value
-        )
-        const isFirstImage = !!uploaded.value
-        await refreshObservations(props.project.id);
-        props.onSubmit?.(isFirstImage);
+        ).then(async () => {
+          if (typeof props.project?.id !== 'number') {
+            throw new Error('Project id is not found')
+          }
+          const isFirstImage = !!uploaded.value
+          await refreshObservations(props.project.id);
+          props.onSubmit?.(isFirstImage);
+        }).catch((e: any) => {
+          let msg = 'An error occured when uploading image'
+          if (e.message) {
+            msg = e.message;
+          }
+          toast.add({
+            title: 'Image upload error',
+            description: msg,
+            icon: 'i-heroicons-exclamation-triangle',
+            color: 'red'
+          });
+        })
       } else {
         throw new Error('Project or observation id was not found');
       }

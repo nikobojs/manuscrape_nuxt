@@ -1,8 +1,11 @@
 export function getErrMsg(err: any) {
+  const objWithMsg = err.error?.value ? err.error.value : err;
+
   return (
-    err.data?.message ||
-    err?.message ||
-    err?.statusMessage ||
+    objWithMsg.data?.message ||
+    objWithMsg.data?.statusMessage ||
+    objWithMsg?.message ||
+    objWithMsg?.statusMessage ||
     'Unknown error'
   ).toString();
 }

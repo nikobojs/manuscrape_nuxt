@@ -1,4 +1,5 @@
 import type { RouteParams } from "vue-router";
+  import { getErrMsg } from '~/utils/getErrMsg';
 
 export const useObservations = async () => {
   const observations = useState<FullObservation[]>('observations', () => []);
@@ -111,7 +112,8 @@ export const useObservations = async () => {
       );
 
       if (uploadRes.status.value !== 'success') {
-        throw new Error('It seems that the fileupload failed :(')
+        const msg = getErrMsg(uploadRes);
+        throw new Error(msg || 'It seems that the fileupload failed :(')
       }
     } catch(err: any) {
       console.error('upload image to observation err:', err);

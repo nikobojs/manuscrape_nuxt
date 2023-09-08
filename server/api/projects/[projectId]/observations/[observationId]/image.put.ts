@@ -7,6 +7,7 @@ import { parseIntParam } from '../../../../../utils/request';
 
 const prisma = new PrismaClient();
 const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+const config = useRuntimeConfig();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
@@ -46,7 +47,9 @@ export default safeResponseHandler(async (event) => {
     maxFiles: 1,
     multiples: false,
     keepExtensions: true,
+    maxTotalFileSize: config.public.maxImageSize,
   });
+
   // parse files
   const [_fields, files] = await form.parse(event.req)
   
