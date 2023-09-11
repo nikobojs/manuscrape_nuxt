@@ -76,7 +76,7 @@
     }
     if (!props.observation) {
       throw createError({
-        statusMessage: 'Project does not exist',
+        statusMessage: 'Observation does not exist',
         statusCode: 400,
       });
     }

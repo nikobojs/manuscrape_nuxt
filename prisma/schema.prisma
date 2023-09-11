@@ -20,7 +20,8 @@ enum FieldOperator {
 }
 
 enum ProjectRole {
-  FULL_ACCESS
+  OWNER
+  INVITED
 }
 
 model User {
@@ -34,7 +35,8 @@ model User {
 }
 
 model ProjectAccess {
-  role               ProjectRole            @default(value: FULL_ACCESS)
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  role               ProjectRole            @default(value: OWNER)
   userId             Int
   projectId          Int
   user               User                   @relation("contributor", fields: [userId], references: [id], onDelete: NoAction)

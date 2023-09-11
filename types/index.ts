@@ -81,4 +81,10 @@ declare global {
         validate: (parsed: T) => boolean;
         required?: boolean;
     }
+    interface IProjectAccess {
+      role: string;
+      project: {
+        id: number;
+      }
+    }
 }

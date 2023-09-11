@@ -21,12 +21,14 @@
         <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" />
       </div>
     </UCard>
+    <CollaboratorWidget v-if="showContributors" :project="project" />
   </UContainer>
 </template>
 
 <script lang="ts" setup>
   const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
+  const { hasRoles } = await useUser();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
 
   await ensureLoggedIn();
@@ -42,6 +44,8 @@
     totalObservations,
     page
   } = await useObservations(project.id);
+
+  const showContributors = computed(() => hasRoles(project.id, ['OWNER']));
 
   async function addObservationClick () {
     const res = await createObservation(project.id).catch(

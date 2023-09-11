@@ -53,7 +53,7 @@ export async function getProjectsByUser(
     }
   });
 
-  const allowedRoles = [ProjectRole.FULL_ACCESS];
+  const allowedRoles = [ProjectRole.OWNER, ProjectRole.INVITED];
 
   if (!user) {
     throw createError({

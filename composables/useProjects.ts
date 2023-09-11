@@ -34,6 +34,22 @@ export const useProjects = async () => {
     })
   };
 
+  const addCollaborator = async (
+    projectId: number,
+    email: string,
+  ): Promise<any> => {
+    return $fetch(
+      `/api/projects/${projectId}/collaborators`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+      }
+    )
+  };
+
   const hasOwnership = (
     projectId: number | string,
     projects: FullProject[]
@@ -64,10 +80,10 @@ export const useProjects = async () => {
       projects?.length
     ) {
       if (!hasOwnership(id, projects)) {
-        navigateTo('/login')
+        navigateTo('/login');
       }
     } else {
-      navigateTo('/login')
+      navigateTo('/login');
     }
   }
 
@@ -84,5 +100,6 @@ export const useProjects = async () => {
     ensureHasOwnership,
     getProjectById,
     requireProjectFromParams,
+    addCollaborator,
   };
 };
