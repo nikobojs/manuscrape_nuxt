@@ -44,8 +44,12 @@ import { formatMb } from '~/utils/formatMb';
     uploadInProgress: Boolean as PropType<boolean>,
   });
 
+  if (!props.project?.id) {
+    throw new Error('Project id is not defined')
+  }
+
   const toast = useToast();
-  const { upsertObservationImage, refreshObservations } = await useObservations();
+  const { upsertObservationImage } = await useObservations(props.project?.id);
   const file = ref<File | undefined>();
   const uploadChecker = ref();
   const route = useRoute();
@@ -100,7 +104,7 @@ import { formatMb } from '~/utils/formatMb';
             throw new Error('Project id is not found')
           }
           const isFirstImage = !!uploaded.value
-          await refreshObservations(props.project.id);
+          // await refreshObservations(props.project.id);
           props.onSubmit?.(isFirstImage);
         }).catch((e: any) => {
           let msg = 'An error occured when uploading image'
@@ -126,7 +130,7 @@ import { formatMb } from '~/utils/formatMb';
   // TODO: document better
   async function handleIfUploadDone(): Promise<void> {
     if (!props.project?.id) throw new Error('Project is not defined');
-    await refreshObservations(props.project.id);
+    // await refreshObservations(props.project.id);
     if (!props.uploadInProgress) {
       setTimeout(async () => {
         router.replace({ query: { electron: route.query.electron || 0 } })

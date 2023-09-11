@@ -10,9 +10,9 @@
   await ensureLoggedIn();
   const { params } = useRoute();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
-  const { requireObservationFromParams, observations } = await useObservations();
   ensureHasOwnership(params?.projectId, projects.value);
   const project = requireProjectFromParams(params);
+  const { requireObservationFromParams, observations } = await useObservations(project.id);
   const _observation = await requireObservationFromParams(params);
   const observation = ref(_observation);
 

@@ -55,12 +55,12 @@ export default safeResponseHandler(async (event) => {
   
   // validate file was sent and save into variable 'file'
   if (!Object.keys(files).includes('file')) {
-    return createError({
+    throw createError({
       statusCode: 400,
       statusMessage: 'No file was sent'
     })
   } else if (files['file'].length !== 1) {
-    return createError({
+    throw createError({
       statusCode: 400,
       statusMessage: 'Only one file is allowed'
     })
@@ -69,7 +69,7 @@ export default safeResponseHandler(async (event) => {
 
   // validate mimetypes
   if (!file.mimetype || !allowedMimeTypes.includes(file.mimetype.toLowerCase())) {
-    return createError({
+    throw createError({
       statusCode: 400,
       statusMessage: 'Only JPEGS and PNGS are supported'
     })

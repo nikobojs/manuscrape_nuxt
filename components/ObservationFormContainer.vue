@@ -12,7 +12,7 @@
         v-if="observation"
         :project="project"
         :observation="observation"
-        :onSubmit="onDataSubmitted"
+        :onSubmit="onFormSubmit"
         :disabled="disabled"
       />
     </UCard>
@@ -41,46 +41,27 @@
 </template>
 
 <script setup lang="ts">
-  const toast = useToast();
-  const { publishObservation } = await useObservations();
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onObservationPublished: Function as PropType<Function>,
+    onFormSubmit: Function as PropType<Function>,
+    onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
     disabled: Boolean as PropType<boolean>,
-    awaitImageUpload: Boolean as PropType<boolean>
+    awaitImageUpload: Boolean as PropType<boolean>,
+    metadataDone: Boolean as PropType<boolean>,
+    imageUploaded: Boolean as PropType<boolean>,
   });
 
-  const metadataDone = computed(() => !!props.observation?.data && !!Object.keys(props.observation.data).length);
-  const imageUploaded = computed(() => {
-    return typeof props.observation?.image?.id === 'number';
-  });
+  if (!props.observation?.id || !props.project?.id) {
+    throw new Error('Project id or observation id is not defined in url params')
+  }
+
+  const { publishObservation } = await useObservations(props.project.id);
 
   const uploadInProgress = computed(() => {
     return props.awaitImageUpload && !props.observation?.image?.id;
   })
-
-  async function onDataSubmitted() {
-    if (!runsInElectron()) {
-      toast.add({
-        title: 'Observation data was saved.'
-      });
-    }
-  }
-
-  async function onImageUploaded() {
-    if (!props.observation?.id || !props.project?.id) {
-      toast.add({
-        title: props.observation ? 'Observation does not exist' : 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-    } else {
-      toast.add({
-        title: 'Image uploaded successfully',
-      });
-    }
-  }
 
   async function publish() {
     if (!props.project || !props.observation) {

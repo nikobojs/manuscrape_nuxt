@@ -1,6 +1,7 @@
 import { UInput } from "#build/components";
 import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
+import type { H3Event } from 'h3';
 
 export {};
 
@@ -71,4 +72,13 @@ declare global {
     }
 
     type Square = [x: number, y: number, w: number, h: number];
+
+    interface QueryParamOptions<T> {
+        name: string;
+        event: H3Event;
+        defaultValue?: T;
+        parse: (value: string) => T;
+        validate: (parsed: T) => boolean;
+        required?: boolean;
+    }
 }

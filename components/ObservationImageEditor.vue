@@ -24,8 +24,7 @@
   });
 
   if (!props.observation?.id || !props.project?.id) {
-    console.error('ObservationImageEditor did not get the right prop values')
-    navigateTo('/')
+    throw new Error('Project id or observation id is not defined in url params')
   }
 
   if (!props.observation?.imageId) {
@@ -35,7 +34,8 @@
 
   const canvas = ref<undefined | HTMLCanvasElement>();
   const context = computed(() => canvas.value ? canvas.value.getContext("2d") : null);
-  const { upsertObservationImage, refreshObservations } = await useObservations();
+  
+  const { upsertObservationImage } = await useObservations(props.project?.id);
 
   const color = ref('black');
   const beginX = ref(0);
@@ -101,7 +101,6 @@
         icon: 'i-heroicons-check',
       });
 
-      await refreshObservations(props.project.id);
       reloadImage();
       reset();
 

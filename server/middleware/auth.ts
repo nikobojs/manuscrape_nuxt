@@ -10,7 +10,8 @@ const prisma = new PrismaClient();
 // TODO: refactor and improve readability
 export default defineEventHandler(async (event) => {
     const cookieValue = getCookie(event, 'authcookie');
-    const authToken = event.req.headers.authentication || cookieValue;
+    const headers = getHeaders(event)
+    const authToken = headers.authentication || cookieValue;
     let loginSuccesfull = false;
 
     if (!authToken && !isOpenUrl(event)) {

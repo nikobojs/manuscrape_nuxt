@@ -25,13 +25,18 @@
   const form = ref();
   const inputs = ref([] as CMSInput[]);
   const toast = useToast();
-  const { patchObservation } = await useObservations();
   const props = defineProps({
     project: Object as PropType<FullProject>,
     observation: Object as PropType<FullObservation>,
     onSubmit: Function as PropType<Function>,
     disabled: Boolean as PropType<Boolean>,
   });
+
+  if (!props.observation?.id || !props.project?.id) {
+    throw new Error('Project id or observation id is not defined in url params')
+  }
+
+  const { patchObservation } = await useObservations(props.project.id);
 
   enum FieldType {
     DATE = 'DATE',

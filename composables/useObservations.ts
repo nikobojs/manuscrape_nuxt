@@ -1,23 +1,28 @@
+import type { AsyncDataExecuteOptions } from "nuxt/dist/app/composables/asyncData";
 import type { RouteParams } from "vue-router";
-  import { getErrMsg } from '~/utils/getErrMsg';
+import { getErrMsg } from '~/utils/getErrMsg';
 
-export const useObservations = async () => {
+export const useObservations = async (projectId: number) => {
   const observations = useState<FullObservation[]>('observations', () => []);
-  const projectId = useState<number | null>('currentProjectId', () => null);
-  const hasRefreshedOnce = ref(false)
+  const page = useState<number>(() => 1);
+  const pageSize = 10;
+  const skip = computed(() => (page.value - 1) * pageSize);
+  const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
+  const totalPages = computed(() => Math.ceil(totalObservations.value / pageSize));
 
   const {
-    refresh: _refreshObservations,
     pending: loading,
   } = await useFetch<FullObservation[]>(
-    () => `/api/projects/${projectId.value}/observations`,
+    () => `/api/projects/${projectId}/observations?take=${pageSize}&skip=${skip.value}`,
     {
       method: 'GET',
-      immediate: false,
+      immediate: true,
       server: true,
+      credentials: 'include',
       onResponse: async (context) => {
         if (context.response.status === 200) {
           observations.value = context.response._data?.observations;
+          totalObservations.value = context.response._data?.total;
         } else if (context.response.status === 401) {
           observations.value = [];
           await navigateTo('/login', { replace: true })
@@ -32,25 +37,23 @@ export const useObservations = async () => {
     }
   );
 
-  const refreshObservations = async (_projectId: number) => {
-    projectId.value = _projectId;
-    hasRefreshedOnce.value = true
-    await _refreshObservations();
-  }
-
   const getObservationById = async (
     obsId: number | string | string[] | null
-  ): Promise<FullObservation> => {
+  ): Promise<{
+    observationLoading: globalThis.Ref<boolean>;
+    refreshObservation: (opts?: AsyncDataExecuteOptions | undefined) => Promise<void>;
+    observation: globalThis.Ref<FullObservation | null>;
+  }> => {
     obsId = requireNumber(obsId, 'observationId');
-    const obs = observations.value?.find?.(o => o.id == obsId);
-    if (!obs) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Observation could not be found'
-      })
-    } else {
-      return obs as FullObservation;
-    }
+    const { pending, refresh, data } = await useFetch<FullObservation>(`/api/projects/${projectId}/observations/${obsId}`, {
+      immediate: true,
+      credentials: 'include',
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+    return { observationLoading: pending, refreshObservation: refresh, observation: data }
   }
 
   const createObservation = async (
@@ -82,7 +85,6 @@ export const useObservations = async () => {
         },
       }
     );
-    await refreshObservations(projectId);
     return res;
   }
 
@@ -125,11 +127,14 @@ export const useObservations = async () => {
   const requireObservationFromParams = async (params: RouteParams): Promise<FullObservation> => {
     const _observationId = requireNumber(params?.observationId, 'observationId');
     const _projectId = requireNumber(params?.projectId, 'projectId');
-    if (!hasRefreshedOnce.value || projectId.value !== _projectId) {
-      await refreshObservations(_projectId);
+
+    const { observation } = await getObservationById(_observationId);
+
+    if (!observation.value) {
+      throw new Error('Observation does not exist')
     }
 
-    return getObservationById(_observationId);
+    return observation.value;
   }
 
   return {
@@ -138,9 +143,11 @@ export const useObservations = async () => {
     patchObservation,
     createObservation,
     getObservationById,
-    refreshObservations,
     observations,
     loading,
     publishObservation,
+    page,
+    totalPages,
+    totalObservations,
   }
 };

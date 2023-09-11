@@ -17,6 +17,9 @@
       </div>
       </template>
       <ObservationList :observations="observations" :project="project" />
+      <div class="flex w-full justify-center">
+        <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" />
+      </div>
     </UCard>
   </UContainer>
 </template>
@@ -25,16 +28,20 @@
   const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
   const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
-  const { createObservation, refreshObservations, observations } = await useObservations();
-  const { params } = useRoute();
 
   await ensureLoggedIn();
-  ensureHasOwnership(params?.projectId, projects.value);
+  const { params } = useRoute();
 
   const project = requireProjectFromParams(params);
+  ensureHasOwnership(project.id, projects.value);
 
-  // TODO: optimize this to run through SSR
-  await refreshObservations(project.id);
+  const {
+    createObservation,
+    observations,
+    totalPages,
+    totalObservations,
+    page
+  } = await useObservations(project.id);
 
   async function addObservationClick () {
     const res = await createObservation(project.id).catch(
