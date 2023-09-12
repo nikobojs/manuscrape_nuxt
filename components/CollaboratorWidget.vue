@@ -2,12 +2,12 @@
   <UCard>
     <template #header>
       <div class="flex items-center justify-between w-full">
-        Collaborators
+        Contributors
       </div>
     </template>
     <div class="flex gap-4">
       <UInput type="email" v-model="email" placeholder="Enter email" />
-      <UButton :disabled="!validEmail" @click="onSubmit">Add collaborator</UButton>
+      <UButton :disabled="!validEmail" @click="onSubmit">Add contributor</UButton>
     </div>
   </UCard>
 </template>
@@ -39,11 +39,19 @@
       throw new Error('Project id is not defined in component props')
     }
 
-    // TODO: handle response (create better toasts)
-    const res = await addCollaborator(props.project?.id, email.value);
-    toast.add({
-      title: 'TODO: improve this message',
-      description: 'Collaborator might have been added! ;o)'
-    });
+    await addCollaborator(props.project?.id, email.value).then((res) => {
+      toast.add({
+        title: 'Success!',
+        description: 'Contributer has been added!',
+        color: 'green'
+      });
+    }).catch(res => {
+      const msg = getErrMsg(res);
+      toast.add({
+        title: 'Error',
+        description: msg,
+        color: 'red'
+      });
+    })
   }
 </script>
