@@ -31,6 +31,7 @@
   const { requireObservationFromParams } = await useObservations(project.id);
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
+  const imageInterval = ref<number | null>(null)
 
   async function refreshObservation() {
     const _observation = await requireObservationFromParams(params);
@@ -45,7 +46,13 @@
 
   const metadataDone = ref<boolean>(!!observation.value?.data && Object.keys(observation.value?.data).length > 0);
   const imageUploaded = computed(() => {
-    return typeof observation.value?.image?.id === 'number';
+    const imageFound = typeof observation.value?.image?.id === 'number';
+    const intervalIsRunning = typeof imageInterval.value === 'number';
+    if (imageFound && intervalIsRunning) {
+      window.clearInterval(imageInterval.value!);
+      imageInterval.value = null;
+    }
+    return imageFound;
   });
 
   async function onSubmit() {
@@ -78,7 +85,22 @@
         title: 'Image uploaded successfully',
       });
     }
-    await refreshObservation();
   }
+
+  onMounted(async () => {
+    if (!imageUploaded.value && awaitImageUpload.value) {
+
+      imageInterval.value = window.setInterval(async () => {
+        await refreshObservation();
+      }, 1000);
+
+      window.setTimeout(() => {
+        window.clearInterval(imageInterval.value!);
+        imageInterval.value = null;
+      }, 10000)
+    } else {
+      await refreshObservation();
+    }
+  })
 
 </script>
