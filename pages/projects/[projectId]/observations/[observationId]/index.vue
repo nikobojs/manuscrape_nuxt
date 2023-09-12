@@ -85,6 +85,7 @@
         title: 'Image uploaded successfully',
       });
     }
+    await refreshObservation();
   }
 
   onMounted(async () => {
