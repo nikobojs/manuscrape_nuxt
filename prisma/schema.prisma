@@ -87,7 +87,6 @@ model Observation {
   id                 Int                    @id @default(autoincrement())
   createdAt          DateTime               @default(now()) @db.Timestamp(6)
   updatedAt          DateTime               @default(now()) @db.Timestamp(6)
-  deletedAt          DateTime?
   projectId          Int
   project            Project                @relation(fields: [projectId], references: [id], onDelete: NoAction)
   userId             Int

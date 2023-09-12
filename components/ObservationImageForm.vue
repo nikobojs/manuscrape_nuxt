@@ -104,7 +104,6 @@ import { formatMb } from '~/utils/formatMb';
             throw new Error('Project id is not found')
           }
           const isFirstImage = !!uploaded.value
-          // await refreshObservations(props.project.id);
           props.onSubmit?.(isFirstImage);
         }).catch((e: any) => {
           let msg = 'An error occured when uploading image'

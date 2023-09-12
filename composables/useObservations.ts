@@ -88,6 +88,22 @@ export const useObservations = async (projectId: number) => {
     return res;
   }
 
+  const deleteObservation = async (
+    projectId: number,
+    obsId: number,
+  ) => {
+    const res = await $fetch(
+      `/api/projects/${projectId}/observations/${obsId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      }
+    );
+    return res;
+  }
+
   const publishObservation = (
     projectId: number,
     obsId: number,
@@ -149,5 +165,6 @@ export const useObservations = async (projectId: number) => {
     page,
     totalPages,
     totalObservations,
+    deleteObservation,
   }
 };

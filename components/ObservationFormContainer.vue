@@ -32,9 +32,12 @@
       />
     </UCard>
 
-    <div v-if="!$props.disabled">
+    <div v-if="!$props.disabled" class="flex gap-4">
       <UButton class="mt-6" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
         Submit observation
+      </UButton>
+      <UButton color="red" variant="outline" class="mt-6" @click="() => discard()">
+        Discard
       </UButton>
     </div>
   </div>
@@ -57,7 +60,8 @@
     throw new Error('Project id or observation id is not defined in url params')
   }
 
-  const { publishObservation } = await useObservations(props.project.id);
+  const { publishObservation, deleteObservation } = await useObservations(props.project.id);
+  const toast = useToast();
 
   const uploadInProgress = computed(() => {
     return props.awaitImageUpload && !props.observation?.image?.id;
@@ -69,6 +73,23 @@
     }
     await publishObservation(props.project.id, props.observation.id);
     props.onObservationPublished?.();
+  }
+
+  async function discard() {
+    if (!props.project || !props.observation) {
+      throw new Error('Props are not defined')
+    }
+    await deleteObservation(props.project.id, props.observation.id);
+    if (runsInElectron()) {
+      window.close();
+    } else {
+      toast.add({
+        title: 'Draft has been deleted',
+        color: 'green',
+        icon: 'i-heroicons-check'
+      });
+      navigateTo(`/projects/${props.project.id}`);
+    }
   }
 
 </script>

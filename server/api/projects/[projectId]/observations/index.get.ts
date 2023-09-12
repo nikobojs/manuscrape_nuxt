@@ -30,7 +30,6 @@ export default safeResponseHandler(async (event) => {
   const total = await prisma.observation.count({
     where: {
       projectId: projectId,
-      deletedAt: null,
     },
   })
 
@@ -39,7 +38,6 @@ export default safeResponseHandler(async (event) => {
     skip,
     where: {
       projectId: projectId,
-      deletedAt: null,
     },
     select: {
       createdAt: true,
