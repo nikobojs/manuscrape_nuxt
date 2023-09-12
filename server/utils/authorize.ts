@@ -38,42 +38,6 @@ export function requireUser(
 }
 
 
-export async function getProjectsByUser(
-  userId: number,
-) {
-  const user = await prisma.user.findFirst({
-    where: {id: userId},
-    select: {
-      projectAccess: {
-        select: {
-          project: true,
-          role: true
-        }
-      }
-    }
-  });
-
-  const allowedRoles = [ProjectRole.OWNER, ProjectRole.INVITED];
-
-  if (!user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'User does not exist',
-    })
-  }
-
-  const projects = user?.projectAccess.reduce((acc, cur) => {
-    if (allowedRoles.includes(cur.role)) {
-      acc.push(cur.project);
-    }
-
-    return acc;
-  }, [] as Project[]);
-
-  return projects;
-}
-
-
 export async function getObservationsByProject(
   projectId: number,
 ) {
@@ -81,9 +45,6 @@ export async function getObservationsByProject(
     where: { id: projectId },
     select: {
       observations: {
-        where: {
-          deletedAt: null,
-        },
         select: {
           id: true,
           createdAt: true,
