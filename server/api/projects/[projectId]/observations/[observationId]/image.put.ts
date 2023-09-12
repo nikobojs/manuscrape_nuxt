@@ -47,7 +47,6 @@ export default safeResponseHandler(async (event) => {
     maxFiles: 1,
     multiples: false,
     keepExtensions: true,
-    maxTotalFileSize: config.public.maxImageSize,
   });
 
   // parse files
@@ -57,12 +56,12 @@ export default safeResponseHandler(async (event) => {
   if (!Object.keys(files).includes('file')) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'No file was sent'
+      statusMessage: 'No image was sent'
     })
   } else if (files['file'].length !== 1) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Only one file is allowed'
+      statusMessage: 'Only one image is allowed'
     })
   }
   const file = files['file'][0];
@@ -79,7 +78,14 @@ export default safeResponseHandler(async (event) => {
   if (!file.originalFilename) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'File has no file name'
+      statusMessage: 'Image has no file name'
+    });
+  }
+
+  if (file.size > config.public.maxImageSize) {
+    throw createError({
+      statusCode: 413,
+      statusMessage: 'Image file size is too big'
     });
   }
 
