@@ -27,11 +27,11 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
+  // ensure user isn't already created
   const existingUser = await prisma.user.findFirst({
     where: { email: parsed.email },
     select: { id: true }
   });
-
   if (existingUser) {
     throw createError({
       statusCode: 409,
@@ -39,10 +39,20 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
+  // validate password
+  const { valid, reason } = passwordStrongEnough(parsed.password);
+  if (!valid) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: reason,
+    })
+  }
+
+  // salt and hash password
   const saltRounds = config.app.saltRounds ?? 10;
   const hashedPassword = await hash(parsed.password, saltRounds);
 
-
+  // create user
   const user = await prisma.user.create({
     data: {
       email: parsed.email,
@@ -50,6 +60,7 @@ export default safeResponseHandler(async (event) => {
     }
   })
 
+  // authorize user
   const { token } = await authorize(event, user)
 
   return {
@@ -57,3 +68,27 @@ export default safeResponseHandler(async (event) => {
     token,
   }
 })
+
+
+function passwordStrongEnough(pw: string) : { valid: boolean, reason: string } {
+  if (!pw) return {
+    valid: false,
+    reason: 'No password was provided'
+  };
+
+  // min length
+  if (pw.length < 6) return {
+    valid: false,
+    reason: 'Password must contain at least 6 characters'
+  };
+
+  // everything except ordinary letters
+  if (!/[^a-zA-Z]/.test(pw)) {
+    return {
+      valid: false,
+      reason: 'Password must contain at least one number or symbol',
+    }
+  }
+
+  return { valid: true, reason: '' };
+}

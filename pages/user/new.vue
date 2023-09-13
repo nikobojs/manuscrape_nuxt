@@ -62,7 +62,6 @@ import { getErrMsg } from '~/utils/getErrMsg';
     if (state.email.split('').filter((c: string) => c == '@').length !== 1) errors.push({ path: 'email', message: 'Should contain exactly one \'@\''});
     if (state.email.split('').filter((c: string) => c == '.').length < 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
     if (!state.password) errors.push({ path: 'password', message: 'Required' });
-    if (state.password.length < 6) errors.push({ path: 'password', message: 'Needs to be longer than 6 characters'})
     return errors;
   }
 
