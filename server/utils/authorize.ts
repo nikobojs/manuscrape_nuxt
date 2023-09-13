@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import { PrismaClient, type User, ProjectRole, Project } from '@prisma/client';
-import { parseIntParam } from './request';
+import { getRequestBeginTime, parseIntParam } from './request';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
@@ -116,4 +116,75 @@ export async function ensureURLResourceAccess(
       })
     }
   }
+}
+
+
+export async function delayedResponse(
+  event: H3Event,
+  response: Record<string, any> | (() => Record<string, any>),
+  responseTimeMs: number = config.app.authResponseTime,
+): Promise<Record<string, any>> {
+  const nowMs = new Date().getTime();
+  const startTime = getRequestBeginTime(event)
+  const alreadyTookMs = nowMs - startTime;
+  
+  // calculate how many ms response should be delayed
+  let waitMs = responseTimeMs - alreadyTookMs;
+  if (waitMs < 0) waitMs = 0;
+
+  return new Promise((r) => setTimeout(() => {
+    // if response from argument is a function, return function's response
+    // else, just return whatever response is
+    if (typeof response === 'function') {
+      response = response() as Record<string, any>;
+      r(response);
+    } else {
+      r(response);
+    }
+  }, waitMs));
+}
+
+
+export async function delayedError(
+  event: H3Event,
+  statusCode: number,
+  statusMessage: string,
+  _report: boolean = false,
+  responseTimeMs: number = config.app.authResponseTime,
+) {
+  // TODO: report error
+  return await delayedResponse(event, () =>
+    createError({
+      statusCode,
+      statusMessage
+    }),
+    responseTimeMs
+  );
+}
+
+
+// server-side password validation function
+export function passwordStrongEnough(
+  pw: string
+) : {valid: boolean, reason: string} {
+  if (!pw) return {
+    valid: false,
+    reason: 'No password was provided'
+  };
+
+  // min length
+  if (pw.length < 6) return {
+    valid: false,
+    reason: 'Password must contain at least 6 characters'
+  };
+
+  // everything except ordinary letters
+  if (!/[^a-zA-Z]/.test(pw)) {
+    return {
+      valid: false,
+      reason: 'Password must contain at least one number or symbol',
+    }
+  }
+
+  return { valid: true, reason: '' };
 }

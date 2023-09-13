@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
-import { authorize } from '../utils/authorize';
+import { authorize, delayedError, delayedResponse, passwordStrongEnough } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
 import * as yup from 'yup';
 
@@ -9,22 +9,21 @@ const config = useRuntimeConfig();
 const prisma = new PrismaClient();
 
 const SignUpRequestSchema = yup.object({
-  email: yup.string().required(),
-  password: yup.string().required(),
+  email: yup.string().required('Email is required').typeError('Email is not valid'),
+  password: yup.string().required('Password is required').typeError('Password is not valid'),
 }).required();
 
 export default safeResponseHandler(async (event) => {
+  // read body and initiate parsed body
   const body = await readBody(event);
   let parsed: {email: string; password: string} | undefined;
 
-  // validate with yup
+  // validate with yup and save to variable 'parsed'
   try {
     parsed = await SignUpRequestSchema.validate(body)
   } catch(e: any) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Missing required body parameters'
-    })
+    const msg = e?.message || 'Missing required body parameters';
+    return await delayedError(event, 400, msg, true);
   }
 
   // ensure user isn't already created
@@ -33,19 +32,13 @@ export default safeResponseHandler(async (event) => {
     select: { id: true }
   });
   if (existingUser) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'User already exists'
-    })
+    return await delayedError(event, 409, 'User already exists');
   }
 
   // validate password
   const { valid, reason } = passwordStrongEnough(parsed.password);
   if (!valid) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: reason,
-    })
+    return await delayedError(event, 400, reason);
   }
 
   // salt and hash password
@@ -63,32 +56,7 @@ export default safeResponseHandler(async (event) => {
   // authorize user
   const { token } = await authorize(event, user)
 
-  return {
-    id: user.id,
-    token,
-  }
-})
-
-
-function passwordStrongEnough(pw: string) : { valid: boolean, reason: string } {
-  if (!pw) return {
-    valid: false,
-    reason: 'No password was provided'
-  };
-
-  // min length
-  if (pw.length < 6) return {
-    valid: false,
-    reason: 'Password must contain at least 6 characters'
-  };
-
-  // everything except ordinary letters
-  if (!/[^a-zA-Z]/.test(pw)) {
-    return {
-      valid: false,
-      reason: 'Password must contain at least one number or symbol',
-    }
-  }
-
-  return { valid: true, reason: '' };
-}
+  // return delayed response
+  const res = await delayedResponse(event, { id: user.id, token });
+  return res;
+});

@@ -23,3 +23,14 @@ export function parseIntParam(val: any): number {
 
   return valInt;
 };
+
+export function getRequestBeginTime(event: H3Event): number {
+  if (typeof event.context.requestBegin !== 'number') {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'requestBegin time was not found in context',
+    });
+  } else {
+    return event.context.requestBegin;
+  }
+}
