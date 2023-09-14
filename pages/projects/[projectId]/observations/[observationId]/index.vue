@@ -102,6 +102,5 @@
     } else {
       await refreshObservation();
     }
-  })
-
+  });
 </script>

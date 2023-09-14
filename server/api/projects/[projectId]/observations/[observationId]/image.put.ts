@@ -163,5 +163,4 @@ export default safeResponseHandler(async (event) => {
   }
 
   return { success: true };
-
-})
+});
