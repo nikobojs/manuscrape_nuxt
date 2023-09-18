@@ -5,10 +5,9 @@ import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';
 
 const prisma = new PrismaClient();
-
 const fieldTypeValues = Object.values(FieldType);
 
-const newProjectSchema = yup.object({
+export const NewProjectSchema = yup.object({
   name: yup.string().required(),
   fields: yup.array(
     yup.object({
@@ -18,13 +17,15 @@ const newProjectSchema = yup.object({
       ).required()
     })
   ).required()
-}).required()
+}).required();
 
+
+// TODO: prettify code
 export default safeResponseHandler(async (event) => {
   const user = requireUser(event);
 
   const body = await readBody(event);
-  const newProject = await newProjectSchema.validate(body)
+  const newProject = await NewProjectSchema.validate(body)
 
   const createdProject = await prisma.project.create({
     data: {

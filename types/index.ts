@@ -1,7 +1,11 @@
-import { UInput } from "#build/components";
+import type { UInput } from "#build/components";
 import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
 import type { H3Event } from 'h3';
+import { NewProjectSchema } from "~/server/api/projects/index.post";
+import type { InferType } from "yup";
+import { SignInRequestSchema } from "~/server/api/auth.post";
+import { SignUpRequestSchema } from "~/server/api/user.post";
 
 export {};
 
@@ -87,4 +91,8 @@ declare global {
         id: number;
       }
     }
+
+    type NewProjectBody = InferType<typeof NewProjectSchema>;
+    type SignInBody = InferType<typeof SignInRequestSchema>;
+    type SignUpBody = InferType<typeof SignUpRequestSchema>;
 }

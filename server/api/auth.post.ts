@@ -6,7 +6,9 @@ import * as yup from 'yup';
 
 const prisma = new PrismaClient();
 
-const SignInRequestSchema = yup.object({
+export const SignInRequestSchema = yup.object({
+  // email: yup.string().required('Email is required'),
+  // password: yup.string().required('Password is required'),
   email: yup.string().required('Email is required').typeError('Email is not valid'),
   password: yup.string().required('Password is required').typeError('Password is not valid'),
 }).required();
@@ -15,7 +17,7 @@ const SignInRequestSchema = yup.object({
 export default safeResponseHandler(async (event) => {
   // read body and initiate parsed body
   const body = await readBody(event);
-  let parsed: {email: string; password: string} | undefined;
+  let parsed: SignInBody | undefined;
 
   // validate with yup and save to variable 'parsed'
   try {

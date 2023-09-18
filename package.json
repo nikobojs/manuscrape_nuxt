@@ -10,7 +10,10 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "migrate": "prisma migrate dev"
+    "migrate": "prisma migrate dev",
+    "test-dev": "vitest dev --no-threads",
+    "test": "vitest run --no-threads --silent=false",
+    "test-ui": "vitest --ui --no-threads"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.54",
@@ -22,18 +25,20 @@
     "@types/formidable": "^3.4.1",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.5.6",
+    "@vitest/ui": "^0.34.4",
+    "jsdom": "^22.1.0",
     "nuxt": "^3.7.0",
     "pm2": "^5.3.0",
     "prisma": "^5.2.0",
     "sass": "^1.66.1",
-    "typescript": "^5.2.2",
-    "vitest": "^0.34.3"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.400.0",
     "bcrypt": "^5.1.1",
     "formidable": "^3.5.1",
     "jsonwebtoken": "^9.0.1",
+    "vitest": "^0.33.0",
     "vue-tsc": "^1.8.8",
     "yup": "^1.2.0"
   }

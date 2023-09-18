@@ -1,4 +1,4 @@
-import { PrismaClientValidationError } from '@prisma/client/runtime/library'
+import { Prisma } from '@prisma/client'
 import { type EventHandler, type H3Event, H3Error } from 'h3'
 import { ValidationError } from 'yup'
 import { errors as formidableErrors } from 'formidable';
@@ -18,7 +18,7 @@ export const safeResponseHandler = (handler: EventHandler) =>
       if (err instanceof ValidationError) {
         msg = err.errors[0];
         status = 400;
-      } else if (err instanceof PrismaClientValidationError) {
+      } else if (err instanceof Prisma.PrismaClientValidationError) {
         status = 400;
         msg = 'Database error. Your input values can probably not be written to database.';
         longMsg = err.message

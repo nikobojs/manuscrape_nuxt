@@ -1,33 +1,37 @@
 <template>
-  <UContainer>
-    <h2 class="text-3xl mb-6 flex gap-x-4">
-      {{ header }}
-      <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
-      <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
-    </h2>
-    <ObservationFormContainer
-      v-if="observation"
-      :project="project"
-      :observation="observation"
-      :onObservationPublished="onSubmit"
-      :disabled="isLocked"
-      :awaitImageUpload="awaitImageUpload"
-      :onImageUploaded="onImageUploaded"
-      :onFormSubmit="onFormSubmit"
-      :metadataDone="metadataDone"
-      :imageUploaded="imageUploaded"
-    />
-  </UContainer>
+  <ResourceAccessChecker>
+    <UContainer>
+      <h2 class="text-3xl mb-6 flex gap-x-4">
+        {{ header }}
+        <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
+        <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
+      </h2>
+      <ObservationFormContainer
+        v-if="observation"
+        :project="project"
+        :observation="observation"
+        :onObservationPublished="onSubmit"
+        :disabled="isLocked"
+        :awaitImageUpload="awaitImageUpload"
+        :onImageUploaded="onImageUploaded"
+        :onFormSubmit="onFormSubmit"
+        :metadataDone="metadataDone"
+        :imageUploaded="imageUploaded"
+      />
+    </UContainer>
+  </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>
-  const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
+  const { requireProjectFromParams, projects } = await useProjects();
   await useUser();
   const { ensureLoggedIn } = await useAuth();
   await ensureLoggedIn();
   const { params, query } = useRoute();
-  ensureHasOwnership(params?.projectId, projects.value);
   const project = requireProjectFromParams(params);
+  if (typeof project?.id !== 'number') {
+    throw new Error('Project is not defined');
+  }
   const { requireObservationFromParams } = await useObservations(project.id);
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
@@ -59,6 +63,9 @@
     if (runsInElectron()) {
       window.electronAPI.observationCreated?.();
     } else {
+      if (typeof project?.id !== 'number') {
+        throw new Error('Project is not defined');
+      }
       navigateTo(`/projects/${project.id}`);
     }
   }

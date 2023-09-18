@@ -1,7 +1,9 @@
 <template>
-  <UContainer>
-    <ObservationImageEditor :project="project" :observation="observation" />
-  </UContainer>
+  <ResourceAccessChecker>
+    <UContainer>
+      <ObservationImageEditor :project="project" :observation="observation" />
+    </UContainer>
+  </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>
@@ -9,9 +11,11 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
-  const { ensureHasOwnership, requireProjectFromParams, projects } = await useProjects();
-  ensureHasOwnership(params?.projectId, projects.value);
+  const { requireProjectFromParams } = await useProjects();
   const project = requireProjectFromParams(params);
+  if (typeof project?.id !== 'number') {
+    throw new Error('Project is not defined');
+  }
   const { requireObservationFromParams, observations } = await useObservations(project.id);
   const _observation = await requireObservationFromParams(params);
   const observation = ref(_observation);

@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
+  await ensureURLResourceAccess(event, event.context.user);
   const projectId = parseIntParam(event.context.params?.projectId);
   const take = queryParam<number>({
     name: 'take',

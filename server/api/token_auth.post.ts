@@ -5,14 +5,14 @@ import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
-const tokenAuthBody = yup.object({
+const TokenAuthBody = yup.object({
   token: yup.string().required(),
 }).required()
 
 // TODO: decide on token or cookie based auth
 export default safeResponseHandler(async (event) => {
     const body = await readBody(event);
-    const { token } = await tokenAuthBody.validate(body)
+    const { token } = await TokenAuthBody.validate(body)
 
     const decoded = await jwt.verify(token, config.app.tokenSecret);
     if (typeof decoded !== 'string' && decoded?.id) {

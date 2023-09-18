@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
-import { ensureURLResourceAccess } from '../utils/authorize';
 import { isOpenUrl } from '../utils/request';
+import * as url from 'url';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
@@ -10,8 +10,9 @@ const prisma = new PrismaClient();
 // TODO: refactor and improve readability
 export default defineEventHandler(async (event) => {
     const cookieValue = getCookie(event, 'authcookie');
-    const headers = getHeaders(event)
+    const headers = getHeaders(event);
     const authToken = headers.authentication || cookieValue;
+    const params = getRouterParams(event);
     let loginSuccesfull = false;
 
     if (!authToken && !isOpenUrl(event)) {
@@ -48,8 +49,6 @@ export default defineEventHandler(async (event) => {
     if (loginSuccesfull && ['/user/new', '/login'].includes(event.path) && event.req.method === 'GET') {
         await sendRedirect(event, '/', 302);
     }
-
-    ensureURLResourceAccess(event);
 });
 
 

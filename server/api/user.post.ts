@@ -8,7 +8,7 @@ const config = useRuntimeConfig();
 
 const prisma = new PrismaClient();
 
-const SignUpRequestSchema = yup.object({
+export const SignUpRequestSchema = yup.object({
   email: yup.string().required('Email is required').typeError('Email is not valid'),
   password: yup.string().required('Password is required').typeError('Password is not valid'),
 }).required();
@@ -16,11 +16,11 @@ const SignUpRequestSchema = yup.object({
 export default safeResponseHandler(async (event) => {
   // read body and initiate parsed body
   const body = await readBody(event);
-  let parsed: {email: string; password: string} | undefined;
+  let parsed: SignUpBody | undefined;
 
   // validate with yup and save to variable 'parsed'
   try {
-    parsed = await SignUpRequestSchema.validate(body)
+    parsed = await SignUpRequestSchema.validate(body);
   } catch(e: any) {
     const msg = e?.message || 'Missing required body parameters';
     return await delayedError(event, 400, msg, true);
@@ -57,6 +57,7 @@ export default safeResponseHandler(async (event) => {
   const { token } = await authorize(event, user)
 
   // return delayed response
+  setResponseStatus(event, 201);
   const res = await delayedResponse(event, { id: user.id, token });
   return res;
 });

@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 export default safeResponseHandler(async (event) => {
   const user = requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
+  await ensureURLResourceAccess(event, event.context.user);
 
   const result = await prisma.observation.create({
     data: {
@@ -17,6 +18,8 @@ export default safeResponseHandler(async (event) => {
       data: {}
     }
   });
+
+  setResponseStatus(event, 201);
 
   return {
     id: result.id,

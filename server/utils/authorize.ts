@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import { PrismaClient, type User, ProjectRole, Project } from '@prisma/client';
 import { getRequestBeginTime, parseIntParam } from './request';
+import { useRoute } from 'nuxt/app';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
@@ -71,15 +72,20 @@ export async function getObservationsByProject(
 
 
 export async function ensureURLResourceAccess(
-    event: H3Event<EventHandlerRequest>
+    event: H3Event<EventHandlerRequest>,
+    user: UserInSession,
+    allowedRoles = [ProjectRole.OWNER.valueOf(), ProjectRole.INVITED.valueOf()]
 ): Promise<void> {
   // return early if user is not logged in
-  if (!event.context.user) {
-    return
+  if (!user) {
+    // TODO: report error
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'User does not exist',
+    });
   }
 
-  const user = event.context.user as UserInSession;
-  const params = event.context.params;
+  const params = getRouterParams(event);
   let projectIdInt: undefined | number;
 
   // validate params.projectId if it exists
@@ -88,9 +94,9 @@ export async function ensureURLResourceAccess(
     projectIdInt = parseIntParam(params.projectId);
 
     // validate params.projectId against projectAccess.projectId and projectAccess.role
-    const projectAccess = user.projectAccess.find(({ projectId, role }) => {
-      return projectId === projectIdInt && ['FULL_ACCESS'].includes(role)
-    })
+    const projectAccess = user.projectAccess.find(({ projectId, role }) => 
+      projectId === projectIdInt && allowedRoles.includes(role)
+    )
 
     // throw error if user doesn't have access to project
     if (!projectAccess) {
@@ -183,6 +189,14 @@ export function passwordStrongEnough(
     return {
       valid: false,
       reason: 'Password must contain at least one number or symbol',
+    }
+  }
+
+  // at least one letter
+  if (!/[a-zA-Z]/.test(pw)) {
+    return {
+      valid: false,
+      reason: 'Password must contain at least one letter',
     }
   }
 

@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
+  await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);

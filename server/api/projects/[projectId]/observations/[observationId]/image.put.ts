@@ -11,6 +11,7 @@ const config = useRuntimeConfig();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
+  await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
   const observation = await prisma.observation.findUnique({
@@ -58,7 +59,7 @@ export default safeResponseHandler(async (event) => {
       statusCode: 400,
       statusMessage: 'No image was sent'
     })
-  } else if (files['file'].length !== 1) {
+  } else if (files['file']?.length !== 1) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Only one image is allowed'

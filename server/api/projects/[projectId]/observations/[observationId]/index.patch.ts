@@ -15,6 +15,7 @@ export default safeResponseHandler(async (event) => {
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);
+  await ensureURLResourceAccess(event, event.context.user);
 
   const body = await readBody(event);
   let patch = await patchObservationSchema.validate(body);

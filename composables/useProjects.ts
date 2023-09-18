@@ -6,17 +6,11 @@ export const useProjects = async () => {
 
   const getProjectById = (
     projectId: number | string | undefined | null | string[]
-  ): FullProject => {
+  ): FullProject | undefined => {
     projectId = requireNumber(projectId, 'projectId')
-    if (!projects.value?.length) {
-      throw new Error('No projects are in state');
-    }
+
     const result = projects.value.find(p => p.id === projectId);
-    if (!result) {
-      throw new Error('Project does not exist');
-    } else {
-      return result;
-    }
+    return result;
   }
 
   const createProject = async (
@@ -63,32 +57,13 @@ export const useProjects = async () => {
     return ownsProject;
   }
 
-  const ensureHasOwnership = (
-    id: string | number | undefined | null | string[],
-    projects: FullProject[]
-  ) => {
-    if (
-      typeof id === 'string' &&
-      !isNaN(parseInt(id)) &&
-      projects?.length
-    ) {
-      id = parseInt(id);
-    }
-    
-    if (
-      typeof id === 'number' &&
-      projects?.length
-    ) {
-      if (!hasOwnership(id, projects)) {
-        navigateTo('/login');
-      }
-    } else {
-      navigateTo('/login');
-    }
-  }
-
   const requireProjectFromParams = (params: RouteParams) => {
-    const p = getProjectById(params?.projectId)
+    const p = getProjectById(params?.projectId);
+    if (!p) {
+      // TODO: report error
+      // throw new Error('No access to project');
+      navigateTo('/');
+    }
     return p;
   }
 
@@ -97,7 +72,6 @@ export const useProjects = async () => {
     createProject,
     loading,
     hasOwnership,
-    ensureHasOwnership,
     getProjectById,
     requireProjectFromParams,
     addCollaborator,
