@@ -31,7 +31,7 @@
   const error = ref(null)
   const { ensureLoggedIn } = await useAuth();
   const { hasRoles } = await useUser();
-  const { requireProjectFromParams, projects } = await useProjects();
+  const { requireProjectFromParams } = await useProjects();
 
   await ensureLoggedIn();
   const { params } = useRoute();

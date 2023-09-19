@@ -32,7 +32,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId: projectId,
     },
-  })
+  });
 
   const result = await prisma.observation.findMany({
     take,
@@ -67,5 +67,5 @@ export default safeResponseHandler(async (event) => {
   return {
     observations: result,
     total,
-  }
+  };
 });

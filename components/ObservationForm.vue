@@ -21,6 +21,8 @@
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
+  import type UCheckbox from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
+import { t } from 'vitest/dist/types-198fd1d9';
 
   const form = ref();
   const inputs = ref([] as CMSInput[]);
@@ -36,6 +38,7 @@
     throw new Error('Project id or observation id is not defined in url params')
   }
 
+  await useProjects();
   const { patchObservation } = await useObservations(props.project.id);
 
   enum FieldType {
@@ -43,13 +46,16 @@
     STRING = 'STRING',
     INT = 'INT',
     FLOAT = 'FLOAT',
-  }
+    DATETIME = 'DATETIME',
+    BOOLEAN = 'BOOLEAN',
+  };
 
-  const inputTypes: Record<FieldType, string> = Object.freeze({
-    [FieldType.DATE]: 'datetime-local',
+  const inputTypes: Record<string, string> = Object.freeze({
+    [FieldType.DATE]: 'date',
     [FieldType.STRING]: 'text',
     [FieldType.INT]: 'number',
     [FieldType.FLOAT]: 'number',
+    [FieldType.DATETIME]: 'datetime-local',
   });
 
   if (!props.observation || !props.project) {
@@ -84,8 +90,14 @@
     const errors = [] as FormError[];
 
     // scan for missing fields
-    // TODO: check if field is required or optional
-    const missingFields = props.project.fields.filter(f => !Object.keys(state).includes(f.label))
+    const missingFields = props.project.fields.filter(f => {
+      return (
+        f.required &&
+        !Object.keys(state).includes(f.label) && 
+        f.type !== FieldType.BOOLEAN
+      );
+    });
+
     if (missingFields.length > 0) {
       for(const field of missingFields) {
         errors.push({ path: field.label, message: 'Field is required'});
@@ -103,8 +115,8 @@
         });
       }
 
-      // TODO: check if field is required or optional
-      if (value === null || value === undefined) {
+      // check if field is required or optional
+      if (field.required && (value === null || value === undefined)) {
         errors.push({ path: key, message: 'Required'})
       }
 
@@ -121,7 +133,6 @@
       }
 
       // validate strings
-      // TODO: check if field is required or optional
       if (
         typ == FieldType.STRING
       ) {
@@ -134,7 +145,8 @@
       // NOTE: only acceps dates in ISO string
       // TODO: check if field is required or optional
       if (
-        typ == FieldType.DATE
+        typ == FieldType.DATE ||
+        typ == FieldType.DATETIME
       ) {
         const valueDate = new Date(''+value);
         if (isNaN(valueDate.getTime())) {
@@ -148,30 +160,53 @@
 
   function buildForm(project: FullProject) {
     for (const field of project.fields) {
-      const inputArgs: CMSInputProps = {
-        placeholder: 'Enter ' + field.label,
-        name: field.label,
-        type: inputTypes[FieldType.STRING],
-      };
 
+      const useSimpleInput = Object.keys(inputTypes).includes(field.type);
       const typ = field.type;
-      if (typ == FieldType.FLOAT) {
-        inputArgs.type = inputTypes[FieldType.FLOAT]
-        inputArgs.step = 0.1;
-      } else if (typ == FieldType.INT) {
-        inputArgs.type = inputTypes[FieldType.INT]
-      } else if (typ == FieldType.DATE) {
-        inputArgs.type = inputTypes[FieldType.DATE]
-      } else if (typ != FieldType.STRING) {
-        throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
-      }
 
-      const element = markRaw(resolveComponent('UInput') as typeof UInput);
-      inputs.value.push({
-        field,
-        props: inputArgs,
-        element,
-      });
+      if (useSimpleInput) {
+        const inputArgs: CMSInputProps = {
+          placeholder: 'Enter ' + field.label,
+          name: field.label,
+          type: inputTypes[FieldType.STRING],
+        };
+
+        if (typ == FieldType.FLOAT) {
+          inputArgs.type = inputTypes[FieldType.FLOAT]
+          inputArgs.step = 0.1;
+        } else if (typ == FieldType.INT) {
+          inputArgs.type = inputTypes[FieldType.INT]
+        } else if (typ == FieldType.DATETIME) {
+          inputArgs.type = inputTypes[FieldType.DATETIME]
+        } else if (typ == FieldType.DATE) {
+          inputArgs.type = inputTypes[FieldType.DATE]
+        } else if (typ == FieldType.BOOLEAN) {
+          inputArgs.type = inputTypes[FieldType.BOOLEAN]
+        } else if (typ != FieldType.STRING) {
+          throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
+        }
+
+        const element = markRaw(resolveComponent('UInput') as typeof UInput);
+        inputs.value.push({
+          field,
+          props: inputArgs,
+          element,
+        });
+      } else {
+        const element = markRaw(resolveComponent('UCheckbox') as typeof UCheckbox);
+        if (typ == FieldType.BOOLEAN) {
+          inputs.value.push({
+            field,
+            props: {
+              label: field.label,
+              name: field.label,
+              type: 'checkbox',
+              checked: false,
+            },
+            element,
+          })
+        }
+      }
     }
   }
 

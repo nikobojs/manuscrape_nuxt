@@ -161,12 +161,14 @@ export const testProject: NewProjectBody = {
   name: 'Temporary test project',
   fields: [
     {
-      label: 'Date field',
-      type: FieldType.DATE,
+      label: 'Date time field',
+      type: FieldType.DATETIME,
+      required: false,
     },
     {
       label: 'Text field',
       type: FieldType.STRING,
+      required: true,
     }
   ]
 };

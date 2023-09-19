@@ -1,5 +1,5 @@
-import type { UInput } from "#build/components";
-import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole } from "@prisma/client";
+import type { UInput, UCheckbox } from "#build/components";
+import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType } from "@prisma/client";
 import { Raw } from "nuxt/dist/app/compat/capi";
 import type { H3Event } from 'h3';
 import { NewProjectSchema } from "~/server/api/projects/index.post";
@@ -29,17 +29,11 @@ declare global {
 
     interface FullImage extends Omit<ImageUpload, 's3Path'> {}
 
-    // TODO: extract type from zod validation object instead
-    type NewField = Omit<
-        Omit<
-            Omit<
-                Omit<
-                    Omit<ProjectField,'id'>,
-                    'createdAt'
-                >, 'projectId'
-            >, 'dynamicFields0'
-        >, 'dynamicFields1'
-    >;
+    type NewField = {
+        label: string;
+        type: FieldType;
+        required: boolean;
+    };
 
     interface CMSInputProps {
         type: string;
@@ -48,10 +42,17 @@ declare global {
         step?: number;
     }
 
+    interface CMSCheckboxProps {
+        type: string;
+        name: string;
+        label: string;
+        checked: boolean;
+    }
+
     interface CMSInput {
         field: ProjectField;
-        props: CMSInputProps;
-        element: Raw<typeof UInput>;
+        props: CMSInputProps | CMSCheckboxProps;
+        element: Raw<typeof UInput | typeof UCheckbox>;
     }
 
     interface Window {

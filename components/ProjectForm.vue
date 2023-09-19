@@ -19,10 +19,13 @@
         </label>
         <UInput v-model="fieldLabel"  id="field-label-input" placeholder="Enter field label" />
         <USelectMenu v-model="fieldType" :options="fieldTypeOptions" placeholder="Select field type" />
-        <div>
-          <UButton icon="i-heroicons-plus" variant="outline" color="blue" type="button" @click="addField">
-            Add field
-          </UButton>
+        <div class="grid grid-cols-2 mt-1 w-full">
+          <UCheckbox class="items-center" v-model="fieldRequired" label="Field is required" />
+          <div class="w-full text-right">
+            <UButton icon="i-heroicons-plus" variant="outline" color="blue" type="button" @click="addField">
+              Add field
+            </UButton>
+          </div>
         </div>
       </div>
       <div class="w-96">
@@ -53,15 +56,18 @@
   const loading = ref(false);
   const error = ref('');
   const fieldLabel = ref('');
+  const fieldRequired = ref(false);
   const toast = useToast();
 
   const fieldType = ref(undefined as NewField | undefined);
 
   const fieldTypes: Record<string, string> = {
     'Text': 'STRING',
-    'Date': 'DATE',
     'Whole number': 'INT',
     'Decimal number': 'FLOAT',
+    'Date': 'DATE',
+    'Date and time': 'DATETIME',
+    'Checkbox': 'BOOLEAN',
   }
 
   const operators: Record<string, string> = {
@@ -76,8 +82,8 @@
 
   const form = reactive({
     name: '',
-    fields: [] as NewField[],
-  });
+    fields: [],
+  } as NewProjectBody);
 
   const addedFields = ref([] as { label: string; field: NewField }[])
 
@@ -124,6 +130,7 @@
     form.fields.push({
       label: fieldLabel.value,
       type: fieldType.value.type,
+      required: fieldRequired.value,
     });
 
     addedFields.value.push({

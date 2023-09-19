@@ -14,7 +14,8 @@ export const NewProjectSchema = yup.object({
       label: yup.string().required(),
       type: yup.mixed<typeof fieldTypeValues[number]>().required().oneOf(
         Object.values(FieldType)
-      ).required()
+      ).required(),
+      required: yup.boolean().required(),
     })
   ).required()
 }).required();
@@ -44,6 +45,7 @@ export default safeResponseHandler(async (event) => {
   const newProjectFields = newProject.fields.map((f) => ({
     label: f.label,
     type: f.type,
+    required: f.required,
     projectId: createdProject.id,
   }))
 

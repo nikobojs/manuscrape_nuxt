@@ -2,15 +2,15 @@
   <slot />
 </template>
 
-<script setup>
+<script setup lang="ts">
   const { requireProjectFromParams } = await useProjects();
-  const { requireObservationFromParams } = await useObservations();
   const { params } = useRoute();
   const toast = useToast();
+  let projectId: number | undefined = undefined;
   
   if (params.projectId) {
     try {
-      requireProjectFromParams(params);
+      projectId = requireProjectFromParams(params)?.id;
     } catch(e) {
       toast.add({
         title: 'No access to project',
@@ -19,18 +19,20 @@
 
       navigateTo('/', { redirectCode: 302 });
     }
-  }
 
-  if (params.observationId) {
-    try {
-      requireObservationFromParams(params);
-    } catch(e) {
-      toast.add({
-        title: 'No access to observation',
-        description: '... or it doesn\'t exist',
-      });
+    if (params.observationId && typeof projectId === 'number') {
+      try {
+        const { requireObservationFromParams } = await useObservations(projectId);
+        requireObservationFromParams(params);
+      } catch(e) {
+        toast.add({
+          title: 'No access to observation',
+          description: '... or it doesn\'t exist',
+        });
 
-      navigateTo('/', { redirectCode: 302 });
+        navigateTo('/', { redirectCode: 302 });
+      }
     }
   }
+
 </script>

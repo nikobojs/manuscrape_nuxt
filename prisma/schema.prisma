@@ -12,6 +12,8 @@ enum FieldType {
   STRING
   INT
   FLOAT
+  DATETIME
+  BOOLEAN
 }
 
 enum FieldOperator {
@@ -64,6 +66,7 @@ model ProjectField {
   projectId          Int
   project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
   type               FieldType
+  required           Boolean                @default(false)
   dynamicFields0s    DynamicProjectField[]  @relation("field0_id")
   dynamicFields1s    DynamicProjectField[]  @relation("field1_id")
 }

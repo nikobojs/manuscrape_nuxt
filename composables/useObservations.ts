@@ -10,6 +10,10 @@ export const useObservations = async (projectId: number) => {
   const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
   const totalPages = computed(() => Math.ceil(totalObservations.value / pageSize));
 
+  if (typeof projectId !== 'number') {
+    throw new Error('Project id is not a number!')
+  }
+
   const {
     pending: loading,
   } = await useFetch<FullObservation[]>(
