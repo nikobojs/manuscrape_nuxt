@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import { PrismaClient, type User, ProjectRole, Project } from '@prisma/client';
 import { getRequestBeginTime, parseIntParam } from './request';
-import { useRoute } from 'nuxt/app';
 
 const config = useRuntimeConfig();
 const prisma = new PrismaClient();
@@ -18,7 +17,7 @@ export async function authorize(
   setCookie(event, 'authcookie', token, {
     expires,
     httpOnly: true,
-    domain: config.app.COOKIE_DOMAIN,
+    domain: config.app.cookieDomain,
     sameSite: 'strict'
   });
 

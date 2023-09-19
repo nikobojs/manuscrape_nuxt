@@ -32,7 +32,7 @@ export default safeResponseHandler(async (event) => {
         setCookie(event, 'authcookie', token, {
           expires,
           httpOnly: true,
-          domain: config.app.COOKIE_DOMAIN,
+          domain: config.app.cookieDomain,
           sameSite: 'strict'
         });
         return { 'success': true }

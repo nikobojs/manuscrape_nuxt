@@ -1,6 +1,9 @@
 
 import { describe, test, expect } from 'vitest';
-import { login, signup, expectRedirect, withTempUser, openSignUpPage, openLoginPage, openIndexPage } from './helpers';
+import { login, signup, expectRedirect, withTempUser, openSignUpPage, openLoginPage, openIndexPage, deleteUser, createProject, getMe, inviteToProject } from './helpers';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 describe('Pages not requiring auth', async () => {
   test('login page returns 200', async () => {

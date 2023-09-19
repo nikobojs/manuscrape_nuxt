@@ -12,3 +12,4 @@ await afterEach(async () => {
 
 export * from './auth';
 export * from './projects';
+export * from './deletion';

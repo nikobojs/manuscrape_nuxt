@@ -43,14 +43,26 @@ export const useAuth = async () => {
         }
     }
 
+    const deleteUser = async (password: string) => {
+        const res = await $fetch<TokenResponse>('/api/user', {
+            method: 'DELETE',
+            body: JSON.stringify({ password }),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        return res;
+    }
+
     return {
-        refreshUser,
-        signOut,
-        signUp,
-        login,
-        user,
+        deleteUser,
         ensureLoggedIn,
         ensureUserFetched,
         hasFetched,
+        login,
+        refreshUser,
+        signOut,
+        signUp,
+        user,
     }
 };

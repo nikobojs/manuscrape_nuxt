@@ -1,20 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { withTempUser, createProject, getMe, fetchObservations, openProjectPage } from './helpers';
-import { FieldType } from '@prisma/client';
-
-const testProject: NewProjectBody = {
-  name: 'Temporary test project',
-  fields: [
-    {
-      label: 'Date field',
-      type: FieldType.DATE,
-    },
-    {
-      label: 'Text field',
-      type: FieldType.STRING,
-    }
-  ]
-};
+import { testProject, withTempUser, createProject, getMe, fetchObservations, openProjectPage } from './helpers';
 
 describe('Project management', () => {
   test('user can create project', async () =>  {

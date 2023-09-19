@@ -53,6 +53,13 @@
   const settingsItems: DropdownItem[][] = [
     [
       {
+        label: 'Profile',
+        icon: 'i-heroicons-user',
+        click: () => {
+          navigateTo('/user')
+        }
+      },
+      {
         label: 'Log out',
         icon: 'i-heroicons-arrow-right-on-rectangle',
         click: () => {

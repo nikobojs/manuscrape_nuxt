@@ -1,5 +1,6 @@
 import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
+import { FieldType } from '@prisma/client';
 
 const contentTypeJson = {
   "Content-Type": "application/json",
@@ -69,6 +70,25 @@ export async function getMe(token: string): Promise<Response> {
   return res;
 }
 
+export async function deleteUser(
+  token: string,
+  body: any,
+): Promise<Response> {
+  const res = await fetch(
+    "/api/user",
+    {
+      method: "DELETE",
+      body: JSON.stringify(body),
+      headers: {
+        ...authHeader(token),
+        ...contentTypeJson,
+      },
+    },
+  );
+
+  return res;
+}
+
 export async function fetchObservations(
   token: string,
   projectId: number,
@@ -114,10 +134,42 @@ export async function openIndexPage(): Promise<Response> {
   return res;
 }
 
-export async function expectRedirect(res: Response, to: string) {
+export async function expectRedirect(
+  res: Response,
+  to: string,
+): Promise<void> {
   expect(res?.status).toBe(302);
   expect(res?.headers.get("location")).toEqual(to);
 }
+
+export async function inviteToProject(token: string, projectId: number, body: any) {
+  const res = await fetch(
+    `/api/projects/${projectId}/collaborators`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      }
+    },
+  );
+  return res;
+}
+
+export const testProject: NewProjectBody = {
+  name: 'Temporary test project',
+  fields: [
+    {
+      label: 'Date field',
+      type: FieldType.DATE,
+    },
+    {
+      label: 'Text field',
+      type: FieldType.STRING,
+    }
+  ]
+};
 
 let emailIndex = 0;
 const freshEmail = () => `nfb+test${emailIndex++}@codecollective.dk`;
