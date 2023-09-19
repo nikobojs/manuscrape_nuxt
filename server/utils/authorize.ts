@@ -169,6 +169,11 @@ export async function delayedError(
 }
 
 
+export function isValidEmail(email: string): boolean {
+  return !!email && /.+\@.+\..+/.test(email);
+}
+
+
 // server-side password validation function
 export function passwordStrongEnough(
   pw: string

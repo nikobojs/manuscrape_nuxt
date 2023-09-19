@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
-import { authorize, delayedError, delayedResponse, passwordStrongEnough } from '../utils/authorize';
+import { authorize, delayedError, delayedResponse, passwordStrongEnough, isValidEmail } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
 import * as yup from 'yup';
 
@@ -33,6 +33,11 @@ export default safeResponseHandler(async (event) => {
   });
   if (existingUser) {
     return await delayedError(event, 409, 'User already exists');
+  }
+
+  // validate email
+  if (!isValidEmail(parsed.email)) {
+    return await delayedError(event, 400, 'Invalid email')
   }
 
   // validate password
