@@ -68,6 +68,7 @@ export default safeResponseHandler(async (event) => {
 })
 
 
+// TODO: move to util
 function removeKeysByUndefinedValue(
   obj: Record<string, any>
 ): Record<string, any> {

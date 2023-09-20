@@ -14,13 +14,9 @@
 
 <script setup lang="ts">
   const props = defineProps({
-    project: Object as PropType<FullProject>,
+    project: requireProjectProp,
   });
   
-  if (!props.project?.id) {
-    throw new Error('Project id is not defined in component props')
-  }
-
   const toast = useToast();
   const email = ref('');
   const validEmail = computed(() => {
@@ -32,11 +28,6 @@
   async function onSubmit() {
     if (!validEmail.value) {
       throw new Error('Email is not valid');
-    }
-
-
-    if (!props.project?.id) {
-      throw new Error('Project id is not defined in component props')
     }
 
     await addCollaborator(props.project?.id, email.value).then((res) => {

@@ -36,8 +36,8 @@
 import { formatMb } from '~/utils/formatMb';
 
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
+    observation: requireObservationProp,
+    project: requireProjectProp,
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
     disabled: Boolean as PropType<boolean>,
     imageUploaded: Boolean as PropType<boolean>,
@@ -49,7 +49,7 @@ import { formatMb } from '~/utils/formatMb';
   }
 
   const toast = useToast();
-  const { upsertObservationImage } = await useObservations(props.project?.id);
+  const { upsertObservationImage } = await useObservations(props.project.id);
   const file = ref<File | undefined>();
   const uploadChecker = ref();
   const route = useRoute();
@@ -94,32 +94,28 @@ import { formatMb } from '~/utils/formatMb';
     file.value = files[0] as File;
 
     try {
-      if (props.observation && props.project) {
-        await upsertObservationImage(
-          props.project.id,
-          props.observation.id,
-          file.value
-        ).then(async () => {
-          if (typeof props.project?.id !== 'number') {
-            throw new Error('Project id is not found')
-          }
-          const isFirstImage = !!uploaded.value
-          props.onSubmit?.(isFirstImage);
-        }).catch((e: any) => {
-          let msg = 'An error occured when uploading image'
-          if (e.message) {
-            msg = e.message;
-          }
-          toast.add({
-            title: 'Image upload error',
-            description: msg,
-            icon: 'i-heroicons-exclamation-triangle',
-            color: 'red'
-          });
-        })
-      } else {
-        throw new Error('Project or observation id was not found');
-      }
+      await upsertObservationImage(
+        props.project.id,
+        props.observation.id,
+        file.value
+      ).then(async () => {
+        if (typeof props.project?.id !== 'number') {
+          throw new Error('Project id is not found')
+        }
+        const isFirstImage = !!uploaded.value
+        props.onSubmit?.(isFirstImage);
+      }).catch((e: any) => {
+        let msg = 'An error occured when uploading image'
+        if (e.message) {
+          msg = e.message;
+        }
+        toast.add({
+          title: 'Image upload error',
+          description: msg,
+          icon: 'i-heroicons-exclamation-triangle',
+          color: 'red'
+        });
+      })
     } catch(err) {
       console.error('Upload image submit error:', err);
       throw err;
@@ -128,8 +124,6 @@ import { formatMb } from '~/utils/formatMb';
 
   // TODO: document better
   async function handleIfUploadDone(): Promise<void> {
-    if (!props.project?.id) throw new Error('Project is not defined');
-    // await refreshObservations(props.project.id);
     if (!props.uploadInProgress) {
       setTimeout(async () => {
         router.replace({ query: { electron: route.query.electron || 0 } })
@@ -142,8 +136,6 @@ import { formatMb } from '~/utils/formatMb';
 
   // TODO: improve error handling and implement for ordinary file upload
   onBeforeMount(async () => {
-    // const alreadyUploaded = await checkIfDoneUploading();
-    // if (alreadyUploaded) {
     if (props.imageUploaded) {
       await handleIfUploadDone();
     } else if (props.uploadInProgress) {

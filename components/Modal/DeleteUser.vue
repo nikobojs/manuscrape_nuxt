@@ -21,8 +21,7 @@
 
 <script lang="ts" setup>
   const props = defineProps({
-    open: Boolean as PropType<boolean>,
-    onClose: Function as PropType<() => void>,
+    ...requireModalProps
   });
 
   const password = ref('');
@@ -33,7 +32,7 @@
 
   async function onDeleteUserConfirm() {
     try {
-      props?.onClose?.()
+      props.onClose()
       await deleteUser(password.value);
       toast.add({
         title: 'Success',

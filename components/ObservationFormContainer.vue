@@ -45,8 +45,6 @@
 
 <script setup lang="ts">
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
     onObservationPublished: Function as PropType<Function>,
     onFormSubmit: Function as PropType<Function>,
     onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
@@ -54,11 +52,9 @@
     awaitImageUpload: Boolean as PropType<boolean>,
     metadataDone: Boolean as PropType<boolean>,
     imageUploaded: Boolean as PropType<boolean>,
+    observation: requireObservationProp,
+    project: requireProjectProp,
   });
-
-  if (!props.observation?.id || !props.project?.id) {
-    throw new Error('Project id or observation id is not defined in url params')
-  }
 
   const { publishObservation, deleteObservation } = await useObservations(props.project.id);
   const toast = useToast();
@@ -68,9 +64,6 @@
   })
 
   async function publish() {
-    if (!props.project || !props.observation) {
-      throw new Error('Props are not defined')
-    }
     await publishObservation(props.project.id, props.observation.id);
     props.onObservationPublished?.();
   }

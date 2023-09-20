@@ -1,8 +1,6 @@
 <template>
   <div
-    v-if="typeof observation?.id === 'number'
-      && typeof project?.id === 'number'
-      && typeof observation?.imageId === 'number'"
+    v-if="typeof observation?.imageId === 'number'"
   >
     <div class="mb-4 w-full">
       <p>Editing image for observation #{{ observation.id }}</p>
@@ -18,14 +16,10 @@
 
 <script setup lang="ts">
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
+    observation: requireObservationProp,
+    project: requireProjectProp,
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
   });
-
-  if (!props.observation?.id || !props.project?.id) {
-    throw new Error('Project id or observation id is not defined in url params')
-  }
 
   if (!props.observation?.imageId) {
     console.error('Observation does not have an image!')
@@ -74,9 +68,6 @@
     const cvs = canvas.value;
     if (!cvs) {
       throw new Error('Canvas is not support. Your browser might need to be updated');
-    }
-    if (!props.project?.id) {
-      throw new Error('Project is not defined');
     }
 
     cvs.toBlob(async (blob) => {

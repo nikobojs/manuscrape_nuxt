@@ -16,6 +16,7 @@ export const NewProjectSchema = yup.object({
         Object.values(FieldType)
       ).required(),
       required: yup.boolean().required(),
+      choices: yup.array().of(yup.string().required()).optional(),
     })
   ).required()
 }).required();
@@ -47,6 +48,7 @@ export default safeResponseHandler(async (event) => {
     type: f.type,
     required: f.required,
     projectId: createdProject.id,
+    choices: f.choices || [],
   }))
 
   await prisma.projectField.createMany({ data: newProjectFields });

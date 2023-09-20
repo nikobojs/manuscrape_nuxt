@@ -7,7 +7,7 @@ import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
 
-export {};
+export { };
 
 declare global {
     interface CurrentUser extends User {
@@ -27,7 +27,7 @@ declare global {
         observations: Observation[];
     }
 
-    interface FullImage extends Omit<ImageUpload, 's3Path'> {}
+    interface FullImage extends Omit<ImageUpload, 's3Path'> { }
 
     type NewField = {
         label: string;
@@ -49,18 +49,24 @@ declare global {
         checked: boolean;
     }
 
+    interface CMSDropdownProps {
+        name: string;
+        label: string;
+        choices: string[];
+    }
+
     interface CMSInput {
         field: ProjectField;
-        props: CMSInputProps | CMSCheckboxProps;
+        props: CMSInputProps | CMSCheckboxProps | CMSDropdownProps;
         element: Raw<typeof UInput | typeof UCheckbox>;
     }
 
     interface Window {
-      electronAPI?: any;
+        electronAPI?: any;
     }
 
     interface TokenResponse {
-      token: string;
+        token: string;
     }
 
     interface UserInSession {
@@ -86,11 +92,16 @@ declare global {
         validate: (parsed: T) => boolean;
         required?: boolean;
     }
+
     interface IProjectAccess {
-      role: string;
-      project: {
-        id: number;
-      }
+        role: string;
+        project: {
+            id: number;
+        }
+    }
+
+    interface DropDownConfig {
+      choices: string[];
     }
 
     type NewProjectBody = InferType<typeof NewProjectSchema>;

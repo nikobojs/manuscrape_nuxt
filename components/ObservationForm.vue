@@ -22,21 +22,15 @@
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
   import type UCheckbox from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
-import { t } from 'vitest/dist/types-198fd1d9';
 
   const form = ref();
   const inputs = ref([] as CMSInput[]);
-  const toast = useToast();
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
+    observation: requireObservationProp,
+    project: requireProjectProp,
     onSubmit: Function as PropType<Function>,
     disabled: Boolean as PropType<Boolean>,
   });
-
-  if (!props.observation?.id || !props.project?.id) {
-    throw new Error('Project id or observation id is not defined in url params')
-  }
 
   await useProjects();
   const { patchObservation } = await useObservations(props.project.id);
@@ -58,35 +52,13 @@ import { t } from 'vitest/dist/types-198fd1d9';
     [FieldType.DATETIME]: 'datetime-local',
   });
 
-  if (!props.observation || !props.project) {
-    toast.add({
-      title: props.observation ? 'Observation does not exist' : 'Project does not exist',
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red'
-    });
-    navigateTo('/');
-  } else {
-    if (inputs.value.length == 0) {
-      buildForm(props.project);
-    }
+  if (inputs.value.length == 0) {
+    buildForm(props.project);
   }
 
   const state = ref(props.observation?.data as any);
 
   function validate(state: any): FormError[] {
-    if (!props.project) {
-      throw createError({
-        statusMessage: 'Project does not exist',
-        statusCode: 400,
-      });
-    }
-    if (!props.observation) {
-      throw createError({
-        statusMessage: 'Observation does not exist',
-        statusCode: 400,
-      });
-    }
-
     const errors = [] as FormError[];
 
     // scan for missing fields
@@ -219,20 +191,12 @@ import { t } from 'vitest/dist/types-198fd1d9';
       return;
     }
 
-    if (props.project?.id && props.observation?.id) {
-      // const res = await createObservation(props.project?.id, state.value);
-      const res = await patchObservation(
-        props.project.id,
-        props.observation?.id,
-        { data: state.value }
-      );
+    const res = await patchObservation(
+      props.project.id,
+      props.observation?.id,
+      { data: state.value }
+    );
 
-      props.onSubmit?.();
-    } else {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Project or observation does not exist',
-      })
-    }
+    props.onSubmit?.();
   }
 </script>

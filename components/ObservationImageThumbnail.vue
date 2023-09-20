@@ -9,7 +9,7 @@
       :src="`/api/projects/${project?.id}/observations/${observation?.id}/image?lastUpdate=${(props.lastUpdate || new Date()).getTime()}`"
     />
 
-    <ObservationImageDialog
+    <ModalObservationImage
       :project="project"
       :observation="observation"
       :open="openImageDialog"
@@ -20,8 +20,8 @@
 
 <script lang="ts" setup>
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
+    observation: requireObservationProp,
+    project: requireProjectProp,
     image: Object as PropType<FullImage>,
     lastUpdate: Date as PropType<Date>,
   });

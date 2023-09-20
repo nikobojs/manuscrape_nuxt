@@ -25,7 +25,7 @@
       </div>
     </template>
   </UTable>
-  <ObservationImageDialog
+  <ModalObservationImage
     v-if="selectedObservation"
     :open="openImageDialog"
     :observation="selectedObservation"
@@ -63,8 +63,8 @@
   const selectedObservation = ref<null | FullObservation>(null);
 
   const props = defineProps({
-    observations: Object as PropType<FullObservation[]>,
-    project: Object as PropType<FullProject>,
+    observations: requireObservationsProp,
+    project: requireProjectProp,
   });
 
   function openObservationImage(row: any) {

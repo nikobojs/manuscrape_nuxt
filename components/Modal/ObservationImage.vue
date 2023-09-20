@@ -14,10 +14,9 @@
 
 <script lang="ts" setup>
   const props = defineProps({
-    project: Object as PropType<FullProject>,
-    observation: Object as PropType<FullObservation>,
-    open: Boolean as PropType<boolean>,
-    onClose: Function as PropType<() => void>,
+    project: requireProjectProp,
+    observation: requireObservationProp,
+    ...requireModalProps,
     lastUpdate: Date as PropType<Date>,
   });
 
