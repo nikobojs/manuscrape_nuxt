@@ -177,13 +177,6 @@
       throw new Error(`Dropdown field type '${fieldType.value.type}' is not supported`);
     }
     
-    console.log('adding dropdown field:', {
-      label: fieldLabel.value,
-      type: fieldType.value,
-      required: fieldRequired.value,
-      choices: choices,
-    })
-
     form.fields.push({
       label: fieldLabel.value,
       type: fieldType.value.type,

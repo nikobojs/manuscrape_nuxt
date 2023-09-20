@@ -1,6 +1,4 @@
-import type { UInput, UCheckbox } from "#build/components";
 import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType } from "@prisma/client";
-import { Raw } from "nuxt/dist/app/compat/capi";
 import type { H3Event } from 'h3';
 import { NewProjectSchema } from "~/server/api/projects/index.post";
 import type { InferType } from "yup";
@@ -43,7 +41,7 @@ declare global {
     }
 
     interface CMSCheckboxProps {
-        type: string;
+        type: 'checkbox';
         name: string;
         label: string;
         checked: boolean;
@@ -51,14 +49,17 @@ declare global {
 
     interface CMSDropdownProps {
         name: string;
-        label: string;
+        choices: string[];
+    }
+
+    interface CMSRadioGroupProps {
+        name: string;
         choices: string[];
     }
 
     interface CMSInput {
         field: ProjectField;
-        props: CMSInputProps | CMSCheckboxProps | CMSDropdownProps;
-        element: Raw<typeof UInput | typeof UCheckbox>;
+        props: CMSInputProps | CMSCheckboxProps | CMSDropdownProps | CMSRadioGroupProps;
     }
 
     interface Window {

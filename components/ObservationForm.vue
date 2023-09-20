@@ -1,9 +1,37 @@
-
 <template>
   <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
-    <div v-for="({ props, element, field }) in inputs" class="mb-4">
+    <div v-for="({ props, field }) in inputs" class="mb-4">
       <UFormGroup :name="field.label" :label="field.label">
-        <component :is="element" v-model="state[field.label]" v-bind="props" :disabled="!!$props.disabled" />
+        <UInput
+          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN'].includes(field.type)"
+          v-model="state[field.label]"
+          v-bind="props"
+          :disabled="!!$props.disabled"
+        />
+        <UInput
+          v-else-if="field.type === 'BOOLEAN'"
+          v-model="state[field.label]"
+          v-bind="props"
+          :disabled="!!$props.disabled"
+        />
+        <div v-else-if="field.type === 'CHOICE'">
+          <div class="flex items-center gap-2" v-for="choice in field.choices">
+            <URadio
+              :id="`radio-${choice}`"
+              :key="choice"
+              v-model="state[field.label]"
+              :name="field.label"
+              :value="choice"
+            />
+            <label :for="`radio-${choice}`">{{ choice }}</label>
+          </div>
+        </div>
+        <div v-else-if="field.type === 'AUTOCOMPLETE'">
+          <USelect
+            :options="field.choices"
+            v-model="state[field.label]"
+          />
+        </div>
       </UFormGroup>
     </div>
     <UButton
@@ -20,8 +48,6 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
-  import type UInput from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
-  import type UCheckbox from '@nuxthq/ui/dist/runtime/components/forms/Input.vue';
 
   const form = ref();
   const inputs = ref([] as CMSInput[]);
@@ -42,6 +68,8 @@
     FLOAT = 'FLOAT',
     DATETIME = 'DATETIME',
     BOOLEAN = 'BOOLEAN',
+    AUTOCOMPLETE = 'AUTOCOMPLETE',
+    CHOICE = 'CHOICE',
   };
 
   const inputTypes: Record<string, string> = Object.freeze({
@@ -116,7 +144,7 @@
       // validate dates
       // NOTE: only acceps dates in ISO string
       // TODO: check if field is required or optional
-      if (
+      else if (
         typ == FieldType.DATE ||
         typ == FieldType.DATETIME
       ) {
@@ -155,17 +183,15 @@
         } else if (typ == FieldType.BOOLEAN) {
           inputArgs.type = inputTypes[FieldType.BOOLEAN]
         } else if (typ != FieldType.STRING) {
+          // TODO: report error
           throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
         }
 
-        const element = markRaw(resolveComponent('UInput') as typeof UInput);
         inputs.value.push({
           field,
           props: inputArgs,
-          element,
         });
       } else {
-        const element = markRaw(resolveComponent('UCheckbox') as typeof UCheckbox);
         if (typ == FieldType.BOOLEAN) {
           inputs.value.push({
             field,
@@ -174,9 +200,22 @@
               name: field.label,
               type: 'checkbox',
               checked: false,
-            },
-            element,
+            } as CMSCheckboxProps,
           })
+        } else if(typ == FieldType.CHOICE || typ == FieldType.AUTOCOMPLETE) {
+          if (!field.choices?.length) {
+            throw new Error('Radio button type has no values to pick from');
+          }
+
+          inputs.value.push({
+            field,
+            props: {
+              name: field.label,
+            } as CMSRadioGroupProps,
+          });
+        } else {
+          // TODO: report error
+          console.warn(`Field with type '${field.type}' is not support :( Try again in an hour`);
         }
       }
     }
