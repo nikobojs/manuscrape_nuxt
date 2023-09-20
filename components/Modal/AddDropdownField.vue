@@ -27,7 +27,7 @@
         </UBadge>
       </div>
       <template #footer>
-        <div class="flex gap-3 justify-end">
+        <div class="flex gap-3 justify-end flex-wrap">
           <UButton @click="handleSubmit" variant="outline" color="primary" :disabled="items.length === 0">
             Save field
           </UButton>

@@ -27,9 +27,10 @@
           </div>
         </div>
         <div v-else-if="field.type === 'AUTOCOMPLETE'">
-          <USelect
+          <USelectMenu
             :options="field.choices"
             v-model="state[field.label]"
+            searchable
           />
         </div>
       </UFormGroup>
