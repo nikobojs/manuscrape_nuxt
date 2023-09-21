@@ -19,7 +19,7 @@
           v-model="state[field.label]"
           v-bind="props"
           :disabled="!!$props.disabled"
-          @input="(inp: any) => maxLengthCheck(inp, field.label)"
+          @input="(asd: Event) => fourDigitYear(asd)"
         />
         <div v-else-if="field.type === 'CHOICE'">
           <div class="flex items-center gap-2" v-for="choice in field.choices">
@@ -57,8 +57,6 @@
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
 
-  const form = ref();
-  const inputs = ref([] as CMSInput[]);
   const props = defineProps({
     observation: requireObservationProp,
     project: requireProjectProp,
@@ -68,6 +66,10 @@
 
   await useProjects();
   const { patchObservation } = await useObservations(props.project.id);
+
+  const form = ref();
+  const inputs = ref([] as CMSInput[]);
+  const state = ref(props.observation?.data as any);
 
   enum FieldType {
     DATE = 'DATE',
@@ -91,22 +93,6 @@
   if (inputs.value.length == 0) {
     buildForm(props.project);
   }
-
-  const state = ref(props.observation?.data as any);
-
-  // TODO: move to utils
-  const maxLengthCheck = (event: any, label: string) => { 
-    let date = event.target.value as string;
-    if(date){
-        let dateArr = date.split('-') 
-        if(dateArr[0] && dateArr[0].length > 4){
-             dateArr[0] = dateArr[0].substr(0, 4) 
-             date = dateArr.join('-')
-             event.target.value = date;
-             state.value[label] = date;
-        }
-    }
-}
 
   function validate(state: any): FormError[] {
     const errors = [] as FormError[];
@@ -202,8 +188,6 @@
           inputArgs.type = inputTypes[FieldType.DATETIME]
         } else if (typ == FieldType.DATE) {
           inputArgs.type = inputTypes[FieldType.DATE]
-        } else if (typ == FieldType.BOOLEAN) {
-          inputArgs.type = inputTypes[FieldType.BOOLEAN]
         } else if (typ != FieldType.STRING) {
           // TODO: report error
           throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);

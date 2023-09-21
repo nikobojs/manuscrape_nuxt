@@ -21,3 +21,18 @@ export function prettyDate(
 
   return result;
 }
+
+export const fourDigitYear = (event: Event) => {
+  const target = (event.target as any | null);
+  let date = target?.value;
+  if (date && target) {
+    let dateArr = date.split("-");
+    if (dateArr[0] && dateArr[0].length > 4) {
+      dateArr[0] = dateArr[0].substr(0, 4);
+      date = dateArr.join("-");
+      target.value = date;
+      target.modelValue = date;
+      return date;
+    }
+  }
+};
