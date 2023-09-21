@@ -3,7 +3,7 @@
     <div v-for="({ props, field }) in inputs" class="mb-4">
       <UFormGroup :name="field.label" :label="field.label">
         <UInput
-          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN'].includes(field.type)"
+          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN', 'DATE', 'DATETIME'].includes(field.type)"
           v-model="state[field.label]"
           v-bind="props"
           :disabled="!!$props.disabled"
@@ -13,6 +13,13 @@
           v-model="state[field.label]"
           v-bind="props"
           :disabled="!!$props.disabled"
+        />
+        <UInput
+          v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
+          v-model="state[field.label]"
+          v-bind="props"
+          :disabled="!!$props.disabled"
+          @input="(inp: any) => maxLengthCheck(inp, field.label)"
         />
         <div v-else-if="field.type === 'CHOICE'">
           <div class="flex items-center gap-2" v-for="choice in field.choices">
@@ -86,6 +93,20 @@
   }
 
   const state = ref(props.observation?.data as any);
+
+  // TODO: move to utils
+  const maxLengthCheck = (event: any, label: string) => { 
+    let date = event.target.value as string;
+    if(date){
+        let dateArr = date.split('-') 
+        if(dateArr[0] && dateArr[0].length > 4){
+             dateArr[0] = dateArr[0].substr(0, 4) 
+             date = dateArr.join('-')
+             event.target.value = date;
+             state.value[label] = date;
+        }
+    }
+}
 
   function validate(state: any): FormError[] {
     const errors = [] as FormError[];
