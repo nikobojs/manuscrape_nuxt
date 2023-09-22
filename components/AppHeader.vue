@@ -8,6 +8,7 @@
         <nav v-show="hasFetched" class="flex justify-end">
           <ul v-show="!!user">
               <li class="flex"><ULink class="px-3 py-2 self-center align-top" to="/">Projects</ULink></li>
+              <USelectMenu :options="projectMenu" />
           </ul>
           <ul v-show="!user">
               <li class="flex"><ULink class="px-3 py-2" to="/login">Log in</ULink></li>
@@ -45,10 +46,29 @@
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
+  const { projects } = await useProjects();
 
   function onLogoClick() {
     navigateTo('/');
   }
+
+  const projectMenu = computed(() => {
+    if (!user || !projects.value?.length) {
+      return []
+    }
+
+    const result =  projects.value.map((p) => ({
+      label: p.name,
+      href: '/projects/' + p.id,
+      id: p.id,
+    }));
+
+    console.log({ result });
+
+    return result;
+  });
+
+  watch([projectMenu], () => { console.log('projectmenu is now', projectMenu.value); }, { deep: true })
   
   const settingsItems: DropdownItem[][] = [
     [

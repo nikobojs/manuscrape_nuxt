@@ -71,6 +71,10 @@
   const inputs = ref([] as CMSInput[]);
   const state = ref(props.observation?.data as any);
 
+  watch([state], () => {
+    console.log('stateupdate:', { ...state.value })
+  }, { deep: true })
+
   enum FieldType {
     DATE = 'DATE',
     STRING = 'STRING',

@@ -2,7 +2,7 @@
   <UCard>
     <template #header>
       <div class="flex items-center justify-between w-full">
-        Contributors
+        Collaborators
       </div>
     </template>
     <div class="flex gap-4">
