@@ -6,10 +6,22 @@
           ManuScrape
         </div>
         <nav v-show="hasFetched" class="flex justify-end">
-          <ul v-show="!!user">
-              <li class="flex"><ULink class="px-3 py-2 self-center align-top" to="/">Projects</ULink></li>
-              <USelectMenu :options="projectMenu" />
-          </ul>
+          <div class="w-[250px] flex justify-end items-center" v-if="typeof rawProjectId === 'string'">
+            <USelectMenu
+              v-if="!!user"
+              value-attribute="id"
+              option-attribute="label"
+              :options="projectMenu"
+              class="w-full mr-3 h-7 min-w-[200px]"
+              v-model="selectedProjectId"
+              searchable
+              @change="onProjectChange"
+            >
+              <template #label>
+                {{  selectedProject?.name || ''  }}
+              </template>
+            </USelectMenu>
+          </div>
           <ul v-show="!user">
               <li class="flex"><ULink class="px-3 py-2" to="/login">Log in</ULink></li>
               <li class="flex"><ULink class="px-3 py-2" to="/user/new">Sign up</ULink></li>
@@ -46,7 +58,29 @@
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
-  const { projects } = await useProjects();
+  const { projects, getProjectById } = await useProjects();
+  const route = useRoute();
+  const selectedProjectId = ref<number | undefined>(undefined);
+
+  const selectedProject = computed<FullProject | undefined>(() => {
+    if (typeof selectedProjectId.value !== 'number') return undefined;
+    return getProjectById(selectedProjectId.value);
+  })
+  const rawProjectId = computed(() => route.params?.projectId);
+  
+  function updateProjectIdFromParams() {
+    const projectId = parseInt(route.params.projectId as string);
+    if (!isNaN(projectId) && projectId !== selectedProjectId.value) {
+      selectedProjectId.value = projectId;
+    }
+  }
+
+  function onProjectChange(projectId: number) {
+    navigateTo(`/projects/${projectId}`)
+  }
+
+  watch([rawProjectId], updateProjectIdFromParams);
+  updateProjectIdFromParams();
 
   function onLogoClick() {
     navigateTo('/');
@@ -63,12 +97,8 @@
       id: p.id,
     }));
 
-    console.log({ result });
-
     return result;
   });
-
-  watch([projectMenu], () => { console.log('projectmenu is now', projectMenu.value); }, { deep: true })
   
   const settingsItems: DropdownItem[][] = [
     [

@@ -1,16 +1,27 @@
 <template>
-  <USelectMenu :options="options" :model-value="modelValue" />
+  <USelectMenu
+    value-attribute="id"
+    option-attribute="label"
+    :options="options"
+    v-model="value"
+  />
 </template>
 
 <script setup lang="ts">
-  defineEmits(['update:modelValue']);
+  const emit = defineEmits(['update:modelValue']);
   const props = defineProps({
-    modelValue: Object as PropType<undefined | number>,
-    fields: requireProp<{}[]>(Array),
+    modelValue: Number as PropType<undefined | number>,
+    fields: requireProp<{id: number; label: string}[]>(Array),
   });
 
-  const options = computed(() => {
-    console.log('fields:', props.fields);
-    return props.fields;
+  const options = computed(() => props.fields);
+
+  const value = computed({
+    get() {
+      return props.fields.find(f => f.id == props.modelValue)
+    },
+    set(value) {
+      emit('update:modelValue', value)
+    }
   });
 </script>

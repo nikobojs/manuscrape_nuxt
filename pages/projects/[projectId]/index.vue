@@ -39,17 +39,24 @@
           <div v-else-if="item.key === 'export'" class="grid grid-cols-2 gap-6 mt-6">
             <UCard>
               <template #header>
-                Dynamic fields
+                <div class="flex justify-between items-center">
+                  <p>Dynamic fields</p>
+                  <div class="inline-flex gap-3">
+                    <UButton
+                      icon="i-heroicons-plus"
+                      variant="outline"
+                      color="blue"
+                      @click="() => openCreateDynamicFieldModal = true"
+                    >
+                      Create dynamic field
+                    </UButton>
+                  </div>
+                </div>
               </template>
-              <p>Dynamic fields will be generated automagically when exporting observations</p>
-              <div class="grid grid-cols-3">
-                <div class="col-span-1">
-                  <DynamicFieldForm :project="project" />
-                </div>
-                <div class="col-span-2">
-                  <DynamicFieldList :project="project" />
-                </div>
-              </div>
+              <p class="mb-6">
+                Dynamic fields will automagically generate their value when exporting observations
+              </p>
+              <DynamicFieldList :project="project" />
             </UCard>
             <UCard>
               <template #header>
@@ -60,7 +67,13 @@
         </template>
       </UTabs>
     </UContainer>
+    <ModalCreateDynamicField
+      :project="project"
+      :open="openCreateDynamicFieldModal"
+      :on-close="() => openCreateDynamicFieldModal = false"
+    />
   </ResourceAccessChecker>
+    
 </template>
 
 <script lang="ts" setup>
@@ -71,6 +84,7 @@
 
   await ensureLoggedIn();
   const { params } = useRoute();
+  const openCreateDynamicFieldModal = ref(false);
 
   const project = requireProjectFromParams(params);
 

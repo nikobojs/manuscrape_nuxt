@@ -1,4 +1,4 @@
-import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType } from "@prisma/client";
+import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType, DynamicProjectField, FieldOperator } from "@prisma/client";
 import type { H3Event } from 'h3';
 import { NewProjectSchema } from "~/server/api/projects/index.post";
 import type { InferType } from "yup";
@@ -22,6 +22,7 @@ declare global {
 
     interface FullProject extends Project {
         fields: ProjectField[];
+        dynamicFields: Omit<DynamicProjectField, 'projectId'>[];
         observations: Observation[];
     }
 
@@ -31,6 +32,13 @@ declare global {
         label: string;
         type: FieldType;
         required: boolean;
+    };
+
+    type NewDynamicField = {
+        label: string;
+        field0Id: number;
+        field1Id: number;
+        operator: FieldOperator,
     };
 
     interface CMSInputProps {
@@ -108,4 +116,10 @@ declare global {
     type NewProjectBody = InferType<typeof NewProjectSchema>;
     type SignInBody = InferType<typeof SignInRequestSchema>;
     type SignUpBody = InferType<typeof SignUpRequestSchema>;
+    type DynamicFieldsConfig = {
+      [operator in FieldOperator]: {
+        pairs: Array<[FieldType, FieldType]>;
+      };
+    };
+
 }

@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   ],
   typescript: {
     strict: true,
-    typeCheck: false,
+    typeCheck: true
   },
   ui: {
     icons: ['mdi', 'heroicons']

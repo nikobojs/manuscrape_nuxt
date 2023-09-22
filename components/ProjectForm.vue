@@ -17,26 +17,9 @@
           <label class="mt-5" for="field-label-input">
             Observation fields:
           </label>
-          <div class="grid grid-cols-[24px_1fr] gap-y-2">
-            <URadio
-              key="static"
-              v-model="fieldClass"
-              value="static"
-              id="field-class-static"
-            />
-            <label for="field-class-static" class="text-sm">Static</label>
-            <URadio
-              key="dynamic"
-              v-model="fieldClass"
-              value="dynamic"
-              id="field-class-dynamic"
-              :disabled="form.fields.length < 2"
-            />
-            <label for="field-class-dynamic" class="text-sm">Dynamic</label>
-          </div>
           <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter field label" />
 
-          <div v-if="fieldClass === 'static'">
+          <div>
             <USelectMenu
               v-model="fieldType"
               :options="fieldTypeOptions"
@@ -59,16 +42,6 @@
                 </UButton>
               </div>
             </div>
-          </div>
-          <div v-if="fieldClass === 'dynamic'">
-            <FieldDropdown
-              :fields="form.fields"
-              v-model="dynamicFieldId0"
-            />
-            <FieldDropdown
-              :fields="form.fields"
-              v-model="dynamicFieldId1"
-            />
           </div>
 
           <div class="mt-6">
@@ -112,7 +85,6 @@
   const { createProject } = await useProjects();
   const toast = useToast();
 
-  const fieldClass = ref<'dynamic' | 'static'>('static');
   const loading = ref(false);
   const error = ref('');
   const fieldLabel = ref('');
@@ -120,8 +92,6 @@
   const fieldLabelInput = ref();
   const openDropdownModal = ref(false);
   const fieldType = ref(undefined as NewField | undefined);
-  const dynamicFieldId0 = ref<number>();
-  const dynamicFieldId1 = ref<number>();
   const form = reactive<NewProjectBody>({
     name: '',
     fields: [],
@@ -155,11 +125,6 @@
     'Checkbox': 'BOOLEAN',
     'Radio buttons': 'CHOICE',
     'Dropdown': 'AUTOCOMPLETE',
-  }
-
-  const operators: Record<string, string> = {
-    'Difference': 'DIFF',
-    'Sum': 'SUM'
   }
 
   const fieldTypeOptions = Object.entries(fieldTypes).map(([key, val]) => ({

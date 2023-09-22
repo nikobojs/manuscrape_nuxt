@@ -71,10 +71,6 @@
   const inputs = ref([] as CMSInput[]);
   const state = ref(props.observation?.data as any);
 
-  watch([state], () => {
-    console.log('stateupdate:', { ...state.value })
-  }, { deep: true })
-
   enum FieldType {
     DATE = 'DATE',
     STRING = 'STRING',
@@ -214,7 +210,9 @@
           })
         } else if(typ == FieldType.CHOICE || typ == FieldType.AUTOCOMPLETE) {
           if (!field.choices?.length) {
-            throw new Error('Radio button type has no values to pick from');
+            console.error('Radio button type has no values to pick from');
+            // TODO: report error
+            return;
           }
 
           inputs.value.push({
