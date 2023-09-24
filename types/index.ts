@@ -20,6 +20,12 @@ declare global {
         image: ImageUpload;
     }
 
+    type FullDynamicProjectField = Omit<DynamicProjectField, 'projectId'>;
+
+    interface DynamicFieldsResponse {
+        dynamicFields: FullDynamicProjectField[];
+    }
+
     interface FullProject extends Project {
         fields: ProjectField[];
         dynamicFields: Omit<DynamicProjectField, 'projectId'>[];

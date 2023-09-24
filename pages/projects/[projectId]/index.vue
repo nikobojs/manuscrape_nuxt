@@ -1,7 +1,7 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <UTabs :items="tabs" :default-index="0">
+      <UTabs :items="tabs" :default-index="0" v-if="project">
         <template #item="{ item }">
           <div v-if="item.key === 'observations'" class="mt-6">
             <UCard class="mb-4">
@@ -13,6 +13,7 @@
                       icon="i-heroicons-pencil-square"
                       variant="outline"
                       @click="addObservationClick"
+                      :disabled="loading"
                     >
                       Create observation
                     </UButton>
@@ -20,7 +21,8 @@
                       icon="i-heroicons-arrow-up-tray"
                       variant="outline"
                       color="blue"
-                      @click="addObservationClick"
+                      @click="() => toast.add({ title: 'Not implemented yet!' })"
+                      :disabled="loading"
                     >
                       Upload media
                     </UButton>
@@ -68,9 +70,10 @@
       </UTabs>
     </UContainer>
     <ModalCreateDynamicField
+      v-if="project"
       :project="project"
       :open="openCreateDynamicFieldModal"
-      :on-close="() => openCreateDynamicFieldModal = false"
+      :on-close="onCloseDynamicFieldModal"
     />
   </ResourceAccessChecker>
     
@@ -81,13 +84,13 @@
   const { ensureLoggedIn } = await useAuth();
   const { hasRoles } = await useUser();
   const { requireProjectFromParams } = await useProjects();
-
   await ensureLoggedIn();
   const { params } = useRoute();
   const openCreateDynamicFieldModal = ref(false);
+  const loading = ref(false);
+  const toast = useToast();
 
-  const project = requireProjectFromParams(params);
-
+  let project = requireProjectFromParams(params);
   if (typeof project?.id !== 'number') {
     throw new Error('Project is not defined');
   }
@@ -100,7 +103,7 @@
     page
   } = await useObservations(project.id);
 
-  const showContributors = computed(() => hasRoles(project.id, ['OWNER']));
+  const showContributors = computed(() => project?.id && hasRoles(project.id, ['OWNER']));
 
   const tabs = computed(() => {
     const result = [{
@@ -129,12 +132,18 @@
     if (typeof project?.id !== 'number') {
       throw new Error('Project is not defined');
     }
-    const res = await createObservation(project.id).catch(
+    loading.value = true;
+    await createObservation(project.id).catch(
       (err) => error.value = err?.message
-    ).then((res) => {
-      if (res?.id) {
-        navigateTo(`/projects/${project.id}/observations/${res.id}`);
+    ).catch(() =>loading.value = false).then((res) => {
+      // dum ux hack :s
+      if (res?.id && project?.id) {
+        navigateTo(`/projects/${project.id}/observations/${res.id}`)
       }
     });
+  }
+
+  async function onCloseDynamicFieldModal () {
+    openCreateDynamicFieldModal.value = false;
   }
 </script>

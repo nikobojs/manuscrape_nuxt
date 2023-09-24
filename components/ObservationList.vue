@@ -1,5 +1,5 @@
 <template>
-  <UTable :rows="props.observations" :columns="columns" >
+  <UTable :rows="props.observations" :columns="columns" v-if="props.project" >
     <template #isDraft-data="{ row }">
       <span>{{ row.isDraft ? 'Yes': 'No' }}</span>
     </template>
@@ -7,7 +7,7 @@
       <span>{{ prettyDate(row.createdAt) }}</span>
     </template>
     <template #user-data="{ row }">
-      <span>{{ row.user.email }}</span>
+      <span>{{ row.user?.email || 'Deleted user' }}</span>
     </template>
     <template #actions-data="{ row }">
       <div class="w-full justify-end flex gap-x-3">

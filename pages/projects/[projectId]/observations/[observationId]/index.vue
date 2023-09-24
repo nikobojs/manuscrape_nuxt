@@ -45,7 +45,7 @@
   await refreshObservation();
 
   const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
-  const header = computed(() => isLocked ? 'Observation details' : 'Edit draft');
+  const header = computed(() => isLocked.value ? 'Observation details' : 'Edit draft');
   const toast = useToast();
 
   const metadataDone = ref<boolean>(!!observation.value?.data && Object.keys(observation.value?.data).length > 0);

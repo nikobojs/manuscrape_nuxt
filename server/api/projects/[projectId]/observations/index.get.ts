@@ -4,6 +4,7 @@ import { parseIntParam } from '../../../../utils/request';
 import { requireUser } from '../../../../utils/authorize';
 import { numberBetween } from '~/utils/validate';
 import { queryParam } from '~/server/utils/queryParam';
+import { observationColumns } from '~/server/utils/prisma';
 
 const prisma = new PrismaClient();
 
@@ -40,28 +41,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId: projectId,
     },
-    select: {
-      createdAt: true,
-      data: true,
-      id: true,
-      imageId: true,
-      isDraft: true,
-      updatedAt: true,
-      uploadInProgress: true,
-      image: {
-        select: {
-          id: true,
-          createdAt: true,
-          mimetype: true,
-          originalName: true,
-        }
-      },
-      user: {
-        select: {
-          email: true
-        }
-      }
-    }
+    select: observationColumns,
   });
 
   return {

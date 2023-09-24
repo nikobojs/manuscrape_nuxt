@@ -44,22 +44,6 @@ export const useProjects = async () => {
     )
   };
 
-  const createDynamicField = async (
-    projectId: number,
-    field: NewDynamicField,
-  ): Promise<any> => {
-    return $fetch(
-      `/api/projects/${projectId}/dynamic-fields`,
-      {
-        method: 'POST',
-        body: JSON.stringify(field),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-      }
-    );
-  };
-
   const hasOwnership = (
     projectId: number | string,
     projects: FullProject[]
@@ -91,6 +75,5 @@ export const useProjects = async () => {
     getProjectById,
     requireProjectFromParams,
     addCollaborator,
-    createDynamicField,
   };
 };

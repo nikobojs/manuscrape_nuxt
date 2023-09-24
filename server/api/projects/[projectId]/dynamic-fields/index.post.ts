@@ -44,7 +44,32 @@ export default safeResponseHandler(async (event) => {
   const field = await NewDynamicFieldSchema.validate(body)
   const projectId = parseIntParam(event.context.params?.projectId);
 
-  // TODO: CHECK IF EXISTING DYNAMIC FIELD WILL CAUSE TROUBLE (unique index)
+  // ensure same setup (fields and operation) is not present in project
+  // NOTE: the reason it is project specific, is because projecFieldsIds are not shared
+  const existing = await prisma.dynamicProjectField.findFirst({
+    where: {
+      field0Id: field.field0Id,
+      field1Id: field.field1Id,
+      operator: field.operator,
+    }
+  });
+  if (existing) {
+    // TODO: report error
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'An identical dynamic field already exists',
+    });
+  }
+
+  // ensure submitted fieldIds are NOT identical
+  if (field.field0Id === field.field1Id) {
+    // TODO: report error
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Dynamic field cannot operate on two identical static fields',
+    });
+  }
+
   
   // get field types
   const fieldTypes = await prisma.projectField.findMany({
@@ -67,8 +92,7 @@ export default safeResponseHandler(async (event) => {
     }
   });
 
-  console.log({ fieldTypes })
-
+  // ensure both fields exists and is in project
   if (fieldTypes.length !== 2) {
     // TODO: report error
     throw createError({
@@ -77,10 +101,12 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
+  // get dynamic field match from config
   const targetFieldTypes = fieldTypes.map(f => f.type);
   const allowedPairs = dynamicFieldsConfig[field.operator].pairs;
   const allowedMatch = allowedPairs.find((pair) => pair.every(t => targetFieldTypes.includes(t)));
 
+  // ensure there is a matching dynamic field config
   if (!allowedMatch) {
     // TODO: report error
     const fieldNames = fieldTypes.map(f => `'${f.label}'`);
@@ -90,6 +116,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
+  // create dynamic field
   const createdField = await prisma.dynamicProjectField.create({
     data: {
       field0Id: field.field0Id,
@@ -100,6 +127,7 @@ export default safeResponseHandler(async (event) => {
     }
   });
 
+  // return 201 Created
   setResponseStatus(event, 201);
   return createdField;
 });

@@ -10,7 +10,7 @@
       <p class="mb-4">
         Your committed observations will be kept, but no one will be able to see you as the author. If you are alone on some projects, they will be deleted permanently.
       </p>
-      <UInput class="mb-6" placeholder="Enter password" type="password" v-model="password" />
+      <UInput autocomplete="off" class="mb-6" placeholder="Enter password" type="password" v-model="password" />
       <div class="text-red-500 mb-4" v-if="errorMsg">{{ errorMsg }}</div>
       <div class="w-full text-right">
         <UButton color="red" @click="onDeleteUserConfirm">Confirm user deletion</UButton>

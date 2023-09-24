@@ -45,26 +45,15 @@
 <script setup lang="ts">
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
 
-  const { createDynamicField } = await useProjects();
-
   const props = defineProps({
     project: requireProjectProp,
     ...requireModalProps,
   });
 
+
+  const { createDynamicField, operators } = await useDynamicFields(props.project.id);
   const form = ref();
   const error = ref();
-
-  const operators = [
-    {
-      label: 'Difference',
-      value: 'DIFF'
-    },
-    {
-      label: 'Sum',
-      value: 'SUM'
-    },
-  ]
 
   const state = reactive({
     field0Id: undefined as (number | undefined),
@@ -72,9 +61,6 @@
     operator: undefined as (string | undefined),
     label: '',
   });
-
-
-  watch([state], () => { console.log({ ...state }) }, { deep: true })
 
   async function validate(state: any) {
     const errors = [] as FormError[];
@@ -93,7 +79,6 @@
       errors.push({ message: 'Needs to be at least 1 character', path: 'label' });
     }
 
-    console.log('validating state', { ...state })
     return errors;
   }
 
