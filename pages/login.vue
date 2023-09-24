@@ -10,12 +10,13 @@
             Email
           </label>
           <UInput
-            v-model="form.email"
+            ref="emailInput"
             type="email"
+            name="email"
             class="input"
             placeholder="Enter email"
             id="email-input"
-            required
+            autocomplete="on"
           />
 
           <br />
@@ -24,15 +25,16 @@
             Password
           </label>
           <UInput
-            v-model="form.password"
+            ref="passwordInput"
             type="password"
+            name="password"
             class="input"
             placeholder="Enter Password"
             id="password-input"
-            required
+            autocomplete="on"
           />
 
-          <span class="block mt-3 text-red-500" v-if="form.error" v-text="form.error"></span>
+          <span class="block mt-3 text-red-500" v-if="error" v-text="error"></span>
 
           <UButton class="mt-5" type="submit" :disabled="loading" :loading="loading">
             Log in
@@ -47,27 +49,43 @@
 <script lang="ts" setup>
   import { getErrMsg } from '~/utils/getErrMsg';
 
-  const form = ref({
-    email: '',
-    password: '',
-    error: '',
-  });
-
+  const error = ref('')
   const { login, ensureUserFetched } = await useAuth();
   await ensureUserFetched()
   const loading = ref(false);
+  const passwordInput = ref();
+  const emailInput = ref();
 
   async function handleLogin() {
+    const em = emailInput.value?.input?.value;
+    const pw = passwordInput.value?.input?.value;
+
+    // ensure email and password is defined
+    if (!em) {
+      error.value = 'Email required';
+      loading.value = false;
+      return;
+    }
+    if (!pw) {
+      error.value = 'Password requried';
+      loading.value = false;
+      return;
+    }
+
+    // begin loading state
     loading.value = true;
+
     setTimeout(() => {
-      login(form.value.email, form.value.password).then(async (res) => {
+      // at this point it is safe to assume that the values are truthy
+      login(em, pw).then(async (res) => {
         if (res?.token) {
           window.location.href = '/';
         }
       })
       .catch(err => {
-        form.value.error = getErrMsg(err);
+        error.value = getErrMsg(err);
       }).finally(() => loading.value = false);
+
     }, 200);
   }
 

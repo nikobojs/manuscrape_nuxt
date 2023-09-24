@@ -12,6 +12,7 @@
     >
       <UFormGroup label="Email" name="email">
         <UInput
+          autocomplete="off"
           v-model="state.email"
           type="text"
           placeholder="Enter email"
@@ -23,6 +24,7 @@
 
       <UFormGroup label="Password" name="password">
         <UInput
+          autocomplete="off"
           v-model="state.password"
           type="password"
           placeholder="Enter Password"
