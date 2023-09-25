@@ -3,12 +3,14 @@
     <template #header>
       <div class="flex items-center justify-between w-full">
         Collaborators
-        <UBadge color="yellow">WARN: In development</UBadge>
+        <div class="flex items-center">
+         <UBadge size="xs" color="yellow">WARN: In development</UBadge>         
+        </div>
       </div>
     </template>
     <div class="flex gap-4">
       <UInput type="email" v-model="email" placeholder="Enter email" />
-      <UButton :disabled="!validEmail" @click="onSubmit">Add contributor</UButton>
+      <UButton variant="outline" color="blue" icon="i-heroicons-user-plus" :disabled="!validEmail" @click="onSubmit">Add contributor</UButton>
     </div>
   </UCard>
 </template>

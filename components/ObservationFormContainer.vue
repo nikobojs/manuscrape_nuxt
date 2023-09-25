@@ -40,6 +40,7 @@
         :observation="observation"
         :project="project"
         :on-file-uploaded="onFileUploaded"
+        :on-video-capture-uploaded="onVideoCaptureUploaded"
       />
     </UCard>
 
@@ -85,6 +86,7 @@
     onFormSubmit: Function as PropType<Function>,
     onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
+    onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
     disabled: Boolean as PropType<boolean>,
     awaitImageUpload: Boolean as PropType<boolean>,
     metadataDone: Boolean as PropType<boolean>,

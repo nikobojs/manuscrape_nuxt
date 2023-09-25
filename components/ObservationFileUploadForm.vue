@@ -1,14 +1,20 @@
 <template>
   <div>
-      <label v-if="observation.isDraft" class="block mb-3">
+      <label v-if="observation.isDraft" class="block">
         <UInput class="hidden" type="file" :on:change="onFilePicked" />
-        <div class="text-sm">
-          <div class="underline text-green-500 cursor-pointer">
-            Upload file
-          </div>
+        <div class="text-sm underline text-green-500 cursor-pointer">
+          Upload file
         </div>
       </label>
+      <div
+        class="text-sm underline text-green-500 cursor-pointer"
+        @click="captureVideo"
+        v-if="isElectron"
+      >
+        Capture video
+      </div>
       <UTable
+        class="mt-6"
         :rows="observation.fileUploads"
         :columns="fileUploadColumns"
         :empty-state="{
@@ -40,6 +46,7 @@
 <script lang="ts" setup>
   const props = defineProps({
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
+    onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
     observation: requireObservationProp,
     project: requireProjectProp,
   });
@@ -47,6 +54,7 @@
   const config = useRuntimeConfig().public;
   const file = ref<File | undefined>();
   const toast = useToast();
+  const isElectron = computed(runsInElectron);
 
   const fileUploadColumns = [
     {
@@ -117,6 +125,26 @@
     } catch(err) {
       console.error('File upload submit error:', err);
       throw err;
+    }
+  }
+
+  async function captureVideo() {
+    if (!runsInElectron()) {
+      toast.add({
+        title: 'Function not available',
+        description: 'Video capture can only be called from within the native application',
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'red',
+      })
+    } else {
+      window.electronAPI?.onVideCaptureUploaded(() => {
+        props.onVideoCaptureUploaded();
+      });
+
+      window.electronAPI?.beginVideoCapture(
+        props.observation.id,
+        props.project.id
+      );
     }
   }
 </script>

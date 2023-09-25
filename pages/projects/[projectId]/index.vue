@@ -1,9 +1,7 @@
 <template>
   <ResourceAccessChecker>
-    <UContainer>
-      <UTabs :items="tabs" :default-index="0" v-if="project">
-        <template #item="{ item }">
-          <div v-if="item.key === 'observations'" class="mt-6">
+    <UContainer v-if="project">
+          <div class="mt-6">
             <UCard class="mb-4">
               <template #header>
                 <div class="flex justify-between items-center">
@@ -17,15 +15,6 @@
                     >
                       Create observation
                     </UButton>
-                    <UButton
-                      icon="i-heroicons-arrow-up-tray"
-                      variant="outline"
-                      color="blue"
-                      @click="() => toast.add({ title: 'Not implemented yet!' })"
-                      :disabled="loading"
-                    >
-                      Upload file
-                    </UButton>
                   </div>
                 </div>
               </template>
@@ -35,10 +24,10 @@
               </div>
             </UCard>
           </div>
-          <div v-else-if="item.key === 'collaborators'" class="mt-6">
+          <div class="mt-6">
             <CollaboratorWidget v-if="showContributors" :project="project" />
           </div>
-          <div v-else-if="item.key === 'export'" class="grid grid-cols-2 gap-6 mt-6">
+          <div class="grid grid-cols-2 gap-6 mt-6">
             <UCard>
               <template #header>
                 <div class="flex justify-between items-center">
@@ -62,15 +51,17 @@
             </UCard>
             <UCard>
               <template #header>
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                   Export
-                  <UBadge color="yellow">WARN: In development</UBadge>
+                  <div class="flex items-center">
+                   <UBadge size="xs" color="yellow">WARN: In development</UBadge>                 
+                  </div>
                 </div>
               </template>
             </UCard>
           </div>
-        </template>
-      </UTabs>
+        <!-- </template>
+      </UTabs> -->
     </UContainer>
     <ModalCreateDynamicField
       v-if="project"
@@ -107,29 +98,6 @@
   } = await useObservations(project.id);
 
   const showContributors = computed(() => project?.id && hasRoles(project.id, ['OWNER']));
-
-  const tabs = computed(() => {
-    const result = [{
-      key: 'observations',
-      label: 'Observations',
-    }];
-
-    if (showContributors.value) {
-      result.push({
-        key: 'collaborators',
-        label: 'Collaborators',
-      })
-    }
-
-    result.push({
-      key: 'export',
-      label: 'Export data',
-    });
-
-    return result;
-  });
-
-
 
   async function addObservationClick () {
     if (typeof project?.id !== 'number') {
