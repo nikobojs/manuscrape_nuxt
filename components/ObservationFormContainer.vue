@@ -49,8 +49,9 @@
         <template #header>
           Save
         </template>
-        <p>
-          When an observation is committed, it will be locked for changes permanently. This includes file uploading, image editing and metadata editing.
+        <p class="text-sm italic text-gray-100">
+          Warning: When an observation is committed, it will be locked for future editing.
+          This includes uploading files, image editing and metadata editing.
         </p>
         <div class="flex gap-4 mt-6">
           <UButton icon="i-heroicons-lock-closed" class="" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
