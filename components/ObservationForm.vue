@@ -1,5 +1,11 @@
 <template>
   <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
+    <div class="text-gray-200 mb-6">
+      <label class="text-sm">Unique ID:</label>
+      <UKbd size="md" class="text-white text-lg ml-2">
+        #{{ observation.id }}
+      </UKbd>
+    </div>
     <div v-for="({ props, field }) in inputs" class="mb-4">
       <UFormGroup :name="field.label" :label="field.label">
         <UInput

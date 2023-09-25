@@ -137,13 +137,10 @@
         color: 'red',
       })
     } else {
-      window.electronAPI?.onVideCaptureUploaded(() => {
-        props.onVideoCaptureUploaded();
-      });
-
       window.electronAPI?.beginVideoCapture(
         props.observation.id,
-        props.project.id
+        props.project.id,
+        props.onVideoCaptureUploaded,
       );
     }
   }

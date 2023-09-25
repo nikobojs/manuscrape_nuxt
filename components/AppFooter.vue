@@ -1,5 +1,5 @@
 <template>
-  <footer>
+  <footer v-if="!isElectron">
     <UContainer class="pb-8">
       <div class="border-b border-b-gray-600 w-full mb-8"></div>
       ManuScrape v{{ version }}
@@ -18,4 +18,5 @@
 
 <script setup lang="ts">
   const { version } = useRuntimeConfig().public;
+  const isElectron = runsInElectron();
 </script>
