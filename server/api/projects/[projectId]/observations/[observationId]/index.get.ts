@@ -10,28 +10,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       id: observationId
     },
-    select: {
-      createdAt: true,
-      data: true,
-      id: true,
-      imageId: true,
-      isDraft: true,
-      updatedAt: true,
-      uploadInProgress: true,
-      image: {
-        select: {
-          id: true,
-          createdAt: true,
-          mimetype: true,
-          originalName: true,
-        }
-      },
-      user: {
-        select: {
-          email: true
-        }
-      }
-    }
+    select: observationColumns,
   });
 
   return observation;

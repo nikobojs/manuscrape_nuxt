@@ -1,4 +1,4 @@
-import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType, DynamicProjectField, FieldOperator } from "@prisma/client";
+import type { Observation, ImageUpload, Project, ProjectField, User, ProjectAccess, ProjectRole, FieldType, DynamicProjectField, FieldOperator, FileUpload } from "@prisma/client";
 import type { H3Event } from 'h3';
 import { NewProjectSchema } from "~/server/api/projects/index.post";
 import type { InferType } from "yup";
@@ -16,8 +16,12 @@ declare global {
         project: Project;
     }
 
+    type FileUploadResponse = Omit<FileUpload, 's3Path'>;
+
     interface FullObservation extends Observation {
         image: ImageUpload;
+        fileUploads: FileUploadResponse[];
+        user?: { email: string };
     }
 
     type FullDynamicProjectField = Omit<DynamicProjectField, 'projectId'>;

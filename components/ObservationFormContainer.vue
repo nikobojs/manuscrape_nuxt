@@ -5,7 +5,7 @@
   >
     <UCard class="overflow-visible">
       <template #header>
-        Insert metadata
+        Metadata
         <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationForm
@@ -19,7 +19,7 @@
 
     <UCard>
       <template #header>
-          Upload image
+          Image
           <span v-if="!$props.disabled && imageUploaded" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationImageForm
@@ -32,13 +32,49 @@
       />
     </UCard>
 
-    <div v-if="!$props.disabled" class="flex gap-4">
-      <UButton class="mt-6" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
-        Submit observation
-      </UButton>
-      <UButton color="red" variant="outline" class="mt-6" @click="() => discard()">
-        Discard
-      </UButton>
+    <UCard>
+      <template v-if="!$props.disabled" #header>
+          Files
+      </template>
+      <ObservationFileUploadForm
+        :observation="observation"
+        :project="project"
+        :on-file-uploaded="onFileUploaded"
+      />
+    </UCard>
+
+    <div>
+      <UCard v-if="!$props.disabled" >
+        <template #header>
+          Save
+        </template>
+        <p>
+          When an observation is committed, it will be locked for changes permanently. This includes file uploading, image editing and metadata editing.
+        </p>
+        <div class="flex gap-4 mt-6">
+          <UButton icon="i-heroicons-lock-closed" class="" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
+            Commit and lock
+          </UButton>
+          <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => discard()">
+            Delete observation draft
+          </UButton>
+        </div>
+      </UCard>
+      <UCard v-else="$props.disabled" >
+        <template #header>
+          Details
+        </template>
+        <div class="grid grid-cols-2 w-full border border-gray-700 rounded-md bg-slate-950 p-3">
+          <div class="text-gray-400">ID:</div>
+          <div>#{{ observation.id }}</div>
+          <div class="text-gray-400">Created by:</div>
+          <div>{{ observation.user?.email || 'Unknown' }}</div>
+          <div class="text-gray-400">Draft created at:</div>
+          <div>{{ prettyDate(observation.createdAt, true) }}</div>
+          <div class="text-gray-400">Last updated at:</div>
+          <div>{{ prettyDate(observation.updatedAt, true) }}</div>
+        </div>
+      </UCard>
     </div>
   </div>
 </template>
@@ -48,6 +84,7 @@
     onObservationPublished: Function as PropType<Function>,
     onFormSubmit: Function as PropType<Function>,
     onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
+    onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
     disabled: Boolean as PropType<boolean>,
     awaitImageUpload: Boolean as PropType<boolean>,
     metadataDone: Boolean as PropType<boolean>,
@@ -56,7 +93,10 @@
     project: requireProjectProp,
   });
 
-  const { publishObservation, deleteObservation } = await useObservations(props.project.id);
+  const {
+    publishObservation,
+    deleteObservation,
+  } = await useObservations(props.project.id);
   const toast = useToast();
 
   const uploadInProgress = computed(() => {

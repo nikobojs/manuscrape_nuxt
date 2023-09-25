@@ -102,6 +102,17 @@ model Observation {
   image              ImageUpload?           @relation(fields: [imageId], references: [id], onDelete: SetNull)
   uploadInProgress   Boolean                @default(false)
   isDraft            Boolean                @default(true)
+  fileUploads        FileUpload[]
+}
+
+model FileUpload {
+  id                 Int                    @id @default(autoincrement())
+  createdAt          DateTime               @default(now()) @db.Timestamp(6)
+  s3Path             String                 @unique
+  mimetype           String
+  originalName       String
+  observationId      Int
+  observation        Observation           @relation(fields: [observationId], references: [id], onDelete: Cascade)
 }
 
 model ImageUpload {

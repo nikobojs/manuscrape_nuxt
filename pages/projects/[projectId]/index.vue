@@ -24,7 +24,7 @@
                       @click="() => toast.add({ title: 'Not implemented yet!' })"
                       :disabled="loading"
                     >
-                      Upload media
+                      Upload file
                     </UButton>
                   </div>
                 </div>
@@ -62,7 +62,10 @@
             </UCard>
             <UCard>
               <template #header>
-                Export
+                <div class="flex justify-between">
+                  Export
+                  <UBadge color="yellow">WARN: In development</UBadge>
+                </div>
               </template>
             </UCard>
           </div>

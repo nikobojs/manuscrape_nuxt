@@ -17,6 +17,7 @@
         :onFormSubmit="onFormSubmit"
         :metadataDone="metadataDone"
         :imageUploaded="imageUploaded"
+        :onFileUploaded="onFileUploaded"
       />
     </UContainer>
   </ResourceAccessChecker>
@@ -45,7 +46,7 @@
   await refreshObservation();
 
   const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
-  const header = computed(() => isLocked.value ? 'Observation details' : 'Edit draft');
+  const header = computed(() => isLocked.value ? 'Observation details' : 'Edit observation draft');
   const toast = useToast();
 
   const metadataDone = ref<boolean>(!!observation.value?.data && Object.keys(observation.value?.data).length > 0);
@@ -90,6 +91,23 @@
     } else {
       toast.add({
         title: 'Image uploaded successfully',
+      });
+    }
+    await refreshObservation();
+  }
+
+  async function onFileUploaded() {
+    if (!observation.value?.id || !project?.id) {
+      toast.add({
+        title: observation ? 'Observation does not exist' : 'Project does not exist',
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'red'
+      });
+    } else {
+      toast.add({
+        title: 'File uploaded successfully',
+        color: 'green',
+        icon: 'i-heroicons-check'
       });
     }
     await refreshObservation();

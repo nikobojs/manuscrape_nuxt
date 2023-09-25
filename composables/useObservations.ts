@@ -58,7 +58,7 @@ export const useObservations = async (projectId: number) => {
       },
     });
     return { observationLoading: pending, refreshObservation: refresh, observation: data }
-  }
+  };
 
   const createObservation = async (
     projectId: number,
@@ -90,7 +90,7 @@ export const useObservations = async (projectId: number) => {
       }
     );
     return res;
-  }
+  };
 
   const deleteObservation = async (
     projectId: number,
@@ -106,7 +106,7 @@ export const useObservations = async (projectId: number) => {
       }
     );
     return res;
-  }
+  };
 
   const publishObservation = (
     projectId: number,
@@ -141,7 +141,34 @@ export const useObservations = async (projectId: number) => {
       console.error('upload image to observation err:', err);
       throw err;
     }
-  }
+  };
+
+
+  const uploadObservationFile = async (
+    projectId: number,
+    observationId: number,
+    file: File,
+  ) => {
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const uploadRes = await useAsyncData('file', () =>
+        $fetch(`/api/projects/${projectId}/observations/${observationId}/upload`, {
+          method: 'POST',
+          body: form,
+        }),
+      );
+
+      if (uploadRes.status.value !== 'success') {
+        const msg = getErrMsg(uploadRes);
+        throw new Error(msg || 'It seems that the fileupload failed :(')
+      }
+    } catch(err: any) {
+      console.error('upload image to observation err:', err);
+      throw err;
+    }
+  };
 
 
   const requireObservationFromParams = async (params: RouteParams): Promise<FullObservation> => {
@@ -155,7 +182,7 @@ export const useObservations = async (projectId: number) => {
     }
 
     return observation.value;
-  }
+  };
 
   return {
     requireObservationFromParams,
@@ -170,5 +197,6 @@ export const useObservations = async (projectId: number) => {
     totalPages,
     totalObservations,
     deleteObservation,
+    uploadObservationFile,
   }
 };
