@@ -70,6 +70,10 @@ declare global {
         choices: string[];
     }
 
+    interface CMSTextAreaProps {
+        name: string;
+    }
+
     interface CMSRadioGroupProps {
         name: string;
         choices: string[];
@@ -77,7 +81,7 @@ declare global {
 
     interface CMSInput {
         field: ProjectField;
-        props: CMSInputProps | CMSCheckboxProps | CMSDropdownProps | CMSRadioGroupProps;
+        props: CMSInputProps | CMSCheckboxProps | CMSDropdownProps | CMSRadioGroupProps | CMSTextAreaProps;
     }
 
     interface Window {

@@ -117,7 +117,8 @@
   });
 
   const fieldTypes: Record<string, string> = {
-    'Text': 'STRING',
+    'Text (single line)': 'STRING',
+    'Text (multi line)': 'TEXTAREA',
     'Whole number': 'INT',
     'Decimal number': 'FLOAT',
     'Date': 'DATE',

@@ -9,7 +9,7 @@
     <div v-for="({ props, field }) in inputs" class="mb-4">
       <UFormGroup :name="field.label" :label="field.label">
         <UInput
-          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN', 'DATE', 'DATETIME'].includes(field.type)"
+          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN', 'DATE', 'DATETIME', 'TEXTAREA'].includes(field.type)"
           v-model="state[field.label]"
           v-bind="props"
           :disabled="!!$props.disabled"
@@ -19,6 +19,12 @@
           v-model="state[field.label]"
           v-bind="props"
           :disabled="!!$props.disabled"
+        />
+        <UTextarea
+          v-else-if="field.type === 'TEXTAREA'"
+          v-model="state[field.label]"
+          v-bind="props"
+          variant="outline"
         />
         <UInput
           v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
@@ -86,6 +92,7 @@
     BOOLEAN = 'BOOLEAN',
     AUTOCOMPLETE = 'AUTOCOMPLETE',
     CHOICE = 'CHOICE',
+    TEXTAREA = 'TEXTAREA',
   };
 
   const inputTypes: Record<string, string> = Object.freeze({
@@ -214,6 +221,13 @@
               checked: false,
             } as CMSCheckboxProps,
           })
+        } else if(typ == FieldType.TEXTAREA) {
+          inputs.value.push({
+            field,
+            props: {
+              name: field.label,
+            } as CMSTextAreaProps,
+          });
         } else if(typ == FieldType.CHOICE || typ == FieldType.AUTOCOMPLETE) {
           if (!field.choices?.length) {
             console.error('Radio button type has no values to pick from');

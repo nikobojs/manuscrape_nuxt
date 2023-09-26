@@ -16,6 +16,7 @@ enum FieldType {
   BOOLEAN
   CHOICE
   AUTOCOMPLETE
+  TEXTAREA
 }
 
 enum FieldOperator {
