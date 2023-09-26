@@ -10,6 +10,21 @@ describe('Project management', () => {
     });
   });
 
+  test('user cannot create project with 2 fields with same label', async () =>  {
+    await withTempUser(async (_user, token) => {
+      const res = await createProject(token, {
+        ...testProject,
+        name: 'unused name 0',
+        fields: [
+          { label: 'asdasd', type: 'INT', required: false, },
+          { label: 'asdasd', type: 'STRING', required: true },
+        ]
+      });
+      const json = await res.json();
+      expect(res.status, json?.statusMessage).toBe(400);
+    });
+  });
+
   test('user cannot access other users project page', async () =>  {
     await withTempUser(async (_userA, tokenA) => {
       // create project

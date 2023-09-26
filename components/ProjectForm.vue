@@ -208,6 +208,11 @@
       return;
     }
 
+    if (form.fields.find((f) => f.label === fieldLabel.value)) {
+      error.value = 'Two fields cannot have the same label';
+      return;
+    }
+
     form.fields.push({
       label: fieldLabel.value,
       type: fieldType.value.type,
@@ -222,6 +227,7 @@
 
     fieldLabel.value = '';
     fieldType.value = undefined;
+    error.value = '';
     fieldLabelInput.value?.input?.focus?.();
   }
 

@@ -29,6 +29,14 @@ export default safeResponseHandler(async (event) => {
   const body = await readBody(event);
   const newProject = await NewProjectSchema.validate(body)
 
+  const fieldLabels = newProject.fields.map((f => f.label));
+  if (fieldLabels.length !== new Set(fieldLabels).size) {
+    throw createError({
+      statusMessage: 'Two fields cannot have an identical label',
+      statusCode: 400,
+    });
+  }
+
   const createdProject = await prisma.project.create({
     data: {
       name: newProject.name,
