@@ -17,6 +17,16 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       isDraft: true,
+      fileUploads: {
+        select: {
+          s3Path: true,
+        }
+      },
+      image: {
+        select: {
+          s3Path: true,
+        }
+      }
     },
     where: {
       id: observationId,
@@ -37,6 +47,29 @@ export default safeResponseHandler(async (event) => {
       statusCode: 403,
       statusMessage: 'You are not allowed to patch locked observations',
     });
+  }
+
+  const filesToDelete = [
+    ...observation.fileUploads.map((f) => f.s3Path),
+    ...(observation.image?.s3Path ? [observation.image.s3Path] : []),
+  ];
+
+  for (const fileToDelete of filesToDelete) {
+    try {
+      const deleteRes = await deleteS3Files(fileToDelete)
+      if (deleteRes.$metadata.httpStatusCode !== 204) {
+        const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
+        // TODO: report error
+        console.log(err)
+      } else {
+        console.log('deleted file', fileToDelete)
+      }
+    } catch(e: any) {
+      // if unable to delete file, handle errors silently
+      // TODO: report error
+      const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
+      console.log(err)
+    }
   }
 
   await prisma.observation.delete({
