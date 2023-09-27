@@ -102,7 +102,6 @@ export function getIconByMimetype(
 ): { icon: string, class: string } {
   for(let { icon, mimetypes } of fileIconMap.icons) {
     if (mimetypes.includes(mimetype)) {
-      console.log('found icon for', mimetype, ':', icon)
       return icon;
     }
   }

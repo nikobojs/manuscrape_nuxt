@@ -136,4 +136,14 @@ declare global {
       };
     };
 
+    interface ObservationFilterConfigs {
+      [key: string]: ObservationFilterConfig
+    }
+
+    interface ObservationFilterConfig {
+        label: string,
+        filter: (obs: FullObservation, user: Ref<CurrentUser>) => boolean,
+    }
+
+
 }
