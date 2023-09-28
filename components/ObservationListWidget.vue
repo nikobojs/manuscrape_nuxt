@@ -5,13 +5,14 @@
       <div class="flex justify-between items-center">
         <p>Observations</p>
         <div class="inline-flex gap-3">
-          <USelectMenu
-            variant="outline"
-            :options="observationFilterMenuItems"
-            v-model="filterOption"
-            option-attribute="label"
-            class="block w-[220px]"
-          />
+          <div class="w-56">
+            <USelectMenu
+              variant="outline"
+              :options="observationFilterMenuItems"
+              v-model="filterOption"
+              option-attribute="label"
+            />
+          </div>
           <UButton
             icon="i-heroicons-pencil-square"
             variant="outline"
@@ -90,11 +91,7 @@ import { observationFilterMenuItems } from '~/utils/observationFilters';
     ObservationFilter[props.defaultObservationFilter || ObservationFilterTypes.ALL]
   );
 
-  computed(() => {
-    console.log('filteroption value!:', filterOption)
-  })
-
-  let project = requireProjectFromParams(params);
+  const project = requireProjectFromParams(params);
   if (typeof project?.id !== 'number') {
     throw new Error('Project is not defined');
   }
