@@ -30,8 +30,8 @@ export default defineNuxtConfig({
     public: {
       baseUrl: process.env.BASE_URL || '',
       version: pkg.version,
-      maxImageSize: 5 * 1000 * 1000,
-      maxFileSize: 10 * 1000 * 1000,
+      maxImageSize: 30 * 1000 * 1000,
+      maxFileSize: 100 * 1000 * 1000,
     }
   },
   colorMode: {
