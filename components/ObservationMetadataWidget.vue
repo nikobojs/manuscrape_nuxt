@@ -1,69 +1,74 @@
 <template>
-  <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
-    <div class="text-gray-200 mb-6">
-      <label class="text-sm">Unique ID:</label>
-      <UKbd size="md" class="text-white text-lg ml-2">
-        #{{ observation.id }}
-      </UKbd>
-    </div>
-    <div v-for="({ props, field }) in inputs" class="mb-4">
-      <UFormGroup :name="field.label" :label="field.label">
-        <UInput
-          v-if="!['CHOICE', 'AUTOCOMPLETE', 'BOOLEAN', 'DATE', 'DATETIME', 'TEXTAREA'].includes(field.type)"
-          v-model="state[field.label]"
-          v-bind="props"
-          :disabled="!!$props.disabled"
-        />
-        <UInput
-          v-else-if="field.type === 'BOOLEAN'"
-          v-model="state[field.label]"
-          v-bind="props"
-          :disabled="!!$props.disabled"
-        />
-        <UTextarea
-          v-else-if="field.type === 'TEXTAREA'"
-          v-model="state[field.label]"
-          v-bind="props"
-          variant="outline"
-        />
-        <UInput
-          v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
-          v-model="state[field.label]"
-          v-bind="props"
-          :disabled="!!$props.disabled"
-          @input="(asd: Event) => fourDigitYear(asd)"
-        />
-        <div v-else-if="field.type === 'CHOICE'">
-          <div class="flex items-center gap-2" v-for="choice in field.choices">
-            <URadio
-              :id="`radio-${choice}`"
-              :key="choice"
-              v-model="state[field.label]"
-              :name="field.label"
-              :value="choice"
-            />
-            <label :for="`radio-${choice}`">{{ choice }}</label>
-          </div>
+  <UCard class="overflow-visible">
+      <template #header>
+        <div class="flex justify-between w-full">
+          <CardHeader>Metadata</CardHeader>
+          <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
         </div>
-        <div v-else-if="field.type === 'AUTOCOMPLETE'">
-          <USelectMenu
-            :options="field.choices"
+      </template>
+    <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
+      <div class="text-gray-200 mb-6">
+        <label class="text-sm">Observation </label>
+      </div>
+      <div v-for="({ props, field }) in inputs" class="mb-4">
+        <UFormGroup :name="field.label" :label="field.label">
+          <UCheckbox
+            v-if="field.type === 'BOOLEAN'"
             v-model="state[field.label]"
-            searchable
+            v-bind="props"
+            :disabled="!!$props.disabled"
           />
-        </div>
-      </UFormGroup>
-    </div>
-    <UButton
-      v-if="!props.disabled"
-      variant="outline"
-      class="mt-4"
-      type="submit"
-      :disabled="!!$props.disabled"
-    >
-      Save metadata
-    </UButton>
-  </UForm>
+          <UTextarea
+            v-else-if="field.type === 'TEXTAREA'"
+            v-model="state[field.label]"
+            v-bind="props"
+            variant="outline"
+          />
+          <UInput
+            v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
+            v-model="state[field.label]"
+            v-bind="props"
+            :disabled="!!$props.disabled"
+            @input="(asd: Event) => fourDigitYear(asd)"
+          />
+          <div v-else-if="field.type === 'CHOICE'">
+            <div class="flex items-center gap-2" v-for="choice in field.choices">
+              <URadio
+                :id="`radio-${choice}`"
+                :key="choice"
+                v-model="state[field.label]"
+                :name="field.label"
+                :value="choice"
+              />
+              <label :for="`radio-${choice}`">{{ choice }}</label>
+            </div>
+          </div>
+          <div v-else-if="field.type === 'AUTOCOMPLETE'">
+            <USelectMenu
+              :options="field.choices"
+              v-model="state[field.label]"
+              searchable
+            />
+          </div>
+          <UInput
+            v-else
+            v-model="state[field.label]"
+            v-bind="props"
+            :disabled="!!$props.disabled"
+          />
+        </UFormGroup>
+      </div>
+      <UButton
+        v-if="!props.disabled"
+        variant="outline"
+        class="mt-4"
+        type="submit"
+        :disabled="!!$props.disabled"
+      >
+        Save metadata
+      </UButton>
+    </UForm>
+  </UCard>
 </template>
 
 <script lang="ts" setup>
@@ -75,6 +80,7 @@
     project: requireProjectProp,
     onSubmit: Function as PropType<Function>,
     disabled: Boolean as PropType<Boolean>,
+    metadataDone: Boolean as PropType<Boolean>,
   });
 
   await useProjects();

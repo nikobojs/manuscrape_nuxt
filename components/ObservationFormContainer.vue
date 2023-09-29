@@ -3,34 +3,23 @@
     class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-y-4 gap-x-4"
     v-if="observation"
   >
-    <UCard class="overflow-visible">
-      <template #header>
-        <CardHeader>Metadata</CardHeader>
-        <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
-      </template>
-      <ObservationForm
-        v-if="observation"
-        :project="project"
-        :observation="observation"
-        :onSubmit="onFormSubmit"
-        :disabled="disabled"
-      />
-    </UCard>
+    <ObservationMetadataWidget
+      v-if="observation"
+      :project="project"
+      :observation="observation"
+      :onSubmit="onFormSubmit"
+      :disabled="disabled"
+      :metadataDone="metadataDone"
+    />
 
-    <UCard>
-      <template #header>
-          <CardHeader>Image</CardHeader>
-          <span v-if="!$props.disabled && imageUploaded" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
-      </template>
-      <ObservationImageForm
-        :project="project"
-        :observation="observation"
-        :onSubmit="onImageUploaded"
-        :disabled="disabled"
-        :imageUploaded="imageUploaded"
-        :uploadInProgress="uploadInProgress"
-      />
-    </UCard>
+    <ObservationImageWidget
+      :project="project"
+      :observation="observation"
+      :onSubmit="onImageUploaded"
+      :disabled="disabled"
+      :imageUploaded="imageUploaded"
+      :uploadInProgress="uploadInProgress"
+    />
 
     <UCard>
       <template v-if="!$props.disabled" #header>
