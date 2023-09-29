@@ -6,6 +6,7 @@ import { requireUser } from '../../../../utils/authorize';
 const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
+  await ensureURLResourceAccess(event, event.context.user);
   const user = requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const allowedRoles: ProjectRole[] = [ProjectRole.OWNER];

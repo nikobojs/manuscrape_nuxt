@@ -32,7 +32,7 @@ export const useProjects = async () => {
     projectId: number,
     email: string,
   ): Promise<any> => {
-    return $fetch(
+    return fetch(
       `/api/projects/${projectId}/collaborators`,
       {
         method: 'POST',

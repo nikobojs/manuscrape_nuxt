@@ -33,14 +33,26 @@
       throw new Error('Email is not valid');
     }
 
-    await addCollaborator(props.project?.id, email.value).then((res) => {
-      toast.add({
-        title: 'Success!',
-        description: 'Contributer has been added!',
-        color: 'green'
-      });
-    }).catch(res => {
-      const msg = getErrMsg(res);
+    await addCollaborator(props.project?.id, email.value).then((res: Response) => {
+      console.log({ res })
+      if (res.status === 202) {
+        toast.add({
+          title: 'Success!',
+          description: 'Collaborator has been added!',
+          color: 'green'
+        });
+      } else if (res.status === 201) {
+        toast.add({
+          title: 'Success!',
+          description: 'Invitation has been created, and is valid for 7 days.',
+          color: 'green'
+        });
+      } else {
+        throw res;
+      }
+    }).catch(async (res: Response) => {
+      const json = await res.json();
+      const msg = getErrMsg(json);
       toast.add({
         title: 'Error',
         description: msg,

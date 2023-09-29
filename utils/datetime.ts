@@ -36,3 +36,9 @@ export const fourDigitYear = (event: Event) => {
     }
   }
 };
+
+export function daysInFuture (days: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d;
+}

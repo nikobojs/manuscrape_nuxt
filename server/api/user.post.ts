@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ProjectRole } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { authorize, delayedError, delayedResponse, passwordStrongEnough, isValidEmail } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
@@ -56,7 +56,43 @@ export default safeResponseHandler(async (event) => {
       email: parsed.email,
       password: hashedPassword,
     }
-  })
+  });
+
+  // get all pending invitations
+  const emailHash = generateInvitationHash(parsed.email);
+  const invitations = await prisma.projectInvitation.findMany({
+    select: {
+      id: true,
+      projectId: true,
+    },
+    where: {
+      emailHash,
+      expiresAt: {
+        gte: new Date(),
+      },
+    },
+  });
+
+  // accept invitations if any
+  if (invitations.length > 0) {
+    await prisma.projectAccess.createMany({
+      data: invitations.map((inv) => ({
+        projectId: inv.projectId,
+        userId: user.id,
+        role: ProjectRole.INVITED,
+      }))
+    });
+  }
+
+  // delete accepted invitations
+  if (invitations.length > 0) {
+    const projectInvitationIds = invitations.map((i) => i.id);
+    await prisma.projectInvitation.deleteMany({
+      where: {
+        id: { in: projectInvitationIds },
+      },
+    });
+  }
 
   // authorize user
   const { token } = await authorize(event, user)

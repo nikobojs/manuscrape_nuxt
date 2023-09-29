@@ -87,7 +87,7 @@ describe('User deletion', async () => {
 
         // [userA] invite userB to the project
         const inviteRes = await inviteToProject(tokenA, projectId!, { email: email2 });
-        expect(inviteRes.status).toBe(201);
+        expect(inviteRes.status).toBe(202);
 
         // [userA] delete userA
         const res = await deleteUser(tokenA, { password });

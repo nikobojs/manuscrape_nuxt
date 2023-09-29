@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   sourcemap: true,
   modules: [
-    '@nuxthq/ui'
+    '@nuxthq/ui',
+    'nuxt-scheduler'
   ],
   typescript: {
     strict: true,
@@ -24,6 +25,7 @@ export default defineNuxtConfig({
       s3Endpoint: process.env.S3_ENDPOINT || '',
       s3BucketName: process.env.S3_BUCKET_NAME || '',
       authResponseTime: 120,
+      invitationSalt: process.env.INVITATION_SALT || 'saltyFreciousTrembleCat42',
     },
     public: {
       baseUrl: process.env.BASE_URL || '',
