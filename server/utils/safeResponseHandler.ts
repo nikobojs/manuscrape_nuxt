@@ -16,8 +16,8 @@ export const safeResponseHandler = (handler: EventHandler) =>
       let longMsg;
 
       if (err instanceof H3Error) {
-        status = 400;
-        const cause = err.cause as any;
+        status = err?.statusCode || 500;
+        const cause = err?.cause || ({} as any);
         msg = cause?.message || cause?.statusMessage || err.message || err.statusMessage;
       } else if (err instanceof ValidationError) {
         msg = err.errors[0];
