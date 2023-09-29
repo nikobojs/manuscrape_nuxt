@@ -5,7 +5,7 @@
   >
     <UCard>
       <template #header>
-        Configure multiple choice
+        <CardHeader>Configure multiple choice</CardHeader>
       </template>
 
 

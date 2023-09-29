@@ -5,7 +5,7 @@
   >
     <UCard class="overflow-visible">
       <template #header>
-        Metadata
+        <CardHeader>Metadata</CardHeader>
         <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationForm
@@ -19,7 +19,7 @@
 
     <UCard>
       <template #header>
-          Image
+          <CardHeader>Image</CardHeader>
           <span v-if="!$props.disabled && imageUploaded" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
       </template>
       <ObservationImageForm
@@ -34,7 +34,7 @@
 
     <UCard>
       <template v-if="!$props.disabled" #header>
-          Files
+          <CardHeader>Files</CardHeader>
       </template>
       <ObservationFileUploadForm
         :observation="observation"
@@ -45,9 +45,9 @@
     </UCard>
 
     <div>
-      <UCard v-if="!$props.disabled" >
+      <UCard v-if="!$props.disabled">
         <template #header>
-          Save
+          <CardHeader>Actions</CardHeader>
         </template>
         <p class="text-sm italic text-gray-100">
           Warning: When an observation is committed, it will be locked for future editing.
@@ -64,7 +64,7 @@
       </UCard>
       <UCard v-else="$props.disabled" >
         <template #header>
-          Details
+          <CardHeader>Details</CardHeader>
         </template>
         <div class="grid grid-cols-2 w-full border border-gray-700 rounded-md bg-slate-950 p-3">
           <div class="text-gray-400">ID:</div>

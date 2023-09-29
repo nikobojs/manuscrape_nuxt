@@ -14,8 +14,8 @@
       <div class="grid grid-cols-2 gap-6 mt-6">
         <UCard>
           <template #header>
-            <div class="flex justify-between items-center">
-              <p>Dynamic fields</p>
+            <div class="flex justify-between items-center h-4">
+              <CardHeader>Dynamic fields</CardHeader>
               <div class="inline-flex gap-3">
                 <UButton
                   icon="i-heroicons-plus"
@@ -35,8 +35,8 @@
         </UCard>
         <UCard>
           <template #header>
-            <div class="flex justify-between items-center">
-              Export
+            <div class="flex justify-between items-center h-4">
+              <CardHeader>Export</CardHeader>
               <div class="flex items-center">
                <UBadge size="xs" color="yellow">WARN: In development</UBadge>                 
               </div>

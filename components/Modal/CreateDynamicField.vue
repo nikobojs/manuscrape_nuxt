@@ -5,7 +5,7 @@
     >
       <UCard>
         <template #header>
-          Create dynamic field
+          <CardHeader>Create dynamic field</CardHeader>
         </template>
         <div>
           <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">

@@ -1,63 +1,81 @@
 
 <template>
-  <UCard class="mb-4 overflow-visible">
-    <template #header>
-      <div class="flex justify-between items-center">
-        <p>Observations</p>
-        <div class="inline-flex gap-3">
-          <div class="w-56">
-            <USelectMenu
+  <div class="grid grid-cols-7 gap-x-6">
+    <UCard class="mb-4 overflow-visible col-span-5 h-full">
+      <template #header>
+        <div class="flex justify-between items-center">
+          <CardHeader>Observations</CardHeader>
+          <div class="inline-flex gap-3 -mt-2 -mb-2">
+            <div class="w-56">
+              <USelectMenu
+                variant="outline"
+                :options="observationFilterMenuItems"
+                v-model="filterOption"
+                option-attribute="label"
+              />
+            </div>
+            <UButton
+              icon="i-heroicons-pencil-square"
               variant="outline"
-              :options="observationFilterMenuItems"
-              v-model="filterOption"
-              option-attribute="label"
-            />
+              @click="addObservationClick"
+              :disabled="loading"
+              v-if="showCreateButton"
+            >
+              Create observation
+            </UButton>
           </div>
-          <UButton
-            icon="i-heroicons-pencil-square"
-            variant="outline"
-            @click="addObservationClick"
-            :disabled="loading"
-            v-if="showCreateButton"
-          >
-            Create observation
-          </UButton>
+        </div>
+      </template>
+
+      <UTable :rows="filteredObservations" :columns="columns" v-if="props.project" >
+        <template #isDraft-data="{ row }">
+          <span>{{ row.isDraft ? 'Yes': 'No' }}</span>
+        </template>
+        <template #createdAt-data="{ row }">
+          <span>{{ prettyDate(row.createdAt) }}</span>
+        </template>
+        <template #user-data="{ row }">
+          <span>{{ row.user?.email || 'Deleted user' }}</span>
+        </template>
+        <template #actions-data="{ row }">
+          <div class="w-full justify-end flex gap-x-3">
+            <div
+              v-if="typeof row.imageId === 'number'"
+              @click="() => openObservationImage(row)"
+            >
+              <span class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
+            </div>
+            <NuxtLink
+              :href="`/projects/${project?.id}/observations/${row.id}`"
+            >
+              <span class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"></span>
+            </NuxtLink>
+          </div>
+        </template>
+    </UTable>
+
+      <div class="flex w-full mt-3 -mb-7 justify-center">
+        <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" />
+      </div>
+    </UCard>
+
+    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] h-full">
+      <template #header>
+        <CardHeader>Parameters</CardHeader>
+      </template>
+
+      <div class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6">
+        <div v-for="field in sortedFields" class="p-3 border-b border-slate-800">
+          <div class="text-sm">
+            <span v-if="field.required" class="text-red-500">*</span>
+            {{ field.label }}
+          </div>
+          <UBadge size="xs" variant="solid" color="white" class="text-xs">{{ getFieldLabel(field.type) }}</UBadge>
         </div>
       </div>
-    </template>
-
-    <UTable :rows="filteredObservations" :columns="columns" v-if="props.project" >
-      <template #isDraft-data="{ row }">
-        <span>{{ row.isDraft ? 'Yes': 'No' }}</span>
-      </template>
-      <template #createdAt-data="{ row }">
-        <span>{{ prettyDate(row.createdAt) }}</span>
-      </template>
-      <template #user-data="{ row }">
-        <span>{{ row.user?.email || 'Deleted user' }}</span>
-      </template>
-      <template #actions-data="{ row }">
-        <div class="w-full justify-end flex gap-x-3">
-          <div
-            v-if="typeof row.imageId === 'number'"
-            @click="() => openObservationImage(row)"
-          >
-            <span class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
-          </div>
-          <NuxtLink
-            :href="`/projects/${project?.id}/observations/${row.id}`"  
-          >
-            <span class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"></span>
-          </NuxtLink>
-        </div>
-      </template>
-  </UTable>
-
-    <div class="flex w-full justify-center">
-      <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" />
-    </div>
-  </UCard>
+    </UCard>
     
+  </div>
   <ModalObservationImage
     v-if="selectedObservation"
     :open="openImageDialog"
@@ -95,6 +113,12 @@ import { observationFilterMenuItems } from '~/utils/observationFilters';
   if (typeof project?.id !== 'number') {
     throw new Error('Project is not defined');
   }
+
+  const sortedFields = computed(() => project.fields.sort((a, b) =>
+    a.required && b.required ?
+    a.label.localeCompare(b.label) :
+    a.required ? -1 : 1
+  ));
 
 
   const {

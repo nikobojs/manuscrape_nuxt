@@ -5,7 +5,7 @@
   >
     <UCard>
       <template #header>
-        Delete user account
+        <CardHeader>Delete user account</CardHeader>
       </template>
       <p class="mb-4">
         Your committed observations will be kept, but no one will be able to see you as the author. If you are alone on some projects, they will be deleted permanently.

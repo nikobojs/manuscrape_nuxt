@@ -68,6 +68,7 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
+  import { inputTypes, FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
     observation: requireObservationProp,
@@ -82,26 +83,6 @@
   const form = ref();
   const inputs = ref([] as CMSInput[]);
   const state = ref(props.observation?.data as any);
-
-  enum FieldType {
-    DATE = 'DATE',
-    STRING = 'STRING',
-    INT = 'INT',
-    FLOAT = 'FLOAT',
-    DATETIME = 'DATETIME',
-    BOOLEAN = 'BOOLEAN',
-    AUTOCOMPLETE = 'AUTOCOMPLETE',
-    CHOICE = 'CHOICE',
-    TEXTAREA = 'TEXTAREA',
-  };
-
-  const inputTypes: Record<string, string> = Object.freeze({
-    [FieldType.DATE]: 'date',
-    [FieldType.STRING]: 'text',
-    [FieldType.INT]: 'number',
-    [FieldType.FLOAT]: 'number',
-    [FieldType.DATETIME]: 'datetime-local',
-  });
 
   if (inputs.value.length == 0) {
     buildForm(props.project);

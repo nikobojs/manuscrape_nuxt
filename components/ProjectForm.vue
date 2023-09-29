@@ -78,6 +78,8 @@
 </template>
 
 <script setup lang="ts">
+import { ObservationFieldTypes } from '~/utils/observationFields';
+
   const props = defineProps({
     onNewProjectCreated: requireFunctionProp<(projectId: number) => void>(),
   });
@@ -116,19 +118,9 @@
     }
   });
 
-  const fieldTypes: Record<string, string> = {
-    'Text (single line)': 'STRING',
-    'Text (multi line)': 'TEXTAREA',
-    'Whole number': 'INT',
-    'Decimal number': 'FLOAT',
-    'Date': 'DATE',
-    'Date and time': 'DATETIME',
-    'Checkbox': 'BOOLEAN',
-    'Radio buttons': 'CHOICE',
-    'Dropdown': 'AUTOCOMPLETE',
-  }
-
-  const fieldTypeOptions = Object.entries(fieldTypes).map(([key, val]) => ({
+  const fieldTypeOptions = Object.entries(
+    ObservationFieldTypes
+  ).map(([key, val]) => ({
     label: key,
     type: val,
   }));

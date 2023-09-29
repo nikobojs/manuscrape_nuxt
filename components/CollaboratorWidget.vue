@@ -2,7 +2,7 @@
   <UCard>
     <template #header>
       <div class="flex items-center justify-between w-full">
-        Collaborators
+        <CardHeader>Collaborators</CardHeader>
         <div class="flex items-center">
          <UBadge size="xs" color="yellow">WARN: In development</UBadge>         
         </div>
