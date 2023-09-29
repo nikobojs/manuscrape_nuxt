@@ -15,7 +15,11 @@ export const safeResponseHandler = (handler: EventHandler) =>
       let status = event.res.statusCode === 200 ? 500 : event.res.statusCode;
       let longMsg;
 
-      if (err instanceof ValidationError) {
+      if (err instanceof H3Error) {
+        status = 400;
+        const cause = err.cause as any;
+        msg = cause?.message || cause?.statusMessage || err.message || err.statusMessage;
+      } else if (err instanceof ValidationError) {
         msg = err.errors[0];
         status = 400;
       } else if (err instanceof Prisma.PrismaClientValidationError) {
