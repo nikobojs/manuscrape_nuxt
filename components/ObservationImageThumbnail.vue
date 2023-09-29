@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="props.image"
-    class="w-44 overflow-hidden h-40 border-dashed border-sky-700 rounded-lg shadow-black shadow-sm hover:shadow-md hover:border-sky-500 cursor-pointer border transition-all"
+    class="w-44 bg-gray-950 overflow-hidden h-40 border-dashed border-sky-700 rounded-lg shadow-black shadow-sm hover:shadow-md hover:border-sky-500 cursor-pointer border transition-all flex items-center"
     @click="() => openImageDialog = true"
   >
     <img
