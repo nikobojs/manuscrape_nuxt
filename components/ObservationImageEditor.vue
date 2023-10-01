@@ -1,20 +1,194 @@
 <template>
-  <div
+  <UCard
     v-if="typeof observation?.imageId === 'number'"
+    class="overflow-visible"
   >
-    <div class="mb-4 w-full">
-      <p>Editing image for observation #{{ observation.id }}</p>
-      <div class="w-full border-b-gray-600 border-b mb-4 mt-4"></div>
+    <template #header>
+      <div class="flex justify-between">
+        <CardHeader>Image editor for observation #{{ observation.id }}</CardHeader>
+        <div class="flex gap-x-3">
+          <!-- Button group: all actions -->
+          <UButtonGroup size="sm" orientation="horizontal">
+            <UButton
+              v-for="[actionMode, { icon, onActionPicked }] in Object.entries(actions).filter(([k]) => k !== EditorMode.DISABLED.toString())"
+              :icon="icon"
+              :variant="modeActive(actionMode as unknown as EditorMode) ? 'solid' : 'outline'"
+              @click="() => { setMode(actionMode as unknown as EditorMode); onActionPicked() }"
+              :disabled="modeActive(EditorMode.DISABLED)"
+            />
+          </UButtonGroup>
+
+          <!-- Button group: colors -->
+          <UButtonGroup size="sm" orientation="horizontal">
+            <label
+              class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-s-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+              :style="{backgroundColor: frontColor, color: 'black'}"
+            >
+              <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
+              <UInput
+                v-show="false"
+                type="color"
+                class="hidden"
+                :disabled="modeActive(EditorMode.DISABLED)"
+                v-model="frontColor"
+              />
+            </label>
+            <label
+              class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-e-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+              :style="{backgroundColor: backColor, color: 'white'}"
+            >
+              <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
+              <UInput
+                v-show="false"
+                type="color"
+                class="hidden"
+                :disabled="modeActive(EditorMode.DISABLED)"
+                v-model="backColor"
+              />
+            </label>
+          </UButtonGroup>
+
+          <!-- Button group: zoom -->
+          <UButtonGroup size="sm" orientation="horizontal">
+            <UButton
+              color="blue"
+              variant="outline"
+              icon="i-heroicons-magnifying-glass-plus"
+              :disabled="modeActive(EditorMode.DISABLED)"
+              @click="zoomIn"
+            ></UButton>
+            <UButton
+              color="blue"
+              variant="outline"
+              icon="i-mdi-restore"
+              :disabled="modeActive(EditorMode.DISABLED)"
+              @click="resetZoom"
+            ></UButton>
+            <UButton
+              color="blue"
+              variant="outline"
+              icon="i-heroicons-magnifying-glass-minus"
+              :disabled="modeActive(EditorMode.DISABLED)"
+              @click="zoomOut"
+            ></UButton>
+          </UButtonGroup>
+        </div>
+      </div>
+    </template>
+    <div class="mb-4 w-full flex justify-between items-center">
+      <!-- Buttons: save & reset -->
       <div class="flex gap-4">
-        <UButton icon="i-heroicons-arrow-uturn-down" :disabled="!hasPendingChanges" color="rose" @click="reset" variant="outline">Reset pending changes</UButton>
-        <UButton icon="i-mdi-content-save-outline" :disabled="!hasPendingChanges" color="primary" @click="save" variant="outline">Save and overwrite</UButton>
+        <UButton
+          icon="i-heroicons-arrow-uturn-down"
+          :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
+          color="rose"
+          @click="reset"
+          variant="outline"
+        >Reset pending changes</UButton>
+        <UButton
+          icon="i-mdi-content-save-outline"
+          :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
+          color="primary"
+          @click="save"
+          variant="outline"
+        >Save and overwrite</UButton>
+      </div>
+      <!-- EditorMode.LINE: extra tools -->
+      <div class="flex items-center gap-x-3" v-if="modeActive(EditorMode.LINE)">
+        <label>Line width:</label>
+        <USelect
+          :options="lineWidths"
+          v-model="lineWidth"
+          color="blue"
+          value-attribute="value"
+          option-attribute="label"
+          class="text-sm cursor-pointer pl-2 pr-6 h-8"
+          placeholder=""
+        >
+        </USelect>
+      </div>
+      <!-- EditorMode.TEXT: extra tools -->
+      <div class="flex items-center gap-x-3" v-if="writing && modeActive(EditorMode.TEXT)">
+        <form @submit.prevent="saveTextDraft">
+          <UButtonGroup size="sm" orientation="horizontal">
+            <UInput
+              type="text"
+              ref="textInput"
+              v-model="textDraft"
+              :disabled="modeActive(EditorMode.DISABLED)"
+              @update="(v: string) => {
+                setTextDraft(v);
+                return v;
+              }"
+              placeholder="Enter text"
+            />
+            <UButton color="blue" type="submit" class="saveText">Save text</UButton>
+            <USelect
+              :options="fontSizes"
+              v-model="textSize"
+              size="sm"
+              color="gray"
+              variant="outline"
+              value-attribute="value"
+              option-attribute="label"
+              class="text-xs cursor-pointer pl-2 pr-2 h-8"
+              placeholder=""
+              :ui="{
+                trailing: {
+                  padding: {
+                    '2xs': 'pe-0',
+                    'xs': 'pe-0',
+                    'sm': 'pe-0',
+                    'md': 'pe-0',
+                    'lg': 'pe-0',
+                    'xl': 'pe-0'
+                  }
+                },
+                color: {
+                  white: {
+                    outline: 'shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white ring-0',
+                  },
+                  gray: {
+                    outline: 'shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ring-0',
+                  }
+                },
+              }"
+            >
+              <template #trailing><div class="hidden"></div></template>
+            </USelect>
+
+          </UButtonGroup>
+        </form>
       </div>
     </div>
-    <canvas ref="canvas" class="cursor-crosshair"></canvas>
-  </div>
+    <div class="w-full overflow-visible relative" ref="canvasContainer">
+      <UBadge class="flex items-center opacity-70 absolute right-3 top-3" color="blue" size="xs" >
+        <div class="flex items-start gap-x-1 pt-1">
+          <UIcon name="i-heroicons-magnifying-glass" />
+          <div class="font-mono">{{  Math.round(zoom * 100)  }}%</div>
+        </div>
+      </UBadge>
+      <canvas
+        v-show="!isSaving"
+        ref="canvas"
+        :class="{
+          'cursor-progress': cursor === 'progress',
+          'cursor-text': cursor === 'text',
+          'cursor-grab': cursor === 'grab',
+          'cursor-grabbing': cursor === 'grabbing',
+          'cursor-crosshair': cursor === 'crosshair',
+          'bg-[#080811]': !modeActive(EditorMode.DISABLED),
+        }"
+        :width="canvasRect.x || '100%'"
+        :height="canvasRect.y || 'auto'"
+      ></canvas>
+    </div>
+  </UCard>
 </template>
 
 <script setup lang="ts">
+  import type { EditorMode } from '~/utils/imageEditor';
+
   const props = defineProps({
     observation: requireObservationProp,
     project: requireProjectProp,
@@ -26,61 +200,53 @@
     navigateTo('/')
   }
 
-  const canvas = ref<undefined | HTMLCanvasElement>();
-  const context = computed(() => canvas.value ? canvas.value.getContext("2d") : null);
-  
+  const canvas = ref<HTMLCanvasElement>();
+  const canvasContainer = ref<HTMLDivElement>();
+  const textInput = ref<HTMLInputElement>();
+  const frontColor = ref<string>('#ffffff');
+  const backColor = ref<string>('#000000');
+
   const { upsertObservationImage } = await useObservations(props.project?.id);
 
-  const color = ref('black');
-  const beginX = ref(0);
-  const beginY = ref(0);
-  const squares = ref<Square[]>([]);
   const toast = useToast();
-  const dragging = ref(false);
-  const hasPendingChanges = computed(() => squares.value.length > 0);
 
-  const lastReload = ref(new Date());
-  const image = computed(() => {
-    const d = lastReload.value;
+  // initialize image editor!
+  const {
+    actions,
+    zoom,
+    hasPendingChanges,
+    modeActive,
+    setMode,
+    reset,
+    canvasRect,
+    setTextDraft,
+    textDraft,
+    createImageFile,
+    zoomIn,
+    writing,
+    zoomOut,
+    resetZoom,
+    destroyEditor,
+    isSaving,
+    cursor,
+    saveTextDraft,
+    textSize,
+    fontSizes,
+    lineWidths,
+    lineWidth
+  } = useImageEditor(
+    props.observation.id,
+    props.project.id,
+    canvas,
+    canvasContainer,
+    textInput,
+    frontColor,
+    backColor,
+  );
 
-    if (typeof props.observation?.id !== 'number' || typeof props.project?.id !== 'number') {
-      throw new Error('Props are not defined correctly');
-    }
 
-    const bg = new Image();
-    bg.src = `/api/projects/${props.project.id}/observations/${props.observation.id}/image?v=${d.getTime()}`
-    bg.addEventListener('load', () => {
-      if (canvas.value && context.value) {
-        canvas.value.width = bg.width;
-        canvas.value.height = bg.height;
-        context.value.drawImage(bg, 0, 0, bg.width, bg.height);
-      }
-    });
-  
-    return bg;
-  });
-
-  function reloadImage() {
-    lastReload.value = new Date();
-  }
-
-  async function save() {
-    const cvs = canvas.value;
-    if (!cvs) {
-      throw new Error('Canvas is not support. Your browser might need to be updated');
-    }
-
-    cvs.toBlob(async (blob) => {
-      if (!props.project?.id || !props.observation?.id) {
-        throw new Error('Project or observation is not defined');
-      }
-
-      if (blob == null) {
-        throw new Error('Image data could not be extracted from canvas');
-      }
-
-      const file = new File([blob], 'image.jpg', { type: 'image/jpeg', lastModified: 0})
-
+  function save() {
+    createImageFile(async (file: File) => {
       await upsertObservationImage(
         props.project.id,
         props.observation.id,
@@ -91,133 +257,25 @@
         title: 'Image was overwritten',
         icon: 'i-heroicons-check',
       });
-
-      reloadImage();
-      reset();
-
-      navigateTo(`/projects/${props.project.id}/observations/${props.observation.id}`);
-    }, 'image/jpeg', 1);
+    })
   }
 
-  function onMouseDown(ev: MouseEvent) {
-    if (context.value) {
-      beginX.value = ev.offsetX;
-      beginY.value = ev.offsetY;
-      dragging.value = true;
-    } else {
-      console.warn('Ignoring onMouseDown event')
-    }
-  }
-
-  function onMouseUp(ev: MouseEvent) {
-    if (context.value && dragging.value) {
-      const endX = ev.offsetX;
-      const endY = ev.offsetY;
-  
-      // TODO: support boxes made from other direction
-      const square: Square = [
-        beginX.value,
-        beginY.value,
-        endX - beginX.value,
-        endY - beginY.value
-      ];
-      squares.value.push(square);
-      dragging.value = false;
-      clearCanvas();
-      drawSquares();
-    } else {
-      console.warn('Ignoring onMouseUp event')
-    }
-  }
-
-  function drawSquare(
-    square: Square,
-  ) {
-    const ctx = context.value;
-    if (!ctx) return;
-    ctx.fillStyle = color.value;
-
-    // TODO: support boxes made from other direction
-    const [x, y, w, h] = square;
-    ctx.fillRect(x, y, w, h);
-  }
-
-  function clearCanvas() {
-    const cvs = canvas.value;
-    const ctx = context.value;
-    if (
-      !ctx ||
-      !cvs ||
-      typeof props.observation?.id !== 'number' ||
-      typeof props.project?.id !== 'number'
-    ) {
-      return;
-    }
-
-    // cvs.width = image.value.width;
-    // cvs.height = image.value.height;
-    ctx.clearRect(0, 0, image.value.width, image.value.height);
-    ctx.drawImage(image.value, 0, 0, image.value.width, image.value.height);
-  }
-
-  function onMouseMove(ev: MouseEvent) {
-    if (context.value) {
-      if (dragging.value) {
-        const endX = ev.offsetX;
-        const endY = ev.offsetY;
-        // TODO: support boxes made from other direction
-        const square: Square = [
-          beginX.value,
-          beginY.value,
-          endX - beginX.value,
-          endY - beginY.value
-        ];
-        clearCanvas();
-        drawSquare(square);
-        drawSquares();
-      }
-    }
-  }
-
-  function drawSquares() {
-    if (!context.value) {
-      throw new Error('Context is not defined');
-    }
-    for (let i = 0; i < squares.value.length; i++) {
-      const square = squares.value[i];
-      drawSquare(square);
-    }
-
-  }
-
-  function reset() {
-    if (
-      canvas.value &&
-      context.value
-    ) {
-      clearCanvas();
-      canvas.value.removeEventListener('mousedown', onMouseDown);
-      canvas.value.removeEventListener('mouseup', onMouseUp);
-      canvas.value.removeEventListener('mousemove', onMouseMove);
-      canvas.value.addEventListener('mousedown', onMouseDown);
-      canvas.value.addEventListener('mouseup', onMouseUp);
-      canvas.value.addEventListener('mousemove', onMouseMove);
-      squares.value = [];
-      dragging.value = false;
-    } else {
-      throw new Error('Canvas or canvas context is not defined!')
-    }
-  }
 
   onMounted(() => {
+    destroyEditor();
     reset();
   });
 
   onUnmounted(() => {
-    if (canvas.value) {
-      canvas.value.removeEventListener('mousedown', onMouseDown);
-      canvas.value.removeEventListener('mouseup', onMouseUp);
-      canvas.value.removeEventListener('mousemove', onMouseMove);
-    }
+    destroyEditor();
   })
-  </script>
+  
+
+</script>
+
+<style>
+  .cursor-text { cursor: text; }
+  .cursor-grab { cursor: grab; }
+  .cursor-grabbing { cursor: grabbing; }
+  .cursor-crosshair { cursor: crosshair; }
+</style>

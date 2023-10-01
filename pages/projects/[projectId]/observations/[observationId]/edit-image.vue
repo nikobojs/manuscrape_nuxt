@@ -1,6 +1,9 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
+      <BackButton :href="`/projects/${project.id}/observations/${observation.id}`">
+        Go back
+      </BackButton>
       <ObservationImageEditor :project="project" :observation="observation" />
     </UContainer>
   </ResourceAccessChecker>
@@ -16,12 +19,7 @@
   if (typeof project?.id !== 'number') {
     throw new Error('Project is not defined');
   }
-  const { requireObservationFromParams, observations } = await useObservations(project.id);
+  const { requireObservationFromParams } = await useObservations(project.id);
   const _observation = await requireObservationFromParams(params);
   const observation = ref(_observation);
-
-  watch(() => observations, async () => {
-    const _observation = await requireObservationFromParams(params);
-    observation.value = _observation;
-  }, { deep: true });
 </script>
