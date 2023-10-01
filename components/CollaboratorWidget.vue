@@ -34,7 +34,6 @@
     }
 
     await addCollaborator(props.project?.id, email.value).then((res: Response) => {
-      console.log({ res })
       if (res.status === 202) {
         toast.add({
           title: 'Success!',
