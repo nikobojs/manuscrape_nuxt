@@ -22,7 +22,10 @@ export default safeResponseHandler(async (event) => {
                             name: true,
                             fields: true,
                             dynamicFields: true,
-                        }
+                            _count: {
+                                select: { observations: true }
+                            }
+                        },
                     },
                     role: true,
                 }

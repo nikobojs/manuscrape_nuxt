@@ -1,6 +1,12 @@
 <template>
   <ResourceAccessChecker>
     <UContainer v-if="project">
+      <BackButton href="/projects">
+        Go to projects
+      </BackButton>
+      <div class="text-2xl">
+        {{ project.name }}
+      </div>
       <div class="mt-6">
         <ObservationListWidget
           :observations="observations"

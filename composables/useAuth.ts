@@ -1,3 +1,12 @@
+// TODO: use this pattern maybe?
+class NotAuthorizedError extends Error {
+    constructor () {
+        super('Not authorized to view component');
+        Object.setPrototypeOf(this, NotAuthorizedError.prototype);
+    }
+}
+
+
 export const useAuth = async () => {
 
     const { user, refreshUser, hasFetched } = await useUser();

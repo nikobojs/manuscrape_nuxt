@@ -1,51 +1,93 @@
 <template>
-    <h2 v-if="projects && projects.length > 0" class="text-3xl mb-3">Projects</h2>
-    <div class="grid grid-cols-5 gap-5 mb-10">
-      <div
-        v-for="project in projects"
-        class="group border rounded-md border-gray-800 bg-gray-900 p-4 cursor-pointer relative"
-        @click="() => openProject(project)"
-      >
-        <Transition mode="out-in" name="fade">
-          <div v-if="!hideAllPings && newProjectId == project.id" class="absolute flex -top-1 right-3">
-            <span
-              class="opacity-100 relative transition-opacity flex h-3 w-3 -right-5 self-end"
-            >
-              <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-sky-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-            </span>
+    <UCard v-if="projects && projects.length > 0">
+      <template #header>
+        <div class="flex justify-between">
+          <CardHeader>Projects</CardHeader>
+          <div class="flex items-right gap-x-3">
+            <USelect
+              color="blue"
+              class="cursor-pointer hover:bg-gray-800 transition-colors"
+              :options="projects"
+              option-attribute="name"
+              value-attribute="id"
+              placeholder="Open project..."
+              @update:model-value="(id: string) => { navigateTo(`/projects/${id}`) }"
+            />
+            <UButton
+              class="transition-colors"
+              icon="i-heroicons-plus"
+              color="blue"
+              @click="() => openCreateProjectModal = true"
+            >Create project</UButton>
           </div>
-        </Transition>
-        <div class="group-hover:underline text-lg mb-2 whitespace-nowrap overflow-hidden text-ellipsis">
-          {{ project.name }}
         </div>
-        <div class="text-sm">{{ project.fields.length }} fields</div>
-        <div class="text-sm text-gray-500">Created {{ dateOnly(project.createdAt) }}</div>
-      </div>
-    </div>
+      </template>
+      <UTable :columns="columns" :rows="projects">
+        <template #createdAt-data="{ row }: { row: FullProject }">
+          {{ prettyDate(row.createdAt) }}
+        </template>
+        <template #fields-data="{ row }">
+          <div class="flex align-middle gap-x-2">
+            <p>{{ row.fields.length }}</p>
+            <UTooltip :text="fieldsTooltip(row)">
+              <UIcon class="text-xl" name="i-heroicons-information-circle" />
+            </UTooltip>
+          </div>
+        </template>
+        <template #observationCount-data="{ row }">
+          {{ row._count.observations }}
+        </template>
+        <template #actions-data="{ row }">
+          <UTooltip text="Open project in same tab">
+            <NuxtLink :href="`/projects/${row.id}`">
+              <UIcon class="text-xl" name="i-heroicons-arrow-top-right-on-square" />
+            </NuxtLink>
+          </UTooltip>
+        </template>
+      </UTable>
+    </UCard>
+    <ModalProjectForm
+      :open="openCreateProjectModal"
+      :on-close="() => openCreateProjectModal = false"
+    />
 </template>
 
 <script setup lang="ts">
-  const props = defineProps({
-    newProjectId: requireProp<number>(Number)
-  });
-
   const { projects } = await useProjects();
-  const dateOnly = (d: Date | string) => new Date(d).toLocaleDateString();
-  const hideAllPings = ref(false);
+  const openCreateProjectModal = ref(false);
+  console.log([...projects.value])
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+    },
+    {
+      key: 'name',
+      label: 'Name',
+    },
+    {
+      key: 'createdAt',
+      label: 'Created at',
+    },
+    {
+      key: 'fields',
+      label: 'Parameters',
+    },
+    {
+      key: 'observationCount',
+      label: 'Total observations',
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+    },
+  ];
 
-  function openProject(project: FullProject) {
-    navigateTo('/projects/' + project.id)
+  function fieldsTooltip(project: FullProject): string {
+    return project.fields.map((p) => {
+        return `${p.label} (${getFieldLabel(p.type)})`
+    }).join(', ').trim();
   }
-
-  function hidePings() {
-    setTimeout(() => {
-      hideAllPings.value = true;
-    }, 5000);
-  }
-
-  const _newProjectId = computed(() => props.newProjectId);
-  watch([_newProjectId], hidePings);
 </script>
 
 <style>

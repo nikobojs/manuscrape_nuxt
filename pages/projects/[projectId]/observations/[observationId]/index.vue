@@ -1,6 +1,9 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
+      <BackButton :href="`/projects/${project.id}`">
+        Go to project
+      </BackButton>
       <h2 class="text-3xl mb-6 flex gap-x-4">
         {{ header }}
         <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>

@@ -1,7 +1,6 @@
 <template>
   <div>
     <AppHeader v-if="!hideNav" />
-    <Breadcrumb v-if="!hideNav" />
     <main class="mt-9">
       <slot />
     </main>

@@ -46,6 +46,9 @@ declare global {
     fields: ProjectField[];
     dynamicFields: Omit<DynamicProjectField, "projectId">[];
     observations: Observation[];
+    _count: {
+      observations: number;
+    }
   }
 
   interface FullImage extends Omit<ImageUpload, "s3Path"> {}

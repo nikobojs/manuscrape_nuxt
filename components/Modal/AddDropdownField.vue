@@ -2,6 +2,7 @@
   <UModal
     v-bind:model-value="open"
     v-on:close="onClose"
+    prevent-close
   >
     <UCard>
       <template #header>

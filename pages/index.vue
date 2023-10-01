@@ -1,9 +1,6 @@
 <template>
   <UContainer>
-    <ProjectList :new-project-id="newProjectId" />
-    <div class="mb-10">
-      <ProjectForm :onNewProjectCreated="(id: number) => newProjectId = id" />
-    </div>
+    <ProjectList />
   </UContainer>
 </template>
 
@@ -11,5 +8,4 @@
   const { ensureLoggedIn } = await useAuth();
   await useUser();
   await ensureLoggedIn();
-  const newProjectId = ref(0);
 </script>

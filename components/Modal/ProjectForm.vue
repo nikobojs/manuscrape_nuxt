@@ -1,10 +1,20 @@
 <template>
-  <h2 class="text-3xl mb-3">Create project</h2>
-  <UCard class="overflow-visible">
-    <form @submit.prevent="handleSubmit">
+  <UModal
+    v-bind:model-value="open"
+    v-on:close="onClose"
+    :ui="{background: 'transparent', width: 'sm:max-w-xl lg:max-w-2xl xl:max-w-4xl'}"
+    prevent-close
+  >
+    <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around">
+      <UCard class="overflow-hidden w-96">
+        <template #header>
+          <CardHeader>Create project</CardHeader>
+        </template>
 
-      <div class="flex gap-x-8">
-        <div class="w-3/12 flex gap-3 flex-col border-r border-r-slate-800 -my-6 py-6 pr-6">
+        <form
+          class="flex gap-3 flex-col"
+          @submit.prevent="handleSubmit"
+        >
           <label for="name-input">
             Name:
           </label>
@@ -15,15 +25,15 @@
             required
           />
           <label class="mt-5" for="field-label-input">
-            Observation fields:
+            Parameters:
           </label>
-          <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter field label" />
+          <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter label" />
 
           <div>
             <USelectMenu
               v-model="fieldType"
               :options="fieldTypeOptions"
-              placeholder="Select field type"
+              placeholder="Select type"
             />
             <div class="grid grid-cols-2 mt-3 w-full">
               <div class="items-center inline-flex">
@@ -44,45 +54,51 @@
             </div>
           </div>
 
-          <div class="mt-6">
+          <div class="mt-6 flex gap-x-3 justify-end">
+            <UButton @click="onClose" color="gray" variant="outline">
+              Cancel
+            </UButton>
             <UButton type="submit" :loading="loading" :disabled="!newProjectIsValid">
               Create project
             </UButton>
           </div>
-          <span v-text="error" class="block mt-3 text-red-600"></span>
-        </div>
-        <div class="w-9/12">
-          <label class="block mb-4">Fields added so far:</label>
-          <div v-if="addedFields.length > 0" class="w-full border border-gray-700 rounded-md bg-slate-950 p-3">
-            <div class="grid grid-cols-5 gap-x-4 w-full border-b border-b-gray-800 pb-2 mb-2">
-              <span class="text-gray-500 text-xs col-span-3">Label</span>
-              <span class="text-gray-500 text-right text-xs">Type</span>
-              <span class="text-gray-500 text-right text-xs">Required?</span>
-            </div>
-            <div v-for="field in addedFields" class="grid grid-cols-5 gap-x-4 w-full">
-              <span class="whitespace-nowrap overflow-hidden text-ellipsis col-span-3">{{ field.label }}</span>
-              <span class="text-gray-500 text-right">{{ field.field.label }}</span>
-              <span class="text-gray-500 text-right">{{ field.required ? 'Yes' : 'No' }}</span>
-            </div>
+          <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
+        </form>
+      </UCard>
+      <UCard class="overflow-hidden" v-if="addedFields.length > 0">
+        <template #header>
+          <CardHeader>Parameters</CardHeader>
+        </template>
+        <div v-if="addedFields.length > 0" class="w-full border border-gray-700 rounded-md bg-slate-950 p-3">
+          <div class="grid grid-cols-12 gap-x-4 w-full border-b border-b-gray-800 pb-2 mb-2">
+            <span class="text-gray-500 text-xs col-span-7">Label</span>
+            <span class="text-gray-500 text-right text-xs col-span-3">Type</span>
+            <span class="text-gray-500 text-right text-xs col-span-2">Required?</span>
+          </div>
+          <div v-for="field in addedFields" class="grid grid-cols-12 gap-x-4 w-full">
+            <!-- Create generic field group -->
+            <span class="whitespace-nowrap overflow-hidden text-ellipsis col-span-7 max-w-sm">{{ field.label }}</span>
+            <span class="text-gray-500 text-right text-xs col-span-3">{{ field.field.label }}</span>
+            <span class="text-gray-500 text-right text-xs col-span-2">{{ field.required ? 'Yes' : 'No' }}</span>
           </div>
         </div>
-      </div>
-    </form>
+      </UCard>
+    </div>
+  </UModal>
 
-    <ModalAddDropdownField
-      :open="openDropdownModal"
-      :onSubmit="addDropdownField"
-      :onClose="() => openDropdownModal = false"
-    />
-  </UCard>
+  <ModalAddDropdownField
+    :open="openDropdownModal"
+    :onSubmit="addDropdownField"
+    :onClose="() => openDropdownModal = false"
+  />
 </template>
 
 <script setup lang="ts">
-import { ObservationFieldTypes } from '~/utils/observationFields';
-
-  const props = defineProps({
-    onNewProjectCreated: requireFunctionProp<(projectId: number) => void>(),
+  defineProps({
+    ...requireModalProps,
   });
+
+  import { ObservationFieldTypes } from '~/utils/observationFields';
 
   const { createProject } = await useProjects();
   const toast = useToast();
@@ -150,7 +166,6 @@ import { ObservationFieldTypes } from '~/utils/observationFields';
       if (runsInElectron()) {
         window.electronAPI.projectCreated(res);
       } else {
-        props.onNewProjectCreated(res.id);
         toast.add({
           title: 'Project was created successfully.'
         });
