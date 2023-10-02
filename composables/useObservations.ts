@@ -5,7 +5,7 @@ import { getErrMsg } from '~/utils/getErrMsg';
 export const useObservations = async (projectId: number) => {
   const observations = useState<FullObservation[]>('observations', () => []);
   const page = useState<number>(() => 1);
-  const pageSize = 10;
+  const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
   const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
   const totalPages = computed(() => Math.ceil(totalObservations.value / pageSize));

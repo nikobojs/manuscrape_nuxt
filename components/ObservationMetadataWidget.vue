@@ -1,5 +1,5 @@
 <template>
-  <UCard class="overflow-visible">
+  <UCard class="overflow-scroll max-h-[500px]">
       <template #header>
         <div class="flex justify-between w-full">
           <CardHeader>Metadata</CardHeader>
@@ -7,9 +7,6 @@
         </div>
       </template>
     <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
-      <div class="text-gray-200 mb-6">
-        <label class="text-sm">Observation </label>
-      </div>
       <div v-for="({ props, field }) in inputs" class="mb-4">
         <UFormGroup :name="field.label" :label="field.label">
           <UCheckbox

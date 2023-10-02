@@ -28,8 +28,8 @@
 </template>
 
 <script lang="ts" setup>
-  const { requireProjectFromParams, projects } = await useProjects();
-  await useUser();
+  const { requireProjectFromParams } = await useProjects();
+  const { refreshUser } = await useUser();
   const { ensureLoggedIn } = await useAuth();
   await ensureLoggedIn();
   const { params, query } = useRoute();
@@ -71,6 +71,12 @@
       if (typeof project?.id !== 'number') {
         throw new Error('Project is not defined');
       }
+      await refreshUser();
+      toast.add({
+        title: 'Nice job! Observation was submitted.',
+        icon: 'i-heroicons-check',
+        color: 'green'
+      });
       navigateTo(`/projects/${project.id}`);
     }
   }

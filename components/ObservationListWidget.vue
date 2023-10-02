@@ -27,7 +27,7 @@
         </div>
       </template>
 
-      <UTable :rows="filteredObservations" :columns="columns" v-if="props.project" >
+      <UTable :empty-state="{ icon: 'i-heroicons-circle-stack-20-solid', label: 'No observations'}" :rows="filteredObservations" :columns="columns" v-if="props.project" >
         <template #isDraft-data="{ row }">
           <span>{{ row.isDraft ? 'Yes': 'No' }}</span>
         </template>
@@ -59,7 +59,7 @@
       </div>
     </UCard>
 
-    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] h-full">
+    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] max-h-[520px] overflow-y-scroll h-full">
       <template #header>
         <CardHeader>Parameters</CardHeader>
       </template>

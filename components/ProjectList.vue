@@ -3,7 +3,7 @@
       <template #header>
         <div class="flex justify-between">
           <CardHeader>Projects</CardHeader>
-          <div class="flex items-right gap-x-3">
+          <div class="flex items-right gap-x-6">
             <USelect
               color="blue"
               class="cursor-pointer hover:bg-gray-800 transition-colors"
@@ -22,14 +22,24 @@
           </div>
         </div>
       </template>
-      <UTable :columns="columns" :rows="projects">
+      <UTable :columns="columns" :rows="projects" :sort="{column: 'createdAt', direction: 'desc'}">
         <template #createdAt-data="{ row }: { row: FullProject }">
           {{ prettyDate(row.createdAt) }}
         </template>
         <template #fields-data="{ row }">
           <div class="flex align-middle gap-x-2">
             <p>{{ row.fields.length }}</p>
-            <UTooltip :text="fieldsTooltip(row)">
+              <UTooltip
+                :text="fieldsTooltip(row)"
+                :ui="{
+                  base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
+                }"
+              >
+                <template #text>
+                  <p class="max-w-xs break-words whitespace-normal">
+                    {{ fieldsTooltip(row) }}
+                  </p>
+                </template>
               <UIcon class="text-xl" name="i-heroicons-information-circle" />
             </UTooltip>
           </div>
@@ -63,10 +73,13 @@
     {
       key: 'name',
       label: 'Name',
+      sortable: true,
     },
     {
       key: 'createdAt',
       label: 'Created at',
+      direction: 'desc' as ("desc" | "asc"),
+      sortable: true,
     },
     {
       key: 'fields',
@@ -75,6 +88,7 @@
     {
       key: 'observationCount',
       label: 'Total observations',
+      sortable: true,
     },
     {
       key: 'actions',
@@ -84,8 +98,8 @@
 
   function fieldsTooltip(project: FullProject): string {
     return project.fields.map((p) => {
-        return `${p.label} (${getFieldLabel(p.type)})`
-    }).join(', ').trim();
+        return `"${p.label}" [${getFieldLabel(p.type)}]`
+    }).join('; ').trim();
   }
 </script>
 

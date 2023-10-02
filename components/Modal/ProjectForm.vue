@@ -6,7 +6,8 @@
     prevent-close
   >
     <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around">
-      <UCard class="overflow-hidden w-96 shadow-xl">
+      <!-- project form left UCard -->
+      <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
         <template #header>
           <CardHeader>Create project</CardHeader>
         </template>
@@ -61,6 +62,8 @@
             </div>
           </div>
 
+          <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
+
           <div class="mt-6 flex gap-x-3 justify-end">
             <UButton @click="onClose" color="gray" variant="outline">
               Cancel
@@ -69,26 +72,48 @@
               Create project
             </UButton>
           </div>
-          <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
         </form>
       </UCard>
-      <UCard class="overflow-hidden shadow-xl" v-if="addedFields.length > 0">
-        <template #header>
-          <CardHeader>Parameters</CardHeader>
-        </template>
-        <div v-if="addedFields.length > 0" class="w-full border border-gray-700 rounded-md bg-slate-950 p-3">
-          <div class="grid grid-cols-12 gap-x-4 w-full border-b border-b-gray-800 pb-2 mb-2">
-            <span class="text-gray-500 text-xs col-span-7">Label</span>
-            <span class="text-gray-500 text-right text-xs col-span-3">Type</span>
-            <span class="text-gray-500 text-right text-xs col-span-2">Required?</span>
-          </div>
-          <div v-for="field in addedFields" class="grid grid-cols-12 gap-x-4 w-full">
-            <!-- Create generic field group -->
-            <span class="whitespace-nowrap overflow-hidden text-ellipsis col-span-7 max-w-sm">{{ field.label }}</span>
-            <span class="text-gray-500 text-right text-xs col-span-3">{{ field.field.label }}</span>
-            <span class="text-gray-500 text-right text-xs col-span-2">{{ field.required ? 'Yes' : 'No' }}</span>
-          </div>
-        </div>
+
+      <!-- added fields right UCard -->
+      <UCard
+        v-if="addedFields.length > 0"
+        class="overflow-y-scroll shadow-xl min-w-[510px] h-full max-h-[450px]"
+        :ui="{ header: { background: 'bg-gray-950' }, body: { background: 'bg-gray-950', padding: 'p-0' } }"
+      >
+        <UTable v-if="addedFields.length > 0" :rows="addedFields" :columns="fieldColumns">
+            <!-- Cceate generic field group -->
+            <template #actions-data="{ row }">
+              <span class="flex items-center relative w-2 ml-1">
+                <UIcon name="i-mdi-close" class="cursor-pointer text-lg absolute" @click="() => removeParameter(row)" />
+              </span>
+            </template>
+            <template #label-data="{ row }">
+              <UTooltip :ui="{
+                base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
+              }">
+                <!-- Tool tip-->
+                <template #text>
+                  <p class="max-w-xs break-words whitespace-normal">{{ row.label }}</p>
+                </template>
+
+                <!-- Label column -->
+                <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[220px]">
+                  {{ row.label }}
+                </span>
+              </UTooltip>
+            </template>
+            <template #field-data="{ row }">
+              <div class="flex gap-2">
+                <UBadge size="xs" color="blue" variant="outline">
+                  {{ row.field.label }}
+                </UBadge>
+                <UBadge size="xs" v-if="!row.required" color="gray" variant="solid">
+                  Optional
+                </UBadge>
+              </div>
+            </template>
+        </UTable>
       </UCard>
     </div>
   </UModal>
@@ -141,6 +166,22 @@
     }
   });
 
+  const fieldColumns = [
+    {
+      label: '',
+      key: 'actions',
+      class: 'px-0 flex items-center w-0 whitespace-nowrap'
+    },
+    {
+      label: 'Parameter label',
+      key: 'label',
+    },
+    {
+      label: 'Parameter type',
+      key: 'field'
+    },
+  ]
+
   const fieldTypeOptions = Object.entries(
     ObservationFieldTypes
   ).map(([key, val]) => ({
@@ -180,6 +221,9 @@
         setTimeout(() => {
           form.name = '';
           form.fields = [];
+          addedFields.value = [];
+          fieldLabel.value = '';
+          error.value = '';
         }, 300);
       }
     } catch (err: any) {
@@ -249,6 +293,15 @@
     fieldType.value = undefined;
     error.value = '';
     fieldLabelInput.value?.input?.focus?.();
+  }
+
+  async function removeParameter(field: any) {
+    addedFields.value = addedFields.value.filter(
+      (f) => f.label !== field.label,
+    );
+    form.fields = form.fields.filter(
+      (f) => f.label !== field.label,
+    );
   }
 
   onMounted(() => {
