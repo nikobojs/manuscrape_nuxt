@@ -296,7 +296,6 @@ export function useImageEditor(
       mouseEvents: {
         up: (ev) => {
           // if already writing, move text instead of creating new
-          console.log('stopped dragging')
           dragging.value = false;
           if (writing.value){
             draw();
@@ -308,7 +307,6 @@ export function useImageEditor(
         },
         down: (ev) => {
           if (!writing.value) {
-            console.log('first text mouse down!')
             textDraft.value = '';
             writing.value = true;
             dragging.value = true;
@@ -326,7 +324,6 @@ export function useImageEditor(
 
             draw();
           } else if (writing.value) {
-            console.log('mouse down start dragging!')
             dragging.value = true;
           }
         },
@@ -344,7 +341,6 @@ export function useImageEditor(
       keyEvents: {
         down: (key: string) => {
           if (key === 'Enter') {
-            console.log('SUBMITTING TEXT', textDraft.value);
             saveTextDraft()
           }
         },
@@ -474,7 +470,6 @@ export function useImageEditor(
 
   // TODO: improve documentation
   function drawTexts(canvasZoom: number) {
-    console.log('drawTexts()', { pos: draftTextPosition.value, text: textDraft.value, mode: mode.value })
     if (!context.value) {
       throw new Error("Context is not defined");
     }

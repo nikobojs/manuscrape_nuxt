@@ -2,11 +2,11 @@
   <UModal
     v-bind:model-value="open"
     v-on:close="onClose"
-    :ui="{background: 'transparent', width: 'sm:max-w-xl lg:max-w-2xl xl:max-w-4xl'}"
+    :ui="{background: 'transparent', width: 'sm:max-w-xl lg:max-w-2xl xl:max-w-4xl', shadow: 'shadow-none'}"
     prevent-close
   >
     <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around">
-      <UCard class="overflow-hidden w-96">
+      <UCard class="overflow-hidden w-96 shadow-xl">
         <template #header>
           <CardHeader>Create project</CardHeader>
         </template>
@@ -24,9 +24,16 @@
             id="name-input"
             required
           />
-          <label class="mt-5" for="field-label-input">
-            Parameters:
-          </label>
+            <label class="mt-5" for="field-label-input">
+              Parameters
+              <UTooltip :ui="{base: 'p-2 text-xs'}">
+                <template #text>
+                  When adding observations later on, all the
+                  parameters will need to be set manually for each observation.
+                </template>
+                <UIcon name="i-heroicons-information-circle" />
+              </UTooltip>
+            </label>
           <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter label" />
 
           <div>
@@ -65,7 +72,7 @@
           <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
         </form>
       </UCard>
-      <UCard class="overflow-hidden" v-if="addedFields.length > 0">
+      <UCard class="overflow-hidden shadow-xl" v-if="addedFields.length > 0">
         <template #header>
           <CardHeader>Parameters</CardHeader>
         </template>
@@ -94,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-  defineProps({
+  const props = defineProps({
     ...requireModalProps,
   });
 
@@ -169,6 +176,11 @@
         toast.add({
           title: 'Project was created successfully.'
         });
+        props.onClose();
+        setTimeout(() => {
+          form.name = '';
+          form.fields = [];
+        }, 300);
       }
     } catch (err: any) {
       error.value = (err?.statusMessage || err?.message).toString();
@@ -241,5 +253,5 @@
 
   onMounted(() => {
     error.value = '';
-  })
+  });
 </script>

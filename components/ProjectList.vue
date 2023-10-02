@@ -55,7 +55,6 @@
 <script setup lang="ts">
   const { projects } = await useProjects();
   const openCreateProjectModal = ref(false);
-  console.log([...projects.value])
   const columns = [
     {
       key: 'id',
