@@ -14,7 +14,7 @@
         <UInput
           v-model="itemName"
           type="text"
-          placeholder="Enter option value"
+          placeholder="Enter option label"
           id="password-input"
           required
           ref="itemNameInput"
@@ -22,9 +22,25 @@
         />
         <UButton @click="onAddOption" variant="outline" color="blue">Add option</UButton>
       </div>
-      <div class="mt-3 flex gap-2">
-        <UBadge color="blue" v-for="item in items" :ui="{ rounded: 'rounded-full' }">
+      <div class="mt-6 flex gap-3 flex-wrap">
+        <!-- added option badges -->
+        <UBadge
+          color="blue"
+          size="lg"
+          v-for="item in items"
+          :ui="{
+            rounded: 'rounded-full'
+          }"
+          class="hover:dark:bg-blue-300 hover:bg-blue-300 cursor-pointer"
+          @click="() => removeOption(item)"
+        >
           {{ item }}
+
+          <!-- close icon for each bach -->
+          <UIcon
+            name="i-mdi-close"
+            class="text-lg ml-1 text-gray-800"
+          />
         </UBadge>
       </div>
       <template #footer>
@@ -50,6 +66,7 @@
   const itemNameInput = ref();
   const items = ref<string[]>([]);
   const itemName = ref('');
+  const toast = useToast();
 
   function handleSubmit() {
     props.onSubmit({ choices: items.value });
@@ -63,8 +80,21 @@
   }
   
   function onAddOption() {
-    items.value.push(itemName.value);
-    itemName.value = '';
-    itemNameInput.value?.input?.focus();
+    if (items.value.includes(itemName.value)) {
+      toast.add({
+        title: 'There is already an option with that label',
+        color: 'yellow'
+      });
+      itemNameInput.value?.input?.focus();
+    } else {
+      items.value.push(itemName.value);
+      itemName.value = '';
+      itemNameInput.value?.input?.focus();
+    }
+  }
+
+  function removeOption(option: string) {
+    console.log('removing option', option)
+    items.value = [...items.value.filter((i) => i !== option)];
   }
 </script>
