@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div class="bg-gray-950">
     <AppHeader v-if="!hideNav" />
-    <main class="mt-9">
+    <main class="pt-9 pb-6">
       <slot />
     </main>
-    <AppFooter />
+    <AppFooter v-if="!hideNav" />
   </div>
   <UNotifications />
 </template>

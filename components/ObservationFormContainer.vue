@@ -1,6 +1,6 @@
 <template>
   <div
-    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-y-4 gap-x-4"
+    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6"
     v-if="observation"
   >
     <ObservationMetadataWidget

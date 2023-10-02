@@ -59,7 +59,7 @@
       </div>
     </UCard>
 
-    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] max-h-[520px] overflow-y-scroll h-full">
+    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] max-h-[520px] overflow-auto h-full">
       <template #header>
         <CardHeader>Parameters</CardHeader>
       </template>

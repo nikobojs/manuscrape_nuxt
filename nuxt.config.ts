@@ -13,7 +13,20 @@ export default defineNuxtConfig({
     typeCheck: true
   },
   ui: {
-    icons: ['mdi', 'heroicons']
+    icons: ['mdi', 'heroicons'],
+  },
+  app: {
+    head: {
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+      title: 'Manuscrape',
+      bodyAttrs: {
+        class: 'h-full dark:bg-gray-950 bg-gray-950 p-0 m-0'
+      },
+      htmlAttrs: {
+        class: 'h-full m-0 p-0',
+      },
+    },
   },
   runtimeConfig: {
     app: {

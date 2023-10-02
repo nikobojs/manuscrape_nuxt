@@ -1,123 +1,115 @@
 <template>
-  <UModal
-    v-bind:model-value="open"
-    v-on:close="onClose"
-    :ui="{background: 'transparent', width: 'sm:max-w-xl lg:max-w-2xl xl:max-w-4xl', shadow: 'shadow-none'}"
-    prevent-close
-  >
-    <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around">
-      <!-- project form left UCard -->
-      <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
-        <template #header>
-          <CardHeader>Create project</CardHeader>
-        </template>
+  <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around px-6">
+    <!-- project form left UCard -->
+    <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
+      <template #header>
+        <CardHeader>Create project</CardHeader>
+      </template>
 
-        <form
-          class="flex gap-3 flex-col"
-          @submit.prevent="handleSubmit"
-        >
-          <label for="name-input">
-            Name:
+      <form
+        class="flex gap-3 flex-col"
+        @submit.prevent="handleSubmit"
+      >
+        <label for="name-input">
+          Name:
+        </label>
+        <UInput
+          v-model="form.name"
+          placeholder="Enter project name"
+          id="name-input"
+          required
+        />
+          <label class="mt-5" for="field-label-input">
+            Parameters
+            <UTooltip :ui="{base: 'p-2 text-xs'}">
+              <template #text>
+                When adding observations later on, all the
+                parameters will need to be set manually for each observation.
+              </template>
+              <UIcon name="i-heroicons-information-circle" />
+            </UTooltip>
           </label>
-          <UInput
-            v-model="form.name"
-            placeholder="Enter project name"
-            id="name-input"
-            required
-          />
-            <label class="mt-5" for="field-label-input">
-              Parameters
-              <UTooltip :ui="{base: 'p-2 text-xs'}">
-                <template #text>
-                  When adding observations later on, all the
-                  parameters will need to be set manually for each observation.
-                </template>
-                <UIcon name="i-heroicons-information-circle" />
-              </UTooltip>
-            </label>
-          <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter label" />
+        <UInput v-model="fieldLabel" ref="fieldLabelInput" id="field-label-input" placeholder="Enter label" />
 
-          <div>
-            <USelectMenu
-              v-model="fieldType"
-              :options="fieldTypeOptions"
-              placeholder="Select type"
-            />
-            <div class="grid grid-cols-2 mt-3 w-full">
-              <div class="items-center inline-flex">
-                <UCheckbox v-model="fieldRequired" :disabled="forceFieldRequired" label="Required?" />
-              </div>
-              <div class="w-full text-right">
-                <UButton
-                  icon="i-heroicons-plus"
-                  variant="outline"
-                  color="blue"
-                  type="button"
-                  @click="addField"
-                  :disabled="!newFieldIsValid"
-                >
-                  Add field
-                </UButton>
-              </div>
+        <div>
+          <USelectMenu
+            v-model="fieldType"
+            :options="fieldTypeOptions"
+            placeholder="Select type"
+          />
+          <div class="grid grid-cols-2 mt-3 w-full">
+            <div class="items-center inline-flex">
+              <UCheckbox v-model="fieldRequired" :disabled="forceFieldRequired" label="Required?" />
+            </div>
+            <div class="w-full text-right">
+              <UButton
+                icon="i-heroicons-plus"
+                variant="outline"
+                color="blue"
+                type="button"
+                @click="addField"
+                :disabled="!newFieldIsValid"
+              >
+                Add field
+              </UButton>
             </div>
           </div>
+        </div>
 
-          <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
+        <span v-text="error" v-if="error" class="block mt-3 text-red-600"></span>
 
-          <div class="mt-6 flex gap-x-3 justify-end">
-            <UButton @click="onClose" color="gray" variant="outline">
-              Cancel
-            </UButton>
-            <UButton type="submit" :loading="loading" :disabled="!newProjectIsValid">
-              Create project
-            </UButton>
-          </div>
-        </form>
-      </UCard>
+        <div class="mt-6 flex gap-x-3 justify-end">
+          <UButton @click="onClose" color="gray" variant="outline">
+            Cancel
+          </UButton>
+          <UButton type="submit" :loading="loading" :disabled="!newProjectIsValid">
+            Create project
+          </UButton>
+        </div>
+      </form>
+    </UCard>
 
-      <!-- added fields right UCard -->
-      <UCard
-        v-if="addedFields.length > 0"
-        class="overflow-y-scroll shadow-xl min-w-[510px] h-full max-h-[450px]"
-        :ui="{ header: { background: 'bg-gray-950' }, body: { background: 'bg-gray-950', padding: 'p-0' } }"
-      >
-        <UTable v-if="addedFields.length > 0" :rows="addedFields" :columns="fieldColumns">
-            <!-- Cceate generic field group -->
-            <template #actions-data="{ row }">
-              <span class="flex items-center relative w-2 ml-1">
-                <UIcon name="i-mdi-close" class="cursor-pointer text-lg absolute" @click="() => removeParameter(row)" />
+    <!-- added fields right UCard -->
+    <UCard
+      v-if="addedFields.length > 0"
+      class="overflow-y-auto shadow-xl min-w-[510px] h-full max-h-[450px]"
+      :ui="{ header: { background: 'bg-[#0d1528]' }, body: { background:  'bg-[#0d1528]', padding: 'p-0' } }"
+    >
+      <UTable v-if="addedFields.length > 0" :rows="addedFields" :columns="fieldColumns">
+          <!-- Cceate generic field group -->
+          <template #actions-data="{ row }">
+            <span class="flex items-center relative w-2 ml-1">
+              <UIcon name="i-mdi-close" class="cursor-pointer text-lg absolute" @click="() => removeParameter(row)" />
+            </span>
+          </template>
+          <template #label-data="{ row }">
+            <UTooltip :ui="{
+              base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
+            }">
+              <!-- Tool tip-->
+              <template #text>
+                <p class="max-w-xs break-words whitespace-normal">{{ row.label }}</p>
+              </template>
+
+              <!-- Label column -->
+              <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[220px]">
+                {{ row.label }}
               </span>
-            </template>
-            <template #label-data="{ row }">
-              <UTooltip :ui="{
-                base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
-              }">
-                <!-- Tool tip-->
-                <template #text>
-                  <p class="max-w-xs break-words whitespace-normal">{{ row.label }}</p>
-                </template>
-
-                <!-- Label column -->
-                <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[220px]">
-                  {{ row.label }}
-                </span>
-              </UTooltip>
-            </template>
-            <template #field-data="{ row }">
-              <div class="flex gap-2">
-                <UBadge size="xs" color="blue" variant="outline">
-                  {{ row.field.label }}
-                </UBadge>
-                <UBadge size="xs" v-if="!row.required" color="gray" variant="solid">
-                  Optional
-                </UBadge>
-              </div>
-            </template>
-        </UTable>
-      </UCard>
-    </div>
-  </UModal>
-
+            </UTooltip>
+          </template>
+          <template #field-data="{ row }">
+            <div class="flex gap-2">
+              <UBadge size="xs" color="blue" variant="outline">
+                {{ row.field.label }}
+              </UBadge>
+              <UBadge size="xs" v-if="!row.required" color="gray" variant="solid">
+                Optional
+              </UBadge>
+            </div>
+          </template>
+      </UTable>
+    </UCard>
+  </div>
   <ModalAddDropdownField
     :open="openDropdownModal"
     :onSubmit="addDropdownField"
@@ -125,10 +117,12 @@
   />
 </template>
 
+
 <script setup lang="ts">
+
   const props = defineProps({
-    ...requireModalProps,
-  });
+    onClose: requireFunctionProp<() => void>()
+  })
 
   import { ObservationFieldTypes } from '~/utils/observationFields';
 

@@ -1,5 +1,5 @@
 <template>
-  <header class="py-2 bg-slate-700 shadow-lg">
+  <header class="py-2 bg-slate-800 shadow-lg">
     <UContainer>
       <div class="flex justify-between items-center">
         <div class="font-sans text-xl cursor-pointer" @click="onLogoClick">
