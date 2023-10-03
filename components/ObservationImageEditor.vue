@@ -99,31 +99,42 @@
         <USelectMenu
           :options="lineWidths"
           v-model="lineWidth"
-          color="blue"
+          color="gray"
           variant="outline"
           value-attribute="value"
           option-attribute="label"
           class="text-sm cursor-pointer pl-3 pr-8 h-8"
-          placeholder=""
         >
+          <template #label>
+            {{ lineWidth }}px
+          </template>
         </USelectMenu>
       </div>
       <!-- EditorMode.TEXT: extra tools -->
       <div class="flex items-center gap-x-3" v-if="writing && modeActive(EditorMode.TEXT)">
-        <form @submit.prevent="saveTextDraft">
-          <UButtonGroup size="sm" orientation="horizontal">
-            <UInput
-              type="text"
-              ref="textInput"
-              v-model="textDraft"
-              :disabled="modeActive(EditorMode.DISABLED)"
-              @update="(v: string) => {
-                setTextDraft(v);
-                return v;
-              }"
-              placeholder="Enter text"
-            />
-            <UButton color="blue" type="submit" class="saveText">Save text</UButton>
+        <form @submit.prevent="saveTextDraft" class="flex gap-3 items-end">
+            <div
+              v-if="textDraftSolidBg"
+              class="w-16 flex flex-col h-full content-between"
+            >
+              <div class="text-xs pb-2">Padding</div>
+              <URange
+                color="red"
+                :ui="{
+                  background: 'bg-[#1f2a42]',
+                }"
+                :min="10"
+                :max="100"
+                v-model="textDraftBgPadding"
+              />
+            </div>
+            <div class="flex flex-col items-center gap-x-2">
+              <div class="text-xs mb-1 -mt-2">Background</div>
+              <UToggle
+                :model-value="textDraftSolidBg"
+                @click="() => { setTextDraftSolidBg(!textDraftSolidBg) }"
+              />
+            </div>
             <USelect
               :options="fontSizes"
               v-model="textSize"
@@ -157,8 +168,19 @@
             >
               <template #trailing><div class="hidden"></div></template>
             </USelect>
-
-          </UButtonGroup>
+            <UTextarea
+              class="ring-inset h-12 dark:ring-inset border-r-0 dark:border-r-0"
+              type="text"
+              ref="textInput"
+              v-model="textDraft"
+              :disabled="modeActive(EditorMode.DISABLED)"
+              @update="(v: string) => {
+                setTextDraft(v);
+                return v;
+              }"
+              placeholder="Enter text"
+            />
+            <UButton color="blue" type="submit" variant="outline" class="saveText">Save text</UButton>
         </form>
       </div>
     </div>
@@ -214,27 +236,30 @@
   // initialize image editor!
   const {
     actions,
-    zoom,
-    hasPendingChanges,
-    modeActive,
-    setMode,
-    reset,
     canvasRect,
-    setTextDraft,
-    textDraft,
     createImageFile,
-    zoomIn,
-    writing,
-    zoomOut,
-    resetZoom,
-    destroyEditor,
-    isSaving,
     cursor,
-    saveTextDraft,
-    textSize,
+    destroyEditor,
     fontSizes,
+    hasPendingChanges,
+    isSaving,
+    lineWidth,
     lineWidths,
-    lineWidth
+    modeActive,
+    reset,
+    resetZoom,
+    saveTextDraft,
+    setMode,
+    setTextDraft,
+    setTextDraftSolidBg,
+    textDraft,
+    textDraftBgPadding,
+    textDraftSolidBg,
+    textSize,
+    writing,
+    zoom,
+    zoomIn,
+    zoomOut,
   } = useImageEditor(
     props.observation.id,
     props.project.id,

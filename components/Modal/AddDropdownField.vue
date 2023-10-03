@@ -94,7 +94,6 @@
   }
 
   function removeOption(option: string) {
-    console.log('removing option', option)
     items.value = [...items.value.filter((i) => i !== option)];
   }
 </script>

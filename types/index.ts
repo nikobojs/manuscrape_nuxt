@@ -133,6 +133,11 @@ declare global {
     w: number;
     h: number;
   };
+
+  type Box = SquareWithZoom & {
+    fillColor: string;
+  }
+
   type Line = SquareWithZoom & {
     color: string;
     width: number;
@@ -144,6 +149,8 @@ declare global {
     zoom: number;
     size: number;
     color: string;
+    bgcolor: string;
+    padding: number;
   };
 
   interface QueryParamOptions<T> {

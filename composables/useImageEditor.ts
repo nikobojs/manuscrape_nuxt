@@ -14,7 +14,7 @@ export function useImageEditor(
   const beginX = ref(0);
   const beginY = ref(0);
   const isSaving = ref(false);
-  const squares = ref<SquareWithZoom[]>([]);
+  const boxes = ref<Box[]>([]);
   const draftLine = ref<Line>();
   const lines = ref<Line[]>([]);
   const dragging = ref(false);
@@ -24,21 +24,23 @@ export function useImageEditor(
   const writing = ref<boolean>(false);
   const textDraft = ref<string>('');
   const textSize = ref<number>(24);
+  const textDraftSolidBg = ref<boolean>(true);
+  const textDraftBgPadding = ref<number>(14);
   const lineWidth = ref<number>(5);
   const cameraPosition = ref<[number, number]>([0, 0]);
-  const hasPendingChanges = computed(() => squares.value.length > 0 || texts.value.length > 0 || lines.value.length > 0);
+  const hasPendingChanges = computed(() => boxes.value.length > 0 || texts.value.length > 0 || lines.value.length > 0);
 
   function draw() {
     // wipe and redraw
     clearCanvas();
     drawImage();
-    drawSquares();
+    drawBoxes();
     drawLines();
     drawTexts(zoom.value);
   }
 
   // redraw the whole thing when ui stuff changes
-  watch([textSize, textDraft, frontColor, backColor], () => {
+  watch([textDraftSolidBg, textDraftBgPadding, textSize, textDraft, frontColor, backColor], () => {
     draw();
   });
 
@@ -81,7 +83,7 @@ export function useImageEditor(
         });
         window.requestAnimationFrame(() => {
           drawImage();
-          drawSquares();
+          drawBoxes();
           drawLines();
           drawTexts(zoom.value);
         });
@@ -134,7 +136,7 @@ export function useImageEditor(
                 "Image cannot be drawn as context or image is not fully loaded",
               );
             }
-            drawSquares();
+            drawBoxes();
             drawLines();
             drawTexts(zoom.value);
             await onLoaded();
@@ -257,7 +259,7 @@ export function useImageEditor(
             const square = mouseRect(ev, beginX.value, beginY.value, zoom.value);
             square.x -= cameraPosition.value[0]; // WORKS
             square.y -= cameraPosition.value[1]; // WORKS
-            squares.value.push(square);
+            boxes.value.push({ ...square, fillColor: backColor.value });
             dragging.value = false;
             draw();
           }
@@ -273,10 +275,11 @@ export function useImageEditor(
         move: (ev) => {
           if (dragging.value) {
             const square = applyZoom(mouseRect(ev, beginX.value, beginY.value, zoom.value), zoom.value);
+            const [x, y, w, h] = square;
             clearCanvas();
             drawImage();
-            drawSquare(square); // TODO: move inside drawSquares
-            drawSquares();
+            drawBoxes();
+            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value }); // TODO: move inside drawSquares
             drawLines();
             drawTexts(zoom.value);
           }
@@ -296,14 +299,14 @@ export function useImageEditor(
       mouseEvents: {
         up: (ev) => {
           // if already writing, move text instead of creating new
-          dragging.value = false;
-          if (writing.value){
-            draw();
-            // focus text field after creating text draft data
+          if (writing.value && dragging.value) {
+            // // focus text field after creating text draft data
             window.requestAnimationFrame(() => (textInput.value as any)?.input?.focus());
-          } else {
-            draw();
           }
+
+          dragging.value = false;
+          draw();
+
         },
         down: (ev) => {
           if (!writing.value) {
@@ -340,9 +343,10 @@ export function useImageEditor(
       },
       keyEvents: {
         down: (key: string) => {
-          if (key === 'Enter') {
-            saveTextDraft()
-          }
+          // NOTE: too aggresive
+          // if (key === 'Enter') {
+          //   saveTextDraft()
+          // }
         },
         up: () => {}
       }
@@ -374,31 +378,34 @@ export function useImageEditor(
   }
 
 
-  function drawSquare(
-    square: Square,
+  function drawBox(
+    box: Box,
   ) {
     const ctx = context.value;
     if (!ctx) return;
     ctx.fillStyle = backColor.value;
 
     // TODO: support boxes made from other direction
-    const [x, y, w, h] = square;
+    const { x, y, w, h, fillColor } = box;
 
+    ctx.fillStyle = fillColor;
     ctx.fillRect(x, y, w, h);
   }
 
 
-  function drawSquares() {
+  function drawBoxes() {
     if (!context.value) {
       throw new Error("Context is not defined");
     }
-    for (let i = 0; i < squares.value.length; i++) {
+    for (let i = 0; i < boxes.value.length; i++) {
       const square = applyCamera(applyZoom(
-        { ...squares.value[i] },
+        { ...boxes.value[i] },
         zoom.value,
       ), cameraPosition.value);
 
-      drawSquare(square);
+      const [x, y, w, h] = square;
+      const { fillColor, z } = boxes.value[i];
+      drawBox({ x, y, w, h, fillColor, z });
     }
   }
 
@@ -451,9 +458,15 @@ export function useImageEditor(
     if (!ctx) {
       throw new Error('Context is not defined when trying to draw texts')
     };
-    ctx.fillStyle = text.color;
+  
+    // TODO: simplify
+    const lines = text.text.split('\n');
+    if (!lines.length) {
+      return;
+    }
+  
     const z = text.zoom;
-    const fontSize = Math.round(text.size * z);
+    const fontSize = Math.floor(text.size * z);
     let scaledPos = {
       x: (text.position[0]) * z, // works
       y: (text.position[1]) * z // works
@@ -464,8 +477,56 @@ export function useImageEditor(
       y: (scaledPos.y + cameraPosition.value[1]) // works
     }
 
+    // set the font family
+    // TODO: support multiple font families
     ctx.font = `${fontSize}px Arial`;
-    ctx.fillText(text.text, fixedPos.x, fixedPos.y); 
+    const lineHeight = 1.15;
+
+    // draw background square if enabled
+    if (text.bgcolor) {
+      // const width = ctx.measureText(text.text);
+      let height;
+      if (ctx.font) {
+        height = parseInt(ctx.font.match(/\d+/)?.pop() as any);
+        if (isNaN(height)) {
+          // TODO: report
+          console.warn('Unable to read font size from canvas context.');
+          return;
+        }
+      } else {
+        // TODO: report
+        console.warn('Context font not set - cannot determine height of text background box. Will skip');
+        return;
+      }
+
+      const pad = text.padding;
+      const pad2 = pad + pad;
+      const halfHeight = height / 2;
+
+      ctx.fillStyle = text.bgcolor;
+      const longestText: TextMetrics = lines.map(
+        line => ctx.measureText(line)
+      ).sort((a: TextMetrics, b: TextMetrics) => {
+        if (a.width === b.width) return 0;
+        return a.width < b.width ? 1 : -1;
+      })[0];
+
+      // draw the background for the height of all lines
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillRect(
+          fixedPos.x - pad,
+          fixedPos.y - halfHeight - pad - 2 + i * fontSize * lineHeight,
+          longestText.width + pad2,
+          height - halfHeight + pad2 + 1,
+        )
+      }
+    }
+
+    // draw the text lines on top of optional background
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillStyle = text.color;
+      ctx.fillText(lines[i], fixedPos.x, fixedPos.y + i * fontSize * lineHeight); 
+    }
   }
 
   // TODO: improve documentation
@@ -482,6 +543,8 @@ export function useImageEditor(
         size: textSize.value,
         text: textDraft.value,
         zoom: canvasZoom,
+        bgcolor: backColor.value,
+        padding: textDraftBgPadding.value,
       });
     } else if (draftTextPosition.value && !textDraft.value) {
       drawText({
@@ -490,6 +553,8 @@ export function useImageEditor(
         size: textSize.value,
         text: 'Enter text',
         zoom: canvasZoom,
+        bgcolor: backColor.value,
+        padding: textDraftBgPadding.value,
       });
     }
 
@@ -540,7 +605,7 @@ export function useImageEditor(
       canvas.value.addEventListener("mousemove", onMouseMove);
       window.addEventListener("keyup", onKeyUp, true);
       window.addEventListener("keydown", onKeyDown, true);
-      squares.value = [];
+      boxes.value = [];
       lines.value = [];
       texts.value = [];
       dragging.value = false;
@@ -608,7 +673,7 @@ export function useImageEditor(
     zoom.value = Math.min(10, zoom.value + ZOOM_STEP);
     clearCanvas();
     drawImage();
-    drawSquares();
+    drawBoxes();
     drawTexts(zoom.value);
     drawLines();
   }
@@ -617,7 +682,7 @@ export function useImageEditor(
     zoom.value = Math.max(0.01, zoom.value - ZOOM_STEP);
     clearCanvas();
     drawImage();
-    drawSquares();
+    drawBoxes();
     drawTexts(zoom.value);
     drawLines();
   }
@@ -629,7 +694,7 @@ export function useImageEditor(
     grabbing.value = false;
     clearCanvas();
     drawImage();
-    drawSquares();
+    drawBoxes();
     drawTexts(zoom.value);
     drawLines();
   }
@@ -646,6 +711,10 @@ export function useImageEditor(
 
   function setTextDraft(text: string) {
     textDraft.value = text;
+  }
+
+  function setTextDraftSolidBg(bool: boolean) {
+    textDraftSolidBg.value = bool;
   }
 
   async function saveTextDraft(): Promise<void> {
@@ -665,6 +734,8 @@ export function useImageEditor(
       size: textSize.value,
       text: textDraft.value,
       zoom: zoom.value,
+      bgcolor: backColor.value,
+      padding: textDraftBgPadding.value,
     }
 
     texts.value.push(newText);
@@ -674,7 +745,7 @@ export function useImageEditor(
 
     clearCanvas();
     drawImage();
-    drawSquares();
+    drawBoxes();
     drawLines();
     drawTexts(zoom.value);
     cursor.value = 'text';
@@ -699,27 +770,30 @@ export function useImageEditor(
   })));
 
   return {
-    cursor,
     actions,
-    zoom,
-    hasPendingChanges,
-    reset,
     canvasRect,
     createImageFile,
+    cursor,
+    destroyEditor,
+    fontSizes,
+    hasPendingChanges,
+    isSaving,
+    lineWidth,
+    lineWidths,
+    modeActive,
+    reset,
+    resetZoom,
+    saveTextDraft,
+    setMode,
+    setTextDraft,
+    setTextDraftSolidBg,
+    textDraft,
+    textDraftBgPadding,
+    textDraftSolidBg,
+    textSize,
+    writing,
+    zoom,
     zoomIn,
     zoomOut,
-    resetZoom,
-    destroyEditor,
-    isSaving,
-    textDraft,
-    setTextDraft,
-    saveTextDraft,
-    writing,
-    modeActive,
-    setMode,
-    textSize,
-    fontSizes,
-    lineWidths,
-    lineWidth,
   };
 }
