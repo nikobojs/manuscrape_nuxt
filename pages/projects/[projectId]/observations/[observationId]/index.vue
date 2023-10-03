@@ -1,7 +1,10 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton :href="`/projects/${project.id}`">
+      <BackButton v-if="isElectron" :href="`/projects/${project.id}/drafts`">
+        Go to drafts
+      </BackButton>
+      <BackButton v-else :href="`/projects/${project.id}`">
         Go to project
       </BackButton>
       <h2 class="text-3xl mb-6 flex gap-x-4">
@@ -41,6 +44,7 @@
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
   const imageInterval = ref<number | null>(null)
+  const isElectron = runsInElectron();
 
   async function refreshObservation() {
     const _observation = await requireObservationFromParams(params);
