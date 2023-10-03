@@ -1,7 +1,7 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton :href="`/projects/${project.id}/observations/${observation.id}`">
+      <BackButton :href="`/projects/${project.id}/observations/${observation.id}${isElectron ? '?electron=1' : ''}`">
         Go back
       </BackButton>
       <ObservationImageEditor :project="project" :observation="observation" />
@@ -14,6 +14,7 @@
   await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
+  const { isElectron } = useDevice();
   const { requireProjectFromParams } = await useProjects();
   const project = requireProjectFromParams(params);
   if (typeof project?.id !== 'number') {

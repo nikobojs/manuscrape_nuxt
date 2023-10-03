@@ -1,10 +1,10 @@
 <template>
   <div class="bg-gray-950">
-    <AppHeader v-if="!hideNav" />
+    <AppHeader v-if="!isElectron" />
     <main class="pt-9 pb-6">
       <slot />
     </main>
-    <AppFooter v-if="!hideNav" />
+    <AppFooter v-if="!isElectron" />
   </div>
   <UNotifications />
 </template>
@@ -13,7 +13,7 @@
   const colorMode = useColorMode();
   colorMode.value = 'dark'
   colorMode.forced = true
-  const route = useRoute();
-  const hideNav = route.query['electron'] == '1';
+  const { isElectron } = useDevice();
+  
   await useAuth();
 </script>

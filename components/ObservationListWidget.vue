@@ -46,7 +46,7 @@
               <span class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
             </div>
             <NuxtLink
-              :href="`/projects/${project?.id}/observations/${row.id}`"
+              :href="`/projects/${project?.id}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
             >
               <span class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"></span>
             </NuxtLink>
@@ -97,6 +97,7 @@ import { observationFilterMenuItems } from '~/utils/observationFilters';
   const loading = ref(false);
   const openImageDialog = ref<boolean>(false);
   const selectedObservation = ref<null | FullObservation>(null);
+  const { isElectron } = useDevice();
 
   const props = defineProps({
     observations: requireObservationsProp,

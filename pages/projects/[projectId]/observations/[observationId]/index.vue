@@ -1,7 +1,7 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton v-if="isElectron" :href="`/projects/${project.id}/drafts`">
+      <BackButton v-if="isElectron" :href="`/projects/${project.id}/drafts?electron=1`">
         Go to drafts
       </BackButton>
       <BackButton v-else :href="`/projects/${project.id}`">

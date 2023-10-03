@@ -49,7 +49,7 @@
         </template>
         <template #actions-data="{ row }">
           <UTooltip text="Open project in same tab">
-            <NuxtLink :href="`/projects/${row.id}`">
+            <NuxtLink :href="`/projects/${row.id}${isElectron ? '?electron=1' : ''}`">
               <UIcon class="text-xl" name="i-heroicons-arrow-top-right-on-square" />
             </NuxtLink>
           </UTooltip>
@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
   const { projects } = await useProjects();
+  const { isElectron } = useDevice();
   const openCreateProjectModal = ref(false);
   const columns = [
     {
