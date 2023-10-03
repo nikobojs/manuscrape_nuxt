@@ -96,16 +96,17 @@
       <!-- EditorMode.LINE: extra tools -->
       <div class="flex items-center gap-x-3" v-if="modeActive(EditorMode.LINE)">
         <label>Line width:</label>
-        <USelect
+        <USelectMenu
           :options="lineWidths"
           v-model="lineWidth"
           color="blue"
+          variant="outline"
           value-attribute="value"
           option-attribute="label"
-          class="text-sm cursor-pointer pl-2 pr-6 h-8"
+          class="text-sm cursor-pointer pl-3 pr-8 h-8"
           placeholder=""
         >
-        </USelect>
+        </USelectMenu>
       </div>
       <!-- EditorMode.TEXT: extra tools -->
       <div class="flex items-center gap-x-3" v-if="writing && modeActive(EditorMode.TEXT)">
