@@ -44,7 +44,7 @@
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
   const imageInterval = ref<number | null>(null)
-  const isElectron = runsInElectron();
+  const { isElectron } = useDevice();
 
   async function refreshObservation() {
     const _observation = await requireObservationFromParams(params);
@@ -69,7 +69,7 @@
   });
 
   async function onSubmit() {
-    if (runsInElectron()) {
+    if (isElectron.value) {
       window.electronAPI.observationCreated?.();
     } else {
       if (typeof project?.id !== 'number') {
@@ -86,7 +86,7 @@
   }
   
   async function onFormSubmit() {
-    if (!runsInElectron()) {
+    if (!isElectron.value) {
       toast.add({
         title: 'Observation data was saved.'
       });

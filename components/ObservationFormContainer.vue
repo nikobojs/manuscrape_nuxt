@@ -90,6 +90,7 @@
     deleteObservation,
   } = await useObservations(props.project.id);
   const toast = useToast();
+  const { isElectron } = useDevice();
 
   const uploadInProgress = computed(() => {
     return props.awaitImageUpload && !props.observation?.image?.id;
@@ -105,7 +106,7 @@
       throw new Error('Props are not defined')
     }
     await deleteObservation(props.project.id, props.observation.id);
-    if (runsInElectron()) {
+    if (isElectron.value) {
       window.close();
     } else {
       toast.add({

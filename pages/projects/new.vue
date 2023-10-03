@@ -4,8 +4,10 @@
 
 <script setup lang="ts">
 
+const { isElectron } = useDevice();
+
 function onClose() {
-  if (runsInElectron()) {
+  if (isElectron.value) {
     window.close();
   }
 }

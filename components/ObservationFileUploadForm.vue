@@ -54,7 +54,7 @@
   const config = useRuntimeConfig().public;
   const file = ref<File | undefined>();
   const toast = useToast();
-  const isElectron = computed(runsInElectron);
+  const { isElectron } = useDevice();
 
   const fileUploadColumns = [
     {
@@ -129,7 +129,7 @@
   }
 
   async function captureVideo() {
-    if (!runsInElectron()) {
+    if (!isElectron.value) {
       toast.add({
         title: 'Function not available',
         description: 'Video capture can only be called from within the native application',

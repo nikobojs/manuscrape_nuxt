@@ -136,6 +136,7 @@
   const fieldLabelInput = ref();
   const openDropdownModal = ref(false);
   const fieldType = ref(undefined as NewField | undefined);
+  const { isElectron } = useDevice();
   const form = reactive<NewProjectBody>({
     name: '',
     fields: [],
@@ -205,7 +206,7 @@
         // TODO: capture error
       }
 
-      if (runsInElectron()) {
+      if (isElectron.value) {
         window.electronAPI.projectCreated(res);
       } else {
         toast.add({
