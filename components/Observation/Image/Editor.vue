@@ -28,12 +28,13 @@
             >Overwrite image</UButton>
           </UButtonGroup>
 
+          <!-- Buttons: Undo/redo buttons -->
           <UButtonGroup>
             <UButton @click="undo" :disabled="undoDisabled" color="blue" variant="outline" icon="i-heroicons-arrow-uturn-left"></Ubutton>
             <UButton @click="redo" :disabled="redoDisabled" color="blue" variant="outline" icon="i-heroicons-arrow-uturn-right"></Ubutton>
           </UButtonGroup>
 
-          <!-- Button group: all actions -->
+          <!-- Buttons: all actions -->
           <UButtonGroup size="sm" orientation="horizontal">
             <UButton
               v-for="[actionMode, { icon, onActionPicked }] in Object.entries(actions).filter(([k]) => k !== EditorMode.DISABLED.toString())"

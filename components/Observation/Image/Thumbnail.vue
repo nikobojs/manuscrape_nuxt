@@ -9,7 +9,7 @@
       :src="`/api/projects/${project?.id}/observations/${observation?.id}/image?lastUpdate=${(props.lastUpdate || new Date()).getTime()}`"
     />
 
-    <ModalObservationImage
+    <ObservationImageModal
       :project="project"
       :observation="observation"
       :open="openImageDialog"

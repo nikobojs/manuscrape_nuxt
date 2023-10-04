@@ -3,6 +3,16 @@ import { EditorMode, ImageEditorActionConfig, ZOOM_STEP, applyCamera, applyZoom,
 let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;
 
+const fontSizes = [12, 14, 18, 24, 38, 52, 66, 82].map((v) => ({
+  value: v,
+  label: `${v}px`,
+}));
+
+const lineWidths = [2, 3, 5, 8, 13, 21].map((v) => ({
+  value: v,
+  label: `${v}px`,
+}));
+
 export function useImageEditor(
   observationId: number,
   projectId: number,
@@ -78,7 +88,6 @@ export function useImageEditor(
     bg.addEventListener("load", () => {
       if (canvas.value && context.value) {
         aspectRatio.value = bg.height / bg.width;
-        // canvasZoomRatio.value = canvasRect.value.x / bg.width;
         canvasZoomRatio.value = canvas.value.width / bg.width;
         zoom.value = 1.0;
         console.info("image loaded event:", {
@@ -780,16 +789,6 @@ export function useImageEditor(
   function setMode(_mode: EditorMode): void {
     mode.value = _mode;
   }
-
-  const fontSizes = ref([12, 14, 18, 24, 38, 52, 66, 82].map((v) => ({
-    value: v,
-    label: `${v}px`,
-  })))
-
-  const lineWidths = ref([2, 3, 5, 8, 13, 21].map((v) => ({
-    value: v,
-    label: `${v}px`,
-  })));
 
   function undo() {
     const newestApplied = changes.value.filter(c => c.applied).reverse()[0]
