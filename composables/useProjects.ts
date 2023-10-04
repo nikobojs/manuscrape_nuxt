@@ -67,6 +67,15 @@ export const useProjects = async () => {
     return p;
   }
 
+  const deleteParameter = async (projectId: number, field: { id: number }) => {
+    return fetch(
+      `/api/projects/${projectId}/fields/${field.id}`,
+      {
+        method: 'DELETE',
+      }
+    )
+  }
+
   return {
     projects,
     createProject,
@@ -75,5 +84,6 @@ export const useProjects = async () => {
     getProjectById,
     requireProjectFromParams,
     addCollaborator,
+    deleteParameter,
   };
 };
