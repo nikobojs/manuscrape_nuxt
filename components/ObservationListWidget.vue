@@ -59,12 +59,12 @@
       </div>
     </UCard>
 
-    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] max-h-[520px] overflow-auto h-full">
+    <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] h-full">
       <template #header>
         <CardHeader>Parameters</CardHeader>
       </template>
 
-      <div class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6">
+      <div class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6 max-h-[460px] overflow-y-auto">
         <div v-for="field in sortedFields" class="p-3 border-b border-slate-800">
           <div class="text-sm">
             <span v-if="field.required" class="text-red-500">*</span>
