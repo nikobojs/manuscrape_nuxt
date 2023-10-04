@@ -149,7 +149,7 @@ declare global {
     zoom: number;
     size: number;
     color: string;
-    bgcolor: string;
+    bgcolor: string | undefined;
     padding: number;
   };
 

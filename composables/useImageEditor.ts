@@ -35,12 +35,13 @@ export function useImageEditor(
     clearCanvas();
     drawImage();
     drawBoxes();
-    drawLines();
     drawTexts(zoom.value);
+    drawLines();
   }
 
   // redraw the whole thing when ui stuff changes
   watch([textDraftSolidBg, textDraftBgPadding, textSize, textDraft, frontColor, backColor], () => {
+    console.log('DRAW!')
     draw();
   });
 
@@ -301,7 +302,7 @@ export function useImageEditor(
           // if already writing, move text instead of creating new
           if (writing.value && dragging.value) {
             // // focus text field after creating text draft data
-            window.requestAnimationFrame(() => (textInput.value as any)?.input?.focus());
+            window.requestAnimationFrame(() => (textInput.value as any)?.textarea?.focus());
           }
 
           dragging.value = false;
@@ -309,26 +310,24 @@ export function useImageEditor(
 
         },
         down: (ev) => {
+          dragging.value = true;
+
+          // in any case we cant to use the position clicked on
+          const { x, y } = mousePosition(ev);
+          draftTextPosition.value = [
+            (x - cameraPosition.value[0]) / zoom.value,
+            (y - cameraPosition.value[1]) / zoom.value
+          ];
+
+          // if not already writing, reset textDraft, textSize and cursor
+          // NOTE: this will trigger a redraw
           if (!writing.value) {
             textDraft.value = '';
-            writing.value = true;
-            dragging.value = true;
-            const { x, y } = mousePosition(ev);
-            draftTextPosition.value = [
-              (x - cameraPosition.value[0]) / zoom.value,
-              (y - cameraPosition.value[1]) / zoom.value
-            ]; // works well!
-
-            // change crosshair to indicate that we can move text
-            cursor.value = 'crosshair'
-
-            // NOTE: resize to default textsize triggers canvas rerender
-            textSize.value = fontSizes.value[3].value;
-
-            draw();
-          } else if (writing.value) {
-            dragging.value = true;
+            cursor.value = 'move'
           }
+
+          // set writing state to true in any case on mouse down
+          writing.value = true;
         },
         move: (ev) => {
           if (dragging.value){
@@ -370,6 +369,7 @@ export function useImageEditor(
     if (!ctx || !cvs) {
       console.warn(
         "Skipping clearCanvas() due to bad/missing props and/or state",
+        { ctx, cvs },
       );
       return;
     }
@@ -397,6 +397,7 @@ export function useImageEditor(
     if (!context.value) {
       throw new Error("Context is not defined");
     }
+
     for (let i = 0; i < boxes.value.length; i++) {
       const square = applyCamera(applyZoom(
         { ...boxes.value[i] },
@@ -440,12 +441,14 @@ export function useImageEditor(
       throw new Error("Context is not defined");
     }
 
-    if (draftLine.value) {
-      drawLine(draftLine.value);
-    }
-
+    // draw all unsaved lines
     for (let i = 0; i < lines.value.length; i++) {
       drawLine(lines.value[i]);
+    }
+
+    // draw draft line if there is any
+    if (draftLine.value) {
+      drawLine(draftLine.value);
     }
   }
 
@@ -484,6 +487,7 @@ export function useImageEditor(
 
     // draw background square if enabled
     if (text.bgcolor) {
+      console.log('bg color enabled')
       // const width = ctx.measureText(text.text);
       let height;
       if (ctx.font) {
@@ -529,43 +533,34 @@ export function useImageEditor(
     }
   }
 
-  // TODO: improve documentation
+  // TODO: improve function name
   function drawTexts(canvasZoom: number) {
     if (!context.value) {
       throw new Error("Context is not defined");
     }
 
-    // draw draft if present
-    if (draftTextPosition.value && textDraft.value) {
+    // draw all existing unsaved texts
+    for (let i = 0; i < texts.value.length; i++) {
+      const textbox = texts.value[i];
+      drawText({
+        ...textbox,
+        zoom: canvasZoom,
+      });
+    }
+
+    // draw draft text if present (on top of the other texts)
+    if (draftTextPosition.value) {
+      const text = textDraft.value || 'Enter text';
       drawText({
         color: frontColor.value,
         position: draftTextPosition.value,
         size: textSize.value,
-        text: textDraft.value,
+        text: text,
         zoom: canvasZoom,
-        bgcolor: backColor.value,
+        bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
         padding: textDraftBgPadding.value,
       });
-    } else if (draftTextPosition.value && !textDraft.value) {
-      drawText({
-        color: "#dddddd99",
-        position: draftTextPosition.value,
-        size: textSize.value,
-        text: 'Enter text',
-        zoom: canvasZoom,
-        bgcolor: backColor.value,
-        padding: textDraftBgPadding.value,
-      });
-    }
-
-    for (let i = 0; i < texts.value.length; i++) {
-      const text = texts.value[i];
-      drawText({
-        ...text,
-        zoom: canvasZoom,
-      });
-    }
-  }
+  } }
 
 
   function onMouseDown(ev: MouseEvent) {
@@ -671,20 +666,12 @@ export function useImageEditor(
 
   function zoomIn() {
     zoom.value = Math.min(10, zoom.value + ZOOM_STEP);
-    clearCanvas();
-    drawImage();
-    drawBoxes();
-    drawTexts(zoom.value);
-    drawLines();
+    draw();
   }
 
   function zoomOut() {
     zoom.value = Math.max(0.01, zoom.value - ZOOM_STEP);
-    clearCanvas();
-    drawImage();
-    drawBoxes();
-    drawTexts(zoom.value);
-    drawLines();
+    draw();
   }
 
   function resetZoom() {
@@ -692,17 +679,13 @@ export function useImageEditor(
     cameraPosition.value = [0, 0];
     grabbed.value = undefined;
     grabbing.value = false;
-    clearCanvas();
-    drawImage();
-    drawBoxes();
-    drawTexts(zoom.value);
-    drawLines();
+    draw();
   }
 
   function destroyEditor() {
     if (canvas.value) {
       canvas.value.removeEventListener("mousedown", onMouseDown);
-      canvas.value.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mouseup", onMouseUp);
       canvas.value.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
@@ -715,6 +698,14 @@ export function useImageEditor(
 
   function setTextDraftSolidBg(bool: boolean) {
     textDraftSolidBg.value = bool;
+  }
+
+  function resetTextDraft() {
+    draftTextPosition.value = undefined;
+    textDraft.value = '';
+    writing.value = false;
+    cursor.value = 'text';
+    draw();
   }
 
   async function saveTextDraft(): Promise<void> {
@@ -734,21 +725,12 @@ export function useImageEditor(
       size: textSize.value,
       text: textDraft.value,
       zoom: zoom.value,
-      bgcolor: backColor.value,
+      bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
       padding: textDraftBgPadding.value,
     }
 
     texts.value.push(newText);
-    textDraft.value = '';
-    draftTextPosition.value = undefined;
-    writing.value = false;
-
-    clearCanvas();
-    drawImage();
-    drawBoxes();
-    drawLines();
-    drawTexts(zoom.value);
-    cursor.value = 'text';
+    resetTextDraft();
   }
 
   function modeActive(_mode: EditorMode): boolean {
@@ -775,6 +757,7 @@ export function useImageEditor(
     createImageFile,
     cursor,
     destroyEditor,
+    resetTextDraft,
     fontSizes,
     hasPendingChanges,
     isSaving,
