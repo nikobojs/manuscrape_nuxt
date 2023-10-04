@@ -28,6 +28,11 @@
             >Overwrite image</UButton>
           </UButtonGroup>
 
+          <UButtonGroup>
+            <UButton @click="undo" :disabled="undoDisabled" color="blue" variant="outline" icon="i-heroicons-arrow-uturn-left"></Ubutton>
+            <UButton @click="redo" :disabled="redoDisabled" color="blue" variant="outline" icon="i-heroicons-arrow-uturn-right"></Ubutton>
+          </UButtonGroup>
+
           <!-- Button group: all actions -->
           <UButtonGroup size="sm" orientation="horizontal">
             <UButton
@@ -304,6 +309,10 @@
     zoom,
     zoomIn,
     zoomOut,
+    redo,
+    undo,
+    undoDisabled,
+    redoDisabled,
   } = useImageEditor(
     props.observation.id,
     props.project.id,

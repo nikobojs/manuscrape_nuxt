@@ -134,16 +134,30 @@ declare global {
     h: number;
   };
 
-  type Box = SquareWithZoom & {
+  type ImageChangeType = 'text' | 'line' | 'box';
+  type ImageChanges = {
+    id: number;
+    type: ImageChangeType;
+    applied: boolean;
+    component: TextBox | Box | Line;
+  }[];
+
+
+  type ImageEditorComponent = SquareWithZoom & {
+    id: number;
+  };
+
+  type Box = ImageEditorComponent & {
     fillColor: string;
   }
 
-  type Line = SquareWithZoom & {
+  type Line = ImageEditorComponent & {
     color: string;
     width: number;
   };
 
   type TextBox = {
+    id: number;
     text: string;
     position: [number, number],
     zoom: number;

@@ -1,5 +1,8 @@
 import { EditorMode, ImageEditorActionConfig, ZOOM_STEP, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
 
+let _imageChangeId = 0;
+const imageChangeId = () => _imageChangeId++;
+
 export function useImageEditor(
   observationId: number,
   projectId: number,
@@ -19,6 +22,7 @@ export function useImageEditor(
   const lines = ref<Line[]>([]);
   const dragging = ref(false);
   const grabbing = ref(false);
+  const changes = ref<ImageChanges>([]);
   const draftTextPosition = ref<[number, number] | undefined>();
   const grabbed = ref<{ x: number; y: number } | undefined>()
   const writing = ref<boolean>(false);
@@ -41,7 +45,6 @@ export function useImageEditor(
 
   // redraw the whole thing when ui stuff changes
   watch([textDraftSolidBg, textDraftBgPadding, textSize, textDraft, frontColor, backColor], () => {
-    console.log('DRAW!')
     draw();
   });
 
@@ -164,6 +167,19 @@ export function useImageEditor(
     context.value.drawImage(image.value, cameraPosition.value[0], cameraPosition.value[1], zoomedX, zoomedY);
   }
 
+  function registerImageUpdate (
+    type: ImageChangeType,
+    id: number,
+    component: TextBox | Line | Box,
+  ) {
+    changes.value.push({
+      type,
+      id,
+      applied: true,
+      component
+    });
+  }
+
   const action = computed(() => actions[mode.value]);
   const actions: ImageEditorActionConfig = {
     [EditorMode.GRAB]: {
@@ -219,6 +235,8 @@ export function useImageEditor(
             if (!draftLine.value) {
               throw new Error('Draft line is not set!')
             }
+
+            registerImageUpdate('line', draftLine.value.id, draftLine.value);
             lines.value.push(draftLine.value);
             draftLine.value = undefined;
           }
@@ -242,6 +260,7 @@ export function useImageEditor(
               color: frontColor.value,
               z: zoom.value,
               width: lineWidth.value,
+              id: imageChangeId(),
             };
             draw();
           }
@@ -260,7 +279,19 @@ export function useImageEditor(
             const square = mouseRect(ev, beginX.value, beginY.value, zoom.value);
             square.x -= cameraPosition.value[0]; // WORKS
             square.y -= cameraPosition.value[1]; // WORKS
-            boxes.value.push({ ...square, fillColor: backColor.value });
+
+            const changeId = imageChangeId();
+
+            const box: Box = {
+              ...square,
+              fillColor:
+              backColor.value,
+              id: changeId,
+            }
+
+            registerImageUpdate('box', changeId, box);
+
+            boxes.value.push(box);
             dragging.value = false;
             draw();
           }
@@ -280,7 +311,7 @@ export function useImageEditor(
             clearCanvas();
             drawImage();
             drawBoxes();
-            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value }); // TODO: move inside drawSquares
+            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
             drawLines();
             drawTexts(zoom.value);
           }
@@ -405,8 +436,8 @@ export function useImageEditor(
       ), cameraPosition.value);
 
       const [x, y, w, h] = square;
-      const { fillColor, z } = boxes.value[i];
-      drawBox({ x, y, w, h, fillColor, z });
+      const { fillColor, z, id } = boxes.value[i];
+      drawBox({ x, y, w, h, fillColor, z, id });
     }
   }
 
@@ -487,7 +518,6 @@ export function useImageEditor(
 
     // draw background square if enabled
     if (text.bgcolor) {
-      console.log('bg color enabled')
       // const width = ctx.measureText(text.text);
       let height;
       if (ctx.font) {
@@ -559,6 +589,7 @@ export function useImageEditor(
         zoom: canvasZoom,
         bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
         padding: textDraftBgPadding.value,
+        id: 0,
       });
   } }
 
@@ -603,6 +634,7 @@ export function useImageEditor(
       boxes.value = [];
       lines.value = [];
       texts.value = [];
+      changes.value = [];
       dragging.value = false;
       grabbing.value = false;
       writing.value = false;
@@ -719,6 +751,7 @@ export function useImageEditor(
       console.warn('Cannot save text draft is empty');
       return;
     }
+    const changeId = imageChangeId();
     const newText: TextBox = {
       color: frontColor.value,
       position: draftTextPosition.value,
@@ -727,7 +760,10 @@ export function useImageEditor(
       zoom: zoom.value,
       bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
       padding: textDraftBgPadding.value,
+      id: changeId,
     }
+
+    registerImageUpdate('text', changeId, newText);
 
     texts.value.push(newText);
     resetTextDraft();
@@ -751,20 +787,66 @@ export function useImageEditor(
     label: `${v}px`,
   })));
 
+  function undo() {
+    const newestApplied = changes.value.filter(c => c.applied).reverse()[0]
+    newestApplied.applied = false;
+
+    const target: Ref<{ id: number}[]> = newestApplied.type === 'text'
+      ? texts
+      : newestApplied.type === 'box'
+      ? boxes
+      : lines;
+    
+    if (!target.value.length) {
+      console.warn('Undo target ref was undefined');
+      // TODO: report error
+      return;
+    }
+
+    target.value = target.value.filter((t) => t.id !== newestApplied.id);
+    draw();
+  }
+
+  function redo() {
+    const newestNonApplied = changes.value.filter(c => !c.applied)[0]
+    console.log({ newestNonApplied })
+    newestNonApplied.applied = true;
+
+    const target: Ref<{ id: number}[]> = newestNonApplied.type === 'text'
+      ? texts
+      : newestNonApplied.type === 'box'
+      ? boxes
+      : lines;
+    
+    if (!target.value.length) {
+      console.warn('Undo target ref was undefined');
+      // TODO: report error
+      return;
+    }
+
+    target.value.push({ ...newestNonApplied.component });
+    draw();
+  }
+
+  const undoDisabled = computed(() => changes.value.filter(c => c.applied).length === 0);
+  const redoDisabled = computed(() => changes.value.filter(c => !c.applied).length === 0);
+
   return {
     actions,
     canvasRect,
     createImageFile,
     cursor,
     destroyEditor,
-    resetTextDraft,
     fontSizes,
     hasPendingChanges,
     isSaving,
     lineWidth,
     lineWidths,
     modeActive,
+    redo,
+    redoDisabled,
     reset,
+    resetTextDraft,
     resetZoom,
     saveTextDraft,
     setMode,
@@ -774,6 +856,8 @@ export function useImageEditor(
     textDraftBgPadding,
     textDraftSolidBg,
     textSize,
+    undo,
+    undoDisabled,
     writing,
     zoom,
     zoomIn,
