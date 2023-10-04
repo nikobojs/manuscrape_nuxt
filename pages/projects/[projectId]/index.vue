@@ -37,7 +37,7 @@
           <p class="mb-6">
             Dynamic fields will automagically generate their value when exporting observations
           </p>
-          <DynamicFieldList :project="project" />
+          <ProjectDynamicFieldList :project="project" />
         </UCard>
         <UCard>
           <template #header>
@@ -51,7 +51,7 @@
         </UCard>
       </div>
     </UContainer>
-    <ModalCreateDynamicField
+    <ProjectCreateDynamicFieldModal
       v-if="project"
       :project="project"
       :open="openCreateDynamicFieldModal"

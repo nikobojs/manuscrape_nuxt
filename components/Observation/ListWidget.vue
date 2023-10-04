@@ -79,7 +79,7 @@
     </UCard>
     
   </div>
-  <ModalObservationImage
+  <ObservationImageModal
     v-if="selectedObservation"
     :open="openImageDialog"
     :observation="selectedObservation"

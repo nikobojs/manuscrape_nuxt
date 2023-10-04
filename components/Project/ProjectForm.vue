@@ -110,7 +110,7 @@
       </UTable>
     </UCard>
   </div>
-  <ModalAddDropdownField
+  <ProjectSetupChoicesModal
     :open="openDropdownModal"
     :onSubmit="addDropdownField"
     :onClose="() => openDropdownModal = false"

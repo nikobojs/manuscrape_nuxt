@@ -19,10 +19,10 @@
             </div>
             <div class="grid grid-cols-2 gap-x-3 mb-3">
               <UFormGroup name="field0Id" label="Field 1" class="mb-3">
-                <FieldDropdown :fields="project.fields" v-model="state.field0Id" />
+                <ProjectFieldDropdown :fields="project.fields" v-model="state.field0Id" />
               </UFormGroup>
               <UFormGroup name="field1Id" label="Field 2">
-                <FieldDropdown :fields="project.fields" v-model="state.field1Id" />
+                <ProjectFieldDropdown :fields="project.fields" v-model="state.field1Id" />
               </UFormGroup>
             </div>
           </UForm>

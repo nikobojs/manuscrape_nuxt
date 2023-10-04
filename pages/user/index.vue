@@ -13,7 +13,10 @@
       <UButton color="red" @click="() => openDeleteModal = true">Delete user</UButton>
     </UCard>
   </UContainer>
-  <ModalDeleteUser :open="openDeleteModal" :on-close="() => openDeleteModal = false" />
+  <ProfileDeleteUserModal
+    :open="openDeleteModal"
+    :on-close="() => openDeleteModal = false"
+  />
 </template>
 
 <script lang="ts" setup>

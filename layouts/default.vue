@@ -1,10 +1,10 @@
 <template>
   <div class="bg-gray-950">
-    <AppHeader v-if="!isElectron" />
+    <Header v-if="!isElectron" />
     <main class="pt-9 pb-6">
       <slot />
     </main>
-    <AppFooter v-if="!isElectron" />
+    <Footer v-if="!isElectron" />
   </div>
   <UNotifications />
 </template>
