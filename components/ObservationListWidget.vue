@@ -65,12 +65,15 @@
       </template>
 
       <div class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6 max-h-[460px] overflow-y-auto">
-        <div v-for="field in sortedFields" class="p-3 border-b border-slate-800">
+        <div v-for="field in sortedFields" class="flex flex-col gap-y-1.5 p-3 border-b border-slate-800">
+          <div class="flex items-center justify-between">
+            <UBadge size="xs" variant="solid" color="white" class="text-xs">{{ getFieldLabel(field.type) }}</UBadge>
+            <span class="text-xs text-gray-400">{{ prettyDate(field.createdAt) }}</span>
+          </div>
           <div class="text-sm">
             <span v-if="field.required" class="text-red-500">*</span>
             {{ field.label }}
           </div>
-          <UBadge size="xs" variant="solid" color="white" class="text-xs">{{ getFieldLabel(field.type) }}</UBadge>
         </div>
       </div>
     </UCard>
