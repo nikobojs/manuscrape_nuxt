@@ -14,7 +14,14 @@ export const useUser = async () => {
     onResponse: async (context) => {
       if (context.response.status === 200) {
         user.value = context.response._data;
-        projects.value = context.response._data.projectAccess.map((p: any) => p.project);
+        projects.value = context.response._data.projectAccess.map(
+          (p: any) => {
+            // We sort the fields to avoid hydration mismatch. Apparently you need to
+            // think about that before nesting prisma queries too deep
+            p.project.fields = [...p.project.fields.sort(sortById)];
+            return p.project;
+          }
+        ).sort(sortById);
         projectAccess.value = context.response._data.projectAccess;
       } else if (context.response.status === 401) {
         user.value = undefined;
@@ -54,4 +61,9 @@ export const useUser = async () => {
     hasRoles,
     projectAccess,
   };
+}
+
+function sortById (a: {id: number}, b: {id:number}): 1 | 0 | -1 {
+  if (a.id === b.id) return 0;
+  else return a.id > b.id ? 1 : -1;
 }

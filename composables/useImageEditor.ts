@@ -812,7 +812,6 @@ export function useImageEditor(
 
   function redo() {
     const newestNonApplied = changes.value.filter(c => !c.applied)[0]
-    console.log({ newestNonApplied })
     newestNonApplied.applied = true;
 
     const target: Ref<{ id: number}[]> = newestNonApplied.type === 'text'

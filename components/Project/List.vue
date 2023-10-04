@@ -56,7 +56,7 @@
         </template>
       </UTable>
     </UCard>
-    <ModalProjectFormModal
+    <ProjectFormModal
       :open="openCreateProjectModal"
       :on-close="() => openCreateProjectModal = false"
     />
