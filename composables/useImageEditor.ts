@@ -172,6 +172,10 @@ export function useImageEditor(
     id: number,
     component: TextBox | Line | Box,
   ) {
+    // delete all unapplied changes (redo's)
+    changes.value = changes.value.filter((c) => c.applied);
+
+    // save new change
     changes.value.push({
       type,
       id,
@@ -797,8 +801,8 @@ export function useImageEditor(
       ? boxes
       : lines;
     
-    if (!target.value.length) {
-      console.warn('Undo target ref was undefined');
+    if (!target.value?.length) {
+      console.warn('Undo target ref was empty or undefined');
       // TODO: report error
       return;
     }
@@ -818,13 +822,13 @@ export function useImageEditor(
       ? boxes
       : lines;
     
-    if (!target.value.length) {
-      console.warn('Undo target ref was undefined');
+    if (!target.value) {
+      console.warn('Redo target ref was undefined');
       // TODO: report error
       return;
     }
 
-    target.value.push({ ...newestNonApplied.component });
+    target.value = target.value.concat([{ ...newestNonApplied.component }]);
     draw();
   }
 
