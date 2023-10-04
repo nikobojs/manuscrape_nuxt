@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { parseIntParam } from '../../../../utils/request';
 import { requireUser } from '../../../../utils/authorize';
-
-const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
   const user = requireUser(event);

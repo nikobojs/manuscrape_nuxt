@@ -1,11 +1,6 @@
 
-import { PrismaClient } from '@prisma/client';
 import formidable from 'formidable';
-import { deleteS3Files } from '../../../../../utils/s3';
-import { requireUser } from '../../../../../utils/authorize';
-import { parseIntParam } from '../../../../../utils/request';
 
-const prisma = new PrismaClient();
 const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 const config = useRuntimeConfig();
 

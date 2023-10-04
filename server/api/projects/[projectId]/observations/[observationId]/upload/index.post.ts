@@ -1,10 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import formidable from 'formidable';
-// import { deleteS3Files } from '../../../../../../utils/s3';
-import { requireUser } from '../../../../../../utils/authorize';
-import { parseIntParam } from '../../../../../../utils/request';
 
-const prisma = new PrismaClient();
 const allowedMimeTypes = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',

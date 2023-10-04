@@ -1,8 +1,5 @@
 import { describe, test, expect } from 'vitest';
 import { withTempUser, testProject, deleteUser, createProject, getMe, inviteToProject } from './helpers';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 describe('User deletion', async () => {
   test('delete user without token returns 401', async () => {

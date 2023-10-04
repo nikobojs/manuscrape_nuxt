@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { compare } from 'bcrypt';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
 import { authorize, delayedError, delayedResponse } from '../utils/authorize';
 import * as yup from 'yup';
 
-const prisma = new PrismaClient();
 
 export const SignInRequestSchema = yup.object({
   // email: yup.string().required('Email is required'),

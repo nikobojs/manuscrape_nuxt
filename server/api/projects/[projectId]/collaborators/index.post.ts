@@ -1,13 +1,11 @@
 
 import * as yup from 'yup';
-import { PrismaClient, ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma/client';
 import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
 import { parseIntParam } from '~/server/utils/request';
 import { requireUser } from '~/server/utils/authorize';
 import { daysInFuture } from '~/utils/datetime';
 import { generateInvitationHash } from '~/server/utils/invitation';
-
-const prisma = new PrismaClient();
 
 const config = useRuntimeConfig();
 

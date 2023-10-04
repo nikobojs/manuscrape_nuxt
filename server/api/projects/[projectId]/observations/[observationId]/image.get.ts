@@ -1,10 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-import { requireUser } from '../../../../../utils/authorize';
-import { parseIntParam } from '../../../../../utils/request';
-import { getS3Upload } from '../../../../../utils/s3';
-
-const prisma = new PrismaClient();
-
 export default safeResponseHandler(async (event) => {
   requireUser(event);
   const params = event.context.params;

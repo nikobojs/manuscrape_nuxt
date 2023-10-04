@@ -1,10 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-import { requireUser } from '../../../../../utils/authorize';
-import { parseIntParam } from '../../../../../utils/request';
-
-const prisma = new PrismaClient();
-
-
 export default safeResponseHandler(async (event) => {
   requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);

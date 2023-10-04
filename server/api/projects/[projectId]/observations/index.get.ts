@@ -1,12 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { parseIntParam } from '../../../../utils/request';
 import { requireUser } from '../../../../utils/authorize';
 import { numberBetween } from '~/utils/validate';
 import { queryParam } from '~/server/utils/queryParam';
 import { observationColumns } from '~/server/utils/prisma';
-
-const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);

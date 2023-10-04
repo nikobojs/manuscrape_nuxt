@@ -1,11 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
-import { isOpenUrl } from '../utils/request';
-import * as url from 'url';
 
 const config = useRuntimeConfig();
-const prisma = new PrismaClient();
 
 // TODO: refactor and improve readability
 export default defineEventHandler(async (event) => {

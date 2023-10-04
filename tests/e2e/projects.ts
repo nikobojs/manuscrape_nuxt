@@ -1,8 +1,5 @@
 import { describe, test, expect } from 'vitest';
 import { testProject, withTempUser, createProject, getMe, fetchObservations, openProjectPage, inviteToProject, signup } from './helpers';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 describe('Project management', () => {
   test('user can create project', async () =>  {

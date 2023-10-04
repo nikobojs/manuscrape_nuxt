@@ -1,10 +1,8 @@
 import Prisma, { FieldOperator, FieldType } from '@prisma/client'
-const { PrismaClient } = Prisma
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 
-const prisma = new PrismaClient();
 const fieldOperators = Object.values(FieldOperator);
 
 export const NewDynamicFieldSchema = yup.object({

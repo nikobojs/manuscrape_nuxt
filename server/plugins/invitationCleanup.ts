@@ -1,8 +1,4 @@
 import { useScheduler } from "#scheduler"
-import { PrismaClient } from "@prisma/client";
-
-
-const prisma = new PrismaClient();
 
 export default defineNitroPlugin(() => {
   startScheduler()

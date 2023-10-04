@@ -1,12 +1,10 @@
-import { PrismaClient, ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { authorize, delayedError, delayedResponse, passwordStrongEnough, isValidEmail } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
 import * as yup from 'yup';
 
 const config = useRuntimeConfig();
-
-const prisma = new PrismaClient();
 
 export const SignUpRequestSchema = yup.object({
   email: yup.string().required('Email is required').typeError('Email is not valid'),

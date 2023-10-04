@@ -1,11 +1,10 @@
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
-import { PrismaClient, type User, ProjectRole, Project } from '@prisma/client';
+import { type User, ProjectRole } from '@prisma/client';
 import { getRequestBeginTime, parseIntParam } from './request';
 import { observationColumns } from './prisma';
 
 const config = useRuntimeConfig();
-const prisma = new PrismaClient();
 
 export async function authorize(
   event: H3Event,

@@ -1,10 +1,8 @@
 import * as yup from 'yup';
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const config = useRuntimeConfig();
-const prisma = new PrismaClient();
 const TokenAuthBody = yup.object({
   token: yup.string().required(),
 }).required()

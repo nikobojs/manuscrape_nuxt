@@ -1,10 +1,10 @@
+// TODO: weird import
 import Prisma from '@prisma/client'
-const { PrismaClient, FieldType } = Prisma
+const { FieldType } = Prisma
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';
 
-const prisma = new PrismaClient();
 const fieldTypeValues = Object.values(FieldType);
 
 export const NewProjectSchema = yup.object({

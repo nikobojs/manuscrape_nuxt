@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
 import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
-const prisma = new PrismaClient();
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
