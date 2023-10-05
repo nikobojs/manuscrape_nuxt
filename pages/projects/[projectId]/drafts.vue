@@ -4,7 +4,6 @@
       <div class="mt-6">
         <ObservationListWidget
           :project="project"
-          :observations="observations"
           :show-create-button="false"
           :default-observation-filter="ObservationFilterTypes.MY_DRAFTS"
         />

@@ -61,7 +61,7 @@
   import { ObservationFieldTypes, type FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
-    fieldType: requireProp<string | undefined>(String),
+    fieldType: String as PropType<string | undefined>,
     label: requireProp<string>(String),
     required: requireProp<boolean>(Boolean),
     onFieldUpdate: requireFunctionProp<(f: NewProjectFieldDraft) => void | Promise<void>>(),
@@ -83,6 +83,7 @@
 
   // handle when add field button is clicked
   function handleAddField() {
+    console.log('handle add field!')
     if (!props.fieldType) {
       props.onError('Field type is not defined in props')
       // TODO: report error

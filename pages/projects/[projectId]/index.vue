@@ -9,7 +9,6 @@
       </div>
       <div class="mt-6 grid grid-cols-7 gap-x-6">
         <ObservationListWidget
-          :observations="observations"
           :project="project"
           :show-create-button="true"
         />

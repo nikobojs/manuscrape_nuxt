@@ -32,16 +32,21 @@
     </div>
   </UCard>
 
-  <UModal v-bind:model-value="openRemoveModal" v-on:close="() => openRemoveModal = false">
+  <UModal
+    v-bind:model-value="openRemoveModal"
+    v-on:close="() => openRemoveModal = false"
+  >
     <UCard>
       <UCommandPalette v-if="projectFieldCommandPalette" placeholder="Search parameters..." nullable
         :empty-state="{ icon: 'i-mdi-magnify', label: 'hello', queryLabel: 'Unable to find parameters with that label' }"
         :groups="[{ key: 'project-parameters', commands: projectFieldCommandPalette }]"
         :fuse="{ resultLimit: 6, fuseOptions: { threshold: 0.1 } }"
         @update:model-value="(val: any) => {
-          selectedParameter = val;
-          openConfirmDeleteParamModal = true;
-          openRemoveModal = false;
+          if (val) {
+            selectedParameter = val;
+            openConfirmDeleteParamModal = true;
+            openRemoveModal = false;
+          }
         }"
       />
     </UCard>
@@ -49,7 +54,10 @@
 
   <UModal
     v-bind:model-value="openConfirmDeleteParamModal"
-    v-on:close="() => openConfirmDeleteParamModal = false"
+    v-on:close="() => {
+      openConfirmDeleteParamModal = false;
+      openRemoveModal = false;
+    }"
   >
     <UCard>
       <template #header>
@@ -78,7 +86,7 @@
           </UButton>
           <UButton
             variant="outline"
-            @click="() => { openConfirmDeleteParamModal = false }"
+            @click="() => { openConfirmDeleteParamModal = false; openRemoveModal = false; }"
             color="gray"
           >Get me out of here!</UButton>
         </div>
@@ -89,17 +97,30 @@
   <UModal
     v-bind:model-value="openAddParamModal"
     v-on:close="() => openAddParamModal = false"
+    :ui="{
+      base: 'relative text-left rtl:text-right overflow-visible w-full flex flex-col',
+      width: 'sm:max-w-xs max-w-xs',
+    }"
   >
-    <UCard>
+    <UCard class="overflow-visible">
       <template #header>
         <div>
           Add new parameter
         </div>
       </template>
-      <span class="bg-slate-950 ml-1 px-2 py-0.5 text-sm rounded-sm inline-block">
-        Hellooo
-      </span>
-      ?
+
+      <div class="flex flex-col gap-3">
+        <ProjectFieldForm
+          :added-fields="[]"
+          :label="newFieldLabel"
+          :field-type="newFieldType"
+          :required="newFieldRequired"
+          :on-field-update="(field) => setFieldDraft(field)"
+          :on-error="(msg) => newFieldError = msg"
+          :on-field-add="(field) => handleCreateParameter(field)"
+        />
+        <span class="red text-xs" v-if="newFieldError">{{  newFieldError  }}</span>
+      </div>
     </UCard>
   </UModal>
 </template>
@@ -111,19 +132,13 @@
   const selectedParameter = ref<null | { id: number, label: string }>();
   const openAddParamModal = ref(false);
   const toast = useToast();
-  const { deleteParameter, sortFields } = await useProjects();
+  const { deleteParameter, sortFields, createParameter } = await useProjects();
 
-  const parametersMenu = [{
-    label: 'Remove parameter',
-    click: () => {
-      openRemoveModal.value = true
-    },
-  }, {
-    label: 'Add parameter',
-    click: () => {
-      openAddParamModal.value = true
-    },
-  }];
+  const newFieldRequired = ref(false);
+  const newFieldLabel = ref('');
+  const newFieldType = ref<undefined | string>();
+  const newFieldChoices = ref<undefined | string[]>();
+  const newFieldError = ref('');
 
   const props = defineProps({
     project: requireProjectProp,
@@ -138,6 +153,72 @@
       id: f.id,
     })),
   );
+
+  const parametersMenu = [{
+    label: 'Remove parameter',
+    click: () => {
+      openRemoveModal.value = true
+    },
+  }, {
+    label: 'Add parameter',
+    click: () => {
+      openAddParamModal.value = true
+    },
+  }];
+
+
+  function setFieldDraft(draft: NewProjectFieldDraft) {
+    newFieldRequired.value = draft.required;
+    newFieldChoices.value = draft.choices;
+    newFieldLabel.value = draft.label;
+    newFieldType.value = draft.type;
+  }
+
+  async function handleCreateParameter (field: NewProjectFieldDraft) {
+    if (!field.type) {
+      newFieldError.value = 'You did not select a field type'
+      return;
+    }
+
+    const newField: NewProjectField = {
+      label: field.label,
+      required: field.required,
+      type: field.type,
+      ...(field.choices ? { choices: field.choices } : {})
+    }
+
+    createParameter(
+      props.project.id,
+      newField,
+    ).then(async (res) => {
+      if (res.status === 201) {
+        toast.add({
+          title: 'Parameter was successfully created!',
+          icon: 'i-heroicons-check',
+          color: 'green',
+        });
+        openAddParamModal.value = false;
+        props.onProjectUpdated();
+        setTimeout(() => {
+          newFieldLabel.value = '',
+          newFieldRequired.value = false;
+          newFieldType.value = undefined;
+          newFieldChoices.value = [];
+          newFieldError.value = '';
+        }, 300);
+      } else {
+        const json = await res.json();
+        throw new Error(getErrMsg(json))
+      }
+    }).catch((err: Error) => {
+      toast.add({
+        title: err.message,
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'red',
+      });
+    });
+  }
+
   async function handleDeleteParameter () {
     if (typeof selectedParameter.value?.id !== 'number') {
       console.warn('Parameter not selected when trying to delete parameter');

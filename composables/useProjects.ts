@@ -20,7 +20,7 @@ export const useProjects = async () => {
       method: 'POST',
       body: JSON.stringify({ name, fields }),
       headers: {
-          'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       }
     }).then(async (response) => {
       await refreshUser();
@@ -38,7 +38,7 @@ export const useProjects = async () => {
         method: 'POST',
         body: JSON.stringify({ email }),
         headers: {
-            'Content-Type': 'application/json'
+          'Content-Type': 'application/json'
         }
       }
     )
@@ -82,6 +82,22 @@ export const useProjects = async () => {
     )
   }
 
+  const createParameter = async (
+    projectId: number,
+    field: NewProjectField
+  ) => {
+    return fetch(
+      `/api/projects/${projectId}/fields`,
+      {
+        method: 'POST',
+        body: JSON.stringify(field),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  }
+
   return {
     projects,
     createProject,
@@ -92,5 +108,6 @@ export const useProjects = async () => {
     addCollaborator,
     deleteParameter,
     sortFields,
+    createParameter
   };
 };

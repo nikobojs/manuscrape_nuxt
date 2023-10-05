@@ -179,7 +179,7 @@ declare global {
     };
   }
 
-  interface NewProjectFieldDraft extends Omit<NewProjectField, 'type'> {
+  type NewProjectFieldDraft = Omit<NewProjectField, 'type'> & {
     type: FieldType | undefined,
   }
 
