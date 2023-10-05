@@ -1,6 +1,4 @@
-// TODO: weird import
-import Prisma from '@prisma/client'
-const { FieldType } = Prisma
+import { FieldType } from '@prisma/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';

@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { DefaultArgs, UserArgs } from '@prisma/client/runtime/library';
+import { DefaultArgs } from '@prisma/client/runtime/library';
 export const prisma = new PrismaClient();
 
 export const observationColumns = {

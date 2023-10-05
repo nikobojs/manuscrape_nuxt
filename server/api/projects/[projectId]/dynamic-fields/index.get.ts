@@ -1,5 +1,3 @@
-
-import Prisma from '@prisma/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 

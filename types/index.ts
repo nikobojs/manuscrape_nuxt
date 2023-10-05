@@ -30,10 +30,10 @@ declare global {
 
   type FileUploadResponse = Omit<FileUpload, "s3Path">;
 
-  interface FullObservation extends Observation {
-    image: ImageUpload;
-    fileUploads: FileUploadResponse[];
-    user?: { email: string };
+  interface FullObservation extends Omit<Omit<Observation, 'userId'>, 'projectId'> {
+    image: Omit<ImageUpload, 's3Path'> | null;
+    fileUploads: Omit<FileUploadResponse, 'observationId'>[];
+    user: { email: string } | null;
   }
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
@@ -42,8 +42,10 @@ declare global {
     dynamicFields: FullDynamicProjectField[];
   }
 
+  interface ProjectFieldResponse extends Omit<ProjectField, "projectId"> {}
+
   interface FullProject extends Project {
-    fields: ProjectField[];
+    fields: ProjectFieldResponse[];
     dynamicFields: Omit<DynamicProjectField, "projectId">[];
     observations: Observation[];
     _count: {

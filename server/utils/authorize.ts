@@ -40,7 +40,7 @@ export function requireUser(
 
 export async function getObservationsByProject(
   projectId: number,
-) {
+): Promise<FullObservation[]> {
   const project = await prisma.project.findFirst({
     where: { id: projectId },
     select: {

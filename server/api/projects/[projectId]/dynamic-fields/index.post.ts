@@ -1,4 +1,4 @@
-import Prisma, { FieldOperator, FieldType } from '@prisma/client'
+import { FieldOperator, FieldType } from '@prisma/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
@@ -70,7 +70,11 @@ export default safeResponseHandler(async (event) => {
 
   
   // get field types
-  const fieldTypes = await prisma.projectField.findMany({
+  const fieldTypes: {
+    id: number,
+    label: string;
+    type: string;
+  }[] = await prisma.projectField.findMany({
     select: {
       id: true,
       label: true,
