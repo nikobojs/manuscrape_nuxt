@@ -14,7 +14,7 @@ export const useProjects = async () => {
   }
 
   const createProject = async (
-    name: string, fields: NewField[]
+    name: string, fields: NewProjectField[]
   ): Promise<FullProject> => {
     return $fetch('/api/projects', {
       method: 'POST',

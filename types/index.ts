@@ -12,7 +12,7 @@ import type {
   User,
 } from "@prisma/client";
 import type { H3Event } from "h3";
-import { NewProjectSchema } from "~/server/api/projects/index.post";
+import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/index.post";
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
@@ -55,12 +55,6 @@ declare global {
 
   interface FullImage extends Omit<ImageUpload, "s3Path"> {}
 
-  type NewField = {
-    label: string;
-    type: FieldType;
-    required: boolean;
-  };
-
   type NewDynamicField = {
     label: string;
     field0Id: number;
@@ -97,7 +91,7 @@ declare global {
   }
 
   interface CMSInput {
-    field: ProjectField;
+    field: NewProjectField;
     props:
       | CMSInputProps
       | CMSCheckboxProps
@@ -185,11 +179,16 @@ declare global {
     };
   }
 
+  interface NewProjectFieldDraft extends Omit<NewProjectField, 'type'> {
+    type: FieldType | undefined,
+  }
+
   interface DropDownConfig {
     choices: string[];
   }
 
   type NewProjectBody = InferType<typeof NewProjectSchema>;
+  type NewProjectField = InferType<typeof NewProjectFieldSchema>;
   type SignInBody = InferType<typeof SignInRequestSchema>;
   type SignUpBody = InferType<typeof SignUpRequestSchema>;
   type DynamicFieldsConfig = {

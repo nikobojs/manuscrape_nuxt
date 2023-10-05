@@ -50,7 +50,8 @@ export const bigUserQuery: Prisma.UserSelect<DefaultArgs> = {
               createdAt: true,
               label: true,
               type: true,
-              required: true
+              required: true,
+              choices: true,
             },
           },
           dynamicFields: true,

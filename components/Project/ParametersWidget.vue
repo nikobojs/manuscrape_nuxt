@@ -32,7 +32,7 @@
     </div>
   </UCard>
 
-  <UModal v-bind:model-value="open" v-on:close="() => open = false">
+  <UModal v-bind:model-value="openRemoveModal" v-on:close="() => openRemoveModal = false">
     <UCard>
       <UCommandPalette v-if="projectFieldCommandPalette" placeholder="Search parameters..." nullable
         :empty-state="{ icon: 'i-mdi-magnify', label: 'hello', queryLabel: 'Unable to find parameters with that label' }"
@@ -41,7 +41,7 @@
         @update:model-value="(val: any) => {
           selectedParameter = val;
           openConfirmDeleteParamModal = true;
-          open = false;
+          openRemoveModal = false;
         }"
       />
     </UCard>
@@ -85,24 +85,44 @@
       </template>
     </UCard>
   </UModal>
+
+  <UModal
+    v-bind:model-value="openAddParamModal"
+    v-on:close="() => openAddParamModal = false"
+  >
+    <UCard>
+      <template #header>
+        <div>
+          Add new parameter
+        </div>
+      </template>
+      <span class="bg-slate-950 ml-1 px-2 py-0.5 text-sm rounded-sm inline-block">
+        Hellooo
+      </span>
+      ?
+    </UCard>
+  </UModal>
 </template>
 
 <script setup lang="ts">
   import type { Command } from '@nuxthq/ui/dist/runtime/types';
   const openConfirmDeleteParamModal = ref(false);
-  const open = ref(false);
+  const openRemoveModal = ref(false);
   const selectedParameter = ref<null | { id: number, label: string }>();
+  const openAddParamModal = ref(false);
   const toast = useToast();
   const { deleteParameter, sortFields } = await useProjects();
 
   const parametersMenu = [{
     label: 'Remove parameter',
     click: () => {
-      open.value = true
+      openRemoveModal.value = true
     },
   }, {
     label: 'Add parameter',
-    click: () => { console.log('add!') },
+    click: () => {
+      openAddParamModal.value = true
+    },
   }];
 
   const props = defineProps({
@@ -136,6 +156,7 @@
           color: 'green',
         });
         openConfirmDeleteParamModal.value = false;
+        openRemoveModal.value = false;
         props.onProjectUpdated();
       } else {
         const json = await res.json();

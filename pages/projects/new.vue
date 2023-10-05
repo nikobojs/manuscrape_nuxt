@@ -1,5 +1,5 @@
 <template>
-  <ProjectForm :onClose="onClose" />
+  <ProjectCreateWidget :onClose="onClose" />
 </template>
 
 <script setup lang="ts">

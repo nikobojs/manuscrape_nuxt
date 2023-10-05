@@ -5,19 +5,19 @@ import { requireUser } from '../../utils/authorize';
 
 const fieldTypeValues = Object.values(FieldType);
 
+export const NewProjectFieldSchema = yup.object({
+  label: yup.string().required(),
+  type: yup.mixed<typeof fieldTypeValues[number]>().required().oneOf(
+    Object.values(FieldType)
+  ).required(),
+  required: yup.boolean().required(),
+  choices: yup.array().of(yup.string().required()).optional(),
+}).required();
+
 export const NewProjectSchema = yup.object({
   name: yup.string().required(),
-  fields: yup.array(
-    yup.object({
-      label: yup.string().required(),
-      type: yup.mixed<typeof fieldTypeValues[number]>().required().oneOf(
-        Object.values(FieldType)
-      ).required(),
-      required: yup.boolean().required(),
-      choices: yup.array().of(yup.string().required()).optional(),
-    })
-  ).required()
-}).required();
+  fields: yup.array().of(NewProjectFieldSchema).required(),
+}).required()
 
 
 // TODO: prettify code
@@ -55,7 +55,7 @@ export default safeResponseHandler(async (event) => {
     required: f.required,
     projectId: createdProject.id,
     choices: f.choices || [],
-  }))
+  }));
 
   await prisma.projectField.createMany({ data: newProjectFields });
 

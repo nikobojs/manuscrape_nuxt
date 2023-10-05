@@ -5,7 +5,7 @@
     :ui="{background: 'transparent', width: 'sm:max-w-xl lg:max-w-2xl xl:max-w-4xl', shadow: 'shadow-none'}"
     prevent-close
   >
-    <ProjectForm :onClose="onClose" />
+    <ProjectCreateWidget :onClose="onClose" />
   </UModal>
 </template>
 
