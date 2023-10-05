@@ -44,6 +44,12 @@ export const useProjects = async () => {
     )
   };
 
+  const sortFields = (project: FullProject) => project.fields.sort((a, b) =>
+    a.required && b.required ?
+      a.label.localeCompare(b.label) :
+      a.required ? -1 : 1
+  );
+
   const hasOwnership = (
     projectId: number | string,
     projects: FullProject[]
@@ -85,5 +91,6 @@ export const useProjects = async () => {
     requireProjectFromParams,
     addCollaborator,
     deleteParameter,
+    sortFields,
   };
 };

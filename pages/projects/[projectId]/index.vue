@@ -7,11 +7,15 @@
       <div class="text-2xl">
         {{ project.name }}
       </div>
-      <div class="mt-6">
+      <div class="mt-6 grid grid-cols-7 gap-x-6">
         <ObservationListWidget
           :observations="observations"
           :project="project"
           :show-create-button="true"
+        />
+        <ProjectParametersWidget
+          :project="project"
+          :on-project-updated="updateProject"
         />
       </div>
       <div class="mt-6">
@@ -63,21 +67,25 @@
 
 <script lang="ts" setup>
   const { ensureLoggedIn } = await useAuth();
-  const { hasRoles } = await useUser();
+  const { hasRoles, refreshUser } = await useUser();
   const { requireProjectFromParams } = await useProjects();
   await ensureLoggedIn();
   const { params } = useRoute();
   const openCreateDynamicFieldModal = ref(false);
 
-  const project = requireProjectFromParams(params);
-  if (typeof project?.id !== 'number') {
+  const updateProject = async () => {
+    await refreshUser();
+    project.value = requireProjectFromParams(params);
+  }
+
+  const project = ref(requireProjectFromParams(params));
+  if (typeof project.value?.id !== 'number') {
     throw new Error('Project is not defined');
   }
 
+  const { observations } = await useObservations(project.value.id);
 
-  const { observations } = await useObservations(project.id);
-
-  const showContributors = computed(() => project?.id && hasRoles(project.id, ['OWNER']));
+  const showContributors = computed(() => project.value?.id && hasRoles(project.value.id, ['OWNER']));
 
   async function onCloseDynamicFieldModal () {
     openCreateDynamicFieldModal.value = false;
