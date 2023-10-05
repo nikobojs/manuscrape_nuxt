@@ -59,7 +59,7 @@ export default safeResponseHandler(async (event) => {
   })
 
   // define array of affected observation id and its new 'data' value
-  const dataUpdates = (await affectedObservations).map((o) => {
+  const dataUpdates = affectedObservations.map((o) => {
     if (typeof o.data !== 'object' || !o.data) {
       // TODO: report
       throw createError({
@@ -70,7 +70,10 @@ export default safeResponseHandler(async (event) => {
 
     if (!(field.label in o.data)) {
       // TODO: report
-      console.warn('Field label not found in observation data')
+      console.warn(
+        'Field label not found in affectedObservations',
+        { fieldLabel: field.label, obsFieldLabel: o.data}
+      );
     } else {
       delete (o.data as JsonObject)[field.label]
     }
