@@ -51,9 +51,9 @@
             <UButton
               color="blue"
               variant="outline"
-              icon="i-heroicons-magnifying-glass-plus"
+              icon="i-heroicons-magnifying-glass-minus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="zoomIn"
+              @click="zoomOut"
             ></UButton>
             <UButton
               color="blue"
@@ -65,9 +65,9 @@
             <UButton
               color="blue"
               variant="outline"
-              icon="i-heroicons-magnifying-glass-minus"
+              icon="i-heroicons-magnifying-glass-plus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="zoomOut"
+              @click="zoomIn"
             ></UButton>
           </UButtonGroup>
         </div>
