@@ -1,63 +1,69 @@
 <template>
   <div class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-6">
 
-    <!-- project form left UCard -->
-    <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
-      <template #header>
-        <CardHeader>Create project</CardHeader>
-      </template>
+    <form
+      @submit.prevent="handleSubmitProject"
+    >
+      <!-- project form left UCard -->
+      <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
+        <template #header>
+          <CardHeader>Create project</CardHeader>
+        </template>
 
-      <form
-        class="flex gap-3 flex-col"
-        @submit.prevent="handleSubmitProject"
-      >
-        <!-- project name -->
-        <label for="name-input">
-          Name:
-        </label>
-        <UInput
-          v-model="form.name"
-          placeholder="Enter project name"
-          id="name-input"
-          required
-        />
-
-        <!-- project draft parameters form -->
-        <label class="mt-5" for="field-label-input">
-          Parameters
-          <UTooltip :ui="{base: 'p-2 text-xs'}">
-            <template #text>
-              When adding observations later on, all the
-              parameters will need to be set manually for each observation.
-            </template>
-            <UIcon name="i-heroicons-information-circle" />
-          </UTooltip>
-        </label>
-
-        <div class="flex flex-col gap-3">
-          <ProjectFieldForm
-            :required="typeRequired"
-            :label="typeLabel"
-            :field-type="typeType"
-            :added-fields="addedFields"
-            :on-field-update="(field) => setFieldDraft(field)"
-            :on-error="(msg) => error = msg"
-            :on-field-add="(field) => addField(field)"
+        <div
+          class="flex gap-3 flex-col"
+          @submit.prevent="handleSubmitProject"
+        >
+          <!-- project name -->
+          <label for="name-input">
+            Name:
+          </label>
+          <UInput
+            v-model="form.name"
+            placeholder="Enter project name"
+            id="name-input"
+            required
           />
-        </div>
 
-        <span v-text="error" v-if="error" class="block text-xs text-red-600"></span>
+          <!-- project draft parameters form -->
+          <label class="mt-5" for="field-label-input">
+            Parameters
+            <UTooltip :ui="{base: 'p-2 text-xs'}">
+              <template #text>
+                When adding observations later on, all the
+                parameters will need to be set manually for each observation.
+              </template>
+              <UIcon name="i-heroicons-information-circle" />
+            </UTooltip>
+          </label>
 
-        <div class="mt-2 flex gap-x-3 justify-end">
-          <UButton @click="onClose" color="gray" variant="outline">
-            Cancel
-          </UButton>
-          <UButton type="submit" :loading="loading" :disabled="!newProjectIsValid">
-            Create project
-          </UButton>
+          <div class="flex flex-col gap-3">
+            <ProjectFieldForm
+              :required="typeRequired"
+              :label="typeLabel"
+              :field-type="typeType"
+              :added-fields="addedFields"
+              :on-field-update="(field) => setFieldDraft(field)"
+              :on-error="(msg) => error = msg"
+              :on-field-add="(field) => addField(field)"
+            />
+          </div>
+
+          <span v-text="error" v-if="error" class="block text-xs text-red-600"></span>
+
         </div>
-      </form>
-    </UCard>
+        <template #footer>
+          <div class="flex gap-x-3 justify-start">
+            <UButton type="submit" :loading="loading" :disabled="!newProjectIsValid">
+              Create project
+            </UButton>
+            <UButton @click="onClose" color="gray" variant="outline">
+              Cancel
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </form>
 
     <!-- project fields right UCard -->
     <ProjectFieldList
