@@ -1,5 +1,5 @@
 <template>
-  <div class="flex gap-x-6 gap-y-6 bg-transparent justify-around px-6">
+  <div class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-6">
 
     <!-- project form left UCard -->
     <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
@@ -77,7 +77,8 @@
     onClose: requireFunctionProp<() => void>()
   })
 
-  const { createProject } = await useProjects();
+  const { params } = useRoute();
+  const { createProject } = await useProjects(params);
   const toast = useToast();
 
   const loading = ref(false);

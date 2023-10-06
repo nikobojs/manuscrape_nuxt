@@ -70,6 +70,7 @@ export default safeResponseHandler(async (event) => {
     const existing = await prisma.projectAccess.findFirst({
       where: {
         user: { email: parsed.email },
+        projectId,
       },
       select: { projectId: true }
     });
@@ -111,7 +112,7 @@ export default safeResponseHandler(async (event) => {
     if (existing) {
       throw createError({
         statusCode: 409,
-        statusMessage: 'User is already invited to project'
+        statusMessage: 'User is already invited to project. They just need to sign up on ManuScrape to get access.'
       });
     }
 

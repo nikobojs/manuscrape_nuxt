@@ -15,14 +15,11 @@
 
 <script lang="ts" setup>
   const { ensureLoggedIn } = await useAuth();
-  const { requireProjectFromParams } = await useProjects();
   await ensureLoggedIn();
   const { params } = useRoute();
+  const { project } = await useProjects(params);
 
-  const project = requireProjectFromParams(params);
-  if (typeof project?.id !== 'number') {
+  if (typeof project.value?.id !== 'number') {
     throw new Error('Project is not defined');
   }
-
-  const { observations } = await useObservations(project.id);
 </script>

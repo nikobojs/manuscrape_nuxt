@@ -1,9 +1,11 @@
 <template>
   <ResourceAccessChecker>
-    <UContainer v-if="project">
+    <UContainer>
       <BackButton href="/projects">
         Go to projects
       </BackButton>
+    </UContainer>
+    <UContainer v-if="project">
       <div class="text-2xl">
         {{ project.name }}
       </div>
@@ -18,14 +20,16 @@
         />
       </div>
       <div class="mt-6">
-        <CollaboratorWidget v-if="showContributors" :project="project" />
+        <CollaboratorWidget v-if="isOwner" :project="project" />
       </div>
       <div class="grid grid-cols-2 gap-6 mt-6">
+        <!-- Dynamic fields widget -->
+        <!-- TODO: seperate into its own component -->
         <UCard>
           <template #header>
             <div class="flex justify-between items-center h-4">
               <CardHeader>Dynamic fields</CardHeader>
-              <div class="inline-flex gap-3">
+              <div class="inline-flex gap-3" v-if="isOwner">
                 <UButton
                   icon="i-heroicons-plus"
                   variant="outline"
@@ -66,25 +70,26 @@
 
 <script lang="ts" setup>
   const { ensureLoggedIn } = await useAuth();
-  const { hasRoles, refreshUser } = await useUser();
-  const { requireProjectFromParams } = await useProjects();
-  await ensureLoggedIn();
+  const { refreshUser } = await useUser();
   const { params } = useRoute();
+  const { project, isOwner } = await useProjects(params);
+  await ensureLoggedIn();
   const openCreateDynamicFieldModal = ref(false);
+  const toast = useToast();
+
+  if (!project.value) {
+    toast.add({
+      title: 'Access denied',
+      description: 'You don\'t have access to this project',
+      color: 'yellow',
+      icon: 'i-heroicons-exclamation-triangle'
+    });
+    navigateTo('/');
+  }
 
   const updateProject = async () => {
     await refreshUser();
-    project.value = requireProjectFromParams(params);
   }
-
-  const project = ref(requireProjectFromParams(params));
-  if (typeof project.value?.id !== 'number') {
-    throw new Error('Project is not defined');
-  }
-
-  const { observations } = await useObservations(project.value.id);
-
-  const showContributors = computed(() => project.value?.id && hasRoles(project.value.id, ['OWNER']));
 
   async function onCloseDynamicFieldModal () {
     openCreateDynamicFieldModal.value = false;

@@ -1,5 +1,6 @@
 import type {
   DynamicProjectField,
+  
   FieldOperator,
   FieldType,
   FileUpload,
@@ -194,6 +195,14 @@ declare global {
   type DynamicFieldsConfig = {
     [operator in FieldOperator]: {
       pairs: Array<[FieldType, FieldType]>;
+    };
+  };
+  
+  type Collaborator = {
+    createdAt: Date;
+    user: {
+      id: number;
+      email: string;
     };
   };
 

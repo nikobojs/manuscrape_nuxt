@@ -1,5 +1,7 @@
 <template>
-  <div></div>
+  <UContainer>
+    <div>Redirecting...</div>
+  </UContainer>
 </template>
 
 <script setup lang="ts">

@@ -1,11 +1,14 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton v-if="isElectron" :href="`/projects/${project.id}/drafts?electron=1`">
+      <BackButton v-if="isElectron && project" :href="`/projects/${project.id}/drafts?electron=1`">
         Go to drafts
       </BackButton>
-      <BackButton v-else :href="`/projects/${project.id}`">
+      <BackButton v-else-if="!isElectron && project" :href="`/projects/${project.id}`">
         Go to project
+      </BackButton>
+      <BackButton v-else :href="'/'">
+        Go back
       </BackButton>
       <h2 class="text-3xl mb-6 flex gap-x-4">
         {{ header }}
@@ -13,7 +16,7 @@
         <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
       </h2>
       <ObservationFormContainer
-        v-if="observation"
+        v-if="observation && project"
         :project="project"
         :observation="observation"
         :onObservationPublished="onSubmit"
@@ -31,16 +34,15 @@
 </template>
 
 <script lang="ts" setup>
-  const { requireProjectFromParams } = await useProjects();
-  const { refreshUser } = await useUser();
   const { ensureLoggedIn } = await useAuth();
+  const { refreshUser } = await useUser();
   await ensureLoggedIn();
   const { params, query } = useRoute();
-  const project = requireProjectFromParams(params);
-  if (typeof project?.id !== 'number') {
+  const { project } = await useProjects(params);
+  if (typeof project.value?.id !== 'number') {
     throw new Error('Project is not defined');
   }
-  const { requireObservationFromParams } = await useObservations(project.id);
+  const { requireObservationFromParams } = await useObservations(project.value.id);
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
   const imageInterval = ref<number | null>(null)
@@ -72,7 +74,7 @@
     if (isElectron.value) {
       window.electronAPI.observationCreated?.();
     } else {
-      if (typeof project?.id !== 'number') {
+      if (typeof project.value?.id !== 'number') {
         throw new Error('Project is not defined');
       }
       await refreshUser();
@@ -81,7 +83,7 @@
         icon: 'i-heroicons-check',
         color: 'green'
       });
-      navigateTo(`/projects/${project.id}`);
+      navigateTo(`/projects/${project.value.id}`);
     }
   }
   
@@ -96,7 +98,7 @@
   }
 
   async function onImageUploaded() {
-    if (!observation.value?.id || !project?.id) {
+    if (!observation.value?.id || !project.value?.id) {
       toast.add({
         title: observation ? 'Observation does not exist' : 'Project does not exist',
         icon: 'i-heroicons-exclamation-triangle',
@@ -111,7 +113,7 @@
   }
 
   async function onFileUploaded(file: File) {
-    if (!observation.value?.id || !project?.id) {
+    if (!observation.value?.id || !project.value?.id) {
       toast.add({
         title: observation ? 'Observation does not exist' : 'Project does not exist',
         icon: 'i-heroicons-exclamation-triangle',
@@ -129,7 +131,7 @@
 
 
   async function onVideoCaptureUploaded() {
-    if (!observation.value?.id || !project?.id) {
+    if (!observation.value?.id || !project.value?.id) {
       toast.add({
         title: observation ? 'Observation does not exist' : 'Project does not exist',
         icon: 'i-heroicons-exclamation-triangle',

@@ -2,7 +2,7 @@
   <!-- added fields right UCard -->
   <UCard
     v-if="fields.length > 0"
-    class="overflow-y-auto shadow-xl min-w-[510px] h-full max-h-[450px]"
+    class="overflow-y-auto shadow-xl max-w-full lg:min-w-[510px] h-full max-h-[450px]"
     :ui="{ header: { background: 'bg-[#0d1528]' }, body: { background:  'bg-[#0d1528]', padding: 'p-0' } }"
   >
     <UTable v-if="fields.length > 0" :rows="fields" :columns="fieldColumns">

@@ -4,7 +4,7 @@
     <template #header>
       <div class="h-4 flex justify-between relative">
         <CardHeader>Parameters</CardHeader>
-        <UPopover>
+        <UPopover v-if="isOwner">
           <UButton icon="i-mdi-dots-vertical" variant="link" color="gray" class="text-lg absolute right-0 -top-2"
             :ui="{ rounded: 'rounded-full' }" />
           <template #panel>
@@ -33,6 +33,7 @@
   </UCard>
 
   <UModal
+    v-if="isOwner"
     v-bind:model-value="openRemoveModal"
     v-on:close="() => openRemoveModal = false"
   >
@@ -53,6 +54,7 @@
   </UModal>
 
   <UModal
+    v-if="isOwner"
     v-bind:model-value="openConfirmDeleteParamModal"
     v-on:close="() => {
       openConfirmDeleteParamModal = false;
@@ -95,6 +97,7 @@
   </UModal>
 
   <UModal
+    v-if="isOwner"
     v-bind:model-value="openAddParamModal"
     v-on:close="() => openAddParamModal = false"
     :ui="{
@@ -132,7 +135,8 @@
   const selectedParameter = ref<null | { id: number, label: string }>();
   const openAddParamModal = ref(false);
   const toast = useToast();
-  const { deleteParameter, sortFields, createParameter } = await useProjects();
+  const { params } = useRoute();
+  const { deleteParameter, sortFields, createParameter, isOwner } = await useProjects(params);
 
   const newFieldRequired = ref(false);
   const newFieldLabel = ref('');

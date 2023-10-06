@@ -86,7 +86,8 @@
     metadataDone: Boolean as PropType<Boolean>,
   });
 
-  await useProjects();
+  const { params } = useRoute();
+  await useProjects(params);
   const { patchObservation } = await useObservations(props.project.id);
 
   const form = ref();

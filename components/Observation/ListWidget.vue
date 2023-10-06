@@ -57,8 +57,6 @@
 import { observationFilterMenuItems } from '~/utils/observationFilters';
 
 const error = ref(null)
-const { ensureLoggedIn } = await useAuth();
-await ensureLoggedIn();
 const { user } = await useUser();
 const loading = ref(false);
 const openImageDialog = ref<boolean>(false);

@@ -33,31 +33,26 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const contributors = await prisma.project.findUnique({
-    where: {
-      id: projectId,
-    },
+  const collaborators: Collaborator[] = await prisma.projectAccess.findMany({
+    where: { projectId },
     select: {
-      contributors: {
+      role: true,
+      createdAt: true,
+      user: {
         select: {
-          createdAt: true,
-          user: {
-            select: {
-              email: true,
-              id: true,
-            }
-          },
-        },
-      },
+          id: true,
+          email: true,
+        }
+      }
     }
   });
 
-  if (!contributors) {
+  if (!collaborators) {
     throw createError({
       statusCode: 404,
       statusMessage: 'The project does not exist'
     });
   }
 
-  return contributors;
+  return { collaborators };
 });

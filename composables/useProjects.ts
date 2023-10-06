@@ -1,11 +1,12 @@
 import { requireNumber } from "./helpers";
 import { type RouteParams } from "vue-router";
 
-export const useProjects = async () => {
-  const { refreshUser, loading, projects } = await useUser();
+export const useProjects = async (params: RouteParams) => {
+  const { hasRoles, refreshUser, loading, projects } = await useUser();
+  const project = computed(() => getProjectFromParams(params));
 
   const getProjectById = (
-    projectId: number | string | undefined | null | string[]
+    projectId: number | string | undefined | null | string[],
   ): FullProject | undefined => {
     projectId = requireNumber(projectId, 'projectId')
 
@@ -44,6 +45,7 @@ export const useProjects = async () => {
     )
   };
 
+
   const sortFields = (project: FullProject) => project.fields.sort((a, b) =>
     a.required && b.required ?
       a.label.localeCompare(b.label) :
@@ -63,14 +65,13 @@ export const useProjects = async () => {
     return ownsProject;
   }
 
-  const requireProjectFromParams = (params: RouteParams) => {
-    const p = getProjectById(params?.projectId);
-    if (!p) {
-      // TODO: report error
-      // throw new Error('No access to project');
-      navigateTo('/');
+  const getProjectFromParams = (params: RouteParams): FullProject | undefined => {
+    try {
+      const p = getProjectById(params?.projectId);
+      return p;
+    } catch {
+      return undefined;
     }
-    return p;
   }
 
   const deleteParameter = async (projectId: number, field: { id: number }) => {
@@ -98,16 +99,27 @@ export const useProjects = async () => {
     )
   }
 
+
+  computed(() => {
+    console.log('project update:', project.value)
+  })
+
+  const isOwner = computed(() =>
+    project.value?.id && hasRoles(project.value.id, ['OWNER']),
+  );
+
+
   return {
     projects,
     createProject,
     loading,
     hasOwnership,
     getProjectById,
-    requireProjectFromParams,
     addCollaborator,
     deleteParameter,
     sortFields,
-    createParameter
+    createParameter,
+    project,
+    isOwner,
   };
 };

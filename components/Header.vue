@@ -58,7 +58,8 @@
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
-  const { projects, getProjectById } = await useProjects();
+  const { params } = useRoute();
+  const { projects, getProjectById } = await useProjects(params);
   const route = useRoute();
   const selectedProjectId = ref<number | undefined>(undefined);
 

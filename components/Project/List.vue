@@ -63,7 +63,8 @@
 </template>
 
 <script setup lang="ts">
-  const { projects } = await useProjects();
+  const { params } = useRoute();
+  const { projects } = await useProjects(params);
   const { isElectron } = useDevice();
   const openCreateProjectModal = ref(false);
   const columns = [
@@ -102,6 +103,12 @@
         return `"${p.label}" [${getFieldLabel(p.type)}]`
     }).join('; ').trim();
   }
+
+  onMounted(() => {
+    if (projects.value.length === 0) {
+      openCreateProjectModal.value = true;
+    }
+  })
 </script>
 
 <style>
