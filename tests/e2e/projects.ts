@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { testProject, withTempUser, createProject, getMe, fetchObservations, openProjectPage, inviteToProject, signup } from './helpers';
+import { prisma } from './helpers';
 
 describe('Project management', () => {
   test('user can create project', async () =>  {

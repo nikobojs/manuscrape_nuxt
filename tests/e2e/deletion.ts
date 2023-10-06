@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { withTempUser, testProject, deleteUser, createProject, getMe, inviteToProject } from './helpers';
+import { prisma } from './helpers';
 
 describe('User deletion', async () => {
   test('delete user without token returns 401', async () => {

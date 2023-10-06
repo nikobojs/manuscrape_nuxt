@@ -2,6 +2,10 @@ import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
 import { FieldType } from '@prisma/client';
 
+import { PrismaClient } from '@prisma/client';
+
+export const prisma = new PrismaClient();
+
 const contentTypeJson = {
   "Content-Type": "application/json",
 };
@@ -32,6 +36,25 @@ export async function signup(json: any): Promise<Response> {
       body: JSON.stringify(json),
       headers: {
         ...contentTypeJson,
+      },
+    },
+  );
+  return res;
+}
+
+export async function invite(
+  token: string,
+  projectId: string | number,
+  json: any
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/collaborators`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
       },
     },
   );
