@@ -5,28 +5,64 @@
   >
     <template #header>
       <div class="flex justify-between">
-        <CardHeader>Image editor for observation #{{ observation.id }}</CardHeader>
+        <div class="relative h-4">
+          <CardHeader>Image editor for observation #{{ observation.id }}</CardHeader>
+          <UTooltip
+            :ui="{
+              base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
+            }"
+          >
+            <template #text>
+              <div class="flex flex-col gap-y-2 py-1 max-w-xs break-words whitespace-normal">
+                <div class="flex gap-x-2">
+                  <UKbd>Q</UKbd>:
+                  <span>Grab mode</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <UKbd>W</UKbd>:
+                  <span>Text mode</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <UKbd>E</UKbd>:
+                  <span>Box mode</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <UKbd>R</UKbd>:
+                  <span>Line mode</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <span class="flex gap-x-1">
+                    <UKbd>Shift</UKbd>+<UKbd>Scroll</UKbd>
+                  </span>:
+                  <span>Zoom</span>
+                </div>
+              </div>
+            </template>
+            <div class="text-xs mt-1 text-gray-600 flex items-center gap-x-1">
+              Shortcuts
+              <UIcon class="text-lg" name="i-heroicons-question-mark-circle" />
+            </div>
+          </UTooltip>
+        </div>
         <div class="flex gap-x-3">
 
           <!-- Buttons: save & reset image -->
-          <UButtonGroup>
-            <UButton
-              icon="i-heroicons-arrow-uturn-down"
-              :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
-              color="rose"
-              @click="reset"
-              variant="outline"
-              size="xs"
-            >Reset pending changes</UButton>
-            <UButton
-              icon="i-mdi-content-save-outline"
-              :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
-              color="primary"
-              @click="save"
-              variant="outline"
-              size="xs"
-            >Overwrite image</UButton>
-          </UButtonGroup>
+          <UButton
+            icon="i-heroicons-trash"
+            :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
+            color="rose"
+            @click="reset"
+            variant="outline"
+            size="xs"
+          >Reset all changes</UButton>
+          <UButton
+            icon="i-mdi-content-save-outline"
+            :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
+            color="primary"
+            @click="save"
+            variant="outline"
+            size="xs"
+          >Overwrite image</UButton>
 
           <!-- Buttons: Undo/redo buttons -->
           <UButtonGroup>
@@ -37,7 +73,7 @@
           <!-- Buttons: all actions -->
           <UButtonGroup size="sm" orientation="horizontal">
             <UButton
-              v-for="[actionMode, { icon, onActionPicked }] in Object.entries(actions).filter(([k]) => k !== EditorMode.DISABLED.toString())"
+              v-for="[actionMode, { icon, onActionPicked }] in actionButtons"
               :icon="icon"
               color="blue"
               :variant="modeActive(actionMode as unknown as EditorMode) ? 'solid' : 'outline'"
@@ -289,7 +325,7 @@
 
   // initialize image editor!
   const {
-    actions,
+    actionButtons,
     canvasRect,
     createImageFile,
     cursor,

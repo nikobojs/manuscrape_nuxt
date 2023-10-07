@@ -12,10 +12,13 @@ export type ImageEditorActionConfig = {
   [key in EditorMode]: {
     icon: string;
     onActionPicked: () => void;
+    cursor: string;
+    menuIndex?: number;
     mouseEvents: {
       up: (ev: MouseEvent) => Promise<void> | void;
       down: (ev: MouseEvent) => Promise<void> | void;
       move: (ev: MouseEvent) => Promise<void> | void;
+      scroll?: (ev: WheelEvent, scrollUp: boolean) => Promise<void> | void;
     };
     keyEvents?: {
       down: (keyCode: string) => void,

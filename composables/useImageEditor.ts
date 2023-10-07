@@ -36,6 +36,7 @@ export function useImageEditor(
   const draftTextPosition = ref<[number, number] | undefined>();
   const grabbed = ref<{ x: number; y: number } | undefined>()
   const writing = ref<boolean>(false);
+  const controlKeyDown = ref<boolean>(false);
   const textDraft = ref<string>('');
   const textSize = ref<number>(24);
   const textDraftSolidBg = ref<boolean>(true);
@@ -59,6 +60,7 @@ export function useImageEditor(
   });
 
   const mode = ref<EditorMode>(EditorMode.DISABLED);
+  const previousMode = ref<EditorMode | undefined>();
   const lastReload = ref(new Date());
   const cursor = ref('grab');
   const texts = ref<TextBox[]>([]);
@@ -201,6 +203,8 @@ export function useImageEditor(
   const action = computed(() => actions[mode.value]);
   const actions: ImageEditorActionConfig = {
     [EditorMode.GRAB]: {
+      menuIndex: 0,
+      cursor: 'grab',
       icon: "i-mdi-hand-right",
       onActionPicked: () => {
         grabbed.value = undefined
@@ -242,6 +246,8 @@ export function useImageEditor(
       },
     },
     [EditorMode.LINE]: {
+      menuIndex: 3,
+      cursor: 'crosshair',
       icon: 'i-mdi-vector-line',
       onActionPicked: () => {
         cursor.value = 'crosshair';
@@ -286,6 +292,8 @@ export function useImageEditor(
       },
     },
     [EditorMode.RECT]: {
+      menuIndex: 2,
+      cursor: 'crosshair',
       icon: "i-mdi-crop-square",
       onActionPicked: () => {
         dragging.value = false;
@@ -337,6 +345,8 @@ export function useImageEditor(
       },
     },
     [EditorMode.TEXT]: {
+      menuIndex: 1,
+      cursor: 'text',
       icon: "i-mdi-format-text",
       onActionPicked: () => {
         if (writing.value) {
@@ -402,6 +412,7 @@ export function useImageEditor(
       }
     },
     [EditorMode.DISABLED]: {
+      cursor: 'progress',
       icon: '',
       onActionPicked: () => {
         cursor.value = 'progress';
@@ -627,12 +638,65 @@ export function useImageEditor(
   function onKeyDown(ev: KeyboardEvent) {
     // check if enter
     const code = ev.key;
+
+    useToolbarShortcuts(code);
+
     return action.value.keyEvents?.down(code);
   }
   function onKeyUp(ev: KeyboardEvent) {
     // check if enter
     const code = ev.key;
+
+    if (code === 'Shift') {
+      controlKeyDown.value = false;
+      if (previousMode.value) {
+        mode.value = previousMode.value;
+        actions[previousMode.value].onActionPicked();
+        previousMode.value = undefined;
+      }
+    }
+
     return action.value.keyEvents?.up(code);
+  }
+
+  function onScroll(ev: WheelEvent) {
+    // if control key is down and target is canvas: zoom in or out
+    if (controlKeyDown.value && (ev.target as HTMLCanvasElement).tagName === 'CANVAS') {
+      const { deltaY } = ev;
+      const up = deltaY < 0;
+
+      const at = mousePosition(ev, canvas.value)
+      up ? zoomIn(at) : zoomOut(at);
+
+      // also call the actions if they want their own shortcut attached
+      action.value.mouseEvents?.scroll?.(ev, up);
+    }
+  }
+
+  function useToolbarShortcuts(code: string) {
+    if (code === 'Shift' && !controlKeyDown.value) {
+      controlKeyDown.value = true;
+      if (mode.value !== EditorMode.GRAB) {
+        previousMode.value = mode.value;
+        mode.value = EditorMode.GRAB;
+        actions[EditorMode.GRAB].onActionPicked();
+      }
+      return;
+    } else if (code === 'q') {
+      mode.value = EditorMode.GRAB;
+      action.value?.onActionPicked();
+    } else if (code === 'w') {
+      mode.value = EditorMode.TEXT;
+      action.value?.onActionPicked();
+    } else if (code === 'e') {
+      mode.value = EditorMode.RECT;
+      action.value?.onActionPicked();
+    } else if (code === 'r') {
+      mode.value = EditorMode.LINE;
+      action.value?.onActionPicked();
+    } else {
+      console.log('shortcut not detected:', code)
+    }
   }
 
   function reset() {
@@ -646,11 +710,13 @@ export function useImageEditor(
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("keyup", onKeyUp, true);
       window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("wheel", onScroll, false);
       canvas.value.addEventListener("mousedown", onMouseDown);
       window.addEventListener("mouseup", onMouseUp);
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("keyup", onKeyUp, true);
       window.addEventListener("keydown", onKeyDown, true);
+      window.addEventListener("wheel", onScroll, false);
       boxes.value = [];
       lines.value = [];
       texts.value = [];
@@ -719,7 +785,7 @@ export function useImageEditor(
   function adjustCameraToZoom(zoomVal: number, at: {x: number; y:number}, useSubtract = true) {
     if (canvasRect.value && canvas.value) {
     } else {
-      throw new Error('Canvas is not defined');
+      throw new Error('Canvas or canvasRect is not defined');
     };
 
     const cameraToTargetVect = {
@@ -743,11 +809,11 @@ export function useImageEditor(
         x: canvas.value.width / 2,
         y: canvas.value.height / 2,
       }
-    } else {
-      throw new Error('Canvas is not defined');
+    } else if(!at) {
+      throw new Error('Canvas and/or \'at\' is not defined');
     };
 
-    adjustCameraToZoom(newZoomVal, at);
+    adjustCameraToZoom(zoom.value, at);
     zoom.value = Math.min(10, newZoomVal);
 
     draw();
@@ -760,10 +826,10 @@ export function useImageEditor(
         x: canvas.value.width / 2,
         y: canvas.value.height / 2,
       }
-    } else {
-      throw new Error('Canvas is not defined');
+    } else if (!at) {
+      throw new Error('Canvas and/or \'at\' is not defined');
     };
-    adjustCameraToZoom(newZoomVal, at, false);
+    adjustCameraToZoom(zoom.value, at, false);
     zoom.value = Math.max(0.01, newZoomVal);
     draw();
   }
@@ -792,6 +858,7 @@ export function useImageEditor(
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("wheel", onScroll, false);
     }
   }
 
@@ -903,8 +970,14 @@ export function useImageEditor(
     return `${px}px ${px}px`
   });
 
+  const actionButtons = computed(() => {
+    return Object.entries(actions)
+      .filter(([k]) => k !== EditorMode.DISABLED.toString())
+      .sort(([_k1, a], [_k2, b]) => (a?.menuIndex || 0) > (b?.menuIndex || 0) ? 1 : -1);
+  });
+
   return {
-    actions,
+    actionButtons,
     canvasRect,
     createImageFile,
     cursor,
