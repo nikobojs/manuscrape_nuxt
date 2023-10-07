@@ -65,7 +65,6 @@ export function useImageEditor(
   const context = computed(() =>
     canvas.value ? canvas.value.getContext("2d") : null
   );
-  const canvasZoomRatio = ref(1.0);
   const canvasRect = computed(() => ({
     x: container.value?.clientWidth || 0,
     y: (container.value?.clientWidth || 0) * aspectRatio.value,
@@ -88,12 +87,8 @@ export function useImageEditor(
     bg.addEventListener("load", () => {
       if (canvas.value && context.value) {
         aspectRatio.value = bg.height / bg.width;
-        canvasZoomRatio.value = canvas.value.width / bg.width;
         zoom.value = 1.0;
-        console.info("image loaded event:", {
-          zoom: zoom.value,
-          aspectRatio: aspectRatio.value,
-        });
+        resetPosition();
         window.requestAnimationFrame(() => {
           drawImage();
           drawBoxes();
@@ -122,6 +117,8 @@ export function useImageEditor(
     }
 
     isSaving.value = true;
+    zoom.value = 1.0;
+    cameraPosition.value = [0, 0];
     const targetWidth = image.value.width;
     const targetHeight = image.value.height;
     const initialCanvasWidth = canvas.value.width;
@@ -139,10 +136,10 @@ export function useImageEditor(
         if (canvas.value && context.value) {
           aspectRatio.value = bg.height / bg.width;
 
-          // alculate zoom based on canvasWidth and imageWith
-          zoom.value = bg.width / initialCanvasWidth;
+          zoom.value = 1;
           clearCanvas();
           context.value.drawImage(bg, 0, 0, targetWidth, targetHeight);
+
           window.requestAnimationFrame(async () => {
             if (!context.value) {
               throw new Error(
@@ -153,7 +150,6 @@ export function useImageEditor(
             drawLines();
             drawTexts(zoom.value);
             await onLoaded();
-            isSaving.value = false;
 
             canvas.value?.setAttribute("width", "" + initialCanvasWidth);
             canvas.value?.setAttribute("height", "" + initialCanvasHeight);
@@ -163,7 +159,7 @@ export function useImageEditor(
     });
   }
 
-  function drawImage() {
+  function drawImage(resizeToFit = false) {
     if (!context.value || !image.value) {
       throw new Error(
         "Image cannot be drawn as context or image is not fully loaded",
@@ -171,7 +167,16 @@ export function useImageEditor(
       // TODO: report error
     }
 
-    const { x: zoomedX, y: zoomedY } = scale(canvasRect.value, zoom.value);
+    const imageSize = resizeToFit
+      ? canvasRect.value
+      : {
+        x: image.value.width,
+        y: image.value.height
+      };
+
+    // const { x: zoomedX, y: zoomedY } = scale(canvasRect.value, zoom.value); // ORIGINAL
+
+    const { x: zoomedX, y: zoomedY } = scale(imageSize, zoom.value);
 
     context.value.drawImage(image.value, cameraPosition.value[0], cameraPosition.value[1], zoomedX, zoomedY);
   }
@@ -670,8 +675,6 @@ export function useImageEditor(
       );
     }
 
-    resetZoom();
-
     // TODO: reset boundaries as well? while full screen overlay?
     // reset zoom so image capture can do its job
     forceHighQualityCanvas(() => new Promise((resolve, reject) => {
@@ -703,6 +706,7 @@ export function useImageEditor(
           clearCanvas();
           reloadImage();
           reset();
+          isSaving.value = false;
           resolve();
         },
         "image/jpeg",
@@ -711,23 +715,75 @@ export function useImageEditor(
     }));
   }
 
-  function zoomIn() {
-    zoom.value = Math.min(10, zoom.value + ZOOM_STEP);
+
+  function adjustCameraToZoom(zoomVal: number, at: {x: number; y:number}, useSubtract = true) {
+    if (canvasRect.value && canvas.value) {
+    } else {
+      throw new Error('Canvas is not defined');
+    };
+
+    const cameraToTargetVect = {
+      x: (at.x - cameraPosition.value[0]) * ZOOM_STEP / zoomVal,
+      y: (at.y - cameraPosition.value[1]) * ZOOM_STEP / zoomVal,
+    }
+
+    const newCameraPosition: [number, number] = [
+      cameraPosition.value[0] + (useSubtract ? (-cameraToTargetVect.x) : cameraToTargetVect.x),
+      cameraPosition.value[1] + (useSubtract ? (-cameraToTargetVect.y) : cameraToTargetVect.y),
+    ];
+
+    cameraPosition.value = newCameraPosition;
+  }
+
+  // NOTE: 'at' is offsetX and offsetY mouse event inside canvas
+  function zoomIn(at?: { x:number; y:number }) {
+    const newZoomVal = zoom.value + ZOOM_STEP;
+    if (!at && canvas.value) {
+      at = {
+        x: canvas.value.width / 2,
+        y: canvas.value.height / 2,
+      }
+    } else {
+      throw new Error('Canvas is not defined');
+    };
+
+    adjustCameraToZoom(newZoomVal, at);
+    zoom.value = Math.min(10, newZoomVal);
+
     draw();
   }
 
-  function zoomOut() {
-    zoom.value = Math.max(0.01, zoom.value - ZOOM_STEP);
+  function zoomOut(at?: { x:number; y:number }) {
+    const newZoomVal = zoom.value - ZOOM_STEP;
+    if (!at && canvas.value) {
+      at = {
+        x: canvas.value.width / 2,
+        y: canvas.value.height / 2,
+      }
+    } else {
+      throw new Error('Canvas is not defined');
+    };
+    adjustCameraToZoom(newZoomVal, at, false);
+    zoom.value = Math.max(0.01, newZoomVal);
     draw();
   }
 
   function resetZoom() {
     zoom.value = 1.0;
-    cameraPosition.value = [0, 0];
     grabbed.value = undefined;
     grabbing.value = false;
+    resetPosition();
     draw();
   }
+
+  function resetPosition() {
+    if (image.value && canvas.value) {
+      const x = (canvas.value.width / 2) - (image.value.width / 2)
+      cameraPosition.value[0] = x;
+      cameraPosition.value[1] = 30;
+    }
+  }
+
 
   function destroyEditor() {
     if (canvas.value) {
@@ -835,6 +891,18 @@ export function useImageEditor(
   const undoDisabled = computed(() => changes.value.filter(c => c.applied).length === 0);
   const redoDisabled = computed(() => changes.value.filter(c => !c.applied).length === 0);
 
+  const canvasBackgroundPosition = computed<string>(() => {
+    return `
+      ${cameraPosition.value[0]}px ${cameraPosition.value[1]}px
+    `.trim();
+  });
+
+  const canvasBackgroundSize = computed<string>(() => {
+    const boxSize = 48;
+    const px = Math.floor(boxSize * zoom.value);
+    return `${px}px ${px}px`
+  });
+
   return {
     actions,
     canvasRect,
@@ -866,5 +934,7 @@ export function useImageEditor(
     zoom,
     zoomIn,
     zoomOut,
+    canvasBackgroundPosition,
+    canvasBackgroundSize,
   };
 }

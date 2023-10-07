@@ -53,21 +53,21 @@
               variant="outline"
               icon="i-heroicons-magnifying-glass-minus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="zoomOut"
+              @click="() => zoomOut()"
             ></UButton>
             <UButton
               color="blue"
               variant="outline"
               icon="i-mdi-restore"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="resetZoom"
+              @click="() => resetZoom()"
             ></UButton>
             <UButton
               color="blue"
               variant="outline"
               icon="i-heroicons-magnifying-glass-plus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="zoomIn"
+              @click="() => zoomIn()"
             ></UButton>
           </UButtonGroup>
         </div>
@@ -251,6 +251,11 @@
           'cursor-crosshair': cursor === 'crosshair',
           'bg-[#080811]': !modeActive(EditorMode.DISABLED),
         }"
+        :style="{
+          backgroundPosition: canvasBackgroundPosition,
+          backgroundImage: `url('/cross-bg.png')`,
+          backgroundSize: canvasBackgroundSize,
+        }"
         :width="canvasRect.x || '100%'"
         :height="canvasRect.y || 'auto'"
       ></canvas>
@@ -314,6 +319,8 @@
     undo,
     undoDisabled,
     redoDisabled,
+    canvasBackgroundPosition,
+    canvasBackgroundSize,
   } = useImageEditor(
     props.observation.id,
     props.project.id,

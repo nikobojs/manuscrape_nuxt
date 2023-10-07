@@ -2,6 +2,9 @@
   <UModal
     v-bind:model-value="open"
     v-on:close="closeObservationImage"
+    :ui="{
+      base: 'relative text-left rtl:text-right overflow-hidden flex flex-col'
+    }"
   >
       <div v-if="imageSrc">
         <img :src="imageSrc" />
