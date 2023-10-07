@@ -31,7 +31,7 @@
       disableBackbutton.value = true;
       return '#'
     } else {
-      const electronParam = isElectron ? '?electron=1' : '';
+      const electronParam = isElectron.value ? '?electron=1' : '';
       return `
         /projects/${project.value.id}/observations/${observation.value.id}${electronParam}
       `.trim();

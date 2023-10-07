@@ -20,7 +20,7 @@
         <NuxtLink
           v-if="observation?.imageId && !$props.disabled"
           class="text-sm underline text-green-500 cursor-pointer"
-          :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image`"
+          :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image${isElectron ? '?electron=1' : ''}`"
         >
           Edit image
         </NuxtLink>
@@ -62,6 +62,7 @@ import { formatMb } from '~/utils/formatMb';
   const uploadChecker = ref();
   const route = useRoute();
   const router = useRouter();
+  const { isElectron } = useDevice();
   const uploaded = computed(() => props.observation?.image?.id && props.observation.image)
   const timeout = ref<null | number>(null);
   const config = useRuntimeConfig().public;
