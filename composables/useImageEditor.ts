@@ -211,8 +211,8 @@ export function useImageEditor(
           }
         },
         down: (ev) => {
-          if (!grabbing.value) {
-            const { x, y, w, h } = mouseRect(ev, beginX.value, beginY.value, zoom.value);
+          if (!grabbing.value && canvas.value) {
+            const { x, y, w, h } = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
             beginX.value = x; // WORKS
             beginY.value = y; // WORKS
             grabbed.value = {
@@ -225,8 +225,8 @@ export function useImageEditor(
           }
         },
         move: (ev) => {
-          if (grabbing.value && grabbed.value) {
-            let { x, y } = mousePosition(ev);
+          if (grabbing.value && grabbed.value && canvas.value) {
+            let { x, y } = mousePosition(ev, canvas.value);
             x = (x - grabbed.value.x); // WORKS
             y = (y - grabbed.value.y); // WORKS
             const move: [number, number] = [x, y];
@@ -255,16 +255,16 @@ export function useImageEditor(
           }
         },
         down: (ev) => {
-          if (!dragging.value) {
-            const { x, y } = mousePosition(ev);
+          if (!dragging.value && canvas.value) {
+            const { x, y } = mousePosition(ev, canvas.value);
             beginX.value = x;
             beginY.value = y;
             dragging.value = true;
           }
         },
         move: (ev) => {
-          if (dragging.value) {
-            const square = mouseRect(ev, beginX.value, beginY.value, zoom.value);
+          if (dragging.value && canvas.value) {
+            const square = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
             draftLine.value = {
               x: square.x - cameraPosition.value[0],
               y: square.y - cameraPosition.value[1],
@@ -288,8 +288,8 @@ export function useImageEditor(
       },
       mouseEvents: {
         up: (ev) => {
-          if (dragging.value) {
-            const square = mouseRect(ev, beginX.value, beginY.value, zoom.value);
+          if (dragging.value && canvas.value) {
+            const square = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
             square.x -= cameraPosition.value[0]; // WORKS
             square.y -= cameraPosition.value[1]; // WORKS
 
@@ -310,16 +310,16 @@ export function useImageEditor(
           }
         },
         down: (ev) => {
-          if (!dragging.value) {
-            const { x, y } = mousePosition(ev);
+          if (!dragging.value && canvas.value) {
+            const { x, y } = mousePosition(ev, canvas.value);
             beginX.value = x;
             beginY.value = y;
             dragging.value = true;
           }
         },
         move: (ev) => {
-          if (dragging.value) {
-            const square = applyZoom(mouseRect(ev, beginX.value, beginY.value, zoom.value), zoom.value);
+          if (dragging.value && canvas.value) {
+            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
             const [x, y, w, h] = square;
             clearCanvas();
             drawImage();
@@ -354,28 +354,30 @@ export function useImageEditor(
 
         },
         down: (ev) => {
-          dragging.value = true;
+          if (canvas.value) {
+            dragging.value = true;
 
-          // in any case we cant to use the position clicked on
-          const { x, y } = mousePosition(ev);
-          draftTextPosition.value = [
-            (x - cameraPosition.value[0]) / zoom.value,
-            (y - cameraPosition.value[1]) / zoom.value
-          ];
+            // in any case we cant to use the position clicked on
+            const { x, y } = mousePosition(ev, canvas.value);
+            draftTextPosition.value = [
+              (x - cameraPosition.value[0]) / zoom.value,
+              (y - cameraPosition.value[1]) / zoom.value
+            ];
 
-          // if not already writing, reset textDraft, textSize and cursor
-          // NOTE: this will trigger a redraw
-          if (!writing.value) {
-            textDraft.value = '';
-            cursor.value = 'move'
+            // if not already writing, reset textDraft, textSize and cursor
+            // NOTE: this will trigger a redraw
+            if (!writing.value) {
+              textDraft.value = '';
+              cursor.value = 'move'
+            }
+
+            // set writing state to true in any case on mouse down
+            writing.value = true;
           }
-
-          // set writing state to true in any case on mouse down
-          writing.value = true;
         },
         move: (ev) => {
-          if (dragging.value){
-            const { x, y } = mousePosition(ev);
+          if (dragging.value && canvas.value){
+            const { x, y } = mousePosition(ev, canvas.value);
             draftTextPosition.value = [
               (x - cameraPosition.value[0]) / zoom.value,
               (y - cameraPosition.value[1]) / zoom.value
@@ -636,12 +638,12 @@ export function useImageEditor(
       clearCanvas();
       canvas.value.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
-      canvas.value.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("keyup", onKeyUp, true);
       window.removeEventListener("keydown", onKeyDown, true);
       canvas.value.addEventListener("mousedown", onMouseDown);
       window.addEventListener("mouseup", onMouseUp);
-      canvas.value.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("keyup", onKeyUp, true);
       window.addEventListener("keydown", onKeyDown, true);
       boxes.value = [];
@@ -731,7 +733,7 @@ export function useImageEditor(
     if (canvas.value) {
       canvas.value.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
-      canvas.value.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("keydown", onKeyDown, true);
       window.removeEventListener("keyup", onKeyUp, true);
     }

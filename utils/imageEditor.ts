@@ -57,7 +57,6 @@ export function scale(
   };
 }
 
-// WORKS
 export function applyZoom(square: SquareWithZoom, canvasZoom: number): Square {
   const { x, y, z, w, h } = square;
   const zoom = canvasZoom / z;
@@ -74,15 +73,9 @@ export function applyZoom(square: SquareWithZoom, canvasZoom: number): Square {
   return scaledSquare;
 }
 
-// WORKS
 export function applyCamera(
   square: Square,
   cameraPosition: [number, number]): Square  {
-  // const { x: fixedX, y: fixedY } = {
-  //   x: x + cameraPosition[0], // WORKS!
-  //   y: y + cameraPosition[1], // WORKS!
-  // }
-
   const scaledSquare: Square = [
     square[0] + cameraPosition[0],
     square[1] + cameraPosition[1],
@@ -93,15 +86,39 @@ export function applyCamera(
   return scaledSquare;
 }
 
-export function mousePosition(ev: MouseEvent): { x: number; y: number } {
-  return {
-    x: ev.offsetX,
-    y: ev.offsetY,
-  };
+// The main mouse position tool that is relative to the canvas element
+export function mousePosition(ev: MouseEvent, canvas: HTMLCanvasElement | undefined): { x: number; y: number } {
+  const { x, y, offsetX, offsetY, target } = ev;
+
+  // if inside canvas, return offsetX offsetY (as they will be mouse pos relative to canvas pos)
+  if ((target as HTMLElement)?.tagName === 'CANVAS') {
+    return {
+      x: offsetX,
+      y: offsetY,
+    }
+  } else if (canvas) {
+    // if mouse target is not canvas, we must be outside (as no elements are inside canvas)
+    // because of that, we want to return the client pos minus the canvas pos.
+    // NOTE: This fixes the mouse position when the mouse is outside the canvas
+    const canvasRect = canvas.getBoundingClientRect();
+    const result = {
+      x: x - canvasRect.x,
+      y: y - canvasRect.y,
+    };
+    return result;
+  } else {
+    // TODO: report
+    console.warn('mouse event missing canvas. Positions in the image editor might be uncalibrated for this event');
+    return { x, y };
+  }
+
 }
 
-export const mouseRect = function (ev: MouseEvent, beginX: number, beginY: number, z: number): SquareWithZoom {
-  const { x, y } = mousePosition(ev);
+export function mouseRect(
+  ev: MouseEvent,
+  canvas: HTMLCanvasElement, beginX: number, beginY: number, z: number
+): SquareWithZoom {
+  const { x, y } = mousePosition(ev, canvas);
 
   // TODO: support boxes made from other direction
   // TODO: test if already possible? it seems :S
