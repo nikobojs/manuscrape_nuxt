@@ -15,17 +15,40 @@ export type ImageEditorActionConfig = {
     cursor: string;
     menuIndex?: number;
     mouseEvents: {
-      up: (ev: MouseEvent) => Promise<void> | void;
-      down: (ev: MouseEvent) => Promise<void> | void;
-      move: (ev: MouseEvent) => Promise<void> | void;
+      up?: (ev: MouseEvent) => Promise<void> | void;
+      down?: (ev: MouseEvent) => Promise<void> | void;
+      move?: (ev: MouseEvent) => Promise<void> | void;
       scroll?: (ev: WheelEvent, scrollUp: boolean) => Promise<void> | void;
+      rightUp?: (ev: MouseEvent) => Promise<void> | void;
+      rightDown?: (ev: MouseEvent) => Promise<void> | void;
     };
     keyEvents?: {
-      down: (keyCode: string) => void,
-      up: (keyCode: string) => void,
+      down?: (keyCode: string) => void,
+      up?: (keyCode: string) => void,
     }
   };
 };
+
+
+export function adjustCameraToZoom(
+  zoomVal: number,
+  at: {x: number; y:number},
+  cameraPosition: [number, number],
+  useSubtract = true
+): [number, number] {
+  const cameraToTargetVect = {
+    x: (at.x - cameraPosition[0]) * ZOOM_STEP / zoomVal,
+    y: (at.y - cameraPosition[1]) * ZOOM_STEP / zoomVal,
+  }
+
+  const newCameraPosition: [number, number] = [
+    cameraPosition[0] + (useSubtract ? (-cameraToTargetVect.x) : cameraToTargetVect.x),
+    cameraPosition[1] + (useSubtract ? (-cameraToTargetVect.y) : cameraToTargetVect.y),
+  ];
+
+  return newCameraPosition;
+}
+
 
 export function scale(
   vect: { x: number; y: number } | [number, number],

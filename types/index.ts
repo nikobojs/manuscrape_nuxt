@@ -132,12 +132,13 @@ declare global {
   };
 
   type ImageChangeType = 'text' | 'line' | 'box';
-  type ImageChanges = {
+  type ImageChange = {
     id: number;
     type: ImageChangeType;
     applied: boolean;
     component: TextBox | Box | Line;
-  }[];
+  };
+  type ImageChanges = ImageChange[];
 
 
   type ImageEditorComponent = SquareWithZoom & {

@@ -31,10 +31,26 @@
                   <span>Line mode</span>
                 </div>
                 <div class="flex gap-x-2">
+                  <UKbd>Right click</UKbd>:
+                  <span>Hold to grab</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <span class="flex gap-x-1">
+                    <UKbd>Ctrl</UKbd>+<UKbd>Enter</UKbd>
+                  </span>:
+                  <span>(Text mode) Save text</span>
+                </div>
+                <div class="flex gap-x-2">
                   <span class="flex gap-x-1">
                     <UKbd>Shift</UKbd>+<UKbd>Scroll</UKbd>
                   </span>:
                   <span>Zoom</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <span class="flex gap-x-1">
+                    <UKbd>Shift</UKbd>+<UKbd>W</UKbd>/<UKbd>A</UKbd>/<UKbd>S</UKbd>/<UKbd>D</UKbd>
+                  </span>:
+                  <span>Move camera</span>
                 </div>
               </div>
             </template>
@@ -117,7 +133,7 @@
       <div class="mb-4 absolute px-3 pt-2 pb-2 rounded-md right-3 top-3 z-10 flex justify-end items-end gap-x-3 bg-slate-950 bg-opacity-80">
 
         <!-- EditorMode.LINE: extra tools -->
-        <div class="flex items-center gap-x-3" v-if="modeActive(EditorMode.LINE)">
+        <div class="flex items-center gap-x-3" v-show="modeActive(EditorMode.LINE)">
           <label class="text-xs">Line width:</label>
           <USelectMenu
             :options="lineWidths"
@@ -136,7 +152,7 @@
         </div>
 
         <!-- EditorMode.TEXT: extra tools -->
-        <div class="flex items-center gap-x-3" v-else-if="modeActive(EditorMode.TEXT)">
+        <div class="flex items-center gap-x-3" v-show="modeActive(EditorMode.TEXT)">
 
           <form @submit.prevent="saveTextDraft" class="flex gap-3 items-end">
               <!-- text draft textarea-->
