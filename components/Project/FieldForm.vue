@@ -53,6 +53,7 @@
     :open="openDropdownModal"
     :onSubmit="addDropdownField"
     :onClose="() => openDropdownModal = false"
+    :defaultChoices="_defaultChoices"
   />
 </template>
 
@@ -60,6 +61,7 @@
 <script setup lang="ts">
   import { ObservationFieldTypes, type FieldType } from '~/utils/observationFields';
 
+  const _defaultChoices = ref<string[]>([])
   const props = defineProps({
     fieldType: String as PropType<string | undefined>,
     label: requireProp<string>(String),

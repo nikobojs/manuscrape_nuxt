@@ -60,6 +60,7 @@
 <script lang="ts" setup>
   const props = defineProps({
     ...requireModalProps,
+    defaultChoices: requireProp<string[]>(Array),
     onSubmit: requireFunctionProp<(config: DropDownConfig) => void>(),
   });
 
@@ -67,6 +68,10 @@
   const items = ref<string[]>([]);
   const itemName = ref('');
   const toast = useToast();
+
+  if (props.defaultChoices) {
+    items.value = [...props.defaultChoices];
+  }
 
   function handleSubmit() {
     props.onSubmit({ choices: items.value });
@@ -96,4 +101,16 @@
   function removeOption(option: string) {
     items.value = [...items.value.filter((i) => i !== option)];
   }
+
+  // TODO: improve readability
+  const _openWatch = computed(() => props.open)
+  watch([_openWatch], () => {
+    if (!props.open) return;
+    if (!props.defaultChoices) {
+      console.warn('default choices is not defined!', props.defaultChoices)
+      return;
+    };
+
+    items.value = [...props.defaultChoices];
+  });
 </script>

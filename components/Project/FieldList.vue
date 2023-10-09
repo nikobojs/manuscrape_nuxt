@@ -56,6 +56,12 @@
         </template>
     </UTable>
   </UCard>
+  <ProjectSetupChoicesModal
+    :open="openChoicesModal"
+    :onSubmit="submitNewChoices"
+    :onClose="() => openChoicesModal = false"
+    :defaultChoices="choicesOnOpen"
+  />
 </template>
 
 <script setup lang="ts">
@@ -64,7 +70,11 @@
     onFieldsUpdate: requireFunctionProp<(fields: NewProjectField[]) => void | Promise<void>>(),
   });
 
+  const toast = useToast();
   const fieldsCopy = computed(() => [...props.fields]);
+  const openChoicesModal = ref(false);
+  const choicesOnOpen = ref<string[]>([])
+  const modifyingField = ref<NewProjectField | undefined>();
 
   const fieldColumns = [
     {
@@ -117,9 +127,48 @@
     props.onFieldsUpdate(fieldsCopy.value);
   }
 
+  function modifyChoices(row: NewProjectField) {
+    // TODO: set existing choices as default
+    choicesOnOpen.value = row.choices || [];
+    openChoicesModal.value = true
+    modifyingField.value = row;
+    console.log('modifying options for field', row.label, row.choices)
+  }
+
+  function submitNewChoices(config: DropDownConfig) {
+    if (!modifyingField.value) {
+      // TODO: report error
+      toast.add({
+        title: 'Unable to save the field :(',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle'
+      });
+      return;
+    } 
+
+    const newFields = [...props.fields];
+    const field = newFields.find((f) => f.index === modifyingField.value?.index);
+    if (!field) {
+      // TODO: report error
+      toast.add({
+        title: 'Unable to save the field :(',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle'
+      });
+      return;
+    }
+
+    field.choices = config.choices;
+
+    console.log('SUBMITTING NEW CHOICES:::', [...config.choices])
+    props.onFieldsUpdate(newFields);
+  }
+
   function getFieldMenu(row: NewProjectField) {
     const fieldMenu = []
     const upDown = []
+
+    // add move up value if not in top
     if (row.index > 1) {
       upDown.push({
         label: 'Move up',
@@ -131,6 +180,7 @@
     }
 
 
+    // add move up value if not in bottom
     if (row.index < props.fields.length) {
       upDown.push({
         icon: 'i-heroicons-arrow-down',
@@ -141,7 +191,19 @@
       })
     }
 
-    fieldMenu.push(upDown)
+    upDown.length > 0 && fieldMenu.push(upDown)
+
+    // add modify choices option if multiple choice field
+    if (row.choices?.length) {
+      // add remove field option
+      fieldMenu.push([{
+        icon: 'i-mdi-pencil-outline',
+        label: 'Modify choices',
+        click: () => {
+          modifyChoices(row);
+        },
+      }]);
+    }
 
     // add remove field option
     fieldMenu.push([{
