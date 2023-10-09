@@ -1,5 +1,7 @@
 <template>
-  <ProjectCreateWidget :onClose="onClose" />
+  <UContainer>
+    <ProjectCreateWidget :onClose="onClose" />
+  </UContainer>
 </template>
 
 <script setup lang="ts">
