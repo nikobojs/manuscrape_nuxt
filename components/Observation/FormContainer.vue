@@ -1,9 +1,10 @@
 <template>
   <div
-    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6"
+    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-min"
     v-if="observation"
   >
     <ObservationMetadataWidget
+      class="row-span-4"
       v-if="observation"
       :project="project"
       :observation="observation"
@@ -12,28 +13,28 @@
       :metadataDone="metadataDone"
     />
 
-    <ObservationImageWidget
-      :project="project"
-      :observation="observation"
-      :onSubmit="onImageUploaded"
-      :disabled="disabled"
-      :imageUploaded="imageUploaded"
-      :uploadInProgress="uploadInProgress"
-    />
-
-    <UCard>
-      <template v-if="!$props.disabled" #header>
-          <CardHeader>Files</CardHeader>
-      </template>
-      <ObservationFileUploadForm
-        :observation="observation"
+    <div class="row-span-3 flex flex-col gap-6">
+      <ObservationImageWidget
         :project="project"
-        :on-file-uploaded="onFileUploaded"
-        :on-video-capture-uploaded="onVideoCaptureUploaded"
+        :observation="observation"
+        :onSubmit="onImageUploaded"
+        :disabled="disabled"
+        :imageUploaded="imageUploaded"
+        :uploadInProgress="uploadInProgress"
       />
-    </UCard>
 
-    <div>
+      <UCard>
+        <template v-if="!$props.disabled" #header>
+            <CardHeader>Files</CardHeader>
+        </template>
+        <ObservationFileUploadForm
+          :observation="observation"
+          :project="project"
+          :on-file-uploaded="onFileUploaded"
+          :on-video-capture-uploaded="onVideoCaptureUploaded"
+        />
+      </UCard>
+
       <UCard v-if="!$props.disabled">
         <template #header>
           <CardHeader>Actions</CardHeader>
@@ -51,7 +52,7 @@
           </UButton>
         </div>
       </UCard>
-      <UCard v-else="$props.disabled" >
+      <UCard v-else >
         <template #header>
           <CardHeader>Details</CardHeader>
         </template>

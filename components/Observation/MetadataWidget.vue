@@ -1,82 +1,98 @@
 <template>
   <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
-    <UCard class="">
+    <UCard class="overflow-visible">
       <template #header>
         <div class="flex justify-between w-full">
-          <CardHeader>Metadata</CardHeader>
+          <CardHeader>Observation parameters</CardHeader>
           <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
         </div>
       </template>
 
-      <!-- scrollable form -->
-      <div class="overflow-y-auto max-h-[300px] -m-6 p-6 shadow-[inset_0_0_8px_2px_rgba(8,8,8,0.2)]">
-        <div v-for="({ props, field }) in inputs" class="mb-4">
-          <UFormGroup :name="field.label" :label="field.label">
-            <UCheckbox
-              v-if="field.type === 'BOOLEAN'"
-              v-model="state[field.label]"
-              v-bind="props"
-              :disabled="!!$props.disabled"
-            />
-            <UTextarea
-              v-else-if="field.type === 'TEXTAREA'"
-              v-model="state[field.label]"
-              v-bind="props"
-              variant="outline"
-            />
-            <UInput
-              v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
-              v-model="state[field.label]"
-              v-bind="props"
-              :disabled="!!$props.disabled"
-              @input="(asd: Event) => fourDigitYear(asd)"
-            />
-            <div v-else-if="field.type === 'CHOICE'">
-              <div class="flex items-center gap-2" v-for="choice in field.choices">
-                <URadio
-                  :id="`radio-${choice}`"
-                  :key="choice"
-                  v-model="state[field.label]"
-                  :name="field.label"
-                  :value="choice"
-                />
-                <label :for="`radio-${choice}`">{{ choice }}</label>
-              </div>
-            </div>
-            <div v-else-if="field.type === 'AUTOCOMPLETE'">
-              <USelectMenu
-                :options="field.choices"
+      <div class="flex flex-col gap-4">
+        <div v-for="({ props, field }) in inputs">
+          <UFormGroup :name="field.label" :label="`${field.label}:`">
+            <div class="inline-block">
+              <UCheckbox
+                v-if="field.type === 'BOOLEAN'"
                 v-model="state[field.label]"
-                searchable
+                v-bind="props"
+                :disabled="!!$props.disabled"
+              />
+              <UTextarea
+                v-else-if="field.type === 'TEXTAREA'"
+                v-model="state[field.label]"
+                v-bind="props"
+                variant="outline"
+                :disabled="!!$props.disabled"
+              />
+              <UInput
+                v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
+                v-model="state[field.label]"
+                v-bind="props"
+                class="flex-shrink"
+                :disabled="!!$props.disabled"
+                @input="(asd: Event) => fourDigitYear(asd)"
+              />
+              <div v-else-if="field.type === 'CHOICE'">
+                <div class="flex items-center gap-2" v-for="choice in field.choices">
+                  <URadio
+                    :id="`radio-${choice}`"
+                    :key="choice"
+                    v-model="state[field.label]"
+                    :name="field.label"
+                    :value="choice"
+                    :disabled="!!$props.disabled"
+                  />
+                  <label :for="`radio-${choice}`">{{ choice }}</label>
+                </div>
+              </div>
+              <div v-else-if="field.type === 'AUTOCOMPLETE'">
+                <USelectMenu
+                  :options="field.choices"
+                  v-model="state[field.label]"
+                  :placeholder="field.required ? 'Select option' : 'None chosen'"
+                  :disabled="!!$props.disabled"
+                  :popper="{
+                    adaptive: false,
+                    offsetDistance: -3,
+                    placement: 'bottom-start',
+                  }"
+                />
+              </div>
+              <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
+                <USelectMenu
+                  :options="field.choices"
+                  v-model="state[field.label]"
+                  :placeholder="field.required ? 'Select or type option' : 'None chosen'"
+                  creatable
+                  searchable
+                  :searchable-placeholder="field.required ? 'Search or write custom text...' : 'None chosen'"
+                  :disabled="!!$props.disabled"
+                >
+                  <template #option-create="{ option }">
+                    <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
+                    <span>
+                      {{ option.label }}
+                    </span>
+                  </template>
+                </USelectMenu>
+              </div>
+              <UInput
+                v-else
+                v-model="state[field.label]"
+                v-bind="props"
+                :disabled="!!$props.disabled"
               />
             </div>
-            <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
-              <USelectMenu
-                :options="field.choices"
-                v-model="state[field.label]"
-                creatable
-                searchable
-                searchable-placeholder="Search or write custom text..."
-              >
-                <template #option-create="{ option }">
-                  <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
-                  <span>
-                    {{ option.label }}
-                  </span>
-                </template>
-              </USelectMenu>
-            </div>
-            <UInput
-              v-else
-              v-model="state[field.label]"
-              v-bind="props"
-              :disabled="!!$props.disabled"
-            />
+
           </UFormGroup>
         </div>
       </div>
 
-      <template #footer>
+      <!-- <template #footer> -->
+        <div class="-ml-6 -mr-6 my-6">
+          <div class="border-b border-gray-800 w-full"></div>
+        </div>
         <UButton
           v-if="!props.disabled"
           variant="outline"
@@ -85,7 +101,7 @@
         >
           Save metadata
         </UButton>
-      </template>
+      <!-- </template> -->
     </UCard>
   </UForm>
 </template>

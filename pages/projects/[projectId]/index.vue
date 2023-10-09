@@ -1,7 +1,7 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton href="/projects">
+      <BackButton href="/">
         Go to projects
       </BackButton>
     </UContainer>
