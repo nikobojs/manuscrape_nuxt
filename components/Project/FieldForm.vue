@@ -59,7 +59,7 @@
 
 
 <script setup lang="ts">
-  import { ObservationFieldTypes, type FieldType } from '~/utils/observationFields';
+  import { ObservationFieldTypes, type FieldType, isMultipleChoice } from '~/utils/observationFields';
 
   const _defaultChoices = ref<string[]>([])
   const props = defineProps({
@@ -99,7 +99,7 @@
     }
 
     // if multiple choice types are chosen, give them the dropdown configurator!
-    if (['CHOICE', 'AUTOCOMPLETE'].includes(props.fieldType)) {
+    if (props.fieldType && isMultipleChoice(props.fieldType)) {
       openDropdownModal.value = true;
     } else {
       // if not, just add the field

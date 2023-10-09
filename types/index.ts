@@ -77,16 +77,11 @@ declare global {
     checked: boolean;
   }
 
-  interface CMSDropdownProps {
-    name: string;
-    choices: string[];
-  }
-
   interface CMSTextAreaProps {
     name: string;
   }
 
-  interface CMSRadioGroupProps {
+  interface CMSMultipleChoiceProps {
     name: string;
     choices: string[];
   }
@@ -96,8 +91,7 @@ declare global {
     props:
       | CMSInputProps
       | CMSCheckboxProps
-      | CMSDropdownProps
-      | CMSRadioGroupProps
+      | CMSMultipleChoiceProps
       | CMSTextAreaProps;
   }
 

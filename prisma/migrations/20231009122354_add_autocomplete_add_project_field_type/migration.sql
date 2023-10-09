@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "FieldType" ADD VALUE 'TEXT_OR_CHOICE';

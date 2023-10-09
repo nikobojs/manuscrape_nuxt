@@ -50,6 +50,22 @@
                 searchable
               />
             </div>
+            <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
+              <USelectMenu
+                :options="field.choices"
+                v-model="state[field.label]"
+                creatable
+                searchable
+                searchable-placeholder="Search or write custom text..."
+              >
+                <template #option-create="{ option }">
+                  <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
+                  <span>
+                    {{ option.label }}
+                  </span>
+                </template>
+              </USelectMenu>
+            </div>
             <UInput
               v-else
               v-model="state[field.label]"
@@ -220,7 +236,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
               name: field.label,
             } as CMSTextAreaProps,
           });
-        } else if(typ == FieldType.CHOICE || typ == FieldType.AUTOCOMPLETE) {
+        } else if (isMultipleChoice(typ)) {
           if (!field.choices?.length) {
             console.error('Radio button type has no values to pick from');
             // TODO: report error
@@ -231,7 +247,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
             field,
             props: {
               name: field.label,
-            } as CMSRadioGroupProps,
+            } as CMSMultipleChoiceProps,
           });
         } else {
           // TODO: report error

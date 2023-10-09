@@ -1,33 +1,39 @@
 export enum FieldType {
-  DATE = 'DATE',
-  STRING = 'STRING',
-  INT = 'INT',
-  FLOAT = 'FLOAT',
-  DATETIME = 'DATETIME',
-  BOOLEAN = 'BOOLEAN',
   AUTOCOMPLETE = 'AUTOCOMPLETE',
+  AUTOCOMPLETE_ADD = 'AUTOCOMPLETE_ADD',
+  BOOLEAN = 'BOOLEAN',
   CHOICE = 'CHOICE',
+  DATE = 'DATE',
+  DATETIME = 'DATETIME',
+  FLOAT = 'FLOAT',
+  INT = 'INT',
+  STRING = 'STRING',
   TEXTAREA = 'TEXTAREA',
 };
 
 export const inputTypes: Record<string, string> = Object.freeze({
-  [FieldType.DATE]: 'date',
-  [FieldType.STRING]: 'text',
-  [FieldType.INT]: 'number',
-  [FieldType.FLOAT]: 'number',
   [FieldType.DATETIME]: 'datetime-local',
+  [FieldType.DATE]: 'date',
+  [FieldType.FLOAT]: 'number',
+  [FieldType.INT]: 'number',
+  [FieldType.STRING]: 'text',
 });
 
 export const ObservationFieldTypes: Record<string, string> = {
-  'Text (single line)': 'STRING',
-  'Text (multi line)': 'TEXTAREA',
-  'Whole number': 'INT',
-  'Decimal number': 'FLOAT',
-  'Date': 'DATE',
-  'Date and time': 'DATETIME',
   'Checkbox': 'BOOLEAN',
-  'Radio buttons': 'CHOICE',
+  'Date and time': 'DATETIME',
+  'Date': 'DATE',
+  'Decimal number': 'FLOAT',
+  'Dropdown or text': 'AUTOCOMPLETE_ADD',
   'Dropdown': 'AUTOCOMPLETE',
+  'Radio buttons': 'CHOICE',
+  'Text (multi line)': 'TEXTAREA',
+  'Text (single line)': 'STRING',
+  'Whole number': 'INT',
+}
+
+export function isMultipleChoice(field: string): boolean {
+  return ['CHOICE', 'AUTOCOMPLETE', 'AUTOCOMPLETE_ADD'].includes(field)
 }
 
 export function getFieldLabel(fieldType: string): string {
