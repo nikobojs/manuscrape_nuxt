@@ -47,12 +47,16 @@ export const bigUserQuery: Prisma.UserSelect<DefaultArgs> = {
           fields: {
             select: {
               id: true,
+              index: true,
               createdAt: true,
               label: true,
               type: true,
               required: true,
               choices: true,
             },
+            orderBy: {
+              index: 'desc',
+            }
           },
           dynamicFields: true,
           _count: {

@@ -181,7 +181,7 @@ declare global {
     };
   }
 
-  type NewProjectFieldDraft = Omit<NewProjectField, 'type'> & {
+  type NewProjectFieldDraft = Omit<Omit<NewProjectField, 'type'>, 'index'> & {
     type: FieldType | undefined,
   }
 

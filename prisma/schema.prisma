@@ -73,8 +73,12 @@ model ProjectField {
   type               FieldType
   choices            String[]
   required           Boolean                @default(false)
+  index              Int
   dynamicFields0s    DynamicProjectField[]  @relation("field0_id")
   dynamicFields1s    DynamicProjectField[]  @relation("field1_id")
+
+  @@unique([projectId, index])
+  @@unique([projectId, label])
 }
 
 model DynamicProjectField {

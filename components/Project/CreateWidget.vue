@@ -1,11 +1,11 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-6">
+  <div class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0">
 
     <form
       @submit.prevent="handleSubmitProject"
     >
       <!-- project form left UCard -->
-      <UCard class="overflow-hidden w-96 shadow-xl max-h-[450px]">
+      <UCard class="overflow-hidden w-80 shadow-xl max-h-[450px]">
         <template #header>
           <CardHeader>Create project</CardHeader>
         </template>
@@ -16,7 +16,7 @@
         >
           <!-- project name -->
           <label for="name-input">
-            Name:
+            Project name:
           </label>
           <UInput
             v-model="form.name"
@@ -69,8 +69,8 @@
     <ProjectFieldList
       :fields="addedFields"
       :onFieldsUpdate="(fields) => {
-        addedFields = fields;
-        form.fields = fields;
+        addedFields = [...fields];
+        form.fields = [...fields];
       }"
     />
   </div>
@@ -162,7 +162,6 @@
 
 
   async function addField(field: NewProjectFieldDraft) {
-
     const label = field.label;
     const type = field?.type;
     const required = field.required;
@@ -178,6 +177,7 @@
       type,
       required,
       choices,
+      index: addedFields.value.length + 1,
     };
 
     form.fields.push(newField);

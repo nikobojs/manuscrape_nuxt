@@ -188,7 +188,8 @@
       label: field.label,
       required: field.required,
       type: field.type,
-      ...(field.choices ? { choices: field.choices } : {})
+      ...(field.choices ? { choices: field.choices } : {}),
+      index: props.project.fields.length + 1,
     }
 
     createParameter(

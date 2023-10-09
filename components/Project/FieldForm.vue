@@ -65,7 +65,7 @@
     label: requireProp<string>(String),
     required: requireProp<boolean>(Boolean),
     onFieldUpdate: requireFunctionProp<(f: NewProjectFieldDraft) => void | Promise<void>>(),
-    onFieldAdd:requireFunctionProp<(f: NewProjectFieldDraft) => void | Promise<void>>(),
+    onFieldAdd: requireFunctionProp<(f: NewProjectFieldDraft) => void | Promise<void>>(),
     addedFields: requireProp<NewProjectField[]>(Array),
     onError: requireFunctionProp<(msg: string) => void>(),
   });
@@ -83,7 +83,6 @@
 
   // handle when add field button is clicked
   function handleAddField() {
-    console.log('handle add field!')
     if (!props.fieldType) {
       props.onError('Field type is not defined in props')
       // TODO: report error

@@ -56,13 +56,11 @@
       server: true,
       credentials: 'include',
       onResponse: async (context) => {
-        console.log('collaborator error!')
         if (context.response.status === 401) {
           await navigateTo('/login', { replace: true })
         }
       },
       onResponseError: async (context) => {
-        console.log('collaborator error!')
         if (context.response.status === 401) {
           await navigateTo('/login', { replace: true })
         }

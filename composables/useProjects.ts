@@ -46,10 +46,8 @@ export const useProjects = async (params: RouteParams) => {
   };
 
 
-  const sortFields = (project: FullProject) => project.fields.sort((a, b) =>
-    a.required && b.required ?
-      a.label.localeCompare(b.label) :
-      a.required ? -1 : 1
+  const sortFields = (project: FullProject) => [...project.fields].sort(
+    (a, b) => a.index > b.index ? 1 : -1
   );
 
   const hasOwnership = (
@@ -101,7 +99,7 @@ export const useProjects = async (params: RouteParams) => {
 
 
   computed(() => {
-    console.log('project update:', project.value)
+    console.log('project updated:', project.value)
   })
 
   const isOwner = computed(() =>

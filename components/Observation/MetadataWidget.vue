@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
+import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   import { inputTypes, FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
@@ -87,22 +87,23 @@
   });
 
   const { params } = useRoute();
-  await useProjects(params);
+  const { sortFields } = await useProjects(params);
   const { patchObservation } = await useObservations(props.project.id);
 
   const form = ref();
   const inputs = ref([] as CMSInput[]);
   const state = ref(props.observation?.data as any);
+  const sortedFields = computed(() => sortFields(props.project));
 
   if (inputs.value.length == 0) {
-    buildForm(props.project);
+    buildForm(sortedFields.value);
   }
 
   function validate(state: any): FormError[] {
     const errors = [] as FormError[];
 
     // scan for missing fields
-    const missingFields = props.project.fields.filter(f => {
+    const missingFields = sortedFields.value.filter(f => {
       return (
         f.required &&
         !Object.keys(state).includes(f.label) && 
@@ -119,7 +120,7 @@
     // validate each state value
     for (const [key, value] of Object.entries(state)) {
       // validate field (field)
-      const field = props.project.fields.find((field) => field.label == key)
+      const field = sortedFields.value.find((field) => field.label == key)
       if (!field) {
         throw createError({
           statusCode: 500,
@@ -170,8 +171,8 @@
     return errors;
   }
 
-  function buildForm(project: FullProject) {
-    for (const field of project.fields) {
+  function buildForm(fields: ProjectFieldResponse[]) {
+    for (const field of fields) {
 
       const useSimpleInput = Object.keys(inputTypes).includes(field.type);
       const typ = field.type;

@@ -187,11 +187,13 @@ export const testProject: NewProjectBody = {
       label: 'Date time field',
       type: FieldType.DATETIME,
       required: false,
+      index: 1,
     },
     {
       label: 'Text field',
       type: FieldType.STRING,
       required: true,
+      index: 2,
     }
   ]
 };
