@@ -10,6 +10,7 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       isDraft: true,
+      projectId: true,
       fileUploads: {
         select: {
           s3Path: true,
@@ -27,7 +28,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // if it does not exist, then throw up
-  if (!observation) {
+  if (!observation || projectId !== observation.projectId) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Observation was not found',
@@ -66,7 +67,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   await prisma.observation.delete({
-    where: { id: observationId, projectId },
+    where: { id: observationId },
   });
 
 

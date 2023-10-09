@@ -22,15 +22,15 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       isDraft: true,
+      projectId: true,
     },
     where: {
       id: observationId,
-      projectId,
     }
   });
 
   // if it does not exist, then throw up
-  if (!observation) {
+  if (!observation || observation.projectId !== projectId) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Observation was not found',
@@ -50,7 +50,6 @@ export default safeResponseHandler(async (event) => {
       id: true,
     }, where: {
       id: observationId,
-      projectId,
     }, data: {
       ...patch,
       updatedAt: new Date().toISOString(),

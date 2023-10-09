@@ -9,15 +9,15 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       originalName: true,
+      observationId: true,
       s3Path: true,
     },
     where: {
       id: fileId,
-      observationId: observationId,
     }
   });
 
-  if (!file) {
+  if (!file || file.observationId !== observationId) {
     throw createError({
       statusCode: 404,
       statusMessage: 'File was not found',

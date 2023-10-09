@@ -12,6 +12,7 @@ export const NewProjectFieldSchema = yup.object({
   ).required(),
   required: yup.boolean().required(),
   choices: yup.array().of(yup.string().required()).optional(),
+  index: yup.number().required(),
 }).required();
 
 export const NewProjectSchema = yup.object({
@@ -31,6 +32,15 @@ export default safeResponseHandler(async (event) => {
   if (fieldLabels.length !== new Set(fieldLabels).size) {
     throw createError({
       statusMessage: 'Two fields cannot have an identical label',
+      statusCode: 400,
+    });
+  }
+
+  const fieldIndexes = newProject.fields.map((f => f.index));
+  const uniqueFieldIndexes = new Set([...fieldIndexes]);
+  if (fieldIndexes.length !== uniqueFieldIndexes.size) {
+    throw createError({
+      statusMessage: 'Two fields cannot have an identical index',
       statusCode: 400,
     });
   }
@@ -55,6 +65,7 @@ export default safeResponseHandler(async (event) => {
     required: f.required,
     projectId: createdProject.id,
     choices: f.choices || [],
+    index: f.index,
   }));
 
   await prisma.projectField.createMany({ data: newProjectFields });
