@@ -18,8 +18,6 @@ import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
 
-export {};
-
 declare global {
   interface CurrentUser extends User {
     projectAccess: ExtendedProjectAccess[];
