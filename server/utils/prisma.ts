@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { DefaultArgs } from '@prisma/client/runtime/library';
+
 export const prisma = new PrismaClient();
 
 export const observationColumns = {
@@ -33,7 +33,7 @@ export const observationColumns = {
   }
 };
 
-export const bigUserQuery: Prisma.UserSelect<DefaultArgs> = {
+export const bigUserQuery = {
   id: true,
   email: true,
   createdAt: true,
@@ -67,4 +67,52 @@ export const bigUserQuery: Prisma.UserSelect<DefaultArgs> = {
       role: true,
     }
   }
-}
+} satisfies Prisma.UserSelect;
+
+export const exportProjectQuery = {
+  id: true,
+  createdAt: true,
+  name: true,
+  observations: {
+    select: {
+      data: true,
+      fileUploads: true,
+      createdAt: true,
+      id: true,
+      image: {
+        select: {
+          id: true,
+          mimetype: true,
+          s3Path: true,
+          createdAt: true,
+          originalName: true,
+        }
+      },
+      updatedAt: true,
+    },
+    where: {
+      image: {
+        isNot: null,
+      },
+      isDraft: false,
+    },
+  },
+  fields: {
+    select: {
+      id: true,
+      index: true,
+      createdAt: true,
+      label: true,
+      type: true,
+      required: true,
+      choices: true,
+    },
+    orderBy: {
+      index: 'desc',
+    }
+  },
+  dynamicFields: true,
+  _count: {
+      select: { observations: true }
+  },
+} satisfies Prisma.ProjectSelect;
