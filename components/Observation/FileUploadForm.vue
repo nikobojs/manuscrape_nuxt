@@ -14,13 +14,10 @@
         Capture video
       </div>
       <UTable
+        v-show="observation.fileUploads.length > 0"
         class="mt-6"
         :rows="observation.fileUploads"
         :columns="fileUploadColumns"
-        :empty-state="{
-          label: 'No uploaded files',
-          icon: 'i-heroicons-circle-stack-20-solid',
-        }"
       >
         <template #mimetype-data="{ row }">
           <div class="w-full h-full items-center justify-center flex">
