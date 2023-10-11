@@ -1,10 +1,8 @@
 import * as yup from 'yup';
-import { safeResponseHandler } from '../../../utils/safeResponseHandler';
-import { requireUser } from '../../../utils/authorize';
-
 
 const SupportedExportTypes = Object.freeze({
   nvivo: 'nvivo',
+  media: 'media',
 });
 
 export const ExportProjectSchema = yup.object({
@@ -17,7 +15,6 @@ export const ExportProjectSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  console.log('export endpoint called!')
   requireUser(event);
 
   // get project id  from url parameters
@@ -29,6 +26,9 @@ export default safeResponseHandler(async (event) => {
 
   if (type === SupportedExportTypes.nvivo ) {
     const buffer = await generateNvivoExport(projectId, event);
+    return buffer;
+  } else if(type === SupportedExportTypes.media) {
+    const buffer = await generateProjectMediaExport(event, projectId);
     return buffer;
   } else {
     throw createError({

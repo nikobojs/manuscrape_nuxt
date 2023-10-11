@@ -1,6 +1,5 @@
 import type {
   DynamicProjectField,
-  
   FieldOperator,
   FieldType,
   FileUpload,
@@ -17,6 +16,14 @@ import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/i
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
+import type {
+  exportProjectQuery,
+  bigUserQuery,
+  observationColumns,
+  allFieldColumns,
+  allDynamicFieldColumns,
+} from "~/server/utils/prisma";
+import { Prisma } from '@prisma/client';
 
 declare global {
   interface CurrentUser extends User {
@@ -207,4 +214,9 @@ declare global {
     label: string;
     filter: (obs: FullObservation, user: Ref<CurrentUser>) => boolean;
   }
+
+  export type ExportedProject = Prisma.ProjectGetPayload<{ select: typeof exportProjectQuery }>;
+  export type AllFieldColumns = Prisma.ProjectFieldGetPayload<{ select: typeof allFieldColumns }>;
+  export type AllDynamicFieldColumns = Prisma.DynamicProjectFieldGetPayload<{ select: typeof allDynamicFieldColumns }>;
+  export type FullObservationPayload = Prisma.ObservationGetPayload<{ select: typeof observationColumns }>;
 }

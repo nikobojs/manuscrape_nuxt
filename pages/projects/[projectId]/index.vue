@@ -22,9 +22,13 @@
       <div class="mt-6">
         <CollaboratorWidget v-if="isOwner" :project="project" />
       </div>
-      <div class="grid grid-cols-2 gap-6 mt-6">
-        <ProjectDynamicFieldWidget :project="project" />
-        <ProjectExportWidget />
+      <div class="grid grid-cols-3 gap-6 mt-6">
+        <div>
+          <ProjectExportWidget :project="project" />
+        </div>
+        <div class="col-span-2">
+          <ProjectDynamicFieldWidget :project="project" />
+        </div>
       </div>
     </UContainer>
   </ResourceAccessChecker>

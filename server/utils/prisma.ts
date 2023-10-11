@@ -31,7 +31,38 @@ export const observationColumns = {
       email: true
     }
   }
-};
+} satisfies Prisma.ObservationSelect;
+
+export const allFieldColumns = {
+  id: true,
+  index: true,
+  createdAt: true,
+  label: true,
+  type: true,
+  required: true,
+  choices: true,
+} satisfies Prisma.ProjectFieldSelect;
+
+export const allDynamicFieldColumns = {
+  createdAt: true,
+  field0Id: true,
+  field1Id: true,
+  id: true,
+  label: true,
+  operator: true,
+  field0: {
+    select: {
+      label: true,
+      type: true,
+    }
+  },
+  field1: {
+    select: {
+      label: true,
+      type: true,
+    }
+  }
+} satisfies Prisma.DynamicProjectFieldSelect;
 
 export const bigUserQuery = {
   id: true,
@@ -45,20 +76,12 @@ export const bigUserQuery = {
           createdAt: true,
           name: true,
           fields: {
-            select: {
-              id: true,
-              index: true,
-              createdAt: true,
-              label: true,
-              type: true,
-              required: true,
-              choices: true,
-            },
-            orderBy: {
-              index: 'desc',
-            }
+            select: allFieldColumns,
+            orderBy: [{
+              index: 'asc'
+            }]
           },
-          dynamicFields: true,
+          dynamicFields: { select: allDynamicFieldColumns },
           _count: {
               select: { observations: true }
           },
@@ -74,22 +97,7 @@ export const exportProjectQuery = {
   createdAt: true,
   name: true,
   observations: {
-    select: {
-      data: true,
-      fileUploads: true,
-      createdAt: true,
-      id: true,
-      image: {
-        select: {
-          id: true,
-          mimetype: true,
-          s3Path: true,
-          createdAt: true,
-          originalName: true,
-        }
-      },
-      updatedAt: true,
-    },
+    select: observationColumns,
     where: {
       image: {
         isNot: null,
@@ -98,20 +106,12 @@ export const exportProjectQuery = {
     },
   },
   fields: {
-    select: {
-      id: true,
-      index: true,
-      createdAt: true,
-      label: true,
-      type: true,
-      required: true,
-      choices: true,
-    },
-    orderBy: {
-      index: 'desc',
-    }
+    select: allFieldColumns,
+    orderBy: [{
+      index: 'asc',
+    }]
   },
-  dynamicFields: true,
+  dynamicFields: { select: allDynamicFieldColumns },
   _count: {
       select: { observations: true }
   },

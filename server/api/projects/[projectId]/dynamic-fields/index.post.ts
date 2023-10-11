@@ -14,7 +14,7 @@ export const NewDynamicFieldSchema = yup.object({
   ).required(),
 }).required();
 
-export const dynamicFieldsConfig: DynamicFieldsConfig = {
+export const DynamicFieldsConfig: DynamicFieldsConfig = {
   [FieldOperator.DIFF]: {
     pairs: [
       [FieldType.DATE, FieldType.DATE],
@@ -70,7 +70,7 @@ export default safeResponseHandler(async (event) => {
 
   
   // get field types
-  const fieldTypes: {
+  const fields: {
     id: number,
     label: string;
     type: string;
@@ -95,7 +95,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // ensure both fields exists and is in project
-  if (fieldTypes.length !== 2) {
+  if (fields.length !== 2) {
     // TODO: report error
     throw createError({
       statusCode: 400,
@@ -104,14 +104,14 @@ export default safeResponseHandler(async (event) => {
   }
 
   // get dynamic field match from config
-  const targetFieldTypes = fieldTypes.map(f => f.type);
-  const allowedPairs = dynamicFieldsConfig[field.operator].pairs;
+  const targetFieldTypes = fields.map(f => f.type);
+  const allowedPairs = DynamicFieldsConfig[field.operator].pairs;
   const allowedMatch = allowedPairs.find((pair) => pair.every(t => targetFieldTypes.includes(t)));
 
   // ensure there is a matching dynamic field config
   if (!allowedMatch) {
     // TODO: report error
-    const fieldNames = fieldTypes.map(f => `'${f.label}'`);
+    const fieldNames = fields.map(f => `'${f.label}'`);
     throw createError({
       statusCode: 400,
       statusMessage: `The fields ${fieldNames.join(' and ')} does not support the provided operation`,
