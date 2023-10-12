@@ -98,6 +98,26 @@ export async function createObservation(
 }
 
 
+export async function createDynamicField(
+  token: string,
+  projectId: string | number,
+  json: any,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/dynamic-fields`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+
 export async function patchObservation(
   token: string,
   projectId: string | number,
@@ -239,16 +259,48 @@ export const testProject: NewProjectBody = {
   name: 'Temporary test project',
   fields: [
     {
-      label: 'Date time field',
+      label: 'Begin timestamp',
       type: FieldType.DATETIME,
       required: false,
       index: 1,
     },
     {
+      label: 'End timestamp',
+      type: FieldType.DATE,
+      required: false,
+      index: 2,
+    },
+    {
       label: 'Text field',
       type: FieldType.STRING,
       required: true,
-      index: 2,
+      index: 3,
+    },
+    {
+      label: 'Integer field',
+      type: FieldType.INT,
+      required: false,
+      index: 4,
+    },
+    {
+      label: 'Float field',
+      type: FieldType.FLOAT,
+      required: false,
+      index: 5,
+    },
+    {
+      label: 'Free text and autocomplete',
+      type: FieldType.AUTOCOMPLETE_ADD,
+      required: false,
+      index: 6,
+      choices: ['a', 'b', 'c']
+    },
+    {
+      label: 'Check me',
+      type: FieldType.BOOLEAN,
+      required: true,
+      index: 7,
+      choices: ['a', 'b', 'c']
     }
   ]
 };
@@ -329,36 +381,44 @@ export async function withTempProject(
   const json = await signupRes.json();
   expect(json).toHaveProperty("token");
 
+  // create new project
   const projectRes = await createProject(json.token, {
     ...testProject,
     ...projectOptions
   });
 
+  // ensure project creation went well
   expect(projectRes.status).toBe(201);
-  const project = (await projectRes.json()) as FullProject
-  expect(project.id).toBeTypeOf('number');
+  const projectJson = (await projectRes.json()) as FullProject
+  expect(projectJson.id).toBeTypeOf('number');
 
+  // create all test observations
   for(const testObs of testObservations) {
-    const obsRes = await createObservation(json.token, project.id)
+    const obsRes = await createObservation(json.token, projectJson.id)
     expect(obsRes.status).toBe(201);
     const obs = await obsRes.json();
     expect(obs?.id).toBeTypeOf('number');
-    const patchRes = await patchObservation(json.token, project.id, obs.id, testObs);
+    const patchRes = await patchObservation(json.token, projectJson.id, obs.id, testObs);
     expect(patchRes.status).toBe(200);
   }
 
-  const observationRes = await getObservations(json.token, project.id);
+  // get all observations in project and test responses
+  const observationRes = await getObservations(json.token, projectJson.id);
   expect(observationRes.status).toBe(200);
   const observations = await observationRes.json();
   expect(observations).toHaveProperty('observations')
   expect(Array.isArray(observations.observations)).toBe(true)
   expect(observations.observations.length).toBe(testObservations.length)
 
-  // fetch the current user, and save user id into variable 'userId'
+  // fetch the current user, and check the project is available
   const userRes = await getMe(json.token);
   expect(userRes.status).toBe(200);
-  const user = (await userRes.json()) as CurrentUser;
+  const user = await userRes.json();
   expect(typeof user.id).toBe("number");
+  expect(Array.isArray(user?.projectAccess)).toBe(true)
+  expect(user?.projectAccess?.length).toBe(1);
+  const project = user.projectAccess[0].project;
+  expect(project.id).toBe(projectJson.id);
 
   // call the callback function with the new user and a fresh token
   await callback(user, project, observations, json.token);

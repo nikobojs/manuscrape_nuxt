@@ -1,9 +1,8 @@
 import excel from 'exceljs';
 import { exportProjectQuery } from './prisma';
 import type { H3Event } from 'h3';
-import { FieldOperator, FieldType } from '@prisma/client';
-import { DynamicFieldsConfig } from '../api/projects/[projectId]/dynamic-fields/index.post';
 import archiver from 'archiver'
+import { calculateDynamicFieldValue } from './dynamicFields';
 
 
 function generateObservationRow(
@@ -55,93 +54,6 @@ function generateObservationRow(
   return row;
 }
 
-
-// TODO: move function to a better place
-function calculateDynamicFieldValue(
-  dynamicField: AllDynamicFieldColumns,
-  fields: AllFieldColumns[],
-  obs: FullObservationPayload,
-) {
-  // get dynamic field match from config
-  const field0 = dynamicField.field0;
-  const field1 = dynamicField.field1;
-  const targetFieldTypes = [field0.type, field1.type];
-  const allowedPairs = DynamicFieldsConfig[dynamicField.operator].pairs;
-  const allowedMatch = allowedPairs.find((pair) => pair.every(t => targetFieldTypes.includes(t)));
-
-  // ensure there is a matching dynamic field config
-  if (!allowedMatch) {
-    // TODO: report error
-    const fieldNames = fields.map(f => `'${f.label}'`);
-    throw createError({
-      statusCode: 400,
-      statusMessage: `The fields ${fieldNames.map(f => `'${f}'`).join(' and ')} does not support the provided operation`,
-    });
-  }
-
-  // TODO: improve maintainability and readability
-  let val0 = (obs.data as any)?.[field0.label];
-  let val1 = (obs.data as any)?.[field1.label];
-  const rawVals = [val0, val1];
-  const types: (keyof typeof FieldType)[] = [field0.type, field1.type];
-  const vals: number[] = [];
-  let convertResultToDate = false;
-  let result;
-
-  if (dynamicField.operator === FieldOperator.DIFF) {
-    for (let i = 0; i < 2; i++) {
-      if ([FieldType.DATE, FieldType.DATETIME].some((t) => t === types[i])) {
-        vals[i] = new Date(rawVals[i]).getTime();
-        convertResultToDate = true;
-      } else if ([FieldType.FLOAT].some((t) => t === types[i])) {
-        vals[i] = parseFloat(rawVals[i]);
-      } else if ([FieldType.INT].some((t) => t === types[i])) {
-        vals[i] = parseInt(rawVals[i]);
-      } else {
-        throw createError({
-          statusMessage: 'Dynamic field error: Provided fieldtypes is not supported',
-          statusCode: 501,
-        });
-      }
-    }
-
-    result = vals[1] - vals[0];
-  } else if (dynamicField.operator === FieldOperator.SUM) {
-    for (let i = 0; i < 2; i++) {
-      if ([FieldType.FLOAT].some((t) => t === types[i])) {
-        vals[i] = parseFloat(rawVals[i]);
-      } else if ([FieldType.INT].some((t) => t === types[i])) {
-        vals[i] = parseInt(rawVals[i]);
-      } else {
-        throw createError({
-          statusMessage: 'Dynamic field error: Provided fieldtypes is not supported',
-          statusCode: 501,
-        });
-      }
-    }
-
-    result = vals[0] + vals[1];
-  } else {
-    throw createError({
-      statusMessage: 'Dynamic field error: The operation is not supported yet',
-      statusCode: 501,
-    });
-  }
-
-  if (convertResultToDate) {
-    // presume result is a Date.getTime() delta (in milliseconds)
-    // we'd like the response in days
-    const secs = result / 1000;
-    const mins = secs / 60;
-    const hours = mins / 60;
-    const days = Math.round(hours / 24);
-    return `${days} days`;
-  } else {
-    return result;
-  }
-}
-
-
 // NOTE: this is a very random thing to do. Should be replaced
 // Takes a string and returns it's approximate column width (in excel terms)
 function calculateTextWidth(label: string): number {
@@ -160,7 +72,7 @@ function calculateTextWidth(label: string): number {
 
   const otherLetters = label.length - thins - bigs;
   const length = thins*0.6 + bigs*1.3 + otherLetters * 1 + 1;
-  return length
+  return Math.max(length, 16);
 }
 
 function getWorksheetColumns(

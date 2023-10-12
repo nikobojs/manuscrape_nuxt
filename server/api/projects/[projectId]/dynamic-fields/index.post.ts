@@ -1,45 +1,16 @@
-import { FieldOperator, FieldType, ProjectRole } from '@prisma/client'
-import * as yup from 'yup';
+import { ProjectRole } from '@prisma/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 
-const fieldOperators = Object.values(FieldOperator);
-
-export const NewDynamicFieldSchema = yup.object({
-  field0Id: yup.number().required(),
-  field1Id: yup.number().required(),
-  label: yup.string().required(),
-  operator: yup.mixed<typeof fieldOperators[number]>().required().oneOf(
-    Object.values(FieldOperator)
-  ).required(),
-}).required();
-
-export const DynamicFieldsConfig: DynamicFieldsConfig = {
-  [FieldOperator.DIFF]: {
-    pairs: [
-      [FieldType.DATE, FieldType.DATE],
-      [FieldType.DATETIME, FieldType.DATETIME],
-      [FieldType.DATETIME, FieldType.DATE],
-      [FieldType.INT, FieldType.INT],
-      [FieldType.FLOAT, FieldType.FLOAT],
-      [FieldType.FLOAT, FieldType.INT],
-    ]
-  },
-  [FieldOperator.SUM]: {
-    pairs: [
-      [FieldType.INT, FieldType.INT],
-      [FieldType.FLOAT, FieldType.FLOAT],
-      [FieldType.FLOAT, FieldType.INT],
-    ]
-  }
-}
-
-// TODO: prettify code
 export default safeResponseHandler(async (event) => {
+  // ensure user is logged in and is owner on project
   requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
+
+  // get parameters and body
   const body = await readBody(event);
   const field = await NewDynamicFieldSchema.validate(body)
+
   const projectId = parseIntParam(event.context.params?.projectId);
 
   // ensure same setup (fields and operation) is not present in project
@@ -68,7 +39,6 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  
   // get field types
   const fields: {
     id: number,
@@ -106,7 +76,10 @@ export default safeResponseHandler(async (event) => {
   // get dynamic field match from config
   const targetFieldTypes = fields.map(f => f.type);
   const allowedPairs = DynamicFieldsConfig[field.operator].pairs;
-  const allowedMatch = allowedPairs.find((pair) => pair.every(t => targetFieldTypes.includes(t)));
+  const allowedMatch = allowedPairs.find(([a, b]) =>
+    a === targetFieldTypes[0] && b === targetFieldTypes[1] ||
+    a === targetFieldTypes[0] && b === targetFieldTypes[1]
+  );
 
   // ensure there is a matching dynamic field config
   if (!allowedMatch) {
