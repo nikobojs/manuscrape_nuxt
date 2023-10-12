@@ -128,11 +128,9 @@
   }
 
   function modifyChoices(row: NewProjectField) {
-    // TODO: set existing choices as default
     choicesOnOpen.value = row.choices || [];
     openChoicesModal.value = true
     modifyingField.value = row;
-    console.log('modifying options for field', row.label, row.choices)
   }
 
   function submitNewChoices(config: DropDownConfig) {
@@ -160,7 +158,6 @@
 
     field.choices = config.choices;
 
-    console.log('SUBMITTING NEW CHOICES:::', [...config.choices])
     props.onFieldsUpdate(newFields);
   }
 

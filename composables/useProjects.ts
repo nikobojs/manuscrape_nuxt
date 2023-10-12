@@ -97,11 +97,6 @@ export const useProjects = async (params: RouteParams) => {
     )
   }
 
-
-  computed(() => {
-    console.log('project updated:', project.value)
-  })
-
   const isOwner = computed(() =>
     project.value?.id && hasRoles(project.value.id, ['OWNER']),
   );
