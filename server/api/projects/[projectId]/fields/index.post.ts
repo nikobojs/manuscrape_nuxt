@@ -1,5 +1,5 @@
 
-import { FieldType } from '@prisma/client'
+import { FieldType, ProjectRole } from '@prisma/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
@@ -10,7 +10,7 @@ import { NewProjectFieldSchema } from '../../index.post';
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
   requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);

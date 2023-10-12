@@ -2,11 +2,12 @@
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 import { JsonObject } from '@prisma/client/runtime/library';
+import { ProjectRole } from '@prisma/client';
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
   requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
