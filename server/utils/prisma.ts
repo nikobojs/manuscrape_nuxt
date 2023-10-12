@@ -28,7 +28,8 @@ export const observationColumns = {
   },
   user: {
     select: {
-      email: true
+      email: true,
+      id: true,
     }
   }
 } satisfies Prisma.ObservationSelect;

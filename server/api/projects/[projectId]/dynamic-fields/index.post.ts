@@ -1,4 +1,4 @@
-import { FieldOperator, FieldType } from '@prisma/client'
+import { FieldOperator, FieldType, ProjectRole } from '@prisma/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
@@ -37,7 +37,7 @@ export const DynamicFieldsConfig: DynamicFieldsConfig = {
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
   requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
   const body = await readBody(event);
   const field = await NewDynamicFieldSchema.validate(body)
   const projectId = parseIntParam(event.context.params?.projectId);

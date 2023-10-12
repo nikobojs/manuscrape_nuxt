@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
 import { FieldType } from '@prisma/client';
-
+import { daysInFuture } from "../../utils/datetime";
 import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
@@ -79,6 +79,46 @@ export async function createProject(
   return res;
 }
 
+
+export async function createObservation(
+  token: string,
+  projectId: string | number,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/observations`,
+    {
+      method: "POST",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+
+export async function patchObservation(
+  token: string,
+  projectId: string | number,
+  observationId: string | number,
+  json: any,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/observations/${observationId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+
 export async function getMe(token: string): Promise<Response> {
   const res = await fetch(
     "/api/user",
@@ -92,6 +132,21 @@ export async function getMe(token: string): Promise<Response> {
 
   return res;
 }
+
+export async function getObservations(token: string, projectId: number | string): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/observations`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
+    },
+  );
+
+  return res;
+}
+
 
 export async function deleteUser(
   token: string,
@@ -198,8 +253,28 @@ export const testProject: NewProjectBody = {
   ]
 };
 
+export const testObservations = [{
+  isDraft: false,
+  data: {
+    'Date time field': new Date().toISOString(),
+    'Text field': 'Test text',
+  }
+}, {
+  isDraft: false,
+  data: {
+    'Date time field': daysInFuture(-20).toISOString(),
+    'Text field': 'Another test text',
+  }
+}, {
+  isDraft: false,
+  data: {
+    'Date time field': daysInFuture(26.8).toISOString(),
+    'Text field': 'A third test text value',
+  }
+}]
+
 let emailIndex = 0;
-const freshEmail = () => `nfb+test${emailIndex++}@codecollective.dk`;
+export const freshEmail = () => `nfb+test${emailIndex++}@codecollective.dk`;
 
 export async function withTempUser(
   callback: (user: CurrentUser, token: string) => Promise<void>,
@@ -230,4 +305,61 @@ export async function withTempUser(
 
   // call the callback function with the new user and a fresh token
   await callback(user, json.token);
+}
+
+export async function withTempProject(
+  callback: (user: CurrentUser, project: FullProject, observations: FullObservation[], token: string) => Promise<void>,
+  email: string | undefined = undefined,
+  password: string = "Password123",
+  projectOptions?: Record<string, any>,
+): Promise<void> {
+  // if email is not defined, set it to some new unique email
+  if (email === undefined) {
+    email = freshEmail();
+  }
+
+  // first, sign up new user
+  const signupRes = await signup({
+    email,
+    password,
+  });
+
+  // ensure signup went well, including the token
+  expect(signupRes.status).toBe(201);
+  const json = await signupRes.json();
+  expect(json).toHaveProperty("token");
+
+  const projectRes = await createProject(json.token, {
+    ...testProject,
+    ...projectOptions
+  });
+
+  expect(projectRes.status).toBe(201);
+  const project = (await projectRes.json()) as FullProject
+  expect(project.id).toBeTypeOf('number');
+
+  for(const testObs of testObservations) {
+    const obsRes = await createObservation(json.token, project.id)
+    expect(obsRes.status).toBe(201);
+    const obs = await obsRes.json();
+    expect(obs?.id).toBeTypeOf('number');
+    const patchRes = await patchObservation(json.token, project.id, obs.id, testObs);
+    expect(patchRes.status).toBe(200);
+  }
+
+  const observationRes = await getObservations(json.token, project.id);
+  expect(observationRes.status).toBe(200);
+  const observations = await observationRes.json();
+  expect(observations).toHaveProperty('observations')
+  expect(Array.isArray(observations.observations)).toBe(true)
+  expect(observations.observations.length).toBe(testObservations.length)
+
+  // fetch the current user, and save user id into variable 'userId'
+  const userRes = await getMe(json.token);
+  expect(userRes.status).toBe(200);
+  const user = (await userRes.json()) as CurrentUser;
+  expect(typeof user.id).toBe("number");
+
+  // call the callback function with the new user and a fresh token
+  await callback(user, project, observations, json.token);
 }

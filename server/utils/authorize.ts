@@ -40,10 +40,16 @@ export function requireUser(
 
 export async function getObservationsByProject(
   projectId: number,
-): Promise<FullObservation[]> {
+): Promise<{observations: FullObservation[], contributors: { userId: number; role: string}[]}> {
   const project = await prisma.project.findFirst({
     where: { id: projectId },
     select: {
+      contributors: {
+        select: {
+          userId: true,
+          role: true,
+        }
+      },
       observations: {
         select: observationColumns,
       }
@@ -58,7 +64,21 @@ export async function getObservationsByProject(
   }
 
 
-  return project?.observations;
+  const { observations, contributors } = project;
+  return { observations, contributors };
+}
+
+
+export async function ensureObservationOwnership(
+  obs: FullObservation | FullObservationPayload,
+  user: User,
+): Promise<void> {
+  if (obs.user?.email !== user.email) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'You do not have access to this observation',
+    })
+  }
 }
 
 
@@ -104,13 +124,23 @@ export async function ensureURLResourceAccess(
     const observationIdInt = parseIntParam(params.observationId);
 
     // get observations beloning to project
-    const observations = await getObservationsByProject(projectIdInt)
-    const hasAccess = observations.find((o) => o.id === observationIdInt);
-    if (!hasAccess) {
+    const { observations, contributors } = await getObservationsByProject(projectIdInt)
+    const access = contributors.find((c) => c.userId === user.id);
+    const observation = observations.find((o) => o.id === observationIdInt);
+
+    if (!access || !observation) {
       throw createError({
         statusCode: 403,
-        statusMessage: 'You don\'t have access to this observation'
+        statusMessage: 'You don\'t have access to this observation or this observation does not exist'
       })
+    }
+
+    const isOwner = access.role === ProjectRole.OWNER;
+    if (!isOwner && access.userId !== observation.user?.id) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'You don\'t have the right permission to interact with this observation'
+      });
     }
   }
 }

@@ -1,3 +1,4 @@
+import { ProjectRole } from '@prisma/client';
 import * as yup from 'yup';
 
 const SupportedExportTypes = Object.freeze({
@@ -16,6 +17,7 @@ export const ExportProjectSchema = yup.object({
 
 export default safeResponseHandler(async (event) => {
   requireUser(event);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
 
   // get project id  from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);

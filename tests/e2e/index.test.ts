@@ -12,3 +12,4 @@ export * from './auth';
 export * from './projects';
 export * from './deletion';
 export * from './collaborators';
+export * from './observations';

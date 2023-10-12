@@ -22,7 +22,7 @@
       <div class="mt-6">
         <CollaboratorWidget v-if="isOwner" :project="project" />
       </div>
-      <div class="grid grid-cols-3 gap-6 mt-6">
+      <div class="grid grid-cols-3 gap-6 mt-6" v-if="isOwner">
         <div>
           <ProjectExportWidget :project="project" />
         </div>

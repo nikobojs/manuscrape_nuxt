@@ -4,11 +4,12 @@ import { parseIntParam } from '../../../../utils/request';
 import { requireUser } from '../../../../utils/authorize';
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
   const user = requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const allowedRoles: ProjectRole[] = [ProjectRole.OWNER];
 
+  // TODO: write test and try deprecase following projectaccess test
   const access = await prisma.projectAccess.findUnique({
     where: {
       projectId_userId: {

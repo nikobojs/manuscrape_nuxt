@@ -39,7 +39,7 @@ declare global {
   interface FullObservation extends Omit<Omit<Observation, 'userId'>, 'projectId'> {
     image: Omit<ImageUpload, 's3Path'> | null;
     fileUploads: Omit<FileUploadResponse, 'observationId'>[];
-    user: { email: string } | null;
+    user: { email: string; id?: number } | null;
   }
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;

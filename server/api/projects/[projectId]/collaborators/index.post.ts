@@ -7,14 +7,12 @@ import { requireUser } from '~/server/utils/authorize';
 import { daysInFuture } from '~/utils/datetime';
 import { generateInvitationHash } from '~/server/utils/invitation';
 
-const config = useRuntimeConfig();
-
 const AddCollaboratorSchema = yup.object({
   email: yup.string().required(),
 }).required();
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
   const body = await readBody(event);
   const user = requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
