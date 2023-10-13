@@ -31,18 +31,18 @@
             </template>
 
             <!-- Label column -->
-            <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis w-[256px]">
-              {{ row.label }}
-            </span>
+            <div class="flex items-baseline w-[257px]">
+              <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[256px]">
+                {{ row.label }}
+              </span>
+              <span v-if="row.required" class="text-red-500 text-sm ml-1 inline-block">*</span>
+            </div>
           </UTooltip>
         </template>
         <template #field-data="{ row }">
           <div class="flex gap-2">
             <UBadge size="xs" color="blue" variant="outline">
               {{ getFieldLabel(row.type) }}
-            </UBadge>
-            <UBadge size="xs" v-if="!row.required" color="gray" variant="solid">
-              Optional
             </UBadge>
           </div>
         </template>
@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+  import type { DropdownItem } from '@nuxthq/ui/dist/runtime/types';
   const props = defineProps({
     fields: requireProp<NewProjectField[]>(Array),
     onFieldsUpdate: requireFunctionProp<(fields: NewProjectField[]) => void | Promise<void>>(),
@@ -161,9 +162,10 @@
     props.onFieldsUpdate(newFields);
   }
 
-  function getFieldMenu(row: NewProjectField) {
-    const fieldMenu = []
-    const upDown = []
+  function getFieldMenu(row: NewProjectField): DropdownItem[][] {
+    const fieldMenu: DropdownItem[][] = []
+    const upDown: DropdownItem[] = []
+    const actions: DropdownItem[] = []
 
     // add move up value if not in top
     if (row.index > 1) {
@@ -188,19 +190,36 @@
       })
     }
 
-    upDown.length > 0 && fieldMenu.push(upDown)
+    // add required checkbox action
+    actions.push(row.required ? {
+        icon: 'i-heroicons-wrench',
+        label: 'Make optional',
+        click: () => {
+          row.required = false;
+        },
+    } : {
+        icon: 'i-heroicons-wrench',
+        label: 'Make required',
+        click: () => {
+          row.required = true;
+        },
+    });
 
     // add modify choices option if multiple choice field
     if (row.choices?.length) {
       // add remove field option
-      fieldMenu.push([{
+      actions.push({
         icon: 'i-mdi-pencil-outline',
         label: 'Modify choices',
         click: () => {
           modifyChoices(row);
         },
-      }]);
+      });
     }
+
+    // wrap up the whole menu inside 'fieldMenu'
+    upDown.length > 0 && fieldMenu.push(upDown)
+    actions.length > 0 && fieldMenu.push(actions)
 
     // add remove field option
     fieldMenu.push([{
