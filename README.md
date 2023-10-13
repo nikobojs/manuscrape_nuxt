@@ -42,7 +42,6 @@ yarn migrate
 <br />
 <br />
 
-
 ## Production
 
 Build the application for production:
