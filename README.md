@@ -2,7 +2,7 @@
 
 ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
 
-This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron releases page](https://github.com/nikobojs/manuscrape_electron/releases).
+This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron repository](https://github.com/nikobojs/manuscrape_electron).
 <br />
 <br />
 
@@ -14,6 +14,11 @@ If you want ManuScrape hosted for you, please contact the Copenhagen-based compa
 <br />
 
 ## Development
+#### TL;DR:
+Clone repositories, look for TODO-comments, make improvement, create feature branch (naming doesn't matter), commit, create PR, and done! The PR will be reviewed by the project maintainers.
+
+#### Git conventions
+Not strict in any way. We'll always figure it out so do your stuff the way you think works best. Pull requests (into "unstable" branch) on feature branches will be reviewed and merged by the current admins of the project.
 
 #### Install dependencies
 Install all the dependencies and add the pre commit hook. The pre-commit hook ensures you cannot commit badly typed code.
