@@ -1,7 +1,7 @@
 {
   "name": "nuxt-app",
   "private": true,
-  "version": "0.9.2",
+  "version": "1.0.0",
   "license": "MIT",
   "scripts": {
     "start": "node .output/server/index.mjs",
