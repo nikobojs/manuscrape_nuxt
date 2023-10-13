@@ -1,8 +1,13 @@
 # ManuScrape Nuxt App
 
-ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations. This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). There is no promise on continuous hosting, so it is recommended to host this repo on-premise. That will probably also make your use case more compliant with your local data processing laws.
+ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
 
-## Contribute to the project
+This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron releases page](https://github.com/nikobojs/manuscrape_electron/releases).
+
+## manuscrape.org
+There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with your local data processing laws.
+
+## Development
 
 #### Install dependencies
 Install all the dependencies and add the pre commit hook. The pre-commit hook ensures you cannot commit badly typed code.
