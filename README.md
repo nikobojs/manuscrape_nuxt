@@ -40,7 +40,6 @@ Whenever you update the data structure (`prisma/schema.prisma`), you can migrate
 yarn migrate
 ```
 <br />
-<br />
 
 ## Production
 
