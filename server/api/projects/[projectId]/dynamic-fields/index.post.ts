@@ -1,6 +1,7 @@
 import { ProjectRole } from '@prisma/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
+import { requireAllowedMatch } from '~/server/utils/dynamicFields';
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
@@ -73,23 +74,8 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // get dynamic field match from config
-  const targetFieldTypes = fields.map(f => f.type);
-  const allowedPairs = DynamicFieldsConfig[field.operator].pairs;
-  const allowedMatch = allowedPairs.find(([a, b]) =>
-    a === targetFieldTypes[0] && b === targetFieldTypes[1] ||
-    a === targetFieldTypes[0] && b === targetFieldTypes[1]
-  );
-
-  // ensure there is a matching dynamic field config
-  if (!allowedMatch) {
-    // TODO: report error
-    const fieldNames = fields.map(f => `'${f.label}'`);
-    throw createError({
-      statusCode: 400,
-      statusMessage: `The fields ${fieldNames.join(' and ')} does not support the provided operation`,
-    });
-  }
+  // ensure dynamic field operation is allowed on these fields
+  requireAllowedMatch(fields[0], fields[1], field.operator)
 
   // create dynamic field
   const createdField = await prisma.dynamicProjectField.create({

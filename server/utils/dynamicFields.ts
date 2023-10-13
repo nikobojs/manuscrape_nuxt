@@ -3,6 +3,7 @@ import yup from 'yup';
 
 export const fieldOperators = Object.values(FieldOperator);
 
+
 export const NewDynamicFieldSchema = yup.object({
   field0Id: yup.number().required(),
   field1Id: yup.number().required(),
@@ -11,6 +12,7 @@ export const NewDynamicFieldSchema = yup.object({
     Object.values(FieldOperator)
   ).required(),
 }).required();
+
 
 export const DynamicFieldsConfig: DynamicFieldsConfig = {
   [FieldOperator.DIFF]: {
@@ -32,6 +34,31 @@ export const DynamicFieldsConfig: DynamicFieldsConfig = {
   }
 }
 
+
+export function requireAllowedMatch(
+  field0: { label: string, type: FieldType | string },
+  field1: { label: string, type: FieldType | string },
+  operator: FieldOperator
+) {
+  const allowedPairs = DynamicFieldsConfig[operator].pairs;
+  const targetFieldTypes = [field0.type, field1.type];
+  const allowedMatch = allowedPairs.find(([a, b]) =>
+    a === targetFieldTypes[0] && b === targetFieldTypes[1] ||
+    a === targetFieldTypes[1] && b === targetFieldTypes[0]
+  );
+
+  if (!allowedMatch) {
+    // TODO: report error
+    throw createError({
+      statusCode: 400,
+      statusMessage: `The field types '${field0.type}' and '${field1.type}' does not support the provided operation`,
+    });
+  }
+
+  return allowedMatch;
+}
+
+
 export function calculateDynamicFieldValue(
   dynamicField: AllDynamicFieldColumns,
   fields: AllFieldColumns[],
@@ -40,19 +67,7 @@ export function calculateDynamicFieldValue(
   // get dynamic field match from config
   const field0 = dynamicField.field0;
   const field1 = dynamicField.field1;
-  const targetFieldTypes = [field0.type, field1.type];
-  const allowedPairs = DynamicFieldsConfig[dynamicField.operator].pairs;
-  const allowedMatch = allowedPairs.find((pair) => pair.every(t => targetFieldTypes.includes(t)));
-
-  // ensure there is a matching dynamic field config
-  if (!allowedMatch) {
-    // TODO: report error
-    const fieldNames = fields.map(f => `'${f.label}'`);
-    throw createError({
-      statusCode: 400,
-      statusMessage: `The fields ${fieldNames.map(f => `'${f}'`).join(' and ')} does not support the provided operation`,
-    });
-  }
+  requireAllowedMatch(field0, field1, dynamicField.operator);
 
   // TODO: improve maintainability and readability
   let val0 = (obs.data as any)?.[field0.label];

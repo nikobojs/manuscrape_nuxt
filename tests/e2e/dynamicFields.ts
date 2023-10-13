@@ -34,6 +34,8 @@ describe('Dynamic project fields', async () => {
         field0Id,
         field1Id,
       });
+      const dynJson = await dynRes.json();
+      expect(dynJson, JSON.stringify(dynJson, null, 2)).toHaveProperty('id')
       expect(dynRes.status).toBe(201);
     })
   });
