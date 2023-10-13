@@ -3,9 +3,15 @@
 ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
 
 This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron releases page](https://github.com/nikobojs/manuscrape_electron/releases).
+<br />
+<br />
 
-## manuscrape.org
+## Hosting (https://manuscrape.org)
 There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with your local data processing laws.
+
+If you want ManuScrape hosted for you, please contact the Copenhagen-based company, [Code Collective](https://codecollective.dk), who is currently hosting manuscrape.org
+<br />
+<br />
 
 ## Development
 
