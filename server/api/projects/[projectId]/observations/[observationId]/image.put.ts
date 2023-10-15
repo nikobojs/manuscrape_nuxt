@@ -1,4 +1,5 @@
 
+import { captureException } from '@sentry/node';
 import formidable from 'formidable';
 
 const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
@@ -105,10 +106,12 @@ export default safeResponseHandler(async (event) => {
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
   const res = await uploadS3File(newS3Path, file.filepath);
   if (res.$metadata.httpStatusCode !== 200) {
-    throw createError({
+    const err = createError({
       statusCode: res.$metadata.httpStatusCode,
       statusMessage: 'Unable to delete existing image'
     });
+    captureException(err);
+    throw err;
   }
 
   // create new ImageUpload row
@@ -146,15 +149,16 @@ export default safeResponseHandler(async (event) => {
     try {
       const deleteRes = await deleteS3Files(deletedImage.s3Path)
       if (deleteRes.$metadata.httpStatusCode !== 204) {
-        throw createError({
+        const err = createError({
           statusCode: deleteRes.$metadata.httpStatusCode,
           statusMessage: 'Unable to delete existing image'
         });
+        captureException(err);
+        throw err;
       }
     } catch(e: any) {
       // if unable to delete file, handle errors silently
-      // TODO: report error!
-      console.warn('Ignoring Minio delete file error:', e);
+      captureException(e);
     }
   }
 

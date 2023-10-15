@@ -76,6 +76,7 @@
   const openChoicesModal = ref(false);
   const choicesOnOpen = ref<string[]>([])
   const modifyingField = ref<NewProjectField | undefined>();
+  const { report } = useSentry();
 
   const fieldColumns = [
     {
@@ -101,8 +102,7 @@
   function moveField(fieldIndex: number, direction: 1 | -1): void {
     const field = fieldsCopy.value.find(f => f.index === fieldIndex);
     if (!field) {
-      console.warn('Field with that index was not found');
-      // TODO: report
+      report('warning', 'Field with that index was not found');
       return;
     }
 
@@ -115,8 +115,7 @@
       .sort((a, b) => (direction === 1 ? a.index > b.index : a.index < b.index) ? 1 : -1);
 
     if (otherFieldsToMove.length === 0) {
-      console.warn('Unable to move field as it has reached the boundary');
-      // TODO: report
+      report('warning', 'Unable to move field as it has reached the boundary');
       return;
     }
 
@@ -136,7 +135,7 @@
 
   function submitNewChoices(config: DropDownConfig) {
     if (!modifyingField.value) {
-      // TODO: report error
+      report('error', 'The variable \'modifyingField.value\' is falsy, when submitting new choices');
       toast.add({
         title: 'Unable to save the field :(',
         color: 'red',
@@ -148,7 +147,7 @@
     const newFields = [...props.fields];
     const field = newFields.find((f) => f.index === modifyingField.value?.index);
     if (!field) {
-      // TODO: report error
+      report('error', 'Unable to find any field with the same index as \'modyfingField.value.index\'');
       toast.add({
         title: 'Unable to save the field :(',
         color: 'red',

@@ -1,8 +1,7 @@
-// export default function (req: any, res: any, next: any) {
 export default defineEventHandler((event) => {
-  const res = event.res
-  res?.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline';")
-  res?.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
-  res?.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
-  res?.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+  setHeader(event, 'Content-Security-Policy', "script-src 'self' 'unsafe-inline' https://bugs.codecollective.dk;")
+  setHeader(event, 'Cross-Origin-Embedder-Policy', 'require-corp')
+  setHeader(event, 'Cross-Origin-Opener-Policy', 'same-origin')
+  setHeader(event, 'Cross-Origin-Resource-Policy', 'cross-origin')
+  setHeader(event, 'Access-Control-Allow-Headers', 'sentry-trace, baggage')
 });

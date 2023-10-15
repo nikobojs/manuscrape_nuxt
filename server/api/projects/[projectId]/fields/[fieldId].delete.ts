@@ -3,6 +3,7 @@ import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 import { JsonObject } from '@prisma/client/runtime/library';
 import { ProjectRole } from '@prisma/client';
+import { captureException } from '@sentry/node';
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
@@ -38,11 +39,12 @@ export default safeResponseHandler(async (event) => {
   });
 
   if (!field || !project) {
-    // TODO: report
-    throw createError({
+    const err = createError({
       statusCode: 400,
       statusMessage: 'Field is not in project or project does not exist'
     });
+    captureException(err);
+    throw err;
   }
 
   // ensure the field is not the last one
@@ -62,19 +64,16 @@ export default safeResponseHandler(async (event) => {
   // define array of affected observation id and its new 'data' value
   const dataUpdates = affectedObservations.map((o) => {
     if (typeof o.data !== 'object' || !o.data) {
-      // TODO: report
-      throw createError({
+      const err = createError({
         statusCode: 500,
         statusMessage: 'Observation has no data'
       });
+      captureException(err);
+      throw err;
     }
 
     if (!(field.label in o.data)) {
-      // TODO: report
-      console.warn(
-        'Field label not found in affectedObservations',
-        { fieldLabel: field.label, obsFieldLabel: o.data}
-      );
+      captureException('Field label not found in affectedObservations');
     } else {
       delete (o.data as JsonObject)[field.label]
     }

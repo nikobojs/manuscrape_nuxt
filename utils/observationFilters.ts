@@ -38,7 +38,6 @@ export const observationFilterMenuItems = Object.keys(ObservationFilter).map(k =
   const config = ObservationFilter[k];
 
   if (!k) {
-    // TODO: report error
     throw new Error('Observation filter was not found');
   }
 
