@@ -133,9 +133,7 @@ export function mousePosition(ev: MouseEvent, canvas: HTMLCanvasElement | undefi
     };
     return result;
   } else {
-    // TODO: report
-    console.warn('mouse event missing canvas. Positions in the image editor might be uncalibrated for this event');
-    return { x, y };
+    throw new Error('mouse event missing canvas. Positions in the image editor might be uncalibrated for this event');
   }
 
 }

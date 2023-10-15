@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
+  import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   import { inputTypes, FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
@@ -126,6 +126,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
   const inputs = ref([] as CMSInput[]);
   const state = ref(props.observation?.data as any);
   const sortedFields = computed(() => sortFields(props.project));
+  const { report } = useSentry();
 
   if (inputs.value.length == 0) {
     buildForm(sortedFields.value);
@@ -226,8 +227,9 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
         } else if (typ == FieldType.DATE) {
           inputArgs.type = inputTypes[FieldType.DATE]
         } else if (typ != FieldType.STRING) {
-          // TODO: report error
-          throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
+          const err = new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
+          report('error', err);
+          throw err;
         }
 
         inputs.value.push({
@@ -254,8 +256,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
           });
         } else if (isMultipleChoice(typ)) {
           if (!field.choices?.length) {
-            console.error('Radio button type has no values to pick from');
-            // TODO: report error
+            report('error', 'Radio button type has no values to pick from');
             return;
           }
 
@@ -266,8 +267,7 @@ import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
             } as CMSMultipleChoiceProps,
           });
         } else {
-          // TODO: report error
-          console.warn(`Field with type '${field.type}' is not support :( Try again in an hour`);
+          report('warning', `Field with type '${field.type}' is not support :( Try again in an hour`);
         }
       }
     }

@@ -3,6 +3,7 @@ import type { H3Event, EventHandlerRequest } from 'h3';
 import { type User, ProjectRole } from '@prisma/client';
 import { getRequestBeginTime, parseIntParam } from './request';
 import { observationColumns } from './prisma';
+import { captureException } from '@sentry/node';
 
 const config = useRuntimeConfig();
 
@@ -89,11 +90,12 @@ export async function ensureURLResourceAccess(
 ): Promise<void> {
   // return early if user is not logged in
   if (!user) {
-    // TODO: report error
-    throw createError({
+    const err = createError({
       statusCode: 403,
       statusMessage: 'User does not exist',
     });
+    captureException(err);
+    throw err;
   }
 
   const params = getRouterParams(event);
@@ -111,10 +113,12 @@ export async function ensureURLResourceAccess(
 
     // throw error if user doesn't have access to project
     if (!projectAccess) {
-      throw createError({
+      const err = createError({
         statusCode: 403,
         statusMessage: 'You don\'t have access to this project',
       });
+      captureException(err);
+      throw err;
     }
   }
 
@@ -179,7 +183,7 @@ export async function delayedError(
   _report: boolean = false,
   responseTimeMs: number = config.app.authResponseTime,
 ) {
-  // TODO: report error
+  captureException(new Error(statusMessage))
   return await delayedResponse(event, () =>
     createError({
       statusCode,

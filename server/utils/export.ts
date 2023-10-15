@@ -3,6 +3,7 @@ import { exportProjectQuery } from './prisma';
 import type { H3Event } from 'h3';
 import archiver from 'archiver'
 import { calculateDynamicFieldValue } from './dynamicFields';
+import { captureException } from '@sentry/node';
 
 
 function generateObservationRow(
@@ -26,8 +27,7 @@ function generateObservationRow(
 
     // if label doesn't exist, it must be from some older fields that wasn't deleted correctly
     if (columnIndex === -1) {
-      console.warn('Label does not exist');
-      // TODO: report
+      captureException(`Label '${key}' does not exist`);
       return;
     }
 

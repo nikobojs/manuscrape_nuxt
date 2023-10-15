@@ -137,6 +137,7 @@
   const toast = useToast();
   const { params } = useRoute();
   const { deleteParameter, sortFields, createParameter, isOwner } = await useProjects(params);
+  const { report } = useSentry();
 
   const newFieldRequired = ref(false);
   const newFieldLabel = ref('');
@@ -226,8 +227,7 @@
 
   async function handleDeleteParameter () {
     if (typeof selectedParameter.value?.id !== 'number') {
-      console.warn('Parameter not selected when trying to delete parameter');
-      // TODO: report
+      report('error', 'Parameter not selected when trying to delete parameter');
       return;
     }
 

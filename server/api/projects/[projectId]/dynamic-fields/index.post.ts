@@ -2,6 +2,7 @@ import { ProjectRole } from '@prisma/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 import { requireAllowedMatch } from '~/server/utils/dynamicFields';
+import { captureException } from '@sentry/node';
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
@@ -24,20 +25,22 @@ export default safeResponseHandler(async (event) => {
     }
   });
   if (existing) {
-    // TODO: report error
-    throw createError({
+    const err = createError({
       statusCode: 400,
       statusMessage: 'An identical dynamic field already exists',
     });
+    captureException(err);
+    throw err;
   }
 
   // ensure submitted fieldIds are NOT identical
   if (field.field0Id === field.field1Id) {
-    // TODO: report error
-    throw createError({
+    const err = createError({
       statusCode: 400,
       statusMessage: 'Dynamic field cannot operate on two identical static fields',
     });
+    captureException(err);
+    throw err;
   }
 
   // get field types
@@ -67,11 +70,12 @@ export default safeResponseHandler(async (event) => {
 
   // ensure both fields exists and is in project
   if (fields.length !== 2) {
-    // TODO: report error
-    throw createError({
+    const err = createError({
       statusCode: 400,
       statusMessage: 'One or both provided static fields could not be found',
     });
+    captureException(err);
+    throw err;
   }
 
   // ensure dynamic field operation is allowed on these fields
