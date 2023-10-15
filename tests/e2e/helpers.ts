@@ -300,7 +300,6 @@ export const testProject: NewProjectBody = {
       type: FieldType.BOOLEAN,
       required: true,
       index: 7,
-      choices: ['a', 'b', 'c']
     }
   ]
 };
