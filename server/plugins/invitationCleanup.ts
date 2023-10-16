@@ -1,4 +1,5 @@
 import { useScheduler } from "#scheduler"
+import { captureException } from "@sentry/node";
 
 export default defineNitroPlugin(() => {
   startScheduler()
@@ -19,7 +20,7 @@ function startScheduler() {
       }
     } catch(e: any) {
       console.error(e);
-      // TODO: report error
+      captureException(e);
     }
   }).everyFiveMinutes();
 }

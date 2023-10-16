@@ -74,8 +74,10 @@
 
   const openDropdownModal = ref(false);
   const chosenFieldType = computed(() =>
-    fieldTypeOptions.find((o) => o.type === props.fieldType)
-  )
+    fieldTypeOptions.find((o) => o.type === props.fieldType),
+  );
+
+  const { report } = useSentry();
 
 
   // computed bool that indicates if add field button is disabled or not
@@ -86,8 +88,9 @@
   // handle when add field button is clicked
   function handleAddField() {
     if (!props.fieldType) {
-      props.onError('Field type is not defined in props')
-      // TODO: report error
+      const err = 'Field type is not defined in props';
+      props.onError(err);
+      report('error', err);
       return;
     }
 
@@ -121,14 +124,14 @@
         required: true,
         type: props.fieldType as FieldType,
         label: props.label
-      })
+      });
       return true;
     } else {
       props.onFieldUpdate({
         required: props.required,
         type: props.fieldType as FieldType,
         label: props.label
-      })
+      });
       return false;
     }
   });
@@ -144,19 +147,23 @@
   // this is called then the dropdown configurator modal is submitted
   function addDropdownField({ choices }: DropDownConfig) {
     if (!props.fieldType) {
-      // TODO: report error
-      props.onError('No field type was picked')
+      const err = 'No field type was picked';
+      report('error', err);
+      props.onError(err);
       return;
     }
 
     if (!props?.label) {
-      // TODO: report error
-      props.onError('No field label was defined')
+      const err = 'No field label was defined';
+      report('error', err);
+      props.onError(err);
       return;
     }
     if (!['CHOICE', 'AUTOCOMPLETE'].includes(props.fieldType)) {
-      // TODO: report error
-      props.onError(`Dropdown field type '${props.fieldType}' is not supported`);
+      const err = `Dropdown field type '${props.fieldType}' is not supported`;
+      report('error', err);
+      props.onError(err);
+      return;
     }
 
     props.onFieldAdd({
@@ -164,6 +171,6 @@
       type: props.fieldType as FieldType,
       required: props.required,
       choices,
-    })
+    });
   }
 </script>

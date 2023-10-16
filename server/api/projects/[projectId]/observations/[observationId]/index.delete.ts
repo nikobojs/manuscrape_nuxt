@@ -1,3 +1,5 @@
+import { captureException } from "@sentry/node";
+
 export default safeResponseHandler(async (event) => {
   requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
@@ -53,16 +55,16 @@ export default safeResponseHandler(async (event) => {
       const deleteRes = await deleteS3Files(fileToDelete)
       if (deleteRes.$metadata.httpStatusCode !== 204) {
         const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
-        // TODO: report error
-        console.log(err)
+        captureException(err);
+        console.error(err)
       } else {
-        console.log('deleted file', fileToDelete)
+        console.info('deleted file', fileToDelete)
       }
     } catch(e: any) {
       // if unable to delete file, handle errors silently
-      // TODO: report error
       const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
-      console.log(err)
+      captureException(err);
+      console.error(err)
     }
   }
 

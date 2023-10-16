@@ -45,6 +45,7 @@ export function useImageEditor(
   const lineWidth = ref<number>(5);
   const cameraPosition = ref<[number, number]>([0, 0]);
   const hasPendingChanges = computed(() => boxes.value.length > 0 || texts.value.length > 0 || lines.value.length > 0);
+  const { report } = useSentry();
 
   function draw() {
     // wipe and redraw
@@ -108,15 +109,12 @@ export function useImageEditor(
   function forceHighQualityCanvas(onLoaded: () => Promise<void>) {
     if (typeof observationId !== "number" || typeof projectId !== "number") {
       throw new Error("Props are not defined correctly");
-      // TODO: report error
     } else if (!context.value || !image.value) {
       throw new Error(
         "Image cannot be drawn as context or image is not fully loaded",
       );
-      // TODO: report error
     } else if (!canvas.value) {
       throw new Error("Canvas is not available");
-      // TODO: report error
     }
 
     isSaving.value = true;
@@ -167,7 +165,6 @@ export function useImageEditor(
       throw new Error(
         "Image cannot be drawn as context or image is not fully loaded",
       );
-      // TODO: report error
     }
 
     // TODO: deprecate canvasRect variable
@@ -570,18 +567,17 @@ export function useImageEditor(
 
     // draw background square if enabled
     if (text.bgcolor) {
-      // const width = ctx.measureText(text.text);
       let height;
       if (ctx.font) {
         height = parseInt(ctx.font.match(/\d+/)?.pop() as any);
         if (isNaN(height)) {
-          // TODO: report
-          console.warn('Unable to read font size from canvas context.');
+          const warn = 'Unable to read font size from canvas context.';
+          report('warning', warn);
           return;
         }
       } else {
-        // TODO: report
-        console.warn('Context font not set - cannot determine height of text background box. Will skip');
+        const warn = 'Context font not set - cannot determine height of text background box. Will skip';
+        report('warning', warn)
         return;
       }
 
@@ -756,8 +752,8 @@ export function useImageEditor(
     if (startGrabbing && ev) {
         actions[EditorMode.GRAB].mouseEvents.down?.(ev);
     } else if(startGrabbing && !ev) {
-      console.warn('Will not activate GRAB mode, due to missing event in function arguments');
-      // TODO: report error
+      const warn = 'Will not activate GRAB mode, due to missing event in function arguments';
+      report('warning', warn)
     }
   }
 
@@ -945,8 +941,8 @@ export function useImageEditor(
 
   async function saveTextDraft(): Promise<void> {
     if (!draftTextPosition.value) {
-      // TODO: report error
-      console.warn('Cannot save text draft when it has no position');
+      const warn = 'Cannot save text draft when it has no position';
+      report('warning', warn);
       return;
     }
     if (!textDraft.value) {
@@ -992,8 +988,8 @@ export function useImageEditor(
 
     const target: Ref<{ id: number}[]> = getTargetRefByImageChange(newestApplied);
     if (!target.value?.length) {
-      console.warn('Undo target ref was empty or undefined');
-      // TODO: report error
+      const warn = 'Undo target ref was empty or undefined';
+      report('warning', warn);
       return;
     }
 
@@ -1007,8 +1003,8 @@ export function useImageEditor(
 
     const target: Ref<{ id: number}[]> = getTargetRefByImageChange(newestNonApplied);
     if (!target.value) {
-      console.warn('Redo target ref was undefined');
-      // TODO: report error
+      const warn = 'Redo target ref was undefined';
+      report('warning', warn);
       return;
     }
 

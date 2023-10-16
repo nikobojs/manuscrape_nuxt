@@ -1,4 +1,5 @@
 import { FieldType, FieldOperator } from "@prisma/client";
+import { captureException } from "@sentry/node";
 import yup from 'yup';
 
 export const fieldOperators = Object.values(FieldOperator);
@@ -48,11 +49,12 @@ export function requireAllowedMatch(
   );
 
   if (!allowedMatch) {
-    // TODO: report error
-    throw createError({
+    const err = createError({
       statusCode: 400,
       statusMessage: `The field types '${field0.type}' and '${field1.type}' does not support the provided operation`,
     });
+    captureException(err);
+    throw err;
   }
 
   return allowedMatch;

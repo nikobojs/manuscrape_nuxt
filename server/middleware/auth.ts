@@ -16,29 +16,33 @@ export default defineEventHandler(async (event) => {
     }
 
     else if (typeof authToken == 'string' && authToken.length > 0) {
-        const decoded = await jwt.verify(authToken, config.app.tokenSecret);
-        if (typeof decoded !== 'string' && decoded?.id) {
-            const user = await prisma.user.findFirst({
-                where: { id: decoded.id },
-                select: {
-                    id: true,
-                    projectAccess: {
-                      select: {
-                        projectId: true,
-                        role: true
-                      }
+        try {
+            const decoded = await jwt.verify(authToken, config.app.tokenSecret);
+            if (typeof decoded !== 'string' && decoded?.id) {
+                const user = await prisma.user.findFirst({
+                    where: { id: decoded.id },
+                    select: {
+                        id: true,
+                        projectAccess: {
+                        select: {
+                            projectId: true,
+                            role: true
+                        }
+                        }
                     }
-                }
-            });
+                });
 
-            if (user) {
-                loginSuccesfull = true;
-                event.context.user = user as UserInSession;
+                if (user) {
+                    loginSuccesfull = true;
+                    event.context.user = user as UserInSession;
+                } else {
+                    return onNotAuthed(event, 'Session is valid but user does not exist')
+                }
             } else {
-                return onNotAuthed(event, 'Session is valid but user does not exist')
+                return onNotAuthed(event, 'Your did not provide any authorization ');
             }
-        } else {
-            return onNotAuthed(event, 'Your did not provide any authorization ');
+        } catch(e) {
+            return onNotAuthed(event, 'Malformed JWT');
         }
     }
 

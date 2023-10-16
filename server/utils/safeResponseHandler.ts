@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { type EventHandler, type H3Event, H3Error } from 'h3'
 import { ValidationError } from 'yup'
 import { errors as formidableErrors } from 'formidable';
+import { captureException } from '@sentry/node';
 
 export const safeResponseHandler = (handler: EventHandler) =>
   defineEventHandler(async (event: H3Event) => {
@@ -40,6 +41,7 @@ export const safeResponseHandler = (handler: EventHandler) =>
         console.error('KEYS:', Object.keys(err))
         console.error(err)
         console.error('----------------     -     ---------------     -     ---------------');
+        captureException(err);
       }
 
       setResponseStatus(event, status);
