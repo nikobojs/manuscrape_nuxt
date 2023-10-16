@@ -23,7 +23,7 @@ export const useSentry = () => {
     logger(err.message);
 
     // report error to sentry
-    if (config.sentry?.dsn) {
+    if (config.sentryDsn) {
       try {
         captureException(err, { level: severity });
       } catch(e) {

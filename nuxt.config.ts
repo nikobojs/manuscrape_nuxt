@@ -45,10 +45,8 @@ export default defineNuxtConfig({
       version: pkg.version,
       maxImageSize: 30 * 1000 * 1000,
       maxFileSize: 100 * 1000 * 1000,
-      sentry: {
-        dsn: process.env.SENTRY_DSN || '',
-        environment: process.env.SENTRY_ENV || 'development',
-      },
+      sentryDsn: process.env.SENTRY_DSN || '',
+      sentryEnv: process.env.SENTRY_ENV || 'development',
     }
   },
   colorMode: {
