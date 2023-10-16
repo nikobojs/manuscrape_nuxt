@@ -5,7 +5,7 @@ export default defineNitroPlugin(() => {
 
   // If no sentry DSN set, ignore and warn in the console
   if (!config.sentryDsn) {
-    console.warn('sentry DSN not set, not using automatic error reporting');
+    console.warn('sentry DSN not set, not using automatic error reporting (server-side)');
     return;
   }
   // If no sentry DSN set, ignore and warn in the console

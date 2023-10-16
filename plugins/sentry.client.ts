@@ -7,7 +7,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   // If no sentry DSN set, ignore and warn in the console
   if (!config?.sentryDsn) {
-    console.warn('sentry DSN not set, not using automatic error reporting')
+    console.warn('sentry DSN not set, not using automatic error reporting (client-side)')
     return
   }
   // If no sentry DSN set, ignore and warn in the console
