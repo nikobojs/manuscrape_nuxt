@@ -91,7 +91,7 @@ export function useImageEditor(
     bg.addEventListener("load", () => {
       if (canvas.value && context.value) {
         aspectRatio.value = bg.height / bg.width;
-        zoom.value = 1.0;
+        resetZoom();
         resetPosition();
         window.requestAnimationFrame(() => {
           drawImage();
@@ -894,7 +894,14 @@ export function useImageEditor(
   }
 
   function resetZoom() {
-    zoom.value = 1.0;
+    if (!canvas.value) throw new Error('Canvas is not defined');
+
+    if (image.value.width > canvas.value.width) {
+      zoom.value = Math.floor((canvas.value.width / image.value.width) * 100) / 100;
+    } else {
+      zoom.value = 1.0;
+    }
+
     grabbed.value = undefined;
     grabbing.value = false;
     resetPosition();
@@ -903,9 +910,14 @@ export function useImageEditor(
 
   function resetPosition() {
     if (image.value && canvas.value) {
-      const x = (canvas.value.width / 2) - (image.value.width / 2)
-      cameraPosition.value[0] = x;
-      cameraPosition.value[1] = 30;
+      if (image.value.width < canvas.value.width) {
+        const x = (canvas.value.width / 2) - (image.value.width / 2)
+        cameraPosition.value[0] = x;
+        cameraPosition.value[1] = 30;
+      } else {
+        cameraPosition.value[0] = 0;
+        cameraPosition.value[1] = 0;
+      }
     }
   }
 
