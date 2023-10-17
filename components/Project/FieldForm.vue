@@ -159,7 +159,7 @@
       props.onError(err);
       return;
     }
-    if (!['CHOICE', 'AUTOCOMPLETE'].includes(props.fieldType)) {
+    if (!isMultipleChoice(props.fieldType)) {
       const err = `Dropdown field type '${props.fieldType}' is not supported`;
       report('error', err);
       props.onError(err);
