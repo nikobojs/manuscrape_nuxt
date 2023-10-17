@@ -25,6 +25,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         routingInstrumentation: Sentry.vueRouterInstrumentation(router),
       }),
     ],
+    tracesSampleRate: 0.2,
   });
 
   console.info('initialized sentry client-side plugin');
