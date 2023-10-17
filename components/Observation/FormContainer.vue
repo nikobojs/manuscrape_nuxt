@@ -39,18 +39,30 @@
         <template #header>
           <CardHeader>Actions</CardHeader>
         </template>
-        <p class="text-sm italic text-gray-100">
-          Warning: When an observation is committed, it will be locked for future editing.
-          This includes uploading files, image editing and metadata editing.
-        </p>
-        <div class="flex gap-4 mt-6">
+        <div class="flex gap-4 mb-6">
           <UButton icon="i-heroicons-lock-closed" class="" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
-            Commit and lock
+            Submit and lock
           </UButton>
           <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => discard()">
             Delete observation draft
           </UButton>
         </div>
+        <UAlert
+          variant="outline"
+          icon="i-mdi-information-outline"
+          color="blue"
+          title="Submit and lock"
+          description="When an observation is submitted, it will be locked for future editing.
+          This includes uploading files, image editing and metadata editing."
+          :ui="{ title: 'text-sm font-normal' }"
+          >
+            <template #title="{ title }">
+              <div class="font-bold">{{ title }}</div>
+            </template>
+            <template #description="{ description }">
+              {{ description }}
+            </template>
+          </UAlert>
       </UCard>
       <UCard v-else >
         <template #header>
