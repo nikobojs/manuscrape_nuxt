@@ -1,31 +1,38 @@
-import { captureException, type SeverityLevel } from "@sentry/vue"
+import * as Sentry from '@sentry/vue';
 
 export const useSentry = () => {
-  const report = (severity: SeverityLevel, err: Error | string) => {
+  const config = useRuntimeConfig().public;
+  const getLogger = (s: Sentry.SeverityLevel) => {
+    const logger = s === 'warning'
+      ? console.warn
+      : s === 'info'
+      ? console.info
+      : s === 'debug'
+      ? console.debug
+      : s === 'log'
+      ? console.log
+      : console.error;
 
-    const config = useRuntimeConfig().public;
+    return logger;
+  }
 
+  const report = (
+    severity: Sentry.SeverityLevel,
+    err: Error | string
+  ) => {
     // ensure error is some kind of error object
     if (!(err instanceof Error)) {
       err = new Error(err);
     }
 
-    // use console.warn for warnings, console.error for the rest
-    const logger = severity === 'warning'
-      ? console.warn
-      : severity === 'info'
-      ? console.info
-      : severity === 'debug'
-      ? console.debug
-      : severity === 'log'
-      ? console.log
-      : console.error;
+    // use the right logging method for the right severity
+    const logger = getLogger(severity);
     logger(err.message);
 
     // report error to sentry
     if (config.sentryDsn) {
       try {
-        captureException(err, { level: severity });
+        Sentry.captureException(err, { level: severity });
       } catch(e) {
         console.error('Unable to report an error due to the following exception:')
         console.error(e);

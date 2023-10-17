@@ -26,6 +26,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       }),
     ],
     tracesSampleRate: 0.2,
+    attachProps: true,
   });
 
   console.info('initialized sentry client-side plugin');
