@@ -1,10 +1,9 @@
 import { describe, test, expect } from 'vitest';
 import { createDynamicField, withTempProject } from './helpers';
-import { prisma } from './helpers';
 import { FieldType } from '@prisma/client';
 
 describe('Dynamic project fields', async () => {
-  test('can create dynamic field (datetime/difference difference)', async () => {
+  test('can create dynamic field (datetime/datetime difference)', async () => {
     await withTempProject(async (_user, project, _observations, token) => {
       const field0Id = project.fields[0].id;
       const field1Id = project.fields[1].id;
