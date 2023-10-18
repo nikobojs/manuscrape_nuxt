@@ -359,11 +359,7 @@ export function useImageEditor(
       cursor: 'text',
       icon: "i-mdi-format-text",
       onActionPicked: () => {
-        if (writing.value) {
-          cursor.value = 'crosshair'
-        } else {
-          cursor.value = 'text';
-        }
+        cursor.value = 'crosshair';
         dragging.value = false;
       },
       mouseEvents: {
@@ -371,17 +367,27 @@ export function useImageEditor(
           if (!canvas.value) return;
           // if already writing, move text instead of creating new
           if (writing.value && dragging.value) {
-            // // focus text field after creating text draft data
-            focusTextArea();
-          } else if (!writing.value) {
+            // pass (TODO)
+          } else if (!writing.value && dragging.value) {
             const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
             writing.value = true;
             textDraft.value = '';
             cursor.value = 'move';
+
+            if (square[2] < 0) {
+              square[0] = beginX.value + square[2];
+              square[2] = Math.abs(square[2]);
+            }
+            if (square[3] < 0) {
+              square[1] = beginY.value + square[3];
+              square[3] = Math.abs(square[3]);
+            }
+
             draftTextMinRect.value = {
-              x: square[2],
-              y: square[3],
+              x: square[2] / zoom.value,
+              y: square[3] / zoom.value,
             };
+
             draftTextPosition.value = [
               (square[0] - cameraPosition.value[0]) / zoom.value,
               (square[1] - cameraPosition.value[1]) / zoom.value
@@ -390,6 +396,7 @@ export function useImageEditor(
 
           dragging.value = false;
           draw();
+          focusTextArea();
         },
         down: (ev) => {
           if (!canvas.value) return;
@@ -401,29 +408,6 @@ export function useImageEditor(
           // set beginX and beginY for drawing rect
           beginX.value = x;
           beginY.value = y;
-
-          // if (canvas.value) {
-          //   dragging.value = true;
-
-          //   // in any case we cant to use the position clicked on
-          //   const { x, y } = mousePosition(ev, canvas.value);
-
-          //   // TODO: use some vector math helper func
-          //   draftTextPosition.value = [
-          //     (x - cameraPosition.value[0]) / zoom.value,
-          //     (y - cameraPosition.value[1]) / zoom.value
-          //   ];
-
-          //   // if not already writing, reset textDraft, textSize and cursor
-          //   // NOTE: this will trigger a redraw
-          //   if (!writing.value) {
-          //     textDraft.value = '';
-          //     cursor.value = 'move'
-          //   }
-
-          //   // set writing state to true in any case on mouse down
-          //   writing.value = true;
-          // }
         },
         move: (ev) => {
           if (dragging.value && canvas.value && writing.value){
@@ -583,7 +567,7 @@ export function useImageEditor(
     }
   
     const z = text.zoom;
-    const relativeZoom = z / zoom.value;z
+    const relativeZoom = z;
     const fontSize = Math.floor(text.size * relativeZoom);
     let padding = 0;
     let scaledPos = {
@@ -603,24 +587,25 @@ export function useImageEditor(
     // TODO: support different line heights
     const lineHeight = 1.15 * fontSize;
 
-    // draw background square if enabled
-    if (text.bgcolor) {
-      let fontHeight;
-      padding = 8 * relativeZoom; // give text padding if its inside a box
-      if (ctx.font) {
-        fontHeight = parseInt(ctx.font.match(/\d+/)?.pop() as any);
-        if (isNaN(fontHeight)) {
-          const warn = 'Unable to read font size from canvas context.';
-          report('warning', warn);
-          return;
-        }
-      } else {
-        const warn = 'Context font not set - cannot determine height of text background box. Will skip';
-        report('warning', warn)
+    let fontHeight;
+    if (ctx.font) {
+      fontHeight = parseInt(ctx.font.match(/\d+/)?.pop() as any);
+      if (isNaN(fontHeight)) {
+        const warn = 'Unable to read font size from canvas context.';
+        report('warning', warn);
         return;
       }
+    } else {
+      const warn = 'Context font not set - cannot determine height of text background box. Will skip';
+      report('warning', warn)
+      return;
+    }
 
-      const halfHeight = Math.ceil(fontHeight / 2);
+    const halfHeight = Math.ceil(fontHeight / 2);
+
+    // draw background square if enabled
+    if (text.bgcolor) {
+      padding = 8 * relativeZoom; // give text padding if its inside a box
 
       ctx.fillStyle = text.bgcolor;
       const longestText: TextMetrics = lines.map(
@@ -631,24 +616,24 @@ export function useImageEditor(
       })[0];
 
       const x = fixedPos.x;
-      const y = fixedPos.y - halfHeight;
-      const w = Math.max(text.minWidth, longestText.width) * relativeZoom;
-      const h = Math.max(text.minHeight, lines.length * fontHeight * 1.15) * relativeZoom;
-      console.log({ lines, x, y, w, h, minWidth: text.minWidth, minHeight: text.minHeight });
-
-
+      const y = fixedPos.y;
+      const w = Math.max(text.minWidth * z, longestText.width) + padding * 2; // NOT ZOOMING
+      const h = Math.max(text.minHeight * z, lines.length * fontHeight * 1.15 + padding);
+      const square: Square = [ x, y, w, h ]
 
       // draw the background for the height of all lines
-      // for (let i = 0; i < lines.length; i++) {
-        ctx.fillRect(x, y, w, h);
-      // }
+      ctx.fillRect(...square);
     }
 
     // draw the text lines on top of optional background
     const textPad = padding;
     for (let i = 0; i < lines.length; i++) {
       ctx.fillStyle = text.color;
-      ctx.fillText(lines[i], fixedPos.x + textPad, fixedPos.y + textPad + i * lineHeight); 
+      ctx.fillText(
+        lines[i],
+        fixedPos.x + textPad,
+        fixedPos.y + halfHeight + 1.5 * textPad + i * lineHeight
+      ); 
     }
   }
 
