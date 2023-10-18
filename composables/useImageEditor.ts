@@ -1,7 +1,9 @@
-import { EditorMode, ImageEditorActionConfig, ZOOM_STEP, adjustCameraToZoom, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
+import { EditorMode, ImageEditorActionConfig, adjustCameraToZoom, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
 
 let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;
+const maxZoom = 10;   // 1000%
+const minZoom = 0.01; // 10%
 
 const fontSizes = [12, 14, 18, 24, 38, 52, 66, 82].map((v) => ({
   value: v,
@@ -729,7 +731,7 @@ export function useImageEditor(
       const up = deltaY < 0;
 
       const at = mousePosition(ev, canvas.value)
-      up ? zoomIn(at) : zoomOut(at);
+      up ? addToZoom(ZOOM_STEP, at) : addToZoom(-ZOOM_STEP, at);
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
@@ -858,27 +860,9 @@ export function useImageEditor(
   }
 
 
-  // NOTE: 'at' is offsetX and offsetY mouse event inside canvas
-  function zoomIn(at?: { x:number; y:number }) {
-    const newZoomVal = zoom.value + ZOOM_STEP;
-    if (!at && canvas.value) {
-      // TODO: use some vector helper or getCanvasCenter helper
-      at = {
-        x: canvas.value.width / 2,
-        y: canvas.value.height / 2,
-      }
-    } else if(!at) {
-      throw new Error('Canvas and/or \'at\' is not defined');
-    };
-
-    cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value);
-    zoom.value = Math.min(10, newZoomVal);
-
-    draw();
-  }
-
-  function zoomOut(at?: { x:number; y:number }) {
-    const newZoomVal = zoom.value - ZOOM_STEP;
+  // // NOTE: 'at' is offsetX and offsetY mouse event inside canvas
+  function addToZoom(val: number, at?: { x:number; y:number }): void {
+    const newZoomVal = zoom.value + val;
     if (!at && canvas.value) {
       // TODO: use some vector helper
       at = {
@@ -888,8 +872,18 @@ export function useImageEditor(
     } else if (!at) {
       throw new Error('Canvas and/or \'at\' is not defined');
     };
-    cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value, false);
-    zoom.value = Math.max(0.01, newZoomVal);
+
+    // respect minimum zoom value
+    if (newZoomVal < minZoom) {
+      zoom.value = minZoom;
+    // respect maximum zoom value
+    } else if (newZoomVal > maxZoom) {
+      zoom.value = maxZoom;
+    } else {
+      cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value, val > 0);
+      zoom.value = newZoomVal;
+    }
+
     draw();
   }
 
@@ -920,7 +914,6 @@ export function useImageEditor(
       }
     }
   }
-
 
   // TODO: refactor or improve naming
   function destroyEditor() {
@@ -1027,15 +1020,13 @@ export function useImageEditor(
   const undoDisabled = computed(() => changes.value.filter(c => c.applied).length === 0);
   const redoDisabled = computed(() => changes.value.filter(c => !c.applied).length === 0);
 
-  const canvasBackgroundPosition = computed<string>(() => {
-    return `
-      ${cameraPosition.value[0]}px ${cameraPosition.value[1]}px
-    `.trim();
-  });
+  const canvasBackgroundPosition = computed<string>(() =>
+    `${cameraPosition.value[0]}px ${cameraPosition.value[1]}px`,
+  );
 
   const canvasBackgroundSize = computed<string>(() => {
     const boxSize = 48;
-    const px = Math.floor(boxSize * zoom.value);
+    const px = boxSize * zoom.value;
     return `${px}px ${px}px`
   });
 
@@ -1074,8 +1065,7 @@ export function useImageEditor(
     undoDisabled,
     writing,
     zoom,
-    zoomIn,
-    zoomOut,
+    addToZoom,
     canvasBackgroundPosition,
     canvasBackgroundSize,
   };
