@@ -105,7 +105,7 @@
               variant="outline"
               icon="i-heroicons-magnifying-glass-minus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="() => zoomOut()"
+              @click="() => addToZoom(-ZOOM_STEP)"
             ></UButton>
             <UButton
               color="blue"
@@ -119,7 +119,7 @@
               variant="outline"
               icon="i-heroicons-magnifying-glass-plus"
               :disabled="modeActive(EditorMode.DISABLED)"
-              @click="() => zoomIn()"
+              @click="() => addToZoom(ZOOM_STEP)"
             ></UButton>
           </UButtonGroup>
         </div>
@@ -301,7 +301,7 @@
           'cursor-grab': cursor === 'grab',
           'cursor-grabbing': cursor === 'grabbing',
           'cursor-crosshair': cursor === 'crosshair',
-          'bg-[#080811]': !modeActive(EditorMode.DISABLED),
+          'bg-[#eeeeee]': !modeActive(EditorMode.DISABLED),
         }"
         :style="{
           backgroundPosition: canvasBackgroundPosition,
@@ -316,7 +316,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { EditorMode } from '~/utils/imageEditor';
+  import type { EditorMode, ZOOM_STEP } from '~/utils/imageEditor';
 
   const props = defineProps({
     observation: requireObservationProp,
@@ -365,8 +365,7 @@
     textSize,
     writing,
     zoom,
-    zoomIn,
-    zoomOut,
+    addToZoom,
     redo,
     undo,
     undoDisabled,
