@@ -3,7 +3,7 @@ import { EditorMode, ImageEditorActionConfig, adjustCameraToZoom, applyCamera, a
 let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
-const minZoom = 0.01; // 10%
+const minZoom = 0.1; // 10%
 
 const fontSizes = [12, 14, 18, 24, 38, 52, 66, 82].map((v) => ({
   value: v,
@@ -862,7 +862,7 @@ export function useImageEditor(
 
   // // NOTE: 'at' is offsetX and offsetY mouse event inside canvas
   function addToZoom(val: number, at?: { x:number; y:number }): void {
-    const newZoomVal = zoom.value + val;
+    let newZoomVal = zoom.value + val;
     if (!at && canvas.value) {
       // TODO: use some vector helper
       at = {
@@ -875,16 +875,18 @@ export function useImageEditor(
 
     // respect minimum zoom value
     if (newZoomVal < minZoom) {
-      zoom.value = minZoom;
+      newZoomVal = minZoom;
     // respect maximum zoom value
     } else if (newZoomVal > maxZoom) {
-      zoom.value = maxZoom;
-    } else {
-      cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value, val > 0);
-      zoom.value = newZoomVal;
+      newZoomVal = maxZoom;
     }
 
-    draw();
+    // redraw and adjust camera if zoom different than last time
+    if (newZoomVal !== zoom.value) {
+      cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value, val > 0);
+      zoom.value = newZoomVal;
+      draw();
+    }
   }
 
   function resetZoom() {
