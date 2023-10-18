@@ -43,7 +43,7 @@ export function useImageEditor(
   const textDraft = ref<string>('');
   const textSize = ref<number>(24);
   const textDraftSolidBg = ref<boolean>(true);
-  const textDraftBgPadding = ref<number>(14);
+  const draftTextMinRect = ref<{ x: number; y: number }>({x: 0, y: 0});
   const lineWidth = ref<number>(5);
   const cameraPosition = ref<[number, number]>([0, 0]);
   const hasPendingChanges = computed(() => boxes.value.length > 0 || texts.value.length > 0 || lines.value.length > 0);
@@ -59,7 +59,7 @@ export function useImageEditor(
   }
 
   // redraw the whole thing when ui stuff changes
-  watch([textDraftSolidBg, textDraftBgPadding, textSize, textDraft, frontColor, backColor], () => {
+  watch([textDraftSolidBg, textSize, textDraft, frontColor, backColor], () => {
     draw();
   });
 
@@ -368,42 +368,65 @@ export function useImageEditor(
       },
       mouseEvents: {
         up: (ev) => {
+          if (!canvas.value) return;
           // if already writing, move text instead of creating new
           if (writing.value && dragging.value) {
             // // focus text field after creating text draft data
             focusTextArea();
+          } else if (!writing.value) {
+            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
+            writing.value = true;
+            textDraft.value = '';
+            cursor.value = 'move';
+            draftTextMinRect.value = {
+              x: square[2],
+              y: square[3],
+            };
+            draftTextPosition.value = [
+              (square[0] - cameraPosition.value[0]) / zoom.value,
+              (square[1] - cameraPosition.value[1]) / zoom.value
+            ];
           }
 
           dragging.value = false;
           draw();
-
         },
         down: (ev) => {
-          if (canvas.value) {
-            dragging.value = true;
+          if (!canvas.value) return;
+          dragging.value = true;
 
-            // in any case we cant to use the position clicked on
-            const { x, y } = mousePosition(ev, canvas.value);
+          // in any case we cant to use the position clicked on
+          const { x, y } = mousePosition(ev, canvas.value);
 
-            // TODO: use some vector math helper func
-            draftTextPosition.value = [
-              (x - cameraPosition.value[0]) / zoom.value,
-              (y - cameraPosition.value[1]) / zoom.value
-            ];
+          // set beginX and beginY for drawing rect
+          beginX.value = x;
+          beginY.value = y;
 
-            // if not already writing, reset textDraft, textSize and cursor
-            // NOTE: this will trigger a redraw
-            if (!writing.value) {
-              textDraft.value = '';
-              cursor.value = 'move'
-            }
+          // if (canvas.value) {
+          //   dragging.value = true;
 
-            // set writing state to true in any case on mouse down
-            writing.value = true;
-          }
+          //   // in any case we cant to use the position clicked on
+          //   const { x, y } = mousePosition(ev, canvas.value);
+
+          //   // TODO: use some vector math helper func
+          //   draftTextPosition.value = [
+          //     (x - cameraPosition.value[0]) / zoom.value,
+          //     (y - cameraPosition.value[1]) / zoom.value
+          //   ];
+
+          //   // if not already writing, reset textDraft, textSize and cursor
+          //   // NOTE: this will trigger a redraw
+          //   if (!writing.value) {
+          //     textDraft.value = '';
+          //     cursor.value = 'move'
+          //   }
+
+          //   // set writing state to true in any case on mouse down
+          //   writing.value = true;
+          // }
         },
         move: (ev) => {
-          if (dragging.value && canvas.value){
+          if (dragging.value && canvas.value && writing.value){
             const { x, y } = mousePosition(ev, canvas.value);
             // TODO: use some vector math helper func
             draftTextPosition.value = [
@@ -411,6 +434,15 @@ export function useImageEditor(
               (y - cameraPosition.value[1]) / zoom.value
             ];
             draw();
+          } else if (dragging.value && canvas.value && !writing.value) {
+            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
+            const [x, y, w, h] = square;
+            clearCanvas();
+            drawImage();
+            drawBoxes();
+            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
+            drawLines();
+            drawTexts(zoom.value);
           }
         },
         rightUp: (ev) => {
@@ -551,7 +583,9 @@ export function useImageEditor(
     }
   
     const z = text.zoom;
-    const fontSize = Math.floor(text.size * z);
+    const relativeZoom = z / zoom.value;z
+    const fontSize = Math.floor(text.size * relativeZoom);
+    let padding = 0;
     let scaledPos = {
       x: (text.position[0]) * z, // works
       y: (text.position[1]) * z // works
@@ -565,14 +599,17 @@ export function useImageEditor(
     // set the font family
     // TODO: support multiple font families
     ctx.font = `${fontSize}px Arial`;
-    const lineHeight = 1.15;
+
+    // TODO: support different line heights
+    const lineHeight = 1.15 * fontSize;
 
     // draw background square if enabled
     if (text.bgcolor) {
-      let height;
+      let fontHeight;
+      padding = 8 * relativeZoom; // give text padding if its inside a box
       if (ctx.font) {
-        height = parseInt(ctx.font.match(/\d+/)?.pop() as any);
-        if (isNaN(height)) {
+        fontHeight = parseInt(ctx.font.match(/\d+/)?.pop() as any);
+        if (isNaN(fontHeight)) {
           const warn = 'Unable to read font size from canvas context.';
           report('warning', warn);
           return;
@@ -583,9 +620,7 @@ export function useImageEditor(
         return;
       }
 
-      const pad = text.padding;
-      const pad2 = pad + pad;
-      const halfHeight = height / 2;
+      const halfHeight = Math.ceil(fontHeight / 2);
 
       ctx.fillStyle = text.bgcolor;
       const longestText: TextMetrics = lines.map(
@@ -595,21 +630,25 @@ export function useImageEditor(
         return a.width < b.width ? 1 : -1;
       })[0];
 
+      const x = fixedPos.x;
+      const y = fixedPos.y - halfHeight;
+      const w = Math.max(text.minWidth, longestText.width) * relativeZoom;
+      const h = Math.max(text.minHeight, lines.length * fontHeight * 1.15) * relativeZoom;
+      console.log({ lines, x, y, w, h, minWidth: text.minWidth, minHeight: text.minHeight });
+
+
+
       // draw the background for the height of all lines
-      for (let i = 0; i < lines.length; i++) {
-        ctx.fillRect(
-          fixedPos.x - pad,
-          fixedPos.y - halfHeight - pad - 2 + i * fontSize * lineHeight,
-          longestText.width + pad2,
-          height - halfHeight + pad2 + 1,
-        )
-      }
+      // for (let i = 0; i < lines.length; i++) {
+        ctx.fillRect(x, y, w, h);
+      // }
     }
 
     // draw the text lines on top of optional background
+    const textPad = padding;
     for (let i = 0; i < lines.length; i++) {
       ctx.fillStyle = text.color;
-      ctx.fillText(lines[i], fixedPos.x, fixedPos.y + i * fontSize * lineHeight); 
+      ctx.fillText(lines[i], fixedPos.x + textPad, fixedPos.y + textPad + i * lineHeight); 
     }
   }
 
@@ -638,8 +677,9 @@ export function useImageEditor(
         text: text,
         zoom: canvasZoom,
         bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
-        padding: textDraftBgPadding.value,
         id: 0,
+        minHeight: draftTextMinRect.value.y,
+        minWidth: draftTextMinRect.value.x,
       });
   } }
 
@@ -965,8 +1005,9 @@ export function useImageEditor(
       text: textDraft.value,
       zoom: zoom.value,
       bgcolor: textDraftSolidBg.value ? backColor.value : undefined,
-      padding: textDraftBgPadding.value,
       id: changeId,
+      minHeight: draftTextMinRect.value.y,
+      minWidth: draftTextMinRect.value.x,
     }
 
     registerImageUpdate('text', changeId, newText);
@@ -1060,7 +1101,6 @@ export function useImageEditor(
     setTextDraft,
     setTextDraftSolidBg,
     textDraft,
-    textDraftBgPadding,
     textDraftSolidBg,
     textSize,
     undo,

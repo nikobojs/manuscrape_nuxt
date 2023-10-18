@@ -161,7 +161,8 @@ declare global {
     size: number;
     color: string;
     bgcolor: string | undefined;
-    padding: number;
+    minWidth: number;
+    minHeight: number;
   };
 
   interface QueryParamOptions<T> {
