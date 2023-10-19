@@ -5,11 +5,6 @@ const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
 const minZoom = 0.1; // 10%
 
-const fontSizes = [12, 14, 18, 24, 30, 38, 45, 52, 64, 76, 88, 96, 118, 142, 188].map((v) => ({
-  value: v,
-  label: `${v}px`,
-}));
-
 const lineWidths = [2, 3, 5, 8, 13, 21].map((v) => ({
   value: v,
   label: `${v}px`,
@@ -64,7 +59,7 @@ export function useImageEditor(
   });
 
   // focus text area after changing settings while writing
-  watch([textSize, frontColor, backColor], () => {
+  watch([frontColor, backColor], () => {
     if (writing.value) {
       focusTextArea();
     }
@@ -355,8 +350,8 @@ export function useImageEditor(
             drawImage();
             drawBoxes();
             drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
-            drawLines();
             drawTexts(zoom.value);
+            drawLines();
           }
         },
       },
@@ -380,7 +375,6 @@ export function useImageEditor(
             writing.value = true;
             textDraft.value = '';
             cursor.value = 'move';
-            textSize.value = square[3] / zoom.value / 2;
 
             if (square[2] < 0) {
               square[0] = beginX.value + square[2];
@@ -396,12 +390,12 @@ export function useImageEditor(
               y: square[3] / zoom.value,
             };
 
+            textSize.value = Math.ceil(10 * square[3] / zoom.value / 2) / 10;
+
             draftTextPosition.value = [
               (square[0] - cameraPosition.value[0]) / zoom.value,
               (square[1] - cameraPosition.value[1]) / zoom.value
             ];
-
-            focusTextArea();
           }
 
           dragging.value = false;
@@ -434,8 +428,8 @@ export function useImageEditor(
             drawImage();
             drawBoxes();
             drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
-            drawLines();
             drawTexts(zoom.value);
+            drawLines();
           }
         },
         rightUp: (ev) => {
@@ -1076,13 +1070,19 @@ export function useImageEditor(
       .sort(([_k1, a], [_k2, b]) => (a?.menuIndex || 0) > (b?.menuIndex || 0) ? 1 : -1);
   });
 
+  function setTextSize (n: number) {
+    if (!n || typeof n !== 'string') return;
+    const parsed = parseFloat(n);
+    if (isNaN(parsed)) return;
+    textSize.value = parsed;
+  }
+
   return {
     actionButtons,
     canvasRect,
     createImageFile,
     cursor,
     removeEventListeners,
-    fontSizes,
     hasPendingChanges,
     isSaving,
     lineWidth,
@@ -1107,5 +1107,6 @@ export function useImageEditor(
     addToZoom,
     canvasBackgroundPosition,
     canvasBackgroundSize,
+    setTextSize,
   };
 }
