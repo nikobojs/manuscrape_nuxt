@@ -85,7 +85,6 @@
             variant="outline"
             size="xs"
           >Overwrite image</UButton>
-
         </div>
       </div>
     </template>

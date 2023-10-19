@@ -375,7 +375,6 @@ export function useImageEditor(
             writing.value = true;
             textDraft.value = '';
             cursor.value = 'move';
-
             if (square[2] < 0) {
               square[0] = beginX.value + square[2];
               square[2] = Math.abs(square[2]);
@@ -407,7 +406,6 @@ export function useImageEditor(
 
           // in any case we cant to use the position clicked on
           const { x, y } = mousePosition(ev, canvas.value);
-
           // set beginX and beginY for drawing rect
           beginX.value = x;
           beginY.value = y;
