@@ -5,7 +5,7 @@ const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
 const minZoom = 0.1; // 10%
 
-const fontSizes = [12, 14, 18, 24, 30, 38, 45, 52, 64, 76, 88, 96].map((v) => ({
+const fontSizes = [12, 14, 18, 24, 30, 38, 45, 52, 64, 76, 88, 96, 118, 142, 188].map((v) => ({
   value: v,
   label: `${v}px`,
 }));
@@ -380,6 +380,7 @@ export function useImageEditor(
             writing.value = true;
             textDraft.value = '';
             cursor.value = 'move';
+            textSize.value = square[3] / zoom.value / 2;
 
             if (square[2] < 0) {
               square[0] = beginX.value + square[2];

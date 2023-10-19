@@ -42,6 +42,12 @@
                 </div>
                 <div class="flex gap-x-2">
                   <span class="flex gap-x-1">
+                    <UKbd>Esc</UKbd>
+                  </span>:
+                  <span>(Text mode) Discard text</span>
+                </div>
+                <div class="flex gap-x-2">
+                  <span class="flex gap-x-1">
                     <UKbd>Shift</UKbd>+<UKbd>Scroll</UKbd>
                   </span>:
                   <span>Zoom</span>
