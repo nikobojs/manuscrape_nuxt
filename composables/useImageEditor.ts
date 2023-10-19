@@ -5,7 +5,7 @@ const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
 const minZoom = 0.1; // 10%
 
-const fontSizes = [12, 14, 18, 24, 38, 52, 66, 82].map((v) => ({
+const fontSizes = [12, 14, 18, 24, 30, 38, 45, 52, 64, 76, 88, 96].map((v) => ({
   value: v,
   label: `${v}px`,
 }));
@@ -41,7 +41,7 @@ export function useImageEditor(
   const shiftKeyDown = ref<boolean>(false);
   const controlKeyDown = ref<boolean>(false);
   const textDraft = ref<string>('');
-  const textSize = ref<number>(24);
+  const textSize = ref<number>(45);
   const textDraftSolidBg = ref<boolean>(true);
   const draftTextMinRect = ref<{ x: number; y: number }>({x: 0, y: 0});
   const lineWidth = ref<number>(5);
@@ -568,7 +568,7 @@ export function useImageEditor(
   
     const z = text.zoom;
     const relativeZoom = z;
-    const fontSize = Math.floor(text.size * relativeZoom);
+    const fontSize = Math.round(text.size * relativeZoom);
     let padding = 0;
     let scaledPos = {
       x: (text.position[0]) * z, // works
@@ -585,7 +585,7 @@ export function useImageEditor(
     ctx.font = `${fontSize}px Arial`;
 
     // TODO: support different line heights
-    const lineHeight = 1.15 * fontSize;
+    const lineHeight = 1.10 * fontSize;
 
     let fontHeight;
     if (ctx.font) {
@@ -601,8 +601,6 @@ export function useImageEditor(
       return;
     }
 
-    const halfHeight = Math.ceil(fontHeight / 2);
-
     // draw background square if enabled
     if (text.bgcolor) {
       padding = 8 * relativeZoom; // give text padding if its inside a box
@@ -617,8 +615,8 @@ export function useImageEditor(
 
       const x = fixedPos.x;
       const y = fixedPos.y;
-      const w = Math.max(text.minWidth * z, longestText.width) + padding * 2; // NOT ZOOMING
-      const h = Math.max(text.minHeight * z, lines.length * fontHeight * 1.15 + padding);
+      const w = Math.max(text.minWidth * z, longestText.width + fontSize);
+      const h = Math.max(text.minHeight * z, (lines.length + 0.6) * lineHeight);
       const square: Square = [ x, y, w, h ]
 
       // draw the background for the height of all lines
@@ -626,13 +624,12 @@ export function useImageEditor(
     }
 
     // draw the text lines on top of optional background
-    const textPad = padding;
     for (let i = 0; i < lines.length; i++) {
       ctx.fillStyle = text.color;
       ctx.fillText(
         lines[i],
-        fixedPos.x + textPad,
-        fixedPos.y + halfHeight + 1.5 * textPad + i * lineHeight
+        fixedPos.x + fontSize / 2,
+        fixedPos.y + (i + 1.1) * lineHeight,
       ); 
     }
   }
