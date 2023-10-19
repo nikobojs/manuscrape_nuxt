@@ -448,6 +448,8 @@ export function useImageEditor(
           // save text on ctrl+enter
           if (key === 'Enter' && controlKeyDown.value) {
             saveTextDraft();
+          } else if (key === 'Escape') {
+            resetTextDraft();
           }
         },
       }
@@ -765,6 +767,8 @@ export function useImageEditor(
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
+    } else if (!controlKeyDown.value && !shiftKeyDown.value) {
+      console.log('scrolling!', ev)
     }
   }
 
