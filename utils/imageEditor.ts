@@ -144,8 +144,7 @@ export function mouseRect(
 ): SquareWithZoom {
   const { x, y } = mousePosition(ev, canvas);
 
-  // TODO: support boxes made from other direction
-  // TODO: test if already possible? it seems :S
+  // TODO: support boxes made from other direction here instead of client code
   const square: SquareWithZoom = {
     x: beginX,
     y: beginY,

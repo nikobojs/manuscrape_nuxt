@@ -5,11 +5,6 @@ const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
 const minZoom = 0.1; // 10%
 
-const fontSizes = [12, 14, 18, 24, 30, 38, 45, 52, 64, 76, 88, 96].map((v) => ({
-  value: v,
-  label: `${v}px`,
-}));
-
 const lineWidths = [2, 3, 5, 8, 13, 21].map((v) => ({
   value: v,
   label: `${v}px`,
@@ -61,6 +56,13 @@ export function useImageEditor(
   // redraw the whole thing when ui stuff changes
   watch([textDraftSolidBg, textSize, textDraft, frontColor, backColor], () => {
     draw();
+  });
+
+  // focus text area after changing settings while writing
+  watch([frontColor, backColor], () => {
+    if (writing.value) {
+      focusTextArea();
+    }
   });
 
   const mode = ref<EditorMode>(EditorMode.DISABLED);
@@ -348,8 +350,8 @@ export function useImageEditor(
             drawImage();
             drawBoxes();
             drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
-            drawLines();
             drawTexts(zoom.value);
+            drawLines();
           }
         },
       },
@@ -373,7 +375,6 @@ export function useImageEditor(
             writing.value = true;
             textDraft.value = '';
             cursor.value = 'move';
-
             if (square[2] < 0) {
               square[0] = beginX.value + square[2];
               square[2] = Math.abs(square[2]);
@@ -388,6 +389,8 @@ export function useImageEditor(
               y: square[3] / zoom.value,
             };
 
+            textSize.value = Math.ceil(10 * square[3] / zoom.value / 2) / 10;
+
             draftTextPosition.value = [
               (square[0] - cameraPosition.value[0]) / zoom.value,
               (square[1] - cameraPosition.value[1]) / zoom.value
@@ -396,7 +399,6 @@ export function useImageEditor(
 
           dragging.value = false;
           draw();
-          focusTextArea();
         },
         down: (ev) => {
           if (!canvas.value) return;
@@ -404,7 +406,6 @@ export function useImageEditor(
 
           // in any case we cant to use the position clicked on
           const { x, y } = mousePosition(ev, canvas.value);
-
           // set beginX and beginY for drawing rect
           beginX.value = x;
           beginY.value = y;
@@ -425,8 +426,8 @@ export function useImageEditor(
             drawImage();
             drawBoxes();
             drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
-            drawLines();
             drawTexts(zoom.value);
+            drawLines();
           }
         },
         rightUp: (ev) => {
@@ -440,6 +441,8 @@ export function useImageEditor(
           // save text on ctrl+enter
           if (key === 'Enter' && controlKeyDown.value) {
             saveTextDraft();
+          } else if (key === 'Escape') {
+            resetTextDraft();
           }
         },
       }
@@ -757,6 +760,8 @@ export function useImageEditor(
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
+    } else if (!controlKeyDown.value && !shiftKeyDown.value) {
+      console.log('scrolling!', ev)
     }
   }
 
@@ -801,22 +806,8 @@ export function useImageEditor(
       context.value
     ) {
       clearCanvas();
-
-      // TODO: find out what the third parameter does... :S
-      canvas.value.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("keyup", onKeyUp, true);
-      window.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("wheel", onScroll, false);
-      canvas.value.removeEventListener("contextmenu", onRightClick);
-      canvas.value.addEventListener("mousedown", onMouseDown);
-      window.addEventListener("mouseup", onMouseUp);
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("keyup", onKeyUp, true);
-      window.addEventListener("keydown", onKeyDown, true);
-      window.addEventListener("wheel", onScroll, false);
-      canvas.value.addEventListener("contextmenu", onRightClick);
+      removeEventListeners(); // fix: naming (it removes all eventlisteners)
+      addEventListeners();
       boxes.value = [];
       lines.value = [];
       texts.value = [];
@@ -940,16 +931,32 @@ export function useImageEditor(
   }
 
   // TODO: refactor or improve naming
-  function destroyEditor() {
+  function removeEventListeners() {
     if (canvas.value) {
       canvas.value.removeEventListener("mousedown", onMouseDown);
       canvas.value.removeEventListener("contextmenu", onRightClick);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("keyup", onKeyUp, true);
-      window.removeEventListener("wheel", onScroll, false);
     }
+
+    window.removeEventListener("mouseup", onMouseUp);
+    window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("keydown", onKeyDown, true);
+    window.removeEventListener("keyup", onKeyUp, true);
+    window.removeEventListener("wheel", onScroll, true);
+  }
+
+  function addEventListeners() {
+    if (!canvas.value) {
+      throw new Error('Unable to add event listeners to canvas, as it is not defined!');
+    }
+
+    canvas.value.removeEventListener("contextmenu", onRightClick);
+    canvas.value.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("wheel", onScroll, true);
+    canvas.value.addEventListener("contextmenu", onRightClick);
   }
 
   function setTextDraft(text: string) {
@@ -1061,13 +1068,19 @@ export function useImageEditor(
       .sort(([_k1, a], [_k2, b]) => (a?.menuIndex || 0) > (b?.menuIndex || 0) ? 1 : -1);
   });
 
+  function setTextSize (n: number) {
+    if (!n || typeof n !== 'string') return;
+    const parsed = parseFloat(n);
+    if (isNaN(parsed)) return;
+    textSize.value = parsed;
+  }
+
   return {
     actionButtons,
     canvasRect,
     createImageFile,
     cursor,
-    destroyEditor,
-    fontSizes,
+    removeEventListeners,
     hasPendingChanges,
     isSaving,
     lineWidth,
@@ -1092,5 +1105,6 @@ export function useImageEditor(
     addToZoom,
     canvasBackgroundPosition,
     canvasBackgroundSize,
+    setTextSize,
   };
 }
