@@ -178,29 +178,13 @@
                 variant="outline"
                 class="saveText"
               >Save text</UButton>
-              <!-- save text button-->
+              <!-- discard text button-->
               <UButton
                 v-if="writing"
                 color="red"
                 variant="outline"
                 @click="resetTextDraft"
               >Discard</UButton>
-              <!-- padding range form component (TODO: simplify)-->
-              <div
-                v-if="textDraftSolidBg"
-                class="w-16 flex flex-col h-full content-between"
-              >
-                <div class="text-xs pb-2">Padding</div>
-                <URange
-                  color="red"
-                  :ui="{
-                    background: 'bg-[#1f2a42]',
-                  }"
-                  :min="10"
-                  :max="100"
-                  v-model="textDraftBgPadding"
-                />
-              </div>
 
               <!-- toggle background transparency -->
               <div class="flex flex-col items-center gap-x-2">
@@ -360,7 +344,6 @@
     setTextDraft,
     setTextDraftSolidBg,
     textDraft,
-    textDraftBgPadding,
     textDraftSolidBg,
     textSize,
     writing,
