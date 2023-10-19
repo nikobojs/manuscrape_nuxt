@@ -63,6 +63,13 @@ export function useImageEditor(
     draw();
   });
 
+  // focus text area after changing settings while writing
+  watch([textSize, frontColor, backColor], () => {
+    if (writing.value) {
+      focusTextArea();
+    }
+  });
+
   const mode = ref<EditorMode>(EditorMode.DISABLED);
   const previousMode = ref<EditorMode | undefined>();
   const lastReload = ref(new Date());
@@ -392,11 +399,12 @@ export function useImageEditor(
               (square[0] - cameraPosition.value[0]) / zoom.value,
               (square[1] - cameraPosition.value[1]) / zoom.value
             ];
+
+            focusTextArea();
           }
 
           dragging.value = false;
           draw();
-          focusTextArea();
         },
         down: (ev) => {
           if (!canvas.value) return;
@@ -801,22 +809,8 @@ export function useImageEditor(
       context.value
     ) {
       clearCanvas();
-
-      // TODO: find out what the third parameter does... :S
-      canvas.value.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("keyup", onKeyUp, true);
-      window.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("wheel", onScroll, false);
-      canvas.value.removeEventListener("contextmenu", onRightClick);
-      canvas.value.addEventListener("mousedown", onMouseDown);
-      window.addEventListener("mouseup", onMouseUp);
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("keyup", onKeyUp, true);
-      window.addEventListener("keydown", onKeyDown, true);
-      window.addEventListener("wheel", onScroll, false);
-      canvas.value.addEventListener("contextmenu", onRightClick);
+      removeEventListeners(); // fix: naming (it removes all eventlisteners)
+      addEventListeners();
       boxes.value = [];
       lines.value = [];
       texts.value = [];
@@ -940,16 +934,32 @@ export function useImageEditor(
   }
 
   // TODO: refactor or improve naming
-  function destroyEditor() {
+  function removeEventListeners() {
     if (canvas.value) {
       canvas.value.removeEventListener("mousedown", onMouseDown);
       canvas.value.removeEventListener("contextmenu", onRightClick);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("keyup", onKeyUp, true);
-      window.removeEventListener("wheel", onScroll, false);
     }
+
+    window.removeEventListener("mouseup", onMouseUp);
+    window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("keydown", onKeyDown, true);
+    window.removeEventListener("keyup", onKeyUp, true);
+    window.removeEventListener("wheel", onScroll, true);
+  }
+
+  function addEventListeners() {
+    if (!canvas.value) {
+      throw new Error('Unable to add event listeners to canvas, as it is not defined!');
+    }
+
+    canvas.value.removeEventListener("contextmenu", onRightClick);
+    canvas.value.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("wheel", onScroll, true);
+    canvas.value.addEventListener("contextmenu", onRightClick);
   }
 
   function setTextDraft(text: string) {
@@ -1066,7 +1076,7 @@ export function useImageEditor(
     canvasRect,
     createImageFile,
     cursor,
-    destroyEditor,
+    removeEventListeners,
     fontSizes,
     hasPendingChanges,
     isSaving,

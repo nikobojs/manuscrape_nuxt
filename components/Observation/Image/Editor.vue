@@ -329,7 +329,6 @@
     canvasRect,
     createImageFile,
     cursor,
-    destroyEditor,
     resetTextDraft,
     fontSizes,
     hasPendingChanges,
@@ -355,6 +354,7 @@
     redoDisabled,
     canvasBackgroundPosition,
     canvasBackgroundSize,
+    removeEventListeners,
   } = useImageEditor(
     props.observation.id,
     props.project.id,
@@ -383,13 +383,12 @@
 
 
   onMounted(() => {
-    destroyEditor();
     reset();
   });
 
   onUnmounted(() => {
-    destroyEditor();
-  })
+    removeEventListeners();
+  });
   
 
 </script>
