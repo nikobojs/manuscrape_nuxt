@@ -13,14 +13,40 @@
     <template #createdAt-data="{ row }">
       {{ prettyDate(row.createdAt) }}
     </template>
+    <template #actions-data="{ row }">
+      <div class="flex h-full w-full items-center self-end justify-end">
+        <span class="text-red-500 text-lg">
+          <UTooltip
+            :ui="{
+              base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
+            }"
+          >
+            <UIcon @click="() => handleRemoveCollaborator(row)" class="cursor-pointer" name="i-heroicons-trash" />
+            <template #text>
+              <div class="break-words whitespace-normal">
+                Remove collaborator from project.
+                <br /><br />
+                This action will also remove the user's email from their submitted observations in this project.
+              </div>
+              </template>
+          </UTooltip>
+        </span>
+      </div>
+    </template>
   </UTable>
 </template>
 
 <script setup lang="ts">
-  defineProps({
+  const props = defineProps({
+    project: requireProjectProp,
     collaborators: requireProp<Collaborator[]>(Array),
     loading: requireProp<boolean>(Boolean),
   });
+
+  const { params } = useRoute();
+  const toast = useToast();
+  const { refreshUser } = await useUser();
+  const { removeCollaborator } = await useProjects(params);
 
   const columns = [{
     label: 'Email',
@@ -31,5 +57,37 @@
   }, {
     label: 'Permission created at',
     key: 'createdAt',
-  }]
+  }, {
+    label: '',
+    key: 'actions',
+  }];
+
+  function handleRemoveCollaborator(collaborator: Collaborator) {
+    // TODO: create nice confirm box
+    const res = confirm(`Are you sure you want to remove '${collaborator?.user?.email}' from the project?`);
+    if (!res) {
+      return;
+    }
+
+    removeCollaborator(props.project.id, collaborator.user.id).then(async (res) => {
+      if (res.status !== 200) {
+        throw res;
+      }
+
+      toast.add({
+        title: 'Collaborator was removed from project',
+        color: 'green',
+        icon: 'i-heroicons-check'
+      });
+      await refreshUser();
+    }).catch(async (res: Response) => {
+      const json = await res.json();
+      const msg = getErrMsg(json);
+      toast.add({
+        title: msg,
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle'
+      });
+    })
+  }
 </script>
