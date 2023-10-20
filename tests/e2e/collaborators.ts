@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { testProject, withTempUser, createProject, invite, getMe, fetchObservations, openProjectPage, inviteToProject, signup, deleteUser } from './helpers';
+import { testProject, withTempUser, createProject, invite, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
 import { prisma } from './helpers';
 import { daysInFuture } from '../../utils/datetime';
 
@@ -15,12 +15,12 @@ describe('Collaborators', () => {
       const inviteRes = await invite(
         token,
         projectId,
-        { email: 'invitationtest@codecolective.dk' },
+        { email: 'invitationtest@codecollective.dk' },
       );
       const inviteRes2 = await invite(
         token,
         projectId,
-        { email: 'invitationtest@codecolective.dk' },
+        { email: 'invitationtest@codecollective.dk' },
       );
 
       expect(inviteRes.status).toBe(201);
@@ -28,8 +28,111 @@ describe('Collaborators', () => {
     });
   });
 
+  test('project owner can remove collaborator', async () =>  {
+    const collaboratorEmail = 'collaborator-0@codecollective.dk';
+    await withTempProject(async (_user, project, _obs, tokenA) => {
+      const inviteRes = await invite(
+        tokenA,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+      await withTempUser(async (user2, tokenB) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        // try remove collaborator
+        const res = await removeCollaborator(tokenA, project.id, user2.id);
+        expect(res.status).toBe(200);
+      }, collaboratorEmail);
+    });
+  });
+
+  test('remove collaborator returns 400 or 404 on bad user id', async () =>  {
+    const collaboratorEmail = 'collaborator-1@codecollective.dk';
+    await withTempProject(async (_user, project, _obs, token) => {
+      const inviteRes = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+      await withTempUser(async (user2) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        // try remove collaborator
+        const resA = await removeCollaborator(token, project.id, user2.id + '1213');
+        expect(resA.status).toBe(400);
+        const resB = await removeCollaborator(token, project.id, 'abcd1ef');
+        expect(resB.status).toBe(400);
+        const resC = await removeCollaborator(token, project.id, '');
+        expect(resC.status).toBe(400);
+      }, collaboratorEmail);
+    });
+  });
+
+  test('user cannot remove other collaborators if user is collaborator', async () =>  {
+    const collaboratorEmail0 = 'collaborator-2-1@codecollective.dk';
+    const collaboratorEmail1 = 'collaborator-2-2@codecollective.dk';
+    // create project
+    await withTempProject(async (_user, project, _obs, token) => {
+
+      // invite two collaborators
+      const inviteRes0 = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail0 },
+      );
+      expect(inviteRes0.status).toBe(201);
+      const inviteRes1 = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail1 },
+      );
+      expect(inviteRes1.status).toBe(201);
+
+
+      // create user and let one try to remove the other
+      await withTempUser(async (user0) => {
+        expect(user0.projectAccess.length).toBe(1);
+        await withTempUser(async (user1, tokenA) => {
+          expect(user1.projectAccess.length).toBe(1);
+          const res = await removeCollaborator(tokenA, project.id, user0.id);
+          expect(res.status).toBe(403);
+        }, collaboratorEmail1);
+      }, collaboratorEmail0);
+    });
+  });
+
+  test('collaborator can remove herself as collaborator', async () =>  {
+    const collaboratorEmail = 'collaborator-3@codecollective.dk';
+    // create project manager and project
+    await withTempProject(async (_user, project, _obs, token) => {
+      // invite collaborator
+      const inviteRes = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+
+      // sign up as collaborator
+      await withTempUser(async (user2, tokenA) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        // let the collaborator remove herself
+        const res = await removeCollaborator(tokenA, project.id, user2.id);
+        expect(res.status).toBe(200);
+
+        // ensure collaborator lost access (has access to 0 projects)
+        const meRes = await getMe(tokenA);
+        const me = await meRes.json();
+        expect(me.projectAccess?.length).toBe(0);
+      }, collaboratorEmail);
+    });
+  });
+
   test('when invited user signs up, she gets automatic access to projects', async () =>  {
-    const inviteEmail = 'invitationtest-1@codecolective.dk'
+    const inviteEmail = 'invitationtest-1@codecollective.dk'
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, testProject);
       const json = await res.json();
@@ -53,7 +156,7 @@ describe('Collaborators', () => {
   });
 
   test('invited user gets immediate access if already a manuscrape user', async () =>  {
-    const inviteEmail = 'invitationtest-2@codecolective.dk'
+    const inviteEmail = 'invitationtest-2@codecollective.dk'
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, testProject);
       const json = await res.json();
@@ -84,7 +187,7 @@ describe('Collaborators', () => {
   });
 
   test('invitations work with the expiration param', async () =>  {
-    const inviteEmail = 'invitationtest-3@codecolective.dk'
+    const inviteEmail = 'invitationtest-3@codecollective.dk'
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, testProject);
       const json = await res.json();
@@ -139,7 +242,7 @@ describe('Collaborators', () => {
   });
 
   test('expired invitations wont affect newer invitations', async () =>  {
-    const inviteEmail = 'invitationtest-4@codecolective.dk'
+    const inviteEmail = 'invitationtest-4@codecollective.dk'
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, testProject);
       const json = await res.json();

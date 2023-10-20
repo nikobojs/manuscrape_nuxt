@@ -22,7 +22,11 @@
       <UInput type="email" v-model="email" placeholder="Enter email" />
       <UButton variant="outline" color="blue" icon="i-heroicons-user-plus" :disabled="!validEmail" @click="onSubmit">Add contributor</UButton>
     </div>
-    <CollaboratorList :collaborators="collaborators" :loading="collaboratorsLoading" />
+    <CollaboratorList
+      :project="project"
+      :collaborators="collaborators"
+      :loading="collaboratorsLoading"
+    />
   </UCard>
 </template>
 
