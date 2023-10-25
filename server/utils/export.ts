@@ -156,7 +156,7 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
   sheet.addRows(observationRows)
 
   // write a buffer to ram
-  const filename = 'nvivo_export.xlsx'
+  const filename = `${cleanName(project.name)}-${dateString()}.xlsx`;
   const buffer = await wb.xlsx.writeBuffer({ filename });
 
   // set http header that fixes control over the download filename
@@ -223,7 +223,7 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
   archive.finalize();
 
   // set http header that fixes control over the download filename
-  const filename = 'export.zip';
+  const filename = `${cleanName(project.name)}-${dateString()}.zip`;
   setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
 
   // set zip mime type
@@ -231,4 +231,16 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
 
   // return { observationImages, s3Paths }
   return archive;
+}
+
+
+function cleanName(unsafe: string): string {
+  let result = unsafe.replace(/[^a-zA-Z0-9-_æøåÆØÅ\ ]/g, '')
+  result = result.replaceAll(' ', '_');
+  return result;
+}
+
+function dateString(date = new Date()): string {
+  const formattedDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  return formattedDate;
 }
