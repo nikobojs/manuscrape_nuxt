@@ -156,7 +156,7 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
   sheet.addRows(observationRows)
 
   // write a buffer to ram
-  const filename = `${cleanName(project.name)}-${dateString()}.xlsx`;
+  const filename = `${cleanName(project.name)}-mastersheet-${dateString()}.xlsx`;
   const buffer = await wb.xlsx.writeBuffer({ filename });
 
   // set http header that fixes control over the download filename
@@ -166,6 +166,82 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
 
   // return excel file
   return buffer;
+}
+
+
+export async function generateProjectUploadsExport (event: H3Event, projectId: number) {
+  // get project by projectId
+  const project: ExportedProject | null = await prisma.project.findUnique({
+    where: {
+      id: projectId
+    },
+    select: exportProjectQuery,
+  });
+
+  // ensure project exists
+  if (!project) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Project does not exist'
+    });
+  }
+
+  // array of observation ids
+  const observationIds = project.observations.map(o => o.id);
+
+  // get observation images for download by observationIds
+  const fileUploads = await prisma.fileUpload.findMany({
+    where: { observationId: { in: observationIds }},
+    select: {
+      id: true,
+      s3Path: true,
+      mimetype: true,
+      originalName: true,
+      observationId: true,
+    }
+  });
+
+  const archive = archiver('zip', {
+    zlib: { level: 9 } // Sets the compression level.
+  });
+
+  const obsFileCounts: Record<number, number> = {};
+  
+  for (const upload of fileUploads) {
+    if (upload?.s3Path) {
+      const res = await getS3Upload(upload.s3Path);
+      if (res.$metadata.httpStatusCode === 200 && res.Body) {
+        const byteArr = await res.Body.transformToByteArray();
+        const buffer = Buffer.from(byteArr);
+
+        let filenameDotSplit = upload.originalName.split('.').reverse();
+        let fileEnding = '';
+        if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+
+        if (!(upload.observationId in obsFileCounts)) {
+          obsFileCounts[upload.observationId] = 0;
+        } else {
+          obsFileCounts[upload.observationId]++;
+        }
+
+        const count = `.${obsFileCounts[upload.observationId]}`;
+
+        archive.append(buffer, { name: upload.observationId + count + fileEnding });
+      }
+    }
+  }
+
+  archive.finalize();
+
+  // set http header that fixes control over the download filename
+  const filename = `${cleanName(project.name)}-uploads-${dateString()}.zip`;
+  setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
+
+  // set zip mime type
+  setHeader(event, 'Content-Type','application/octet-stream');
+
+  // return { observationImages, s3Paths }
+  return archive;
 }
 
 
@@ -223,7 +299,7 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
   archive.finalize();
 
   // set http header that fixes control over the download filename
-  const filename = `${cleanName(project.name)}-${dateString()}.zip`;
+  const filename = `${cleanName(project.name)}-images-${dateString()}.zip`;
   setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
 
   // set zip mime type

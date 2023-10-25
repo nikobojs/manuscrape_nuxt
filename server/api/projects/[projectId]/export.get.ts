@@ -1,8 +1,10 @@
 import { ProjectRole } from '@prisma/client';
 import * as yup from 'yup';
+import { generateProjectUploadsExport } from '~/server/utils/export';
 
 const SupportedExportTypes = Object.freeze({
   nvivo: 'nvivo',
+  uploads: 'uploads',
   media: 'media',
 });
 
@@ -31,6 +33,9 @@ export default safeResponseHandler(async (event) => {
     return buffer;
   } else if(type === SupportedExportTypes.media) {
     const buffer = await generateProjectMediaExport(event, projectId);
+    return buffer;
+  } else if(type === SupportedExportTypes.uploads) {
+    const buffer = await generateProjectUploadsExport(event, projectId);
     return buffer;
   } else {
     throw createError({

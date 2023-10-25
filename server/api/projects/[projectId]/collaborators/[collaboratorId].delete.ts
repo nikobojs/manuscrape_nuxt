@@ -1,19 +1,13 @@
-
-import * as yup from 'yup';
 import { ProjectRole } from '@prisma/client';
 import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
 import { parseIntParam } from '~/server/utils/request';
 import { requireUser } from '~/server/utils/authorize';
-import { daysInFuture } from '~/utils/datetime';
-import { generateInvitationHash } from '~/server/utils/invitation';
 
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
   const user = requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
-
-  console.log({ collaboratorId })
 
   // TODO: abstract this to server util
   const access = await prisma.projectAccess.findUnique({

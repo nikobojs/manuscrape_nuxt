@@ -772,8 +772,6 @@ export function useImageEditor(
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
-    } else if (!controlKeyDown.value && !shiftKeyDown.value) {
-      console.log('scrolling!', ev)
     }
   }
 
