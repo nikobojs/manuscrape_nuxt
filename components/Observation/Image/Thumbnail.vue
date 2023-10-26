@@ -5,7 +5,6 @@
     @click="() => openImageDialog = true"
   >
     <img
-      class="opacity-50"
       :src="`/api/projects/${project?.id}/observations/${observation?.id}/image?lastUpdate=${(props.lastUpdate || new Date()).getTime()}`"
     />
 
