@@ -74,6 +74,19 @@ export const useObservations = async (projectId: number) => {
     })
   };
 
+  const deleteObservationFile = async (
+    projectId: number,
+    observationId: number,
+    file: FileUploadResponse,
+  ) => {
+    return $fetch(`/api/projects/${projectId}/observations/${observationId}/upload/${file.id}`, {
+      method: 'DELETE',
+    }).catch(err => {
+      console.error('delete observation file err:', err);
+      throw err;
+    })
+  };
+
   const patchObservation = async (
     projectId: number,
     obsId: number,
@@ -185,18 +198,19 @@ export const useObservations = async (projectId: number) => {
   };
 
   return {
-    requireObservationFromParams,
-    upsertObservationImage,
-    patchObservation,
     createObservation,
-    getObservationById,
-    observations,
-    loading,
-    publishObservation,
-    page,
-    totalPages,
-    totalObservations,
     deleteObservation,
+    deleteObservationFile,
+    getObservationById,
+    loading,
+    observations,
+    page,
+    patchObservation,
+    publishObservation,
+    requireObservationFromParams,
+    totalObservations,
+    totalPages,
     uploadObservationFile,
+    upsertObservationImage,
   }
 };
