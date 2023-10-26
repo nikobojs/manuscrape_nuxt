@@ -16,6 +16,9 @@
       <NuxtLink :href="`/api/projects/${project.id}/export?type=media`" target="_blank">
         <UButton icon="i-mdi-image-multiple-outline" variant="outline" color="blue">Export observation media</UButton>
       </NuxtLink>
+      <NuxtLink :href="`/api/projects/${project.id}/export?type=uploads`" target="_blank">
+        <UButton icon="i-mdi-image-multiple-outline" variant="outline" color="blue">Export observation uploads</UButton>
+      </NuxtLink>
     </div>
   </UCard>
 </template>

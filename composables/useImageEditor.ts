@@ -4,6 +4,7 @@ let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;
 const maxZoom = 10;   // 1000%
 const minZoom = 0.1; // 10%
+const defaultTextSize = 16;
 
 const lineWidths = [2, 3, 5, 8, 13, 21].map((v) => ({
   value: v,
@@ -369,6 +370,7 @@ export function useImageEditor(
           if (!canvas.value) return;
           // if already writing, move text instead of creating new
           if (writing.value && dragging.value) {
+            focusTextArea();
             // pass (TODO)
           } else if (!writing.value && dragging.value) {
             const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
@@ -389,12 +391,22 @@ export function useImageEditor(
               y: square[3] / zoom.value,
             };
 
-            textSize.value = Math.ceil(10 * square[3] / zoom.value / 2) / 10;
+            // if marked area is less than 10 px^2, use defaultTextSize
+            if (square[2] * square[3] < 10) {
+              textSize.value = defaultTextSize;
+            } else {
+              textSize.value = Math.max(
+                defaultTextSize,
+                Math.ceil(10 * square[3] / zoom.value / 2) / 10,
+              );
+            }
 
             draftTextPosition.value = [
               (square[0] - cameraPosition.value[0]) / zoom.value,
               (square[1] - cameraPosition.value[1]) / zoom.value
             ];
+
+            focusTextArea();
           }
 
           dragging.value = false;
@@ -760,8 +772,6 @@ export function useImageEditor(
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
-    } else if (!controlKeyDown.value && !shiftKeyDown.value) {
-      console.log('scrolling!', ev)
     }
   }
 

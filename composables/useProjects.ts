@@ -45,6 +45,20 @@ export const useProjects = async (params: RouteParams) => {
     )
   };
 
+  const removeCollaborator = async (
+    projectId: number,
+    collaboratorId: number,
+  ): Promise<any> => {
+    return fetch(
+      `/api/projects/${projectId}/collaborators/${collaboratorId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  };
 
   const sortFields = (project: FullProject) => [...project.fields].sort(
     (a, b) => a.index > b.index ? 1 : -1
@@ -103,16 +117,17 @@ export const useProjects = async (params: RouteParams) => {
 
 
   return {
-    projects,
-    createProject,
-    loading,
-    hasOwnership,
-    getProjectById,
     addCollaborator,
-    deleteParameter,
-    sortFields,
     createParameter,
-    project,
+    createProject,
+    deleteParameter,
+    getProjectById,
+    hasOwnership,
     isOwner,
+    loading,
+    project,
+    projects,
+    removeCollaborator,
+    sortFields,
   };
 };

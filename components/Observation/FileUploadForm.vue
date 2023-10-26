@@ -20,7 +20,7 @@
         :columns="fileUploadColumns"
       >
         <template #mimetype-data="{ row }">
-          <div class="w-full h-full items-center justify-center flex">
+          <div class="w-5 h-5">
             <UIcon
               :name="getIconByMimetype(row.mimetype).icon"
               :class="`${getIconByMimetype(row.mimetype).class} text-xl`"
@@ -36,13 +36,30 @@
             {{ row.originalName }}
           </NuxtLink>
         </template>
+        <template #createdAt-data="{ row }">
+          {{ prettyDate(row.createdAt, true) }}
+        </template>
+        <template #delete-data="{ row }">
+          <div
+            class="w-5 h-5 cursor-pointer transition-opacity opacity-80 hover:opacity-100"
+            @click="handleDeleteFile(row)"
+          >
+            <UIcon
+              name="i-mdi-trash-outline"
+              :class="`text-red-600 text-xl`"
+            />
+          </div>
+        </template>
       </UTable>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { captureException } from '@sentry/vue';
+
   const props = defineProps({
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
+    onFileDeleted: requireFunctionProp<() => Promise<void>>(),
     onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
     observation: requireObservationProp,
     project: requireProjectProp,
@@ -57,7 +74,8 @@
     {
       label: '',
       key: 'mimetype',
-      sortable: true,
+      sortable: false,
+      class: 'w-5',
     },
     {
       label: 'File name',
@@ -65,14 +83,21 @@
       sortable: true,
     },
     {
-      label: 'Uploaded at',
+      label: 'Date',
       key: 'createdAt',
       sortable: true,
-    }
+    },
+    {
+      label: '',
+      key: 'delete',
+      sortable: false,
+      class: 'w-5',
+    },
   ]
 
   const {
     uploadObservationFile,
+    deleteObservationFile,
   } = await useObservations(props.project.id);
 
   async function onFilePicked(event: any) {
@@ -111,6 +136,41 @@
         let msg = 'An error occured when uploading image'
         if (e.message) {
           msg = e.message;
+        }
+        toast.add({
+          title: 'File upload error',
+          description: msg,
+          icon: 'i-heroicons-exclamation-triangle',
+          color: 'red'
+        });
+      })
+    } catch(err) {
+      console.error('File upload submit error:', err);
+      throw err;
+    }
+  }
+
+  async function handleDeleteFile(f: FileUploadResponse) {
+    const confirmed = confirm('Are you sure you want to delete the file?')
+    if (!confirmed) return;
+
+    try {
+      await deleteObservationFile(
+        props.project.id,
+        props.observation.id,
+        f,
+      ).then(async () => {
+        await props.onFileDeleted();
+      }).catch(async (res: any) => {
+        let msg = 'An error occured when deleting file'
+        if (res.json) {
+          const json = await res.json();
+          msg = getErrMsg(json)
+        } else if (res instanceof Error) {
+          msg = res.message;
+        } else {
+          console.error('Unhandled error:', res);
+          captureException(res);
         }
         toast.add({
           title: 'File upload error',

@@ -61,6 +61,24 @@ export async function invite(
   return res;
 }
 
+export async function removeCollaborator(
+  token: string,
+  projectId: string | number,
+  userId: string | number,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/collaborators/${userId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export async function createProject(
   token: string,
   json: any,
