@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-import { captureException } from '@sentry/vue';
+  import * as Sentry from '@sentry/vue';
 
   const props = defineProps({
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
@@ -170,7 +170,7 @@ import { captureException } from '@sentry/vue';
           msg = res.message;
         } else {
           console.error('Unhandled error:', res);
-          captureException(res);
+          Sentry.captureException(res);
         }
         toast.add({
           title: 'File upload error',
