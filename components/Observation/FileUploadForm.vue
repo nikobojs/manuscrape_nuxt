@@ -55,8 +55,6 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Sentry from '@sentry/vue';
-
   const props = defineProps({
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
     onFileDeleted: requireFunctionProp<() => Promise<void>>(),
@@ -69,6 +67,7 @@
   const file = ref<File | undefined>();
   const toast = useToast();
   const { isElectron } = useDevice();
+  const { report } = useSentry();
 
   const fileUploadColumns = [
     {
@@ -170,7 +169,7 @@
           msg = res.message;
         } else {
           console.error('Unhandled error:', res);
-          Sentry.captureException(res);
+          report('error', res);
         }
         toast.add({
           title: 'File upload error',

@@ -10,6 +10,7 @@ await afterEach(async () => {
 
 export * from './auth';
 export * from './projects';
+export * from './invitations';
 export * from './deletion';
 export * from './collaborators';
 export * from './observations';

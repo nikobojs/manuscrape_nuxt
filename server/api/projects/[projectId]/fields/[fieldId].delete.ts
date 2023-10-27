@@ -94,6 +94,15 @@ export default safeResponseHandler(async (event) => {
     }),
   ]);
 
+  // get the updated fields to ensure indexes are ok
+  const updatedFields = await prisma.projectField.findMany({
+    where: { projectId },
+    select: { id: true, index: true }
+  })
+
+  // verify and update indexes if needed
+  await enforceCorrectIndexes(updatedFields)
+
   setResponseStatus(event, 204);
   return { success: true };
 });

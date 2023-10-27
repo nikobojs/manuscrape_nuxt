@@ -167,7 +167,7 @@
     const actions: DropdownItem[] = []
 
     // add move up value if not in top
-    if (row.index > 1) {
+    if (row.index > 0) {
       upDown.push({
         label: 'Move up',
         icon: 'i-heroicons-arrow-up',

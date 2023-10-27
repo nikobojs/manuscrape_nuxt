@@ -180,8 +180,13 @@
   }
 
   async function handleCreateParameter (field: NewProjectFieldDraft) {
+    const nextIndex = Math.max(...props.project.fields.map(f => f.index)) + 1;
     if (!field.type) {
       newFieldError.value = 'You did not select a field type'
+      return;
+    } else if (typeof nextIndex !== 'number') {
+      newFieldError.value = 'Unable to determine field index';
+      report('fatal', 'Field index could not be calculated when adding new field')
       return;
     }
 
@@ -190,7 +195,7 @@
       required: field.required,
       type: field.type,
       ...(field.choices ? { choices: field.choices } : {}),
-      index: props.project.fields.length + 1,
+      index: props.project.fields.length,
     }
 
     createParameter(

@@ -68,7 +68,18 @@ export default safeResponseHandler(async (event) => {
     index: f.index,
   }));
 
-  await prisma.projectField.createMany({ data: newProjectFields });
+  await prisma.projectField.createMany({
+    data: newProjectFields,
+  });
+
+  // get the updated fields to ensure indexes are ok
+  const updatedFields = await prisma.projectField.findMany({
+    where: { projectId: createdProject.id },
+    select: { id: true, index: true }
+  });
+
+  // verify and update indexes if needed
+  await enforceCorrectIndexes(updatedFields)
 
   setResponseStatus(event, 201);
   return createdProject;

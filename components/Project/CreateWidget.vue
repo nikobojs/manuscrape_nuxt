@@ -177,7 +177,7 @@
       type,
       required,
       choices,
-      index: addedFields.value.length + 1,
+      index: addedFields.value.length,
     };
 
     form.fields.push(newField);
