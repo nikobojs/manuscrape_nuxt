@@ -20,7 +20,7 @@ function generateObservationRow(
   // for each data entry
   const entries = Object.entries(obs.data as any)
   for(let i = 0; i < entries.length; i++) {
-    const [key, val] = entries[i];
+    const [key, rawVal] = entries[i];
 
     // get column index with that label
     const columnIndex = fieldLabels.indexOf(key);
@@ -29,6 +29,14 @@ function generateObservationRow(
     if (columnIndex === -1) {
       captureException(`Label '${key}' does not exist`);
       return;
+    }
+
+    // initialize default cell value
+    let val = rawVal;
+
+    // replace carriage returns to support line feeds in windows excel
+    if (typeof val === 'string') {
+      val = val.replaceAll('\n', '\r\n');
     }
 
     // set column value on the found column index
