@@ -65,12 +65,14 @@
       <template #header>
         <div>
           Confirm deletion of parameter
-          <span class="bg-slate-950 ml-1 px-2 py-0.5 text-sm rounded-sm inline-block">
-            {{  selectedParameter?.label }}
-          </span>
-          ?
         </div>
       </template>
+          <div>
+            <div class="text-sm">You're about to destroy observation data associated to the following parameter:</div>
+            <span class="bg-slate-950 mb-5 mt-4 px-2 py-0.5 text-sm rounded-sm inline-block">
+              {{  selectedParameter?.label }}
+            </span>
+          </div>
       <UAlert
         color="yellow"
         variant="outline"
@@ -129,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { Command } from '@nuxthq/ui/dist/runtime/types';
+  import type { Command } from '@nuxt/ui/dist/runtime/types';
   const openConfirmDeleteParamModal = ref(false);
   const openRemoveModal = ref(false);
   const selectedParameter = ref<null | { id: number, label: string }>();

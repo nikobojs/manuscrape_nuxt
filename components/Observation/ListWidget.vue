@@ -16,8 +16,13 @@
       </div>
     </template>
 
-    <UTable :empty-state="{ icon: 'i-heroicons-circle-stack-20-solid', label: 'No observations' }"
-      :rows="filteredObservations" :columns="columns" v-if="props.project">
+    <UTable
+      v-model:sort="sort"
+      :empty-state="{ icon: 'i-heroicons-circle-stack-20-solid', label: 'No observations' }"
+      :rows="filteredObservations"
+      :columns="columns"
+      v-if="props.project"
+    >
       <template #isDraft-data="{ row }">
         <span>{{ row.isDraft ? 'Yes' : 'No' }}</span>
       </template>
@@ -42,7 +47,7 @@
     </UTable>
 
     <div class="flex w-full mt-3 -mb-7 justify-center">
-      <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" />
+      <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" :max="8" :page-count="pageSize" />
     </div>
   </UCard>
 
@@ -78,9 +83,12 @@ const {
   observations,
   totalPages,
   totalObservations,
-  page
+  page,
+  pageSize,
+  sort,
 } = await useObservations(props.project.id);
 
+// TODO: convert to query param as well to avoid pages with less than max observations
 const filteredObservations = computed<FullObservation[]>(() => observations.value.filter(
   (obs) => {
     filterOption.value
@@ -110,13 +118,13 @@ const columns = [
     key: 'createdAt',
   },
   {
-    label: 'Created by',
+    label: 'Submitted by',
     sortable: true,
     key: 'user',
   },
   {
     label: 'Draft',
-    sortable: true,
+    sortable: false,
     key: 'isDraft',
   },
   {

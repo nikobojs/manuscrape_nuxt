@@ -5,6 +5,7 @@ import { getErrMsg } from '~/utils/getErrMsg';
 export const useObservations = async (projectId: number) => {
   const observations = useState<FullObservation[]>('observations', () => []);
   const page = useState<number>(() => 1);
+  const sort = ref<{column:string; direction:'asc'|'desc'}>({  column: 'createdAt',  direction: 'desc'});
   const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
   const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
@@ -17,7 +18,7 @@ export const useObservations = async (projectId: number) => {
   const {
     pending: loading,
   } = await useFetch<FullObservation[]>(
-    () => `/api/projects/${projectId}/observations?take=${pageSize}&skip=${skip.value}`,
+    () => `/api/projects/${projectId}/observations?take=${pageSize}&skip=${skip.value}&orderBy=${sort.value.column}&orderDirection=${sort.value.direction}`,
     {
       method: 'GET',
       immediate: true,
@@ -25,7 +26,7 @@ export const useObservations = async (projectId: number) => {
       credentials: 'include',
       onResponse: async (context) => {
         if (context.response.status === 200) {
-          observations.value = context.response._data?.observations;
+          observations.value = context.response._data?.observations.reverse?.();
           totalObservations.value = context.response._data?.total;
         } else if (context.response.status === 401) {
           observations.value = [];
@@ -210,7 +211,9 @@ export const useObservations = async (projectId: number) => {
     requireObservationFromParams,
     totalObservations,
     totalPages,
+    pageSize,
     uploadObservationFile,
     upsertObservationImage,
+    sort,
   }
 };
