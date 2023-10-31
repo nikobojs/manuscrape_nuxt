@@ -105,6 +105,7 @@ export function useImageEditor(
           drawTexts(zoom.value);
         });
         mode.value = EditorMode.GRAB; // initial editor mode
+        isSaving.value && (isSaving.value = false);
       }
     });
 
@@ -155,6 +156,7 @@ export function useImageEditor(
             drawBoxes();
             drawLines();
             drawTexts(zoom.value);
+
             await onLoaded();
 
             canvas.value?.setAttribute("width", "" + initialCanvasWidth);
@@ -873,7 +875,6 @@ export function useImageEditor(
           clearCanvas();
           reloadImage();
           reset();
-          isSaving.value = false;
           resolve();
         },
         "image/jpeg",
@@ -981,7 +982,7 @@ export function useImageEditor(
     draftTextPosition.value = undefined;
     textDraft.value = '';
     writing.value = false;
-    cursor.value = 'text';
+    cursor.value = 'crosshair';
     draw();
   }
 
