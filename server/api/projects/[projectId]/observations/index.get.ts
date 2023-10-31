@@ -46,12 +46,32 @@ export default safeResponseHandler(async (event) => {
     validate: numberBetween(0, 1999999999),
     required: true,
   });
+  const orderDirection = queryParam<'asc' | 'desc'>({
+    name: 'orderDirection',
+    event: event,
+    defaultValue: 'desc',
+    parse: (v) => v as 'asc' | 'desc',
+    validate: (v) => ['asc', 'desc'].includes(v),
+    required: true,
+  });
+  const orderBy = queryParam<'user' | 'createdAt'>({
+    name: 'orderBy',
+    event: event,
+    defaultValue: 'createdAt',
+    parse: (v) => v as 'user' | 'createdAt',
+    validate: (v) => ['user', 'createdAt'].includes(v),
+    required: true,
+  });
 
   const total = await prisma.observation.count({
     where: {
       projectId: projectId,
     },
   });
+
+  const orderByStatement = orderBy === 'createdAt'
+    ? { createdAt: orderDirection }
+    : { user: { email: orderDirection } };
 
   const whereStatement = (isOwner ? {
     projectId
@@ -65,6 +85,7 @@ export default safeResponseHandler(async (event) => {
     skip,
     where: whereStatement,
     select: observationColumns,
+    orderBy: orderByStatement,
   });
 
   return {
