@@ -56,6 +56,7 @@ function generateObservationRow(
     obs.id, 
     obs.createdAt,
     obs.updatedAt,
+    obs.user?.email || '<deleted user>',
     ...fieldValues
   ];
 
@@ -99,7 +100,12 @@ function getWorksheetColumns(
     id: 2,
     header: 'Last update',
     width: 14,
-  }]
+  }, {
+    id: 4,
+    header: 'Submitted by',
+    width: 18,
+  }
+]
 
   const dataColumns: Partial<excel.Column>[] = fields.map((field, index) => {
     return {
@@ -143,6 +149,14 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
   const fields: AllFieldColumns[] = project.fields;
   const dynamicFields: AllDynamicFieldColumns[] = project.dynamicFields;
 
+  // ensure export is meaningful
+  if (observations.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'There are no published observations on this project'
+    });
+  }
+
   // create workbook and set some metadata
   const wb = new excel.Workbook();
   wb.created = new Date();
@@ -170,7 +184,8 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
   // set http header that fixes control over the download filename
   setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
 
-  // TODO: set the ms xlsx mimetype header
+  // set the ms xlsx mimetype header
+  setHeader(event, 'Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
   // return excel file
   return buffer;
@@ -214,6 +229,14 @@ export async function generateProjectUploadsExport (event: H3Event, projectId: n
   });
 
   const obsFileCounts: Record<number, number> = {};
+
+  // ensure export is meaningful
+  if (fileUploads.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'There are no files uploaded to any observations'
+    });
+  }
   
   for (const upload of fileUploads) {
     if (upload?.s3Path) {
@@ -286,6 +309,14 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
       }
     }
   });
+
+  // ensure export is meaningful
+  if (observationImages.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'There are currenctly no images to download'
+    });
+  }
 
   const archive = archiver('zip', {
     zlib: { level: 9 } // Sets the compression level.
