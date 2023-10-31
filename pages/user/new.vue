@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { FormError } from '@nuxthq/ui/dist/runtime/types';
+import type { FormError } from '@nuxt/ui/dist/runtime/types';
 import { getErrMsg } from '~/utils/getErrMsg';
 
   const state = ref({

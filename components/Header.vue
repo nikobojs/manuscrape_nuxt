@@ -53,7 +53,7 @@
 </style>
 
 <script setup lang="ts">
-  import { type DropdownItem } from '@nuxthq/ui/dist/runtime/types';
+  import { type DropdownItem } from '@nuxt/ui/dist/runtime/types';
 
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
