@@ -26,7 +26,7 @@
               <div class="break-words whitespace-normal">
                 Remove collaborator from project.
                 <br /><br />
-                This action will also remove the user's email from their submitted observations in this project.
+                This action will <i class="italic">not</i> remove the user's email from their submitted observations.
               </div>
               </template>
           </UTooltip>
