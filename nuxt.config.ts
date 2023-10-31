@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   sourcemap: true,
   modules: [
-    '@nuxthq/ui',
+    '@nuxt/ui',
     'nuxt-scheduler',
   ],
   typescript: {
