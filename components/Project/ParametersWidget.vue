@@ -41,7 +41,7 @@
       <UCommandPalette v-if="projectFieldCommandPalette" placeholder="Search parameters..." nullable
         :empty-state="{ icon: 'i-mdi-magnify', label: 'hello', queryLabel: 'Unable to find parameters with that label' }"
         :groups="[{ key: 'project-parameters', commands: projectFieldCommandPalette }]"
-        :fuse="{ resultLimit: 6, fuseOptions: { threshold: 0.1 } }"
+        :fuse="{ resultLimit: 1000, fuseOptions: { threshold: 0.1 } }"
         @update:model-value="(val: any) => {
           if (val) {
             selectedParameter = val;
