@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { FormError } from '@nuxthq/ui/dist/runtime/types/form';
+  import type { FormError } from '@nuxt/ui/dist/runtime/types/form';
   import { inputTypes, FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
