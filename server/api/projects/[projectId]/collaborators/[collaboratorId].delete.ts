@@ -58,17 +58,6 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // remove collaboratorId from project observations
-  await prisma.observation.updateMany({
-    where: {
-      projectId: projectId,
-      userId: collaboratorId,
-    },
-    data: {
-      userId: null,
-    }
-  });
-
   // remove collaborator access to project
   await prisma.projectAccess.deleteMany({
     where: { userId: collaboratorId, projectId: projectId },
