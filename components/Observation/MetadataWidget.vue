@@ -1,5 +1,5 @@
 <template>
-  <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
+  <UForm ref="form" :validate="validate" :state="state" @submit="submit">
     <UCard class="overflow-visible">
       <template #header>
         <div class="flex justify-between w-full">
@@ -282,7 +282,7 @@
       return;
     }
 
-    const res = await patchObservation(
+    const _res = await patchObservation(
       props.project.id,
       props.observation?.id,
       { data: state.value }

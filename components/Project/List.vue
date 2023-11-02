@@ -29,12 +29,13 @@
         <template #fields-data="{ row }">
           <div class="flex align-middle gap-x-2">
             <p>{{ row.fields.length }}</p>
-              <UTooltip
-                :text="fieldsTooltip(row)"
-              >
+              <UTooltip>
                 <template #text>
-                  <p class="break-words whitespace-pre">
-                    {{ fieldsTooltip(row) }}
+                  <p
+                    class="max-w-xs break-words whitespace-normal"
+                    v-for="txt in fieldsTooltips(row)"
+                  >
+                    {{ txt }}
                   </p>
                 </template>
               <UIcon class="text-xl" name="i-heroicons-information-circle" />
@@ -95,10 +96,10 @@
     },
   ];
 
-  function fieldsTooltip(project: FullProject): string {
+  function fieldsTooltips(project: FullProject): string[] {
     return project.fields.map((p) => {
-        return `"${p.label}" [${getFieldLabel(p.type)}]`
-    }).join('\n').trim();
+        return `${p.index}. "${p.label}" [${getFieldLabel(p.type)}]`
+    })
   }
 
   onMounted(() => {

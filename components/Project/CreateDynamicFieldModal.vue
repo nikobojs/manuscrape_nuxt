@@ -3,11 +3,13 @@
       v-bind:model-value="open"
       v-on:close="onClose"
     >
-      <UCard>
+      <UCard :ui="{
+        base: '',
+      }">
         <template #header>
           <CardHeader>Create dynamic field</CardHeader>
         </template>
-        <div>
+        <div class="relative z-50">
           <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
             <div class="grid grid-cols-2 gap-x-3 mb-3">
               <UFormGroup name="label" label="Label">
