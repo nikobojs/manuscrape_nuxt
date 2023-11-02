@@ -22,22 +22,19 @@
           </div>
         </template>
         <template #label-data="{ row }">
-          <UTooltip :ui="{
-            base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
-          }">
-            <!-- Tool tip-->
-            <template #text>
-              <p class="max-w-xs break-words whitespace-normal">{{ row.label }}</p>
-            </template>
-
-            <!-- Label column -->
-            <div class="flex items-baseline w-[257px]">
+          <!-- Label column -->
+          <div class="flex items-baseline w-[257px]">
+            <UTooltip>
+              <!-- Tool tip-->
+              <template #text>
+                <p class="max-w-xs break-words whitespace-normal">{{ row.label }}</p>
+              </template>
               <span class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[256px]">
                 {{ row.label }}
               </span>
               <span v-if="row.required" class="text-red-500 text-sm ml-1 inline-block">*</span>
-            </div>
-          </UTooltip>
+            </UTooltip>
+          </div>
         </template>
         <template #field-data="{ row }">
           <div class="flex gap-2">

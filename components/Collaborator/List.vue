@@ -16,17 +16,16 @@
     <template #actions-data="{ row }">
       <div class="flex h-full w-full items-center self-end justify-end">
         <span class="text-red-500 text-lg">
-          <UTooltip
-            :ui="{
-              base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
-            }"
-          >
+          <UTooltip>
             <UIcon @click="() => handleRemoveCollaborator(row)" class="cursor-pointer" name="i-heroicons-trash" />
             <template #text>
-              <div class="break-words whitespace-normal">
-                Remove collaborator from project.
-                <br /><br />
-                This action will <i class="italic">not</i> remove the user's email from their submitted observations.
+              <div>
+                <div class="break-words whitespace-normal">
+                  Remove collaborator from project.
+                </div>
+                <div class="break-words whitespace-normal">
+                  This action will <i class="italic">not</i> remove the user's email from their submitted observations.
+                </div>
               </div>
               </template>
           </UTooltip>

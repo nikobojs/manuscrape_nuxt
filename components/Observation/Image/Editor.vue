@@ -7,11 +7,7 @@
       <div class="flex justify-between">
         <div class="relative h-4">
           <CardHeader>Image editor for observation #{{ observation.id }}</CardHeader>
-          <UTooltip
-            :ui="{
-              base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
-            }"
-          >
+          <UTooltip>
             <template #text>
               <div class="flex flex-col gap-y-2 py-1 max-w-xs break-words whitespace-normal">
                 <div class="flex gap-x-2">

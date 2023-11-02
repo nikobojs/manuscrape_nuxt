@@ -6,10 +6,10 @@
           Dynamic fields
           <UTooltip class="ml-2" :ui="{base: 'p-2 text-xs'}">
             <template #text>
-              <p class="mb-3">
+              <p class="mb-3 whitespace-normal break-words">
                 Dynamic fields will "automagically" generate their value when exporting observations.
               </p>
-              <p>
+              <p class="whitespace-normal break-words">
                 An example is time difference. A project may contain 2 ordinary timestamps parameters. To avoid entering the time difference manually for each observation, you can create a dynamic field measuring the time difference instead.
               </p>
             </template>

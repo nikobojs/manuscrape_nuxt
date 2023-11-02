@@ -31,12 +31,9 @@
             <p>{{ row.fields.length }}</p>
               <UTooltip
                 :text="fieldsTooltip(row)"
-                :ui="{
-                  base: 'invisible lg:visible px-2 py-1 text-xs font-normal block',
-                }"
               >
                 <template #text>
-                  <p class="max-w-xs break-words whitespace-normal">
+                  <p class="break-words whitespace-pre">
                     {{ fieldsTooltip(row) }}
                   </p>
                 </template>
@@ -101,7 +98,7 @@
   function fieldsTooltip(project: FullProject): string {
     return project.fields.map((p) => {
         return `"${p.label}" [${getFieldLabel(p.type)}]`
-    }).join('; ').trim();
+    }).join('\n').trim();
   }
 
   onMounted(() => {
