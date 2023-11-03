@@ -2,7 +2,7 @@
   <header class="py-2 bg-slate-800 shadow-lg">
     <UContainer>
       <div class="flex justify-between items-center">
-        <div class="w-[190px] pt-3 pb-2 cursor-pointer" @click="onLogoClick">
+        <div class="w-[190px] min-h-[45px] pt-3 pb-2 cursor-pointer" @click="onLogoClick">
           <span class="dark:hidden">
             <NuxtImg src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark"></NuxtImg>
           </span>
