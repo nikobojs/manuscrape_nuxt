@@ -1,4 +1,10 @@
 # ManuScrape Nuxt App
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="/public/logo/manuscrape-logo-dark.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="/public/logo/manuscrape-logo-light.svg">
+  <img width="350" alt="Manuscape logo" src="/public/logo/manuscrape-logo-light.svg">
+</picture>
+<br />
 
 ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
 
