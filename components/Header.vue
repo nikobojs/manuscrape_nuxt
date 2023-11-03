@@ -2,8 +2,13 @@
   <header class="py-2 bg-slate-800 shadow-lg">
     <UContainer>
       <div class="flex justify-between items-center">
-        <div class="font-sans text-xl cursor-pointer" @click="onLogoClick">
-          ManuScrape
+        <div class="w-[190px] min-h-[45px] pt-3 pb-2 cursor-pointer" @click="onLogoClick">
+          <span class="dark:hidden">
+            <NuxtImg src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark"></NuxtImg>
+          </span>
+          <span class="hidden dark:block">
+            <NuxtImg src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light"></NuxtImg>
+          </span>
         </div>
         <nav v-show="hasFetched" class="flex justify-end">
           <div class="w-[250px] flex justify-end items-center" v-if="typeof rawProjectId === 'string'">

@@ -4,10 +4,7 @@ import pkg from './package.json'
 export default defineNuxtConfig({
   devtools: { enabled: true },
   sourcemap: true,
-  modules: [
-    '@nuxt/ui',
-    'nuxt-scheduler',
-  ],
+  modules: ['@nuxt/ui', 'nuxt-scheduler', "@nuxt/image"],
   typescript: {
     strict: true,
     typeCheck: false,
