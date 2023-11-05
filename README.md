@@ -1,21 +1,29 @@
-# ManuScrape Nuxt App
-
-ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
-
-This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron repository](https://github.com/nikobojs/manuscrape_electron).
-
 <br />
 
 <a href="https://github.com/nikobojs/manuscrape_electron">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="/public/logo/manuscrape-logo-dark.svg">
   <source media="(prefers-color-scheme: dark)" srcset="/public/logo/manuscrape-logo-light.svg">
-  <img width="220" alt="Manuscape logo" src="/public/logo/manuscrape-logo-light.svg">
+  <img width="250" alt="Manuscape logo" src="/public/logo/manuscrape-logo-light.svg">
 </picture>
 </a>
+<br />
+<br />
+ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
+<br />
+<br />
+
+>If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron repository](https://github.com/nikobojs/manuscrape_electron).
 
 <br />
+
+# Nuxt App
+
+
+This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org). 
+
 <br />
+
 
 ## Hosting (https://manuscrape.org)
 There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with your local data processing laws.
