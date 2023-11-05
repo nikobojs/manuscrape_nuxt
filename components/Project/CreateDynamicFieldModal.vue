@@ -10,7 +10,7 @@
           <CardHeader>Create dynamic field</CardHeader>
         </template>
         <div class="relative z-50">
-          <UForm ref="form" :validate="validate" :state="state" @submit.prevent="submit">
+          <UForm ref="form" :validate="validate" :state="state" @submit="submit">
             <div class="grid grid-cols-2 gap-x-3 mb-3">
               <UFormGroup name="label" label="Label">
                 <UInput placeholder="Enter field label" v-model="state.label" required />

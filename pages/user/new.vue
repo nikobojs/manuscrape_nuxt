@@ -5,7 +5,7 @@
     </div>
     <UForm
       class="w-80"
-      @submit.prevent="submit"
+      @submit="submit"
       :validate="validate"
       :state="state"
       ref="form"
