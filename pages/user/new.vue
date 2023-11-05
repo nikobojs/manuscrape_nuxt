@@ -1,8 +1,18 @@
 <template>
   <UContainer>
-    <div class="title">
-      <h2 class="text-3xl mb-8">Create account</h2>
+    <div class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer" @click="onLogoClick">
+      <span class="dark:hidden">
+        <img src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark">
+      </span>
+      <span class="hidden dark:block">
+        <img src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light">
+      </span>
     </div>
+    <div class="title">
+        <div class="flex">
+          <h2 class="text-2xl mb-8">Create account</h2>
+        </div>
+      </div>
     <UForm
       class="w-80"
       @submit.prevent="submit"
@@ -37,6 +47,14 @@
       <UButton :disabled="loading" :loading="loading" type="submit" class="mt-5">
         Create and login
       </UButton>
+      <ULink
+        to="/login"
+        class="text-sm pl-3 hover:underline"
+        active-class="text-primary"
+        inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+      >
+      I already have an account
+      </ULink>
     </UForm>
   </UContainer>
 </template>
@@ -78,4 +96,9 @@ import { getErrMsg } from '~/utils/getErrMsg';
       loading.value = false;
     });
   };
+
+  function onLogoClick() {
+    navigateTo('/');
+  }
+  
 </script>
