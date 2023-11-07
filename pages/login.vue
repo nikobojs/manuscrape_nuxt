@@ -1,9 +1,21 @@
 <template>
   <div>
     <UContainer class="flex flex-col">
-    <div class="title">
-      <h2 class="text-3xl mb-8">Sign in to manuscrape</h2>
-    </div>
+      <div class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer" @click="onLogoClick">
+        <span class="dark:hidden">
+          <img src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark">
+        </span>
+        <span class="hidden dark:block">
+          <img src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light">
+        </span>
+      </div>
+      <div class="title">
+        <div class="flex">
+          <ULink to="/" class="text-2xl mb-8">Sign in</ULink>
+          <h2 class="text-2xl mb-8 px-2"> / </h2>
+          <ULink to="/user/new" class="text-2xl mb-8 dark:text-slate-600 hover:dark:text-primary hover:underline">Create account</ULink>
+        </div>
+      </div>
       <div class="w-80">
         <form @submit.prevent="handleLogin">
           <label for="email-input">
@@ -89,4 +101,8 @@
     }, 200);
   }
 
+  function onLogoClick() {
+    navigateTo('/');
+  }
+  
 </script>

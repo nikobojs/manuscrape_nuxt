@@ -1,13 +1,13 @@
 <template>
-  <header class="py-2 bg-slate-800 shadow-lg">
+  <header class="py-2 bg-slate-800 shadow-lg" v-show="user">
     <UContainer>
       <div class="flex justify-between items-center">
         <div class="w-[190px] min-h-[45px] pt-3 pb-2 cursor-pointer" @click="onLogoClick">
           <span class="dark:hidden">
-            <NuxtImg src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark"></NuxtImg>
+            <img src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark">
           </span>
           <span class="hidden dark:block">
-            <NuxtImg src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light"></NuxtImg>
+            <img src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light">
           </span>
         </div>
         <nav v-show="hasFetched" class="flex justify-end">
@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
   import { type DropdownItem } from '@nuxt/ui/dist/runtime/types';
-
+  const img = useImage() 
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
