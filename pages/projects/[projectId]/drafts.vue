@@ -15,6 +15,7 @@
 
 <script lang="ts" setup>
   const { ensureLoggedIn } = await useAuth();
+  await useUser();
   await ensureLoggedIn();
   const { params } = useRoute();
   const { project } = await useProjects(params);

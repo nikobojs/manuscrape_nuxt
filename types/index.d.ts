@@ -213,7 +213,8 @@ declare global {
 
   interface ObservationFilterConfig {
     label: string;
-    filter: (obs: FullObservation, user: Ref<CurrentUser>) => boolean;
+    filter: 'drafts' | 'published' | 'all';
+    ownership: 'me' | 'everyone';
   }
 
   export type ExportedProject = Prisma.ProjectGetPayload<{ select: typeof exportProjectQuery }>;
