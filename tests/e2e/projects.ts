@@ -1,5 +1,15 @@
 import { describe, test, expect } from 'vitest';
-import { testProject, withTempUser, createProject, getMe, fetchObservations, openProjectPage, inviteToProject, signup } from './helpers';
+import {
+  testProject,
+  duplicateProject,
+  withTempProject,
+  withTempUser,
+  createProject,
+  getMe,
+  fetchObservations,
+  openProjectPage,
+  defaultPassword
+} from './helpers';
 
 const wrongIndexes: any[][] = [
   [2,2],
@@ -187,4 +197,45 @@ describe('Project management', () => {
       });
     });
   });
+
+  test('project owner can duplicate project with a unique name', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      const projectId = project.id;
+      expect(projectId).toBeTypeOf('number');
+
+      // try duplicate project
+      const dupRes = await duplicateProject(
+        token,
+        projectId,
+        { name: 'project-2' },
+      );
+      const json = await dupRes.json();
+      expect(dupRes.status).toBe(201);
+
+      // ensure new project is in response
+      // const json = await dupRes.json();
+      expect(Object.keys(json)).includes('id', 'Response should have id');
+      expect(Object.keys(json)).includes('fields', 'Response should have fields');
+      expect(Object.keys(json)).includes('name', 'Response should have name');
+      const newProjectId = json.id;
+      expect(newProjectId).toBeTypeOf('number');
+      expect(json.fields?.length).toBeTypeOf('number')
+      expect(json.fields?.length).toBe(project.fields.length);
+
+      // expect project was created
+      const meRes = await getMe(token);
+      const meJson = await meRes.json();
+      expect(meJson.projectAccess.length).toBe(2);
+
+      // expect new project to be in response
+      const projectIds = meJson.projectAccess.map((p: any) => p?.project.id)
+      const projectNames = meJson.projectAccess.map((p: any) => p?.project.name)
+      expect(projectIds).toContain(newProjectId);
+      expect(projectNames).toContain('project-1');
+      expect(projectNames).toContain('project-2');
+    }, undefined, defaultPassword, {
+      name: 'project-1'
+    });
+  })
 });

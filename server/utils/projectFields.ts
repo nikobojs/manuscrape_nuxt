@@ -51,3 +51,28 @@ export async function enforceCorrectIndexes(
     )
   )
 }
+
+// copy dynamic fields helper
+// TODO: improve typing and test coverage
+export function getNewFieldId (
+  oldId: number,
+  sourceProject: Partial<FullProject>,
+  createdProject: Partial<FullProject>,
+) {
+  const oldField = sourceProject.fields?.find((f) => f.id === oldId);
+  if (!oldField) {
+    throw createError({
+      status: 500,
+      statusText: 'Unable to copy dynamic field'
+    });
+  }
+  const newField = createdProject.fields?.find(f => f.label === oldField.label);
+  if (!newField) {
+    throw createError({
+      status: 500,
+      statusText: 'Unable to find newly created fields'
+    });
+  }
+
+  return newField
+}

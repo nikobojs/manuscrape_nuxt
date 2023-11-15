@@ -97,6 +97,25 @@ export async function createProject(
   return res;
 }
 
+export async function duplicateProject(
+  token: string,
+  projectId: number,
+  json: any,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/duplicate`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 
 export async function createObservation(
   token: string,
@@ -376,10 +395,11 @@ export async function withTempUser(
   await callback(user, json.token);
 }
 
+export const defaultPassword = 'Password123';
 export async function withTempProject(
   callback: (user: CurrentUser, project: FullProject, observations: FullObservation[], token: string) => Promise<void>,
   email: string | undefined = undefined,
-  password: string = "Password123",
+  password: string = defaultPassword,
   projectOptions?: Record<string, any>,
 ): Promise<void> {
   // if email is not defined, set it to some new unique email
