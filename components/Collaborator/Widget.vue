@@ -80,7 +80,8 @@
     if (!validEmail.value) {
       toast.add({
         title: 'Invalid email',
-        color: 'red'
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
       });
       return;
     }
@@ -107,7 +108,8 @@
       toast.add({
         title: 'Error',
         description: msg,
-        color: 'red'
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
       });
     })
   }

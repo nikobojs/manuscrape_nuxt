@@ -19,7 +19,7 @@
     <UTable
       v-model:sort="sort"
       :empty-state="{ icon: 'i-heroicons-circle-stack-20-solid', label: 'No observations' }"
-      :rows="filteredObservations"
+      :rows="observations"
       :columns="columns"
       v-if="props.project"
     >
@@ -62,7 +62,6 @@
 import { observationFilterMenuItems } from '~/utils/observationFilters';
 
 const error = ref(null)
-const { user } = await useUser();
 const loading = ref(false);
 const openImageDialog = ref<boolean>(false);
 const selectedObservation = ref<null | FullObservation>(null);
@@ -74,10 +73,6 @@ const props = defineProps({
   defaultObservationFilter: Number as PropType<keyof typeof ObservationFilter>,
 });
 
-const filterOption = ref<ObservationFilterConfig>(
-  ObservationFilter[props.defaultObservationFilter || ObservationFilterTypes.ALL]
-);
-
 const {
   createObservation,
   observations,
@@ -86,15 +81,8 @@ const {
   page,
   pageSize,
   sort,
-} = await useObservations(props.project.id);
-
-// TODO: convert to query param as well to avoid pages with less than max observations
-const filteredObservations = computed<FullObservation[]>(() => observations.value.filter(
-  (obs) => {
-    filterOption.value
-    return filterOption.value.filter(obs, user as Ref<CurrentUser>);
-  }
-));
+  filterOption,
+} = await useObservations(props.project.id, props.defaultObservationFilter);
 
 async function addObservationClick() {
   if (typeof props.project.id !== 'number') {

@@ -2,14 +2,43 @@ import type { AsyncDataExecuteOptions } from "nuxt/dist/app/composables/asyncDat
 import type { RouteParams } from "vue-router";
 import { getErrMsg } from '~/utils/getErrMsg';
 
-export const useObservations = async (projectId: number) => {
+export const useObservations = async (
+  projectId: number,
+  defaultObservationFilter?: keyof typeof ObservationFilter
+) => {
   const observations = useState<FullObservation[]>('observations', () => []);
   const page = useState<number>(() => 1);
   const sort = ref<{column:string; direction:'asc'|'desc'}>({  column: 'createdAt',  direction: 'desc'});
   const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
+  const filter = useState<'all' | 'drafts' | 'published'>(() => 'all' as 'all' | 'drafts' | 'published');
+  const ownership = useState<'me' | 'everyone'>(() => 'everyone' as 'everyone' | 'me');
   const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
   const totalPages = computed(() => Math.ceil(totalObservations.value / pageSize));
+
+  const filterOption = useState<ObservationFilterConfig>(
+    () => {
+      // lazy way to validate enum is actually set
+      // NOTE: sets default observation filter if passed to useObservations()
+      if (typeof defaultObservationFilter === 'number' || typeof defaultObservationFilter === 'string') {
+        const obsFilter = ObservationFilter[defaultObservationFilter];
+        if (obsFilter) {
+          filter.value = obsFilter.filter;
+          ownership.value = obsFilter.ownership;
+          page.value = 1;
+          return obsFilter
+        };
+      }
+
+      return ObservationFilter[ObservationFilterTypes.ALL];
+    }
+  );
+
+  watch([filterOption], (value) => {
+    filter.value = value[0].filter;
+    ownership.value = value[0].ownership;
+    page.value = 1
+  });
 
   if (typeof projectId !== 'number') {
     throw new Error('Project id is not a number!')
@@ -18,7 +47,18 @@ export const useObservations = async (projectId: number) => {
   const {
     pending: loading,
   } = await useFetch<FullObservation[]>(
-    () => `/api/projects/${projectId}/observations?take=${pageSize}&skip=${skip.value}&orderBy=${sort.value.column}&orderDirection=${sort.value.direction}`,
+    () => {
+      const url = `
+        /api/projects/${projectId}/observations?
+          take=${pageSize}&
+          skip=${skip.value}&
+          orderBy=${sort.value.column}&
+          orderDirection=${sort.value.direction}&
+          filter=${filter.value}&
+          ownership=${ownership.value}
+      `.trim().replaceAll(/\s/g,'');
+      return url;
+    },
     {
       method: 'GET',
       immediate: true,
@@ -215,5 +255,8 @@ export const useObservations = async (projectId: number) => {
     uploadObservationFile,
     upsertObservationImage,
     sort,
+    filter,
+    ownership,
+    filterOption,
   }
 };

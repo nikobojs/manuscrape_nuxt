@@ -60,6 +60,22 @@ export const useProjects = async (params: RouteParams) => {
     )
   };
 
+  const duplicateProject = async (
+    name: string,
+    projectId: number,
+  ): Promise<any> => {
+    return fetch(
+      `/api/projects/${projectId}/duplicate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  };
+
   const sortFields = (project: FullProject) => [...project.fields].sort(
     (a, b) => a.index > b.index ? 1 : -1
   );
@@ -129,5 +145,6 @@ export const useProjects = async (params: RouteParams) => {
     projects,
     removeCollaborator,
     sortFields,
+    duplicateProject,
   };
 };

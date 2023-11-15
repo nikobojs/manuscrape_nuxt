@@ -65,6 +65,24 @@ export const allDynamicFieldColumns = {
   }
 } satisfies Prisma.DynamicProjectFieldSelect;
 
+
+export const smallProjectQuery = {
+  id: true,
+  createdAt: true,
+  name: true,
+  fields: {
+    select: allFieldColumns,
+    orderBy: [{
+      index: 'asc'
+    }]
+  },
+  dynamicFields: { select: allDynamicFieldColumns },
+  _count: {
+      select: { observations: true }
+  },
+} satisfies Prisma.ProjectSelect;
+
+
 export const bigUserQuery = {
   id: true,
   email: true,
@@ -72,21 +90,7 @@ export const bigUserQuery = {
   projectAccess: {
     select: {
       project: {
-        select: {
-          id: true,
-          createdAt: true,
-          name: true,
-          fields: {
-            select: allFieldColumns,
-            orderBy: [{
-              index: 'asc'
-            }]
-          },
-          dynamicFields: { select: allDynamicFieldColumns },
-          _count: {
-              select: { observations: true }
-          },
-        },
+        select: smallProjectQuery,
       },
       role: true,
     }

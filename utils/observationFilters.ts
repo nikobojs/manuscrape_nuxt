@@ -10,27 +10,33 @@ export enum ObservationFilterTypes {
 export const ObservationFilter: ObservationFilterConfigs = {
   [ObservationFilterTypes.ALL]: {
     label: 'Show all',
-    filter: () => true,
+    filter: 'all',
+    ownership: 'everyone'
   },
   [ObservationFilterTypes.MINE]: {
     label: 'Show all uploaded by me',
-    filter: (obs, user) => !!obs.user?.email ? obs.user.email === user.value!.email : true,
+    filter: 'all',
+    ownership: 'me'
   },
   [ObservationFilterTypes.MY_DRAFTS]: {
     label: 'Show my drafts',
-    filter: (obs, user) => obs.isDraft && (!!obs.user?.email ? obs.user.email === user.value!.email : true),
+    filter: 'drafts',
+    ownership: 'me'
   },
   [ObservationFilterTypes.ALL_DRAFTS]: {
     label: 'Show all drafts',
-    filter: (obs) => obs.isDraft,
+    filter: 'drafts',
+    ownership: 'everyone'
   },
   [ObservationFilterTypes.ALL_PUBLISHED]: {
     label: 'Show all published',
-    filter: (obs) => !obs.isDraft,
+    filter: 'published',
+    ownership: 'everyone'
   },
   [ObservationFilterTypes.MY_PUBLISHED]: {
     label: 'Show my published',
-    filter: (obs, user) => !obs.isDraft && (!!obs.user?.email ? obs.user.email === user.value!.email : true),
+    filter: 'published',
+    ownership: 'me'
   },
 };
 
@@ -42,8 +48,7 @@ export const observationFilterMenuItems = Object.keys(ObservationFilter).map(k =
   }
 
   return {
-    label: config.label,
+    ...config,
     value: k,
-    filter: config.filter,
   }
 });
