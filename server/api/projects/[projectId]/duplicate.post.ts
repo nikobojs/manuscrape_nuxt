@@ -13,7 +13,7 @@ export const DuplicateProjectSchema = yup.object({
 
 export default safeResponseHandler(async (event) => {
   const user = requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
