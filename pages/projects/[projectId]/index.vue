@@ -13,10 +13,11 @@
         <ObservationListWidget
           :project="project"
           :show-create-button="true"
+          :on-project-updated="refreshObservations"
         />
         <ProjectParametersWidget
           :project="project"
-          :on-project-updated="updateProject"
+          :on-project-updated="refreshUser"
         />
       </div>
       <div class="mt-6">
@@ -38,9 +39,9 @@
 <script lang="ts" setup>
   const { ensureLoggedIn } = await useAuth();
   const { refreshUser } = await useUser();
+  await ensureLoggedIn();
   const { params } = useRoute();
   const { project, isOwner } = await useProjects(params);
-  await ensureLoggedIn();
   const toast = useToast();
 
   if (!project.value) {
@@ -52,8 +53,6 @@
     });
     navigateTo('/');
   }
-  const updateProject = async () => {
-    await refreshUser();
-  }
+  const { refreshObservations } = await useObservations(project.value?.id as number);
 
 </script>

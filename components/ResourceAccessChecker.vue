@@ -7,11 +7,14 @@
   const { project } = await useProjects(params);
   const toast = useToast();
   let projectId: number | undefined = undefined;
+  // TODO: report errors?
   
   if (params.projectId && !project) {
     toast.add({
       title: 'No access to project',
       description: '... or it doesn\'t exist',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
     });
 
     navigateTo('/', { redirectCode: 302 });
@@ -25,6 +28,8 @@
       toast.add({
         title: 'No access to observation',
         description: '... or it doesn\'t exist',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
       });
 
       navigateTo('/', { redirectCode: 302 });
@@ -33,6 +38,8 @@
       toast.add({
         title: 'No access to observation',
         description: '... or it doesn\'t exist',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
       });
 
       navigateTo('/', { redirectCode: 302 });

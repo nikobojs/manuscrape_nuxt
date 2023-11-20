@@ -224,14 +224,15 @@ export async function deleteUser(
   return res;
 }
 
-export async function fetchObservations(
+export async function deleteObservation(
   token: string,
   projectId: number,
+  obsId: number,
 ): Promise<Response> {
   const res = await fetch(
-    "/api/projects/" + projectId + "/observations",
+    `/api/projects/${projectId}/observations/${obsId}`,
     {
-      method: "GET",
+      method: "DELETE",
       headers: {
         ...authHeader(token),
       },
@@ -458,5 +459,5 @@ export async function withTempProject(
   expect(project.id).toBe(projectJson.id);
 
   // call the callback function with the new user and a fresh token
-  await callback(user, project, observations, json.token);
+  await callback(user, project, observations.observations, json.token);
 }

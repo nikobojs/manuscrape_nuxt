@@ -41,11 +41,12 @@ export const useObservations = async (
   });
 
   if (typeof projectId !== 'number') {
-    throw new Error('Project id is not a number!')
+    throw new Error(`Project id ${projectId} is not a number (useObservations)!`);
   }
 
   const {
     pending: loading,
+    refresh: refreshObservations,
   } = await useFetch<FullObservation[]>(
     () => {
       const url = `
@@ -238,6 +239,48 @@ export const useObservations = async (
     return observation.value;
   };
 
+  function observationIsDeletable(
+    obs?: Partial<FullObservation>,
+    user?: CurrentUser,
+    project?: Partial<FullProject>,
+  ): boolean {
+    // TODO: validate types of used variables instead
+    if (!obs || !user || !project) {
+      // report missing arguments
+      return false;
+    }
+
+    // report missing author id
+    if (!obs.user?.id) {
+      return false;
+    }
+
+    // find user role
+    const role = user.projectAccess.find((a) => a.project.id === project.id)?.role;
+    if (typeof role !== 'string') {
+      // report invalid role
+      console.error(`Project access role '${role}' is not valid`);
+      return false;
+    }
+
+    // find out if user is author of observation
+    const isAuthor = obs.user.id === user.id;
+    const isProjectOwner = role === 'OWNER';
+    const isDraft = obs.isDraft;
+
+    // ensure observation cannot be removed if it isn't a draft and user is not owner
+    if (!isDraft && !isProjectOwner) {
+      return false
+    }
+
+    // ensure owner cannot delete other users' drafts
+    if (isDraft && !isAuthor) {
+      return false;
+    }
+
+    return true;
+  }
+
   return {
     createObservation,
     deleteObservation,
@@ -258,5 +301,7 @@ export const useObservations = async (
     filter,
     ownership,
     filterOption,
+    observationIsDeletable,
+    refreshObservations,
   }
 };
