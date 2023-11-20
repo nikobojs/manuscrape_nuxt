@@ -44,7 +44,7 @@
           <UButton icon="i-heroicons-lock-closed" class="" :disabled="!imageUploaded || !metadataDone" @click="() => publish()">
             Submit and lock
           </UButton>
-          <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => discard()">
+          <UButton v-if="observationIsDeletable(observation, user, project)" icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => discard()">
             Delete observation draft
           </UButton>
         </div>
@@ -79,6 +79,11 @@
           <div class="text-gray-400">Last updated at:</div>
           <div>{{ prettyDate(observation.updatedAt, true) }}</div>
         </div>
+        <div class="mt-6" v-if="observationIsDeletable(observation, user, project)">
+          <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => handleDelete()">
+            Delete observation
+          </UButton>
+        </div>
       </UCard>
     </div>
   </div>
@@ -100,9 +105,12 @@
     project: requireProjectProp,
   });
 
+  const { user } = await useUser();
+
   const {
     publishObservation,
     deleteObservation,
+    observationIsDeletable,
   } = await useObservations(props.project.id);
   const toast = useToast();
   const { isElectron } = useDevice();
@@ -126,6 +134,26 @@
     } else {
       toast.add({
         title: 'Draft has been deleted',
+        color: 'green',
+        icon: 'i-heroicons-check'
+      });
+      navigateTo(`/projects/${props.project.id}`);
+    }
+  }
+
+
+  async function handleDelete() {
+    if (!props.project || !props.observation) {
+      throw new Error('Props are not defined')
+    }
+    const confirmed = confirm(`Are you sure you want to delete observation #${props.observation.id} ?`)
+    if (!confirmed) return;
+    await deleteObservation(props.project.id, props.observation.id);
+    if (isElectron.value) {
+      window.close();
+    } else {
+      toast.add({
+        title: 'Observation has been deleted permanently',
         color: 'green',
         icon: 'i-heroicons-check'
       });

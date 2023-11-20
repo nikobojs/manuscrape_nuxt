@@ -247,11 +247,13 @@ export const useObservations = async (
     // TODO: validate types of used variables instead
     if (!obs || !user || !project) {
       // report missing arguments
+      console.error('missing arguments in observationIsDeletable()')
       return false;
     }
 
     // report missing author id
     if (!obs.user?.id) {
+      console.error('missing observation user id')
       return false;
     }
 
@@ -270,11 +272,13 @@ export const useObservations = async (
 
     // ensure observation cannot be removed if it isn't a draft and user is not owner
     if (!isDraft && !isProjectOwner) {
+      console.info('Observation is published and you are not the project owner');
       return false
     }
 
     // ensure owner cannot delete other users' drafts
     if (isDraft && !isAuthor) {
+      console.info('Observation is a draft but you are not the author owner');
       return false;
     }
 
