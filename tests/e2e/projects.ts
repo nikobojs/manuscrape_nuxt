@@ -6,9 +6,9 @@ import {
   withTempUser,
   createProject,
   getMe,
-  fetchObservations,
   openProjectPage,
-  defaultPassword
+  defaultPassword,
+  getObservations
 } from './helpers';
 
 const wrongIndexes: any[][] = [
@@ -185,12 +185,12 @@ describe('Project management', () => {
       expect(typeof projectId).toBe('number');
 
       // ensure observations can be fetched
-      const observationRes = await fetchObservations(tokenA, projectId);
+      const observationRes = await getObservations(tokenA, projectId);
       expect(observationRes.status).toBe(200);
 
       // with a new user ensure observations from other project cannot be read
       await withTempUser(async (_userB, tokenB) => {
-        const observationRes = await fetchObservations(tokenB, projectId);
+        const observationRes = await getObservations(tokenB, projectId);
         const observationJson = await observationRes.json();
         expect(Object.keys(observationJson)).not.includes('observations')
         expect(observationRes.status).toBe(403);

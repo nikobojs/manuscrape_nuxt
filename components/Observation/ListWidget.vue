@@ -23,14 +23,18 @@
       :columns="columns"
       v-if="props.project"
     >
-      <template #isDraft-data="{ row }">
-        <span>{{ row.isDraft ? 'Yes' : 'No' }}</span>
+      <template #id-data="{ row }">
+        <span class="text-gray-600 pr-1 inline-block">#</span>
+        <span class="font-semibold">{{ row.id }}</span>
       </template>
       <template #createdAt-data="{ row }">
         <span>{{ prettyDate(row.createdAt) }}</span>
       </template>
       <template #user-data="{ row }">
         <span>{{ row.user?.email || 'Deleted user' }}</span>
+      </template>
+      <template #isDraft-data="{ row }">
+        <span>{{ row.isDraft ? 'Yes' : 'No' }}</span>
       </template>
       <template #actions-data="{ row }">
         <div class="w-full justify-end flex gap-x-3">
@@ -42,6 +46,13 @@
             <span
               class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"></span>
           </NuxtLink>
+          <div
+            @click="() => beginDeleteObservation(row)"
+            v-if="observationIsDeletable(row, user, props.project)"
+          >
+            <span
+              class="text-red-500 i-heroicons-trash text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
+          </div>
         </div>
       </template>
     </UTable>
@@ -65,12 +76,16 @@ const error = ref(null)
 const loading = ref(false);
 const openImageDialog = ref<boolean>(false);
 const selectedObservation = ref<null | FullObservation>(null);
+const { user, refreshUser } = await useUser();
 const { isElectron } = useDevice();
+const { report } = useSentry();
+const toast = useToast();
 
 const props = defineProps({
   project: requireProjectProp,
   showCreateButton: requireProp<boolean>(Boolean),
   defaultObservationFilter: Number as PropType<keyof typeof ObservationFilter>,
+  onProjectUpdated: requireFunctionProp<() => void | Promise<void>>(),
 });
 
 const {
@@ -82,6 +97,8 @@ const {
   pageSize,
   sort,
   filterOption,
+  observationIsDeletable,
+  deleteObservation,
 } = await useObservations(props.project.id, props.defaultObservationFilter);
 
 async function addObservationClick() {
@@ -100,6 +117,11 @@ async function addObservationClick() {
 }
 
 const columns = [
+  {
+    label: 'ID',
+    sortable: false,
+    key: 'id',
+  },
   {
     label: 'Created at',
     sortable: true,
@@ -129,6 +151,48 @@ function openObservationImage(row: any) {
   } else {
     selectedObservation.value = row;
     openImageDialog.value = true;
+  }
+}
+
+async function beginDeleteObservation(row: any) {
+  if (typeof row?.id !== 'number') {
+    const msg = 'Observation id was not a number, when trying to delete observation';
+    const err = new Error(msg);
+    report('error', err);
+    toast.add({
+        title: 'An internal error just happened :(',
+        description: 'The error was reported anonymously without including any third-parties.',
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle'
+    })
+  } else {
+    // TODO: create nice confirm box
+    const res = confirm(`Are you sure you want to delete observation #${row.id}?`);
+    if (!res) {
+      return;
+    }
+
+    try {
+      const { msg } = await deleteObservation(props.project.id, row.id);
+
+      toast.add({
+        title: msg,
+        color: 'green',
+        icon: 'i-heroicons-check',
+      });
+
+      await props.onProjectUpdated();
+    } catch(e) {
+      report('error', e as string | Error)
+      console.error('delete observation error:', e);
+      const msg = getErrMsg(e);
+      toast.add({
+        title: 'Observation was NOT deleted',
+        description: msg,
+        color: 'red',
+        icon: 'i-heroicons-exclamation-triangle',
+      });
+    }
   }
 }
 </script>

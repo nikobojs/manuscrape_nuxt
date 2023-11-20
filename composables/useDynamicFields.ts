@@ -2,7 +2,7 @@ export const useDynamicFields = async (projectId: number) => {
   const dynamicFields = useState<FullDynamicProjectField[]>('dynamicFields', () => []);
 
   if (typeof projectId !== 'number') {
-    throw new Error('Project id is not a number!')
+    throw new Error(`Project id ${projectId} is not a number (useDynamicFields)!`);
   }
 
   const {

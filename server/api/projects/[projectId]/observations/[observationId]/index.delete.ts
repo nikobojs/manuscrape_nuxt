@@ -1,11 +1,32 @@
+import { ProjectRole } from "@prisma/client";
 import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
-  requireUser(event);
+  const user = requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);
+
+  // retrieve the user access role for the project
+  const projectAccess = await prisma.projectAccess.findFirst({
+    where: {
+      userId: user.id,
+      projectId: projectId,
+    },
+    select: {
+      role: true,
+    }
+  });
+
+  // ensure user has access
+  // TODO: ensureURLResourceAccess does this as well. Find a better way
+  if (!projectAccess) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: `You don't have access to this project`,
+    });
+  }
 
   // fetch existing observation
   const observation = await prisma.observation.findUnique({
@@ -13,6 +34,7 @@ export default safeResponseHandler(async (event) => {
       id: true,
       isDraft: true,
       projectId: true,
+      userId: true,
       fileUploads: {
         select: {
           s3Path: true,
@@ -37,19 +59,33 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  // ensure observation cannot be updated if it isn't a draft any more
-  if (!observation.isDraft) {
+  const isAuthor = observation.userId === user.id;
+  const isDraft = observation.isDraft;
+  const isProjectOwner = projectAccess.role === ProjectRole.OWNER;
+
+  // ensure observation cannot be removed if it isn't a draft and user is not owner
+  if (!isDraft && !isProjectOwner) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'You are not allowed to patch locked observations',
+      statusMessage: 'You are not allowed to delete locked observations',
     });
   }
 
+  // ensure owner cannot delete other users' drafts
+  if (isDraft && !isAuthor) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'You are not allowed to delete other users\' observation drafts',
+    });
+  }
+
+  // retrieve a list of all files to be deleted
   const filesToDelete = [
-    ...observation.fileUploads.map((f) => f.s3Path),
-    ...(observation.image?.s3Path ? [observation.image.s3Path] : []),
+    ...observation.fileUploads.map((f) => f.s3Path), // all file uploads
+    ...(observation.image?.s3Path ? [observation.image.s3Path] : []), // uploaded image, if any
   ];
 
+  // delete all the files from s3 in the array (skips if empty)
   for (const fileToDelete of filesToDelete) {
     try {
       const deleteRes = await deleteS3Files(fileToDelete)
@@ -68,11 +104,14 @@ export default safeResponseHandler(async (event) => {
     }
   }
 
+  // delete the observation (cascades to its files as well)
   await prisma.observation.delete({
     where: { id: observationId },
   });
 
 
+  // return response
+  // TODO: set better response status code (don't forget response handling in frontend)
   return {
     msg: 'observation has been deleted!',
   };
