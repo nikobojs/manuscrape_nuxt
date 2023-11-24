@@ -61,12 +61,12 @@ export default safeResponseHandler(async (event) => {
     validate: (v) => ['asc', 'desc'].includes(v),
     required: true,
   });
-  const orderBy = queryParam<'user' | 'createdAt'>({
+  const orderBy = queryParam<'user' | 'createdAt' | 'id'>({
     name: 'orderBy',
     event: event,
     defaultValue: 'createdAt',
-    parse: (v) => v as 'user' | 'createdAt',
-    validate: (v) => ['user', 'createdAt'].includes(v),
+    parse: (v) => v as 'user' | 'createdAt' | 'id',
+    validate: (v) => ['user', 'createdAt', 'id'].includes(v),
     required: true,
   });
   const filter = queryParam<'all' | 'published' | 'drafts'>({
@@ -107,7 +107,9 @@ export default safeResponseHandler(async (event) => {
   // create order by / sorting statement
   const orderByStatement = orderBy === 'createdAt'
     ? { createdAt: orderDirection }
-    : { user: { email: orderDirection } };
+    : orderBy === 'user'
+    ? { user: { email: orderDirection } }
+    : { id: orderDirection }
 
   // count how many observations where are in total (with filters applied)
   const total = await prisma.observation.count({
