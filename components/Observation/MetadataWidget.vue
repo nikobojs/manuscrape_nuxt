@@ -48,6 +48,7 @@
               </div>
               <div v-else-if="field.type === 'AUTOCOMPLETE'">
                 <USelectMenu
+                  class="min-w-[200px]"
                   :options="field.choices"
                   v-model="state[field.label]"
                   :placeholder="field.required ? 'Select option' : 'None chosen'"
@@ -61,6 +62,7 @@
               </div>
               <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
                 <USelectMenu
+                  class="min-w-[200px]"
                   :options="field.choices"
                   v-model="state[field.label]"
                   :placeholder="field.required ? 'Select or type option' : 'None chosen'"
