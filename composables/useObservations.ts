@@ -8,7 +8,7 @@ export const useObservations = async (
 ) => {
   const observations = useState<FullObservation[]>('observations', () => []);
   const page = useState<number>(() => 1);
-  const sort = ref<{column:string; direction:'asc'|'desc'}>({  column: 'createdAt',  direction: 'desc'});
+  const sort = ref<{column:string; direction:'asc'|'desc'}>({column: 'createdAt',  direction: 'desc'});
   const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
   const filter = useState<'all' | 'drafts' | 'published'>(() => 'all' as 'all' | 'drafts' | 'published');
