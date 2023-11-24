@@ -10,6 +10,16 @@
     <template #role-data="{ row }">
       {{ row.role }}
     </template>
+    <template #nameInProject-data="{ row }">
+      <span class="flex items-start gap-x-2">
+        {{ row.nameInProject }}
+        <UIcon
+          name="i-mdi-pencil-outline opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+          class="text-lg"
+          @click="() => onEditAlias(row)"
+        />
+      </span>
+    </template>
     <template #createdAt-data="{ row }">
       {{ prettyDate(row.createdAt) }}
     </template>
@@ -40,6 +50,7 @@
     project: requireProjectProp,
     collaborators: requireProp<Collaborator[]>(Array),
     loading: requireProp<boolean>(Boolean),
+    onEditAlias: requireFunctionProp<(c: Collaborator) => void | Promise<void>>()
   });
 
   const { params } = useRoute();
@@ -53,6 +64,9 @@
   }, {
     label: 'Role',
     key: 'role',
+  }, {
+    label: 'Alias',
+    key: 'nameInProject',
   }, {
     label: 'Permission created at',
     key: 'createdAt',

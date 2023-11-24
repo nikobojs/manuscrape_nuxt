@@ -44,6 +44,7 @@ model User {
 model ProjectAccess {
   createdAt          DateTime               @default(now()) @db.Timestamp(6)
   role               ProjectRole            @default(value: OWNER)
+  nameInProject      String
   userId             Int
   projectId          Int
   user               User                   @relation("contributor", fields: [userId], references: [id], onDelete: Cascade)

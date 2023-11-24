@@ -26,8 +26,16 @@
       :project="project"
       :collaborators="collaborators"
       :loading="collaboratorsLoading"
+      :on-edit-alias="beginEditAlias"
     />
   </UCard>
+  <CollaboratorAliasModal
+    v-if="activeCollaborator"
+    :open="openAliasModal"
+    :on-close="onAliasModalClose"
+    :project="project"
+    :collaborator="activeCollaborator"
+  />
 </template>
 
 <script setup lang="ts">
@@ -37,9 +45,11 @@
   
   const toast = useToast();
   const email = ref('');
+  const openAliasModal = ref(false);
+  const activeCollaborator = ref<Collaborator | null>(null);
   const validEmail = computed(() => {
     return isEmail(email.value);
-  })
+  });
 
   const { params } = useRoute();
   const {
@@ -74,7 +84,17 @@
 
   const collaborators = computed<Collaborator[]>(() => {
     return collaboratorsResponse.value?.collaborators || [];
-  })
+  });
+
+  function beginEditAlias(collaborator: Collaborator) {
+    console.log({ collaborator })
+    activeCollaborator.value = collaborator;
+    openAliasModal.value = true;
+  }
+
+  function onAliasModalClose() {
+    openAliasModal.value = false;
+  }
 
   async function onSubmit() {
     if (!validEmail.value) {
