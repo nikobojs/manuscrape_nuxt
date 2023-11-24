@@ -119,7 +119,7 @@ async function addObservationClick() {
 const columns = [
   {
     label: 'ID',
-    sortable: false,
+    sortable: true,
     key: 'id',
   },
   {
