@@ -58,7 +58,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       email: parsed.email,
     },
-    select: { id: true }
+    select: { id: true, email: true }
   });
 
 
@@ -85,7 +85,8 @@ export default safeResponseHandler(async (event) => {
         projectId,
         userId: collaborator.id,
         role: ProjectRole.INVITED,
-      }
+        nameInProject: collaborator.email,
+      },
     });
 
     setResponseStatus(event, 202);
@@ -121,7 +122,7 @@ export default safeResponseHandler(async (event) => {
         inviterId: user.id,
         expiresAt: daysInFuture(7),
         emailHash: hash,
-      }
+      },
     });
 
     setResponseStatus(event, 201);
