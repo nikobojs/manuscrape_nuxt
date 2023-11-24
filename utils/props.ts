@@ -1,6 +1,8 @@
 export const requireObservationProp = requireProp<FullObservation>();
 export const requireObservationsProp = requireProp<FullObservation[]>();
 export const requireProjectProp = requireProp<FullProject>();
+export const requireCollaboratorProp = requireProp<Collaborator>();
+
 export const requireModalProps = {
   open: requireProp<boolean>(Boolean),
   onClose: requireProp<() => void>(Function),

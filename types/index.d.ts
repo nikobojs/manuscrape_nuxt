@@ -201,6 +201,8 @@ declare global {
   
   type Collaborator = {
     createdAt: Date;
+    role: string;
+    nameInProject: string;
     user: {
       id: number;
       email: string;

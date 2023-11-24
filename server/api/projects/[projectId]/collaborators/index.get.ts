@@ -39,6 +39,7 @@ export default safeResponseHandler(async (event) => {
     select: {
       role: true,
       createdAt: true,
+      nameInProject: true,
       user: {
         select: {
           id: true,
