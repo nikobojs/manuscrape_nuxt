@@ -23,7 +23,7 @@
       </div>
       
       <template #footer>
-        <span class="red block mb-3" v-if="error">{{ error }}</span>
+        <span class="text-red-500 block mb-3" v-if="error">{{ error }}</span>
         <div class="flex gap-3 justify-end flex-wrap">
           <UButton @click="submit" variant="outline" color="primary">
             Save
@@ -50,6 +50,7 @@
   const { params } = useRoute();
   const { refreshUser } = await useUser();
   const { patchCollaborator } = await useProjects(params);
+  const toast = useToast();
 
 
   function submit() {
@@ -58,13 +59,23 @@
     patchCollaborator(
       props.project.id,
       props.collaborator.user.id,
-      patch
+      patch,
     ).then(async (res) => {
+      const json = await res.json();
       if (res.status !== 200) {
-        throw new Error(getErrMsg(res))
+        throw new Error(getErrMsg(json))
       }
       await refreshUser();
+      toast.add({
+        title: `The alias for ${props.collaborator.user.email} was updated successfully.`,
+        color: 'green',
+        icon: 'i-heroicons-check'
+      })
+
       props.onClose()
+      setTimeout(() => {
+        newAlias.value = '';
+      }, 300);
     }).catch(err => {
       error.value = err;
     })
