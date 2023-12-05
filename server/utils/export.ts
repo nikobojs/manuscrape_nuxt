@@ -10,6 +10,7 @@ function generateObservationRow(
   obs: FullObservationPayload,
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
+  access: { nameInProject: string, userId: number }[],
 ) {
   // get list of field labels (which are also data-keys)
   const fieldLabels = fields.map(f => f.label);
@@ -51,15 +52,20 @@ function generateObservationRow(
     fieldValues[columnIndex] = val;
   }
 
-  // return row + three rows
+  // get name / initials / alias for author of observation
+  const { nameInProject } = access.find((a) => a.userId === obs.user?.id)
+    || { nameInProject: '<deleted user>' };
+
+  // define values in this observation row
   const row = [
     obs.id, 
     obs.createdAt,
     obs.updatedAt,
-    obs.user?.email || '<deleted user>',
+    nameInProject,
     ...fieldValues
   ];
 
+  // return the row
   return row;
 }
 
@@ -170,7 +176,7 @@ export async function generateNvivoExport(projectId: number, event: H3Event) {
 
   // create all our observation rows for this project
   const observationRows = observations.map((obs) => {
-    const row = generateObservationRow(obs, fields, dynamicFields);
+    const row = generateObservationRow(obs, fields, dynamicFields, project.contributors);
     return row;
   });
 

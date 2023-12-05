@@ -104,6 +104,12 @@ export const exportProjectQuery = {
   id: true,
   createdAt: true,
   name: true,
+  contributors: {
+    select: {
+      nameInProject: true,
+      userId: true,
+    }
+  },
   observations: {
     select: observationColumns,
     where: {
