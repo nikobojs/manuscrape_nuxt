@@ -6,7 +6,7 @@ import { NewProjectFieldSchema } from '../../index.post';
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
-  requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
 
   // get integer parameters

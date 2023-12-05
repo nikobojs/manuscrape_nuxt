@@ -1,5 +1,5 @@
 export default safeResponseHandler(async (event) => {
-  requireUser(event);
+  await requireUser(event);
   const params = event.context.params;
   await ensureURLResourceAccess(event, event.context.user);
   const observationId = parseIntParam(params?.observationId);

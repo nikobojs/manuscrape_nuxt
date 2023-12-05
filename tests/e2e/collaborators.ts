@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { testProject, withTempUser, createProject, invite, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
+import { testProject, withTempUser, createProject, patchCollaborator, invite, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
 import { prisma } from './helpers';
 import { daysInFuture } from '../../utils/datetime';
 
@@ -130,6 +130,57 @@ describe('Collaborators', () => {
       }, collaboratorEmail);
     });
   });
+
+  test('owner can patch collaborator', async () =>  {
+    const collaboratorEmail = 'collaborator-3@codecollective.dk';
+    // create project manager and project
+    await withTempProject(async (_user, project, _obs, token) => {
+      // invite collaborator
+      const inviteRes = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+
+      // sign up as collaborator
+      await withTempUser(async (user2, tokenA) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        const patchRes = await patchCollaborator(token, project.id, user2.id, { role: 'OWNER' });
+        expect(patchRes.status).toBe(200);
+
+        // expect user2 now has OWNER permissions
+        const meRes = await getMe(tokenA);
+        const me = await meRes.json();
+        expect(me.projectAccess?.length).toBe(1);
+        expect(me.projectAccess[0].role).toBe('OWNER');
+      }, collaboratorEmail);
+    });
+  });
+
+  test('collaborator cannot patch collaborator (missing permissions)', async () =>  {
+    const collaboratorEmail = 'collaborator-3@codecollective.dk';
+    // create project manager and project
+    await withTempProject(async (user, project, _obs, token) => {
+      // invite collaborator
+      const inviteRes = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+
+      // sign up as collaborator
+      await withTempUser(async (user2, tokenA) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        const patchRes = await patchCollaborator(tokenA, user.id, project.id, { role: 'INVITED' });
+        expect(patchRes.status).toBe(403);
+      }, collaboratorEmail);
+    });
+  });
+
 
   test('when invited user signs up, she gets automatic access to projects', async () =>  {
     const inviteEmail = 'invitationtest-1@codecollective.dk'

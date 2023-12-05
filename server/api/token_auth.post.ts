@@ -18,15 +18,17 @@ export default safeResponseHandler(async (event) => {
       const user = await prisma.user.findFirst({
         where: { id: decoded.id },
         select: {
+          ...bigUserQuery,
           id: true,
-        }
+          email: true,
+          password: true,
+          createdAt: true,
+        },
       });
 
       if (user) {
         const expires = new Date(new Date().setDate(new Date().getDate() + 365))
-        event.context.auth = {
-          id: user.id
-        };
+        event.context.user = user;
         setCookie(event, 'authcookie', token, {
           expires,
           httpOnly: true,

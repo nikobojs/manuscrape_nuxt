@@ -11,7 +11,7 @@ export async function authorize(
   event: H3Event,
   user: User
 ): Promise<{ token: string }> {
-  const expires = new Date(new Date().setDate(new Date().getDate() + 365))
+  const expires = new Date(new Date().setDate(new Date().getDate() + 365));
   event.context.user = user;
   const token = await jwt.sign({ id: user.id }, config.app.tokenSecret);
 
@@ -25,9 +25,9 @@ export async function authorize(
   return { token };
 }
 
-export function requireUser(
+export async function requireUser(
   event: H3Event<EventHandlerRequest>
-): User {
+): Promise<User> {
   if (!event.context.user?.id) {
       throw createError({
           statusMessage: 'Invalid auth token value',
@@ -35,6 +35,15 @@ export function requireUser(
       });
   }
 
+  if (!event.context.user?.email) {
+    // TODO: why is email not kept between requests?
+    console.warn('refetching user as only id missing in H3Event context (FIXME)');
+    const user = await prisma.user.findFirst({
+      where: {id: event.context.user.id },
+      select: bigUserQuery,
+    });
+    event.context.user = user;
+  }
   return event.context.user as User;
 }
 
@@ -49,6 +58,7 @@ export async function getObservationsByProject(
         select: {
           userId: true,
           role: true,
+          nameInProject: true,
         }
       },
       observations: {
@@ -85,7 +95,7 @@ export async function ensureObservationOwnership(
 
 export async function ensureURLResourceAccess(
     event: H3Event<EventHandlerRequest>,
-    user: UserInSession,
+    user: CurrentUser,
     allowedRoles = [ProjectRole.OWNER.valueOf(), ProjectRole.INVITED.valueOf()]
 ): Promise<void> {
   // return early if user is not logged in
@@ -107,9 +117,9 @@ export async function ensureURLResourceAccess(
     projectIdInt = parseIntParam(params.projectId);
 
     // validate params.projectId against projectAccess.projectId and projectAccess.role
-    const projectAccess = user.projectAccess.find(({ projectId, role }) => 
-      projectId === projectIdInt && allowedRoles.includes(role)
-    )
+    const projectAccess = user.projectAccess.find(({ project, role }) => {
+      return project.id === projectIdInt && allowedRoles.includes(role)
+    })
 
     // throw error if user doesn't have access to project
     if (!projectAccess) {

@@ -92,6 +92,9 @@ export const bigUserQuery = {
       project: {
         select: smallProjectQuery,
       },
+      createdAt: true,
+      projectId: true,
+      nameInProject: true,
       role: true,
     }
   }

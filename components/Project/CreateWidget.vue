@@ -156,7 +156,11 @@
         }, 300);
       }
     } catch (err: any) {
-      error.value = (err?.statusMessage || err?.message).toString();
+        console.log(' caught error:', {err})
+        const msg = getErrMsg(err);
+        error.value = msg;
+    } finally {
+      setTimeout(() => loading.value = false, 300);
     }
   }
 

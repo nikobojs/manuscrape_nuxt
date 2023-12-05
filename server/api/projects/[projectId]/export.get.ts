@@ -18,7 +18,7 @@ export const ExportProjectSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
 
   // get project id  from url parameters

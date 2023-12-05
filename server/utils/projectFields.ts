@@ -62,15 +62,15 @@ export function getNewFieldId (
   const oldField = sourceProject.fields?.find((f) => f.id === oldId);
   if (!oldField) {
     throw createError({
-      status: 500,
-      statusText: 'Unable to copy dynamic field'
+      statusCode: 500,
+      statusMessage: 'Unable to copy dynamic field'
     });
   }
   const newField = createdProject.fields?.find(f => f.label === oldField.label);
   if (!newField) {
     throw createError({
-      status: 500,
-      statusText: 'Unable to find newly created fields'
+      statusCode: 500,
+      statusMessage: 'Unable to find newly created fields'
     });
   }
 

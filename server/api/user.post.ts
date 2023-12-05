@@ -53,6 +53,11 @@ export default safeResponseHandler(async (event) => {
     data: {
       email: parsed.email,
       password: hashedPassword,
+    }, select: {
+      id: true,
+      email: true,
+      password: true,
+      createdAt: true,
     }
   });
 
@@ -78,6 +83,7 @@ export default safeResponseHandler(async (event) => {
         projectId: inv.projectId,
         userId: user.id,
         role: ProjectRole.INVITED,
+        nameInProject: user.email,
       }))
     });
   }
