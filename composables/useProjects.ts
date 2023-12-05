@@ -64,7 +64,7 @@ export const useProjects = async (params: RouteParams) => {
     projectId: number,
     collaboratorId: number,
     patch: { nameInProject: string, role?: string }
-  ): Promise<any> => {
+  ): Promise<Response> => {
     return fetch(
       `/api/projects/${projectId}/collaborators/${collaboratorId}`,
       {
