@@ -9,7 +9,7 @@ export const DeleteUserSchema = yup.object({
 }).required();
 
 export default safeResponseHandler(async (event) => {
-  const { id } = requireUser(event);
+  const { id } = await requireUser(event);
 
   // parse body
   const body = await readBody(event);

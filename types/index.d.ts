@@ -31,7 +31,7 @@ declare global {
   }
 
   interface ExtendedProjectAccess extends Omit<ProjectAccess, "userId"> {
-    project: Project;
+    project: Omit<Omit<FullProject, 'observations'>, 'authorId'>;
   }
 
   type FileUploadResponse = Omit<FileUpload, "s3Path">;
@@ -108,13 +108,10 @@ declare global {
     token: string;
   }
 
-  interface UserInSession {
-    id: number;
-    projectAccess: {
-      projectId: number;
-      role: ProjectRole;
-    }[];
-  }
+  // interface UserInSession {
+  //   id: number;
+  //   projectAccess: ExtendedProjectAccess[];
+  // }
 
   interface Breadcrumb {
     url: string;

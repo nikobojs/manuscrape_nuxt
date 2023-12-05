@@ -60,6 +60,24 @@ export const useProjects = async (params: RouteParams) => {
     )
   };
 
+  const patchCollaborator = async (
+    projectId: number,
+    collaboratorId: number,
+    patch: { nameInProject: string, role?: string }
+  ): Promise<any> => {
+    return fetch(
+      `/api/projects/${projectId}/collaborators/${collaboratorId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  };
+
+
   const duplicateProject = async (
     name: string,
     projectId: number,
@@ -146,5 +164,6 @@ export const useProjects = async (params: RouteParams) => {
     removeCollaborator,
     sortFields,
     duplicateProject,
+    patchCollaborator,
   };
 };

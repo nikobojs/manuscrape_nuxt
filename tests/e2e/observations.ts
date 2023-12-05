@@ -40,7 +40,6 @@ describe('Observations', () => {
   test('invited user can only delete its own observations drafts', async () =>  {
     await withTempProject(async (user, project, observations, token) => {
       // expect this observation to be published
-      console.log(observations)
       expect(observations[0].isDraft).toBe(false);
 
       await withTempUser(async (userB, tokenB) => {
@@ -91,7 +90,6 @@ describe('Observations', () => {
   test('project owner cannot delete drafts of other users', async () =>  {
     await withTempProject(async (user, project, observations, token) => {
       // expect this observation to be published
-      console.log(observations)
       expect(observations[0].isDraft).toBe(false);
 
       await withTempUser(async (userB, tokenB) => {

@@ -8,7 +8,7 @@ import { ProjectRole, Prisma } from '@prisma/client';
 
 export default safeResponseHandler(async (event) => {
   // require login
-  requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
 
   // fetch project access object from db

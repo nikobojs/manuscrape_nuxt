@@ -5,7 +5,7 @@ import { requireUser } from '~/server/utils/authorize';
 
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
-  const user = requireUser(event);
+  const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
 

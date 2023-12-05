@@ -6,7 +6,7 @@ import { captureException } from '@sentry/node';
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
-  requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
 
   // get parameters and body

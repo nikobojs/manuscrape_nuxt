@@ -3,7 +3,7 @@ import { requireUser } from '../utils/authorize';
 import { bigUserQuery } from '../utils/prisma';
 
 export default safeResponseHandler(async (event) => {
-    const { id } = requireUser(event);
+    const { id } = await requireUser(event);
     
     const user = await prisma.user.findFirst({
         where: { id: id },

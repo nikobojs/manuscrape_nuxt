@@ -3,7 +3,7 @@ import { requireUser } from '../../../../utils/authorize';
 import { ProjectRole } from '@prisma/client';
 
 export default safeResponseHandler(async (event) => {
-  requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
   const projectId = parseIntParam(event.context.params?.projectId);
 

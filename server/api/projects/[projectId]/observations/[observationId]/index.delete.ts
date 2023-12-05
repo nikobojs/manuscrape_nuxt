@@ -2,7 +2,7 @@ import { ProjectRole } from "@prisma/client";
 import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
-  const user = requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
