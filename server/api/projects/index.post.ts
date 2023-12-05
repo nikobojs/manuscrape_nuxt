@@ -1,4 +1,4 @@
-import { FieldType } from '@prisma/client'
+import { FieldType, ProjectRole } from '@prisma/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';
@@ -23,7 +23,7 @@ export const NewProjectSchema = yup.object({
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
-  const user = requireUser(event);
+  const user = await requireUser(event);
 
   const body = await readBody(event);
   const newProject = await NewProjectSchema.validate(body)
@@ -51,11 +51,12 @@ export default safeResponseHandler(async (event) => {
       authorId: user.id,
     }
   });
-
   await prisma.projectAccess.create({
     data: {
       userId: user.id,
       projectId: createdProject.id,
+      nameInProject: user.email,
+      role: ProjectRole.OWNER,
     }
   });
 

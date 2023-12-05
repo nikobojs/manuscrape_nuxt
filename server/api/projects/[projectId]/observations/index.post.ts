@@ -3,7 +3,7 @@ import { parseIntParam } from '../../../../utils/request';
 import { requireUser } from '../../../../utils/authorize';
 
 export default safeResponseHandler(async (event) => {
-  const user = requireUser(event);
+  const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   await ensureURLResourceAccess(event, event.context.user);
 

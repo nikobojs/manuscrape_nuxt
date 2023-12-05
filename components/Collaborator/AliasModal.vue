@@ -23,6 +23,7 @@
       </div>
       
       <template #footer>
+        <span class="red block mb-3" v-if="error">{{ error }}</span>
         <div class="flex gap-3 justify-end flex-wrap">
           <UButton @click="submit" variant="outline" color="primary">
             Save
@@ -45,10 +46,27 @@
   });
 
   const newAlias = ref('');
+  const error = ref('');
+  const { params } = useRoute();
+  const { refreshUser } = await useUser();
+  const { patchCollaborator } = await useProjects(params);
 
 
   function submit() {
-    // NIKOOOOOOOOOOOOOOOOOOOOOOO
-    props.onClose()
+    const patch = { nameInProject: newAlias.value };
+    error.value = '';
+    patchCollaborator(
+      props.project.id,
+      props.collaborator.user.id,
+      patch
+    ).then(async (res) => {
+      if (res.status !== 200) {
+        throw new Error(getErrMsg(res))
+      }
+      await refreshUser();
+      props.onClose()
+    }).catch(err => {
+      error.value = err;
+    })
   }
 </script>

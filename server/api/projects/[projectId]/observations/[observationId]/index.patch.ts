@@ -7,7 +7,7 @@ const patchObservationSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  requireUser(event);
+  await requireUser(event);
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);

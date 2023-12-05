@@ -87,7 +87,6 @@
   });
 
   function beginEditAlias(collaborator: Collaborator) {
-    console.log({ collaborator })
     activeCollaborator.value = collaborator;
     openAliasModal.value = true;
   }

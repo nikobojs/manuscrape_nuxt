@@ -175,6 +175,26 @@ export async function patchObservation(
   return res;
 }
 
+export async function patchCollaborator(
+  token: string,
+  projectId: string | number,
+  collaboratorId: string | number,
+  json: any,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/collaborators/${collaboratorId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 
 export async function getMe(token: string): Promise<Response> {
   const res = await fetch(

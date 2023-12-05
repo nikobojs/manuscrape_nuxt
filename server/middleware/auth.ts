@@ -21,20 +21,12 @@ export default defineEventHandler(async (event) => {
             if (typeof decoded !== 'string' && decoded?.id) {
                 const user = await prisma.user.findFirst({
                     where: { id: decoded.id },
-                    select: {
-                        id: true,
-                        projectAccess: {
-                        select: {
-                            projectId: true,
-                            role: true
-                        }
-                        }
-                    }
+                    select: {...bigUserQuery, password: true},
                 });
 
                 if (user) {
                     loginSuccesfull = true;
-                    event.context.user = user as UserInSession;
+                    event.context.user = user as CurrentUser;
                 } else {
                     return onNotAuthed(event, 'Session is valid but user does not exist')
                 }

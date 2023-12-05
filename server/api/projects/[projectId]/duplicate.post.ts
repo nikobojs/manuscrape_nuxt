@@ -5,6 +5,7 @@ import { requireUser } from '../../../utils/authorize';
 import { ProjectRole } from '@prisma/client';
 import { smallProjectQuery } from '~/server/utils/prisma';  // TODO: does auto import work?
 import { getNewFieldId } from '~/server/utils/projectFields';
+import { NuxtError } from 'nuxt/app';
 
 export const DuplicateProjectSchema = yup.object({
   name: yup.string().required(),
@@ -12,7 +13,7 @@ export const DuplicateProjectSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  const user = requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
 
   // get integer parameters
@@ -34,17 +35,17 @@ export default safeResponseHandler(async (event) => {
   // ensure source project exists
   if (!sourceProject) {
     throw createError({
-      status: 404,
-      statusText: 'Project could not be found'
-    })
+      statusCode: 404,
+      statusMessage: 'Project could not be found'
+    } as Partial<NuxtError>)
   }
 
   // ensure new project name differs from source project name
   // TODO: maybe enforce unique project names at some point
   if (sourceProject.name === newName) {
     throw createError({
-      status: 400,
-      statusText: 'The name of a project duplicate must differ from the source project'
+      statusCode: 400,
+      statusMessage: 'The name of a project duplicate must differ from the source project'
     });
   }
   
@@ -85,8 +86,8 @@ export default safeResponseHandler(async (event) => {
   // ensure prisma project query returned something
   if (!createdProject || typeof createdProject.id !== 'number') {
     throw createError({
-      status: 500,
-      statusText: 'Project was unreachable after creation'
+      statusCode: 500,
+      statusMessage: 'Project was unreachable after creation'
     });
   }
 
@@ -96,6 +97,7 @@ export default safeResponseHandler(async (event) => {
       projectId: createdProject.id,
       userId: user.id,
       role: ProjectRole.OWNER,
+      nameInProject: user.email,
     }
   });
 
