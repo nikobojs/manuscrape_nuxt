@@ -354,6 +354,13 @@ export const testProject: NewProjectBody = {
       choices: ['a', 'b', 'c']
     },
     {
+      label: 'Multiple choice with free text',
+      type: FieldType.MULTIPLE_CHOICE_ADD,
+      required: false,
+      index: 6,
+      choices: ['a', 'b', 'c']
+    },
+    {
       label: 'Check me',
       type: FieldType.BOOLEAN,
       required: true,

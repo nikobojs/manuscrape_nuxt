@@ -1,4 +1,4 @@
-import { EditorMode, ImageEditorActionConfig, adjustCameraToZoom, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
+import { EditorMode, type ImageEditorActionConfig, adjustCameraToZoom, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
 
 let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;

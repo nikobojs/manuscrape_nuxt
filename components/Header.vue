@@ -21,9 +21,10 @@
               v-model="selectedProjectId"
               searchable
               @change="onProjectChange"
+              placeholder="Loading..."
             >
               <template #label>
-                {{  selectedProject?.name || ''  }}
+                {{ selectedProject?.name || '' }}
               </template>
             </USelectMenu>
           </div>
@@ -58,7 +59,7 @@
 </style>
 
 <script setup lang="ts">
-  import { type DropdownItem } from '@nuxt/ui/dist/runtime/types';
+  import type { DropdownItem } from '@nuxt/ui/dist/runtime/types';
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();

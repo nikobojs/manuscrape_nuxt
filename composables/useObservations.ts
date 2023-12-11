@@ -87,7 +87,7 @@ export const useObservations = async (
     obsId: number | string | string[] | null
   ): Promise<{
     observationLoading: globalThis.Ref<boolean>;
-    refreshObservation: (opts?: AsyncDataExecuteOptions | undefined) => Promise<void>;
+    refreshObservation: (opts?: AsyncDataExecuteOptions | undefined) => Promise<FullObservation | null>;
     observation: globalThis.Ref<FullObservation | null>;
   }> => {
     obsId = requireNumber(obsId, 'observationId');

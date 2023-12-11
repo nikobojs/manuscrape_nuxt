@@ -13,11 +13,11 @@
         <ObservationListWidget
           :project="project"
           :show-create-button="true"
-          :on-project-updated="refreshObservations"
+          :on-project-updated="() => { refreshObservations() }"
         />
         <ProjectParametersWidget
           :project="project"
-          :on-project-updated="refreshUser"
+          :on-project-updated="() => { refreshUser() }"
         />
       </div>
       <div class="mt-6">

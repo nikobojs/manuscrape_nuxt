@@ -5,7 +5,7 @@ import { requireUser } from '../../../utils/authorize';
 import { ProjectRole } from '@prisma/client';
 import { smallProjectQuery } from '~/server/utils/prisma';  // TODO: does auto import work?
 import { getNewFieldId } from '~/server/utils/projectFields';
-import { NuxtError } from 'nuxt/app';
+import type { NuxtError } from 'nuxt/app';
 
 export const DuplicateProjectSchema = yup.object({
   name: yup.string().required(),
