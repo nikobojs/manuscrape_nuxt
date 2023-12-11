@@ -79,6 +79,31 @@
                   </template>
                 </USelectMenu>
               </div>
+              <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
+                <USelectMenu
+                  :name="field.label"
+                  class="min-w-[200px]"
+                  :options="field.choices?.map((o) => ({ label: o }))"
+                  v-model="state[field.label]"
+                  :placeholder="field.required ? 'Select options or type freely' : 'Nothing picked'"
+                  option-attribute="label"
+                  :search-attributes="['label']"
+                  :value-attributes="'label'"
+                  multiple
+                  searchable
+                  creatable
+                  by="label"
+                  :disabled="!!$props.disabled"
+                  @update:model-value="(val: Array<{ label: string}>) => addCustomFieldToOptions(val, field)"
+                >
+                  <template #option-create="{ option }">
+                    <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
+                    <span>
+                      {{ option.label }}
+                    </span>
+                  </template>
+                </USelectMenu>
+              </div>
               <UInput
                 v-else
                 v-model="state[field.label]"
@@ -134,6 +159,22 @@
     buildForm(sortedFields.value);
   }
 
+  function addCustomFieldToOptions(
+    value: Array<{ label: string}>,
+    field: { choices?: string[] }
+  ) {
+    if (!field.choices) {
+      // TODO: report error
+      return;
+    }
+
+    const newChoices = new Set(value.map(v => v.label).concat(field.choices));
+    if (newChoices.size === field.choices.length) {
+      return;
+    }
+    field.choices = Array.from(newChoices);
+  }
+
   function validate(state: any): FormError[] {
     const errors = [] as FormError[];
 
@@ -141,7 +182,7 @@
     const missingFields = sortedFields.value.filter(f => {
       return (
         f.required &&
-        !Object.keys(state).includes(f.label) && 
+        !Object.keys(state).includes(f.label) &&
         f.type !== FieldType.BOOLEAN
       );
     });
@@ -155,7 +196,7 @@
     // validate each state value
     for (const [key, value] of Object.entries(state)) {
       // validate field (field)
-      const field = sortedFields.value.find((field) => field.label == key)
+      const field = sortedFields.value.find((field) => field.label == key);
       if (!field) {
         throw createError({
           statusCode: 500,
@@ -165,7 +206,7 @@
 
       // check if field is required or optional
       if (field.required && (value === null || value === undefined)) {
-        errors.push({ path: key, message: 'Required'})
+        errors.push({ path: key, message: 'Required'});
       }
 
       // validate numbers
@@ -176,14 +217,13 @@
       ) {
         const valueFloat = parseFloat(''+value);
         if (isNaN(valueFloat)) {
-          errors.push({ path: key, message: 'Invalid number'})
+          errors.push({ path: key, message: 'Invalid number'});
         }
       }
 
       // validate strings
-      if (
-        typ == FieldType.STRING
-      ) {
+      if (typ == FieldType.STRING) {
+        // TODO: explain why
         if ((''+value).length === 0) {
           errors.push({ path: key, message: 'Text field is required'})
         }
@@ -198,7 +238,7 @@
       ) {
         const valueDate = new Date(''+value);
         if (isNaN(valueDate.getTime())) {
-          errors.push({ path: key, message: 'Date field is invalid'})
+          errors.push({ path: key, message: 'Date field is invalid'});
         }
       }
     }
@@ -220,14 +260,14 @@
         };
 
         if (typ == FieldType.FLOAT) {
-          inputArgs.type = inputTypes[FieldType.FLOAT]
+          inputArgs.type = inputTypes[FieldType.FLOAT];
           inputArgs.step = 0.1;
         } else if (typ == FieldType.INT) {
-          inputArgs.type = inputTypes[FieldType.INT]
+          inputArgs.type = inputTypes[FieldType.INT];
         } else if (typ == FieldType.DATETIME) {
-          inputArgs.type = inputTypes[FieldType.DATETIME]
+          inputArgs.type = inputTypes[FieldType.DATETIME];
         } else if (typ == FieldType.DATE) {
-          inputArgs.type = inputTypes[FieldType.DATE]
+          inputArgs.type = inputTypes[FieldType.DATE];
         } else if (typ != FieldType.STRING) {
           const err = new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
           report('error', err);
@@ -248,7 +288,7 @@
               type: 'checkbox',
               checked: false,
             } as CMSCheckboxProps,
-          })
+          });
         } else if(typ == FieldType.TEXTAREA) {
           inputs.value.push({
             field,
@@ -261,6 +301,20 @@
             report('error', 'Radio button type has no values to pick from');
             return;
           }
+
+          // add arrays for multiple choices types
+          if (typ === 'MULTIPLE_CHOICE_ADD') {
+            if (!state.value[field.label]) {
+              state.value[field.label] = [];
+            } else {
+              // if custom choices are picked, add them to field.choices
+              const customChoices = state.value[field.label]
+                .map((v: { label: string }) => v.label)
+                .filter((v: string) => !field.choices.includes(v));
+              
+              field.choices = field.choices.concat(customChoices);
+            }
+          } 
 
           inputs.value.push({
             field,
