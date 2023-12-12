@@ -6,7 +6,7 @@
           :project="project"
           :show-create-button="false"
           :default-observation-filter="ObservationFilterTypes.MY_DRAFTS"
-          :on-project-updated="refreshObservations"
+          :on-project-updated="() => { refreshObservations() }"
         />
       </div>
     </UContainer>

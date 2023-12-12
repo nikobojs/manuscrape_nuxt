@@ -59,7 +59,7 @@
 
 
 <script lang="ts" setup>
-  import { getErrMsg } from '~/utils/getErrMsg';
+  // import { getErrMsg } from '~/utils/getErrMsg';
 
   const error = ref('')
   const { login, ensureUserFetched } = await useAuth();
@@ -95,14 +95,15 @@
         }
       })
       .catch(err => {
-        error.value = getErrMsg(err);
+        error.value = 'help!!!'; // getErrMsg(err);
       }).finally(() => loading.value = false);
 
     }, 200);
   }
 
   function onLogoClick() {
-    navigateTo('/');
+    //navigateTo('/');
+    console.log('HELLOW NAVIGATE TO / !')
   }
   
 </script>

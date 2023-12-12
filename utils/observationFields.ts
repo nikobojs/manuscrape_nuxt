@@ -1,6 +1,7 @@
 export enum FieldType {
   AUTOCOMPLETE = 'AUTOCOMPLETE',
   AUTOCOMPLETE_ADD = 'AUTOCOMPLETE_ADD',
+  MULTIPLE_CHOICE_ADD = 'MULTIPLE_CHOICE_ADD',
   BOOLEAN = 'BOOLEAN',
   CHOICE = 'CHOICE',
   DATE = 'DATE',
@@ -25,6 +26,7 @@ export const ObservationFieldTypes: Record<string, string> = {
   'Date': 'DATE',
   'Decimal number': 'FLOAT',
   'Dropdown or text': 'AUTOCOMPLETE_ADD',
+  'Multiple choice or free text': 'MULTIPLE_CHOICE_ADD',
   'Dropdown': 'AUTOCOMPLETE',
   'Radio buttons': 'CHOICE',
   'Text (multi line)': 'TEXTAREA',
@@ -33,7 +35,7 @@ export const ObservationFieldTypes: Record<string, string> = {
 }
 
 export function isMultipleChoice(field: string): boolean {
-  return ['CHOICE', 'AUTOCOMPLETE', 'AUTOCOMPLETE_ADD'].includes(field)
+  return ['CHOICE', 'AUTOCOMPLETE', 'AUTOCOMPLETE_ADD', 'MULTIPLE_CHOICE_ADD'].includes(field)
 }
 
 export function getFieldLabel(fieldType: string): string {

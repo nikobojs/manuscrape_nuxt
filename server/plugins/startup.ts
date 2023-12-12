@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node'
-import { PublicRuntimeConfig } from 'nuxt/schema';
+import type { PublicRuntimeConfig } from 'nuxt/schema';
 import type { NitroApp } from 'nitropack';
 import { exit } from 'process';
 

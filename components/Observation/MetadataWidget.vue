@@ -79,6 +79,30 @@
                   </template>
                 </USelectMenu>
               </div>
+              <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
+                <USelectMenu
+                  :name="field.label"
+                  class="min-w-[200px]"
+                  :options="getMultipleChoiceAddOptions(field as ProjectFieldResponse)"
+                  v-model="state[field.label]"
+                  :placeholder="field.required ? 'Select options or type freely' : 'Nothing picked'"
+                  option-attribute="label"
+                  :search-attributes="['label']"
+                  :value-attributes="'label'"
+                  multiple
+                  searchable
+                  creatable
+                  by="label"
+                  :disabled="!!$props.disabled"
+                >
+                  <template #option-create="{ option }">
+                    <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
+                    <span>
+                      {{ option.label }}
+                    </span>
+                  </template>
+                </USelectMenu>
+              </div>
               <UInput
                 v-else
                 v-model="state[field.label]"
@@ -110,7 +134,7 @@
 
 <script lang="ts" setup>
   import type { FormError } from '@nuxt/ui/dist/runtime/types/form';
-  import { inputTypes, FieldType } from '~/utils/observationFields';
+  import { FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
     observation: requireObservationProp,
@@ -118,22 +142,28 @@
     onSubmit: Function as PropType<Function>,
     disabled: Boolean as PropType<Boolean>,
     metadataDone: Boolean as PropType<Boolean>,
+    initialState: Object as PropType<any>,
+    inputs: requireProp<CMSInput[]>(),
   });
 
   const { params } = useRoute();
   const { sortFields } = await useProjects(params);
   const { patchObservation } = await useObservations(props.project.id);
 
-  const form = ref();
-  const inputs = ref([] as CMSInput[]);
-  const state = ref(props.observation?.data as any);
-  const sortedFields = computed(() => sortFields(props.project));
-  const { report } = useSentry();
-
-  if (inputs.value.length == 0) {
-    buildForm(sortedFields.value);
+  function getMultipleChoiceAddOptions(field: ProjectFieldResponse) {
+    const updatedOptions = (field.choices || [])
+      .concat(getCustomFieldChoices(field, state))
+      .map((o) => ({ label: o }));
+    return updatedOptions;
   }
 
+  const form = ref();
+  const state = ref(Object.assign({ ...props.initialState }, props.observation?.data as any));
+  const sortedFields = computed(() => sortFields(props.project));
+
+
+  // TODO: validation function doesn't seem completely functional
+  //       - manuel edge-case testing required
   function validate(state: any): FormError[] {
     const errors = [] as FormError[];
 
@@ -141,7 +171,7 @@
     const missingFields = sortedFields.value.filter(f => {
       return (
         f.required &&
-        !Object.keys(state).includes(f.label) && 
+        !Object.keys(state).includes(f.label) &&
         f.type !== FieldType.BOOLEAN
       );
     });
@@ -155,7 +185,7 @@
     // validate each state value
     for (const [key, value] of Object.entries(state)) {
       // validate field (field)
-      const field = sortedFields.value.find((field) => field.label == key)
+      const field = sortedFields.value.find((field) => field.label == key);
       if (!field) {
         throw createError({
           statusCode: 500,
@@ -165,7 +195,7 @@
 
       // check if field is required or optional
       if (field.required && (value === null || value === undefined)) {
-        errors.push({ path: key, message: 'Required'})
+        errors.push({ path: key, message: 'Required'});
       }
 
       // validate numbers
@@ -176,14 +206,13 @@
       ) {
         const valueFloat = parseFloat(''+value);
         if (isNaN(valueFloat)) {
-          errors.push({ path: key, message: 'Invalid number'})
+          errors.push({ path: key, message: 'Invalid number'});
         }
       }
 
       // validate strings
-      if (
-        typ == FieldType.STRING
-      ) {
+      if (typ == FieldType.STRING) {
+        // TODO: explain why
         if ((''+value).length === 0) {
           errors.push({ path: key, message: 'Text field is required'})
         }
@@ -198,81 +227,12 @@
       ) {
         const valueDate = new Date(''+value);
         if (isNaN(valueDate.getTime())) {
-          errors.push({ path: key, message: 'Date field is invalid'})
+          errors.push({ path: key, message: 'Date field is invalid'});
         }
       }
     }
 
     return errors;
-  }
-
-  function buildForm(fields: ProjectFieldResponse[]) {
-    for (const field of fields) {
-
-      const useSimpleInput = Object.keys(inputTypes).includes(field.type);
-      const typ = field.type;
-
-      if (useSimpleInput) {
-        const inputArgs: CMSInputProps = {
-          placeholder: 'Enter ' + field.label,
-          name: field.label,
-          type: inputTypes[FieldType.STRING],
-        };
-
-        if (typ == FieldType.FLOAT) {
-          inputArgs.type = inputTypes[FieldType.FLOAT]
-          inputArgs.step = 0.1;
-        } else if (typ == FieldType.INT) {
-          inputArgs.type = inputTypes[FieldType.INT]
-        } else if (typ == FieldType.DATETIME) {
-          inputArgs.type = inputTypes[FieldType.DATETIME]
-        } else if (typ == FieldType.DATE) {
-          inputArgs.type = inputTypes[FieldType.DATE]
-        } else if (typ != FieldType.STRING) {
-          const err = new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
-          report('error', err);
-          throw err;
-        }
-
-        inputs.value.push({
-          field,
-          props: inputArgs,
-        });
-      } else {
-        if (typ == FieldType.BOOLEAN) {
-          inputs.value.push({
-            field,
-            props: {
-              label: field.label,
-              name: field.label,
-              type: 'checkbox',
-              checked: false,
-            } as CMSCheckboxProps,
-          })
-        } else if(typ == FieldType.TEXTAREA) {
-          inputs.value.push({
-            field,
-            props: {
-              name: field.label,
-            } as CMSTextAreaProps,
-          });
-        } else if (isMultipleChoice(typ)) {
-          if (!field.choices?.length) {
-            report('error', 'Radio button type has no values to pick from');
-            return;
-          }
-
-          inputs.value.push({
-            field,
-            props: {
-              name: field.label,
-            } as CMSMultipleChoiceProps,
-          });
-        } else {
-          report('warning', `Field with type '${field.type}' is not support :( Try again in an hour`);
-        }
-      }
-    }
   }
 
   async function submit() {

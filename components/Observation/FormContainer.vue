@@ -11,6 +11,8 @@
       :onSubmit="onFormSubmit"
       :disabled="disabled"
       :metadataDone="metadataDone"
+      :initialState="observationForm.initialState"
+      :inputs="observationForm.inputs"
     />
 
     <div class="row-span-3 flex flex-col gap-6">
@@ -55,15 +57,8 @@
           title="Submit and lock"
           description="When an observation is submitted, it will be locked for future editing.
           This includes uploading files, image editing and metadata editing."
-          :ui="{ title: 'text-sm font-normal' }"
-          >
-            <template #title="{ title }">
-              <div class="font-bold">{{ title }}</div>
-            </template>
-            <template #description="{ description }">
-              {{ description }}
-            </template>
-          </UAlert>
+          :ui="{ title: 'text-sm font-bold' }"
+        />
       </UCard>
       <UCard v-else >
         <template #header>
@@ -107,6 +102,10 @@
 
   const { user } = await useUser();
 
+  const observationForm = computed(
+    () => buildForm(props.project.fields),
+  );
+
   const {
     publishObservation,
     deleteObservation,
@@ -117,7 +116,7 @@
 
   const uploadInProgress = computed(() => {
     return props.awaitImageUpload && !props.observation?.image?.id;
-  })
+  });
 
   async function publish() {
     await publishObservation(props.project.id, props.observation.id);
