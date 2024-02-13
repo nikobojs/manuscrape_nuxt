@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { FormError } from '@nuxt/ui/dist/runtime/types/form';
+  import type { FormError } from '#ui/types';
 
   const props = defineProps({
     project: requireProjectProp,

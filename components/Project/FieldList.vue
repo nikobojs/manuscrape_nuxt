@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { DropdownItem } from '@nuxt/ui/dist/runtime/types';
+  import type { DropdownItem } from '#ui/types';
   const props = defineProps({
     fields: requireProp<NewProjectField[]>(Array),
     onFieldsUpdate: requireFunctionProp<(fields: NewProjectField[]) => void | Promise<void>>(),
