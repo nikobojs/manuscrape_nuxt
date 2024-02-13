@@ -1,4 +1,4 @@
-import type { AsyncDataExecuteOptions } from "nuxt/dist/app/composables/asyncData";
+import type { AsyncDataExecuteOptions } from "#app/composables/asyncData";
 import type { RouteParams } from "vue-router";
 import { getErrMsg } from '~/utils/getErrMsg';
 
@@ -87,7 +87,7 @@ export const useObservations = async (
     obsId: number | string | string[] | null
   ): Promise<{
     observationLoading: globalThis.Ref<boolean>;
-    refreshObservation: (opts?: AsyncDataExecuteOptions | undefined) => Promise<FullObservation | null>;
+    refreshObservation: (opts?: AsyncDataExecuteOptions | undefined) => Promise<void>;
     observation: globalThis.Ref<FullObservation | null>;
   }> => {
     obsId = requireNumber(obsId, 'observationId');
@@ -189,6 +189,10 @@ export const useObservations = async (
       );
 
       if (uploadRes.status.value !== 'success') {
+        const statusCode = uploadRes.error.value?.statusCode;
+        if (statusCode === 413) {
+          throw new Error('The uploaded file is to large');
+        }
         const msg = getErrMsg(uploadRes);
         throw new Error(msg || 'It seems that the fileupload failed :(')
       }

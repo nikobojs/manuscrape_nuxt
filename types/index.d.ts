@@ -108,10 +108,13 @@ declare global {
     token: string;
   }
 
-  // interface UserInSession {
-  //   id: number;
-  //   projectAccess: ExtendedProjectAccess[];
-  // }
+  interface IScrollshotSettingInput {
+    label: string;
+    help: string;
+    type: 'number' | 'float';
+    name: string;
+    step?: number;
+  }
 
   interface Breadcrumb {
     url: string;

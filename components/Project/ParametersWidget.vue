@@ -131,7 +131,8 @@
 </template>
 
 <script setup lang="ts">
-  import type { Command } from '@nuxt/ui/dist/runtime/types';
+  import type { Command } from '#ui/types';
+
   const openConfirmDeleteParamModal = ref(false);
   const openRemoveModal = ref(false);
   const selectedParameter = ref<null | { id: number, label: string }>();

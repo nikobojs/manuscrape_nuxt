@@ -102,8 +102,7 @@
   }
 
   function onLogoClick() {
-    //navigateTo('/');
-    console.log('HELLOW NAVIGATE TO / !')
+    navigateTo('/');
   }
   
 </script>

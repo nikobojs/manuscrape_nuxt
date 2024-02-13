@@ -10,10 +10,10 @@
             <img src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light">
           </span>
         </div>
-        <nav v-show="hasFetched" class="flex justify-end">
+
+        <nav v-if="hasFetched && !!user" class="flex justify-end">
           <div class="w-[250px] flex justify-end items-center" v-if="typeof rawProjectId === 'string'">
             <USelectMenu
-              v-if="!!user"
               value-attribute="id"
               option-attribute="label"
               :options="projectMenu"
@@ -28,15 +28,18 @@
               </template>
             </USelectMenu>
           </div>
-          <ul v-show="!user">
-              <li class="flex"><ULink class="px-3 py-2" to="/login">Log in</ULink></li>
-              <li class="flex"><ULink class="px-3 py-2" to="/user/new">Sign up</ULink></li>
-          </ul>
-          <UDropdown v-if="!!user" class="flex self-center" :items="settingsItems">
+          <UDropdown class="flex self-center" :items="settingsItems">
             <div class="w-9 h-9 p-1.5">
               <UIcon class="w-full h-full" name="i-heroicons-user-circle" />
             </div>
           </UDropdown>
+        </nav>
+
+        <nav v-if="hasFetched && !user" class="flex justify-end">
+          <ul>
+              <li class="flex"><ULink class="px-3 py-2" to="/login">Log in</ULink></li>
+              <li class="flex"><ULink class="px-3 py-2" to="/user/new">Sign up</ULink></li>
+          </ul>
         </nav>
       </div>
     </UContainer>
@@ -59,7 +62,6 @@
 </style>
 
 <script setup lang="ts">
-  import type { DropdownItem } from '@nuxt/ui/dist/runtime/types';
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
   const { user, hasFetched } = await useUser();
@@ -101,12 +103,12 @@
       label: p.name,
       href: '/projects/' + p.id,
       id: p.id,
-    }));
+    })).sort((a, b) => a.label.localeCompare(b.label));
 
     return result;
   });
   
-  const settingsItems: DropdownItem[][] = [
+  const settingsItems = [
     [
       {
         label: 'Profile',
