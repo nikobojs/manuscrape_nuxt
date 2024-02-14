@@ -11,9 +11,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "migrate": "prisma migrate dev",
-    "test-dev": "vitest dev --no-threads --silent=false",
-    "test": "vitest run --no-threads --silent=true",
-    "test-ui": "vitest --ui --no-threads"
+    "test-dev": "vitest dev",
+    "test": "vitest run --silent",
+    "test-ui": "vitest --ui"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.60",
