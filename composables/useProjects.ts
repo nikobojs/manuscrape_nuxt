@@ -1,9 +1,9 @@
 import { requireNumber } from "./helpers";
 import { type RouteParams } from "vue-router";
 
-export const useProjects = async (params: RouteParams) => {
+export const useProjects = async (params?: RouteParams | undefined) => {
   const { hasRoles, refreshUser, loading, projects } = await useUser();
-  const project = computed(() => getProjectFromParams(params));
+  const project = computed(() => params ? getProjectFromParams(params) : undefined);
 
   const getProjectById = (
     projectId: number | string | undefined | null | string[],
@@ -26,6 +26,25 @@ export const useProjects = async (params: RouteParams) => {
     }).then(async (response) => {
       await refreshUser();
       return response;
+    })
+  };
+
+  const patchProject = async (
+    projectId: number,
+    patch: { name?: string, ownerCanDelockObservations: boolean, authorCanDelockObservations: boolean }
+  ): Promise<Response> => {
+    return fetch(
+      `/api/projects/${projectId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    ).then(async (res) => {
+      await refreshUser();
+      return res;
     })
   };
 
@@ -165,5 +184,6 @@ export const useProjects = async (params: RouteParams) => {
     sortFields,
     duplicateProject,
     patchCollaborator,
+    patchProject,
   };
 };

@@ -57,7 +57,7 @@
     }, 300);
   }
 
-  function renderSettings(settings: ISettings) {
+  function renderSettings(settings: Record<string, any>) {
     renderScrollshotSettings(settings.scrollshot);
   }
 
@@ -73,7 +73,7 @@
 
     // get settings from user input
     const scrollshotPatch = getSettingsPatch(ScrollshotSettingInputs);
-    const fullPatch: ISettings = {
+    const fullPatch: Record<string, any> = {
       scrollshot: scrollshotPatch,
     };
 
@@ -83,12 +83,12 @@
     // try update via the electron client
     window.electronAPI.updateSettings(
       fullPatch,
-      (event, patched) => {
+      (event: Event, patched: Record<string, any>) => {
         error.value = '';
         renderSettings(patched)
         savingDone();
-      }, (event, errorMessage) => {
-        errorElem.value.innerText = errorMessage;
+      }, (event: Event, errorMessage: string) => {
+        error.value = errorMessage;
         savingDone();
       },
     );
@@ -100,13 +100,13 @@
     const res = confirm(`Are you sure you want to reset all scrollshot settings to their default values?`);
     if (!res) return;
 
-    window.electronAPI.getDefaultSettings((_event, settings: any) => {
+    window.electronAPI.getDefaultSettings((_event: Event, settings: Record<string, any>) => {
 
-      window.electronAPI.updateSettings(settings, (event, patched) => {
+      window.electronAPI.updateSettings(settings, (event: Event, patched: Record<string, any>) => {
         error.value = '';
         renderScrollshotSettings(patched.scrollshot)
         savingDone();
-      }, (event, errorMessage) => {
+      }, (event: Event, errorMessage: string) => {
         error.value = errorMessage;
         savingDone();
       });

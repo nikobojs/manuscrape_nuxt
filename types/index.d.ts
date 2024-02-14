@@ -51,6 +51,8 @@ declare global {
   interface ProjectFieldResponse extends Omit<ProjectField, "projectId"> {}
 
   interface FullProject extends Project {
+    authorCanDelockObservations: boolean;
+    ownerCanDelockObservations: boolean;
     fields: ProjectFieldResponse[];
     dynamicFields: Omit<DynamicProjectField, "projectId">[];
     observations: Observation[];

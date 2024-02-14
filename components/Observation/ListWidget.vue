@@ -24,8 +24,10 @@
       v-if="props.project"
     >
       <template #id-data="{ row }">
-        <span class="text-gray-600 pr-1 inline-block">#</span>
-        <span class="font-semibold">{{ row.id }}</span>
+        <NuxtLink :href="`/projects/${props.project?.id}/observations/${row.id}${isElectron ? '?electron=1' : ''}`">
+          <span class="text-gray-600 pr-1 inline-block">#</span>
+          <span class="font-semibold">{{ row.id }}</span>
+        </NuxtLink>
       </template>
       <template #createdAt-data="{ row }">
         <span>{{ prettyDate(row.createdAt) }}</span>

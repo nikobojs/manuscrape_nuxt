@@ -5,11 +5,10 @@
   >
     <ObservationMetadataWidget
       class="row-span-4"
-      v-if="observation"
       :project="project"
-      :observation="observation"
+      :observationId="observationId"
       :onSubmit="onFormSubmit"
-      :disabled="disabled"
+      :disabled="isLocked"
       :metadataDone="metadataDone"
       :initialState="observationForm.initialState"
       :inputs="observationForm.inputs"
@@ -18,15 +17,15 @@
     <div class="row-span-3 flex flex-col gap-6">
       <ObservationImageWidget
         :project="project"
-        :observation="observation"
+        :observationId="observationId"
         :onSubmit="onImageUploaded"
-        :disabled="disabled"
+        :disabled="isLocked"
         :imageUploaded="imageUploaded"
         :uploadInProgress="uploadInProgress"
       />
 
-      <UCard>
-        <template v-if="!$props.disabled" #header>
+      <UCard v-if="!isLocked || (isLocked && observation.fileUploads.length > 0)">
+        <template #header>
             <CardHeader>Files</CardHeader>
         </template>
         <ObservationFileUploadForm
@@ -38,7 +37,7 @@
         />
       </UCard>
 
-      <UCard v-if="!$props.disabled">
+      <UCard v-if="!isLocked">
         <template #header>
           <CardHeader>Actions</CardHeader>
         </template>
@@ -60,7 +59,7 @@
           :ui="{ title: 'text-sm font-bold' }"
         />
       </UCard>
-      <UCard v-else >
+      <UCard v-else="observation" >
         <template #header>
           <CardHeader>Details</CardHeader>
         </template>
@@ -74,10 +73,17 @@
           <div class="text-gray-400">Last updated at:</div>
           <div>{{ prettyDate(observation.updatedAt, true) }}</div>
         </div>
-        <div class="mt-6" v-if="observationIsDeletable(observation, user, project)">
-          <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => handleDelete()">
-            Delete observation
-          </UButton>
+        <div class="flex gap-x-4">
+          <div class="mt-6" v-if="observationIsDeletable(observation, user, project)">
+            <UButton icon="i-mdi-delete-outline" color="red" variant="outline" @click="() => handleDelete()">
+              Delete observation
+            </UButton>
+          </div>
+          <div class="mt-6" v-if="observationIsDelockable(observation, user, project)">
+            <UButton icon="i-mdi-lock-open-variant-outline" color="yellow" variant="outline" @click="() => handleDelock()">
+              Unlock observation
+            </UButton>
+          </div>
         </div>
       </UCard>
     </div>
@@ -92,42 +98,50 @@
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
     onFileDeleted: requireFunctionProp<() => Promise<void>>(),
     onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
-    disabled: Boolean as PropType<boolean>,
     awaitImageUpload: Boolean as PropType<boolean>,
     metadataDone: Boolean as PropType<boolean>,
     imageUploaded: Boolean as PropType<boolean>,
-    observation: requireObservationProp,
+    observationId: {
+      type: Number,
+      required: true,
+    },
     project: requireProjectProp,
   });
 
-  const { user } = await useUser();
+  const { user, refreshUser } = await useUser();
 
   const observationForm = computed(
     () => buildForm(props.project.fields),
   );
-
   const {
     publishObservation,
     deleteObservation,
+    patchObservation,
     observationIsDeletable,
+    observationIsDelockable,
+    observations,
   } = await useObservations(props.project.id);
   const toast = useToast();
   const { isElectron } = useDevice();
 
+  const observation = computed(() => observations.value.find((o) => o.id === props.observationId))
+  const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
+
+
   const uploadInProgress = computed(() => {
-    return props.awaitImageUpload && !props.observation?.image?.id;
+    return observation.value && props.awaitImageUpload && !observation.value?.image?.id;
   });
 
   async function publish() {
-    await publishObservation(props.project.id, props.observation.id);
+    await publishObservation(props.project.id, props.observationId);
     props.onObservationPublished?.();
   }
 
   async function discard() {
-    if (!props.project || !props.observation) {
+    if (!props.project || !observation) {
       throw new Error('Props are not defined')
     }
-    await deleteObservation(props.project.id, props.observation.id);
+    await deleteObservation(props.project.id, props.observationId);
     if (isElectron.value) {
       window.close();
     } else {
@@ -140,14 +154,13 @@
     }
   }
 
-
   async function handleDelete() {
-    if (!props.project || !props.observation) {
+    if (!props.project || !observation) {
       throw new Error('Props are not defined')
     }
-    const confirmed = confirm(`Are you sure you want to delete observation #${props.observation.id} ?`)
+    const confirmed = confirm(`Are you sure you want to delete observation #${props.observationId} ?`)
     if (!confirmed) return;
-    await deleteObservation(props.project.id, props.observation.id);
+    await deleteObservation(props.project.id, props.observationId);
     if (isElectron.value) {
       window.close();
     } else {
@@ -157,6 +170,36 @@
         icon: 'i-heroicons-check'
       });
       navigateTo(`/projects/${props.project.id}`);
+    }
+  }
+
+  async function handleDelock() {
+    if (!props.project || !observation) {
+      throw new Error('Props are not defined')
+    }
+    const confirmed = confirm(`Are you sure you want to unlock observation #${props.observationId} ?`)
+    if (!confirmed) return;
+
+    try {
+      const res = await patchObservation(props.project.id, props.observationId, { isDraft: true });
+
+      if (isElectron.value) {
+        window.close();
+        return;
+      } else {
+        toast.add({
+          title: 'Observation unlocked successfully',
+          color: 'green',
+          icon: 'i-heroicons-check'
+        });
+        props.onFormSubmit?.();
+      }
+    } catch(e) {
+      const msg = getErrMsg(e);
+      toast.add({
+        title: msg,
+        color: 'red',
+      });
     }
   }
 

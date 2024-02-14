@@ -25,6 +25,7 @@
           Edit image
         </NuxtLink>
         <ObservationImageThumbnail
+          v-if="observation"
           class="mt-6 mb-4"
           :image="uploaded"
           :observation="observation"
@@ -44,7 +45,10 @@
 import { formatMb } from '~/utils/formatMb';
 
   const props = defineProps({
-    observation: requireObservationProp,
+    observationId: {
+      type: Number,
+      required: true,
+    },
     project: requireProjectProp,
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
     disabled: Boolean as PropType<boolean>,
@@ -57,18 +61,20 @@ import { formatMb } from '~/utils/formatMb';
   }
 
   const toast = useToast();
-  const { upsertObservationImage } = await useObservations(props.project.id);
+  const { upsertObservationImage, observations } = await useObservations(props.project.id);
   const file = ref<File | undefined>();
   const uploadChecker = ref();
   const route = useRoute();
   const router = useRouter();
   const { isElectron } = useDevice();
-  const uploaded = computed(() => props.observation?.image?.id && props.observation.image)
+
+  const observation = computed(() => observations.value.find((o) => o.id === props.observationId))
+  const uploaded = computed(() => observation.value?.image?.id && observation.value?.image)
   const timeout = ref<null | number>(null);
   const config = useRuntimeConfig().public;
   const lastImageUpdate = computed(() => {
     return (
-      props?.observation?.image?.createdAt && new Date(props.observation.image.createdAt)
+      observation.value?.image?.createdAt && new Date(observation.value.image.createdAt)
     ) || undefined;
   });
 
@@ -92,7 +98,7 @@ import { formatMb } from '~/utils/formatMb';
     }
 
     // ensure overwriting of image is confirmed by user
-    if (props.observation?.image) {
+    if (observation.value?.image) {
       // TODO: create nice confirm box
       const res = confirm('Are you sure you want to overwrite the existing image?');
       if (!res) {
@@ -105,7 +111,7 @@ import { formatMb } from '~/utils/formatMb';
     try {
       await upsertObservationImage(
         props.project.id,
-        props.observation.id,
+        props.observationId,
         file.value
       ).then(async () => {
         if (typeof props.project?.id !== 'number') {
@@ -135,7 +141,7 @@ import { formatMb } from '~/utils/formatMb';
   async function handleIfUploadDone(): Promise<void> {
     if (!props.uploadInProgress) {
       setTimeout(async () => {
-        router.replace({ query: { electron: route.query.electron || 0 } })
+        router.replace({ query: { electron: route.query?.electron || 0 } })
         window.clearInterval(uploadChecker.value);
         timeout.value !== null && clearTimeout(timeout.value);
         uploadChecker.value = null;

@@ -32,115 +32,117 @@ enum ProjectRole {
 }
 
 model User {
-  id                 Int                    @id @default(autoincrement())
-  email              String                 @unique
-  password           String
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  observations       Observation[]
-  ownedProjects      Project[]              @relation("author")
-  projectAccess      ProjectAccess[]        @relation("contributor")
-  sentInvitations    ProjectInvitation[]    @relation("inviter")
+  id                           Int                    @id @default(autoincrement())
+  email                        String                 @unique
+  password                     String
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  observations                 Observation[]
+  ownedProjects                Project[]              @relation("author")
+  projectAccess                ProjectAccess[]        @relation("contributor")
+  sentInvitations              ProjectInvitation[]    @relation("inviter")
 }
 
 model ProjectAccess {
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  role               ProjectRole            @default(value: OWNER)
-  nameInProject      String
-  userId             Int
-  projectId          Int
-  user               User                   @relation("contributor", fields: [userId], references: [id], onDelete: Cascade)
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  role                         ProjectRole            @default(value: OWNER)
+  nameInProject                String
+  userId                       Int
+  projectId                    Int
+  user                         User                   @relation("contributor", fields: [userId], references: [id], onDelete: Cascade)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@id([projectId, userId])
 }
 
 model Project {
-  id                 Int                    @id @default(autoincrement())
-  name               String
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  authorId           Int?
-  author             User?                  @relation("author", fields: [authorId], references: [id], onDelete: SetNull)
-  fields             ProjectField[]
-  dynamicFields      DynamicProjectField[]
-  observations       Observation[]
-  contributors       ProjectAccess[]
-  invitations        ProjectInvitation[]
+  id                           Int                    @id @default(autoincrement())
+  name                         String
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  authorId                     Int?
+  author                       User?                  @relation("author", fields: [authorId], references: [id], onDelete: SetNull)
+  authorCanDelockObservations  Boolean                @default(false)
+  ownerCanDelockObservations   Boolean                @default(false)
+  fields                       ProjectField[]
+  dynamicFields                DynamicProjectField[]
+  observations                 Observation[]
+  contributors                 ProjectAccess[]
+  invitations                  ProjectInvitation[]
 }
 
 model ProjectField {
-  id                 Int                    @id @default(autoincrement())
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  label              String
-  projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  type               FieldType
-  choices            String[]
-  required           Boolean                @default(false)
-  index              Int
-  dynamicFields0s    DynamicProjectField[]  @relation("field0_id")
-  dynamicFields1s    DynamicProjectField[]  @relation("field1_id")
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  label                        String
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type                         FieldType
+  choices                      String[]
+  required                     Boolean                @default(false)
+  index                        Int
+  dynamicFields0s              DynamicProjectField[]  @relation("field0_id")
+  dynamicFields1s              DynamicProjectField[]  @relation("field1_id")
 
   @@unique([projectId, index])
   @@unique([projectId, label])
 }
 
 model DynamicProjectField {
-  id                 Int                    @id @default(autoincrement())
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  label              String
-  projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  operator           FieldOperator
-  field0Id           Int
-  field1Id           Int
-  field0             ProjectField           @relation("field0_id", fields: [field0Id], references: [id])
-  field1             ProjectField           @relation("field1_id", fields: [field1Id], references: [id])
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  label                        String
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  operator                     FieldOperator
+  field0Id                     Int
+  field1Id                     Int
+  field0                       ProjectField           @relation("field0_id", fields: [field0Id], references: [id])
+  field1                       ProjectField           @relation("field1_id", fields: [field1Id], references: [id])
 
   @@unique([field0Id, field1Id, operator])
 }
 
 model ProjectInvitation {
-  id                 Int                    @id @default(autoincrement())
-  inviterId          Int
-  projectId          Int
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  expiresAt          DateTime
-  emailHash          String
-  inviter            User                   @relation("inviter", fields: [inviterId], references: [id], onDelete: Cascade)
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id                           Int                    @id @default(autoincrement())
+  inviterId                    Int
+  projectId                    Int
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  expiresAt                    DateTime
+  emailHash                    String
+  inviter                      User                   @relation("inviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Observation {
-  id                 Int                    @id @default(autoincrement())
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  updatedAt          DateTime               @default(now()) @db.Timestamp(6)
-  projectId          Int
-  project            Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  userId             Int?
-  user               User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  data               Json
-  imageId            Int?                   @unique
-  image              ImageUpload?           @relation(fields: [imageId], references: [id], onDelete: SetNull)
-  uploadInProgress   Boolean                @default(false)
-  isDraft            Boolean                @default(true)
-  fileUploads        FileUpload[]
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt                    DateTime               @default(now()) @db.Timestamp(6)
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId                       Int?
+  user                         User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  data                         Json
+  imageId                      Int?                   @unique
+  image                        ImageUpload?           @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  uploadInProgress             Boolean                @default(false)
+  isDraft                      Boolean                @default(true)
+  fileUploads                  FileUpload[]
 }
 
 model FileUpload {
-  id                 Int                    @id @default(autoincrement())
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  s3Path             String                 @unique
-  mimetype           String
-  originalName       String
-  observationId      Int
-  observation        Observation           @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  s3Path                       String                 @unique
+  mimetype                     String
+  originalName                 String
+  observationId                Int
+  observation                  Observation           @relation(fields: [observationId], references: [id], onDelete: Cascade)
 }
 
 model ImageUpload {
-  id                 Int                    @id @default(autoincrement())
-  createdAt          DateTime               @default(now()) @db.Timestamp(6)
-  s3Path             String                 @unique
-  mimetype           String
-  originalName       String
-  observation        Observation?
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  s3Path                       String                 @unique
+  mimetype                     String
+  originalName                 String
+  observation                  Observation?
 }

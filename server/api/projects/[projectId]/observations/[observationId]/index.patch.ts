@@ -7,7 +7,7 @@ const patchObservationSchema = yup.object({
 
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   const params = event.context.params
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);
@@ -18,11 +18,37 @@ export default safeResponseHandler(async (event) => {
   patch = removeKeysByUndefinedValue(patch);
 
   // fetch existing observation
+  const project = await prisma.project.findUnique({
+    select: {
+      id: true,
+      authorCanDelockObservations: true,
+      ownerCanDelockObservations: true,
+    },
+    where: {
+      id: projectId,
+    }
+  });
+
+  // if it does not exist, then throw up
+  if (!project) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Project was not found',
+    })
+  }
+
+
+  // fetch existing observation
   const observation = await prisma.observation.findUnique({
     select: {
       id: true,
       isDraft: true,
       projectId: true,
+      user: {
+        select: {
+          id: true
+        },
+      },
     },
     where: {
       id: observationId,
@@ -37,12 +63,69 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  // ensure observation cannot be updated if it isn't a draft any more
-  if (!observation.isDraft) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'You are not allowed to patch locked observations',
-    });
+  // find user role
+  const access = await prisma.projectAccess.findUnique({
+    where: {
+      projectId_userId: {
+        userId: user.id,
+        projectId: project.id,
+      }
+    },
+    select: {
+      role: true,
+    }
+  });
+  const role = access?.role;
+  if (typeof role !== 'string') {
+    // report invalid role
+    console.error(`Project access role '${role}' is not valid`);
+    return false;
+  }
+
+
+  // find out if user is author of observation
+  const isAuthor = observation.user?.id === user.id;
+  const isProjectOwner = role === 'OWNER';
+
+  // if patch includes isDraft
+  if (Object.keys(patch).includes('isDraft')) {
+
+    // if unpublishing while observation is already unpublished
+    if (patch.isDraft && observation.isDraft) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Observation is already delocked',
+      });
+
+    // if trying to publish, while isDraft is already false / already published
+    } else if (!patch.isDraft && !observation.isDraft) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Observation is already published',
+      });
+    // if trying to delock
+    } else if (patch.isDraft && !observation.isDraft) {
+      // if not either (isAuther && isAuthorRule) and (isOwner && isOwnerRule),
+      // don't allow unpublishing
+      if (
+        !(isAuthor && project.authorCanDelockObservations) &&
+        !(isProjectOwner && project.ownerCanDelockObservations)
+      ) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: 'You are not allowed to delock observation',
+        });
+      }
+    // if trying to publish the observation, only allow author
+    } else if (!patch.isDraft && observation.isDraft) {
+      if (!isAuthor) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: 'You are not allowed to publish this observation',
+        });
+      }
+    }
+
   }
 
   const result = await prisma.observation.update({

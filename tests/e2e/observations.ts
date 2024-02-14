@@ -3,16 +3,111 @@
 
 import { describe, test, expect } from 'vitest';
 import {
-  testProject, withTempUser, withTempProject, deleteObservation,
-  createProject, getMe, openProjectPage, inviteToProject,
-  signup, freshEmail, createObservation, patchObservation, getObservations, testObservations
+  withTempUser, withTempProject, deleteObservation, inviteToProject, freshEmail,
+  createObservation, patchObservation, getObservations, testObservations, patchProject
 } from './helpers';
-import { prisma } from './helpers';
 
 describe('Observations', () => {
   test('basic create project + create 3 observations flow works normally', async () =>  {
-    await withTempProject(async (user, project, _observations, token) => {
+    await withTempProject(async (user, project, observations, token) => {
       expect(user.projectAccess.map(a => a.project.id)).toContain(project.id)
+      expect(observations.length).toBe(3);
+    });
+  });
+
+  test('delocking observations as collaborator respects project settings', async () =>  {
+    const otherEmail = freshEmail();
+    await withTempProject(async (_user, project, _observations, token) => {
+      expect(project.authorCanDelockObservations).toBe(false);
+      expect(project.ownerCanDelockObservations).toBe(false);
+
+      await withTempUser(async (_userB, tokenCollaborator) => {
+        const inviteRes = await inviteToProject(token, project.id, { email: otherEmail });
+        expect(inviteRes.status).toBe(202);
+
+        // create new observation
+        console.log('fields:', project.fields);
+        const createObsRes = await createObservation(tokenCollaborator, project.id);
+        expect(createObsRes.status).toBe(201);
+        const createObsJson = await createObsRes.json();
+        expect(createObsJson).toHaveProperty('id');
+        const obsId = createObsJson['id'];
+
+        // publish observation and expect it to go well
+        const publishRes = await patchObservation(tokenCollaborator, project.id, obsId, { isDraft: false });
+        const publishJson = await publishRes.json();
+        expect(publishRes.status, JSON.stringify(publishJson)).toBe(200);
+
+        // expect observation is published
+        const updatedObsRes = await getObservations(token, project.id);
+        const updatedObsJson = await updatedObsRes.json();
+        expect(Array.isArray(updatedObsJson.observations), updatedObsJson).toBe(true)
+        const updatedObs = updatedObsJson.observations.find((o: any) => o.id === createObsJson.id)
+        expect(updatedObs).toBeTruthy();
+        expect(updatedObs.isDraft).toBe(false);
+
+        // try to set isDraft=true (aka delock) the observation
+        // should fail because project.authorCanDelockObservation == false
+        const patchRes0 = await patchObservation(tokenCollaborator, project.id, obsId, {
+          isDraft: true,
+        });
+        expect(patchRes0.status).toBe(403);
+
+        // change rule as the project owner, to make delocking possible for collaborators
+        const patchProjectRes = await patchProject(token, project.id, {
+          authorCanDelockObservations: true,
+        });
+        expect(patchProjectRes.status).toBe(200);
+
+        // try to set isDraft=faiwtruelse (aka delock) the observation
+        // should work now because project.authorCanDelockObservation == true
+        const patchRes1 = await patchObservation(tokenCollaborator, project.id, obsId, {
+          isDraft: true,
+        });
+        const patchRes1Json = await patchRes1.json();
+        expect(patchRes1.status, JSON.stringify(patchRes1Json)).toBe(200);
+      }, otherEmail)
+    });
+  });
+
+  test('delocking observations as owner respects project settings', async () =>  {
+    const otherEmail = freshEmail();
+    await withTempProject(async (_user, project, _observations, token) => {
+      expect(project.authorCanDelockObservations).toBe(false);
+      expect(project.ownerCanDelockObservations).toBe(false);
+      const inviteRes = await inviteToProject(token, project.id, { email: otherEmail });
+      expect(inviteRes.status).toBe(201);
+
+      await withTempUser(async (_userB, tokenCollaborator) => {
+        // create new observation
+        console.log('fields:', project.fields);
+        const createObsRes = await createObservation(tokenCollaborator, project.id);
+        expect(createObsRes.status).toBe(201);
+        const createObsJson = await createObsRes.json();
+        expect(createObsJson).toHaveProperty('id');
+        const obsId = createObsJson['id'];
+
+        // publish observation and expect it to go well
+        const publishRes = await patchObservation(tokenCollaborator, project.id, obsId, { isDraft: false });
+        const publishJson = await publishRes.json();
+        expect(publishRes.status, JSON.stringify(publishJson)).toBe(200);
+
+        // delock observation as owner - expected to fail due to ownerCanDelockObservations == false
+        const delock0Res = await patchObservation(token, project.id, obsId, { isDraft: true });
+        const delock0Json = await delock0Res.json();
+        expect(delock0Res.status, JSON.stringify(delock0Json)).toBe(403);
+
+        // change rule as the project owner, to make delocking possible for owners
+        const patchProjectRes = await patchProject(token, project.id, {
+          ownerCanDelockObservations: true,
+        });
+        expect(patchProjectRes.status).toBe(200);
+
+        // delock observation as owner - expected to work because ownerCanDelockObservations == false
+        const delock1Res = await patchObservation(token, project.id, obsId, { isDraft: true });
+        const delock1Json = await delock1Res.json();
+        expect(delock1Res.status, JSON.stringify(delock1Json)).toBe(200);
+      }, otherEmail);
     });
   });
 
