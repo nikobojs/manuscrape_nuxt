@@ -11,7 +11,7 @@ export function requireFunctionProp<T extends Function>() {
   return requireProp<T>(Function);
 }
 export function requireProp<T>(
-  type: StringConstructor | NumberConstructor | ArrayConstructor | BooleanConstructor | ObjectConstructor | FunctionConstructor = Object
+  type: StringConstructor | NumberConstructor | ArrayConstructor | BooleanConstructor | ObjectConstructor | FunctionConstructor = Object,
 ): Readonly<{
   required: true,
   type: PropType<T>

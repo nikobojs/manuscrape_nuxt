@@ -137,7 +137,10 @@
   import { FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
-    observation: requireObservationProp,
+    observationId: {
+      type: Number,
+      required: true,
+    },
     project: requireProjectProp,
     onSubmit: Function as PropType<Function>,
     disabled: Boolean as PropType<Boolean>,
@@ -148,7 +151,7 @@
 
   const { params } = useRoute();
   const { sortFields } = await useProjects(params);
-  const { patchObservation } = await useObservations(props.project.id);
+  const { patchObservation, observations } = await useObservations(props.project.id);
 
   function getMultipleChoiceAddOptions(field: ProjectFieldResponse) {
     const updatedOptions = (field.choices || [])
@@ -158,8 +161,9 @@
   }
 
   const form = ref();
-  const state = ref(Object.assign({ ...props.initialState }, props.observation?.data as any));
   const sortedFields = computed(() => sortFields(props.project));
+  const observation = computed(() => observations.value.find((o) => o.id === props.observationId))
+  const state = ref(Object.assign({ ...props.initialState }, observation.value?.data as any));
 
 
   // TODO: validation function doesn't seem completely functional
@@ -246,7 +250,7 @@
 
     const _res = await patchObservation(
       props.project.id,
-      props.observation?.id,
+      props.observationId,
       { data: state.value }
     );
 

@@ -76,6 +76,8 @@ export const smallProjectQuery = {
       index: 'asc'
     }]
   },
+  authorCanDelockObservations: true,
+  ownerCanDelockObservations: true,
   dynamicFields: { select: allDynamicFieldColumns },
   _count: {
       select: { observations: true }

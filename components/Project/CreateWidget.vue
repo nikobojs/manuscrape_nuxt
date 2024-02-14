@@ -133,6 +133,7 @@
         console.error(`Unable to read 'id' from createProject api response`);
         toast.add({
           title: 'Server error :(',
+          color: 'red',
           description: `We're working to fix this as soon as possible`
         });
         // TODO: capture error

@@ -8,7 +8,9 @@ import {
   getMe,
   openProjectPage,
   defaultPassword,
-  getObservations
+  getObservations,
+  patchProject,
+  invite
 } from './helpers';
 
 const wrongIndexes: any[][] = [
@@ -45,6 +47,98 @@ describe('Project management', () => {
       });
       const json = await res.json();
       expect(res.status, json?.statusMessage).toBe(400);
+    });
+  });
+
+  test('user can edit the name of a project', async () =>  {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      expect(project.id).toBeTypeOf('number');
+
+      // patch project with a new name
+      const newName = 'edited name 0';
+      const updateRes = await patchProject(token, project.id, { name: newName})
+      expect(updateRes.status).toBe(200);
+
+      // fetch updated project to verify new name is returned
+      const userRes = await getMe(token);
+      expect(userRes.status).toBe(200);
+      const userJson = await userRes.json();
+      expect(typeof userJson.id).toBe("number");
+      expect(Array.isArray(userJson?.projectAccess)).toBe(true)
+      expect(userJson?.projectAccess?.length).toBe(1);
+      const updatedProject = userJson.projectAccess[0].project;
+
+      // verify changes are persistant
+      expect(updatedProject.name).toStrictEqual(newName);
+    });
+  });
+
+  test('user can not edit other user\'s project', async () =>  {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      expect(project.id).toBeTypeOf('number');
+
+      await withTempUser(async (_user, tokenA) => {
+        // patch project with a new name
+        const newName = 'edited name 0';
+        const updateRes = await patchProject(tokenA, project.id, { name: newName})
+        expect(updateRes.status).toBe(403);
+      });
+    });
+  });
+
+  test('user can edit delocking settings', async () =>  {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      expect(project.id).toBeTypeOf('number');
+
+      // patch project with a new name
+      const updateRes = await patchProject(
+        token,
+        project.id,
+        {
+          ownerCanDelockObservations: true,
+          authorCanDelockObservations: true,
+        },
+      );
+
+      expect(updateRes.status).toBe(200);
+      const userRes = await getMe(token);
+      const userJson = await userRes.json();
+      expect(typeof userJson.id).toBe("number");
+      expect(Array.isArray(userJson?.projectAccess)).toBe(true)
+      expect(userJson?.projectAccess?.length).toBe(1);
+      const updatedProject = userJson.projectAccess[0].project;
+
+      // expect settings where updated
+      expect(updatedProject.ownerCanDelockObservations).toBe(true);
+      expect(updatedProject.authorCanDelockObservations).toBe(true);
+    });
+  });
+
+  test('collaborator can not edit other user\'s project', async () =>  {
+    const collaboratorEmail = 'update-settings-collaborator-0@codecollective.dk';
+    await withTempProject(async (user, project, _obs, token) => {
+      // invite collaborator
+      const inviteRes = await invite(
+        token,
+        project.id,
+        { email: collaboratorEmail },
+      );
+      expect(inviteRes.status).toBe(201);
+
+      // sign up as collaborator
+      await withTempUser(async (user2, tokenA) => {
+        expect(user2.projectAccess.length).toBe(1);
+
+        // try patch project as collaborator
+        const newName = 'edited name 0';
+        const updateRes = await patchProject(tokenA, project.id, { name: newName})
+
+        // expect it to fail
+        expect(updateRes.status).toBe(403);
+      }, collaboratorEmail);
     });
   });
 

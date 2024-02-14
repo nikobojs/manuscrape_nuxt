@@ -97,6 +97,25 @@ export async function createProject(
   return res;
 }
 
+export async function patchProject(
+  token: string,
+  projectId: number,
+  json: any
+): Promise<Response> {
+  const res = await fetch(
+    "/api/projects/" + projectId,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export async function duplicateProject(
   token: string,
   projectId: number,
@@ -357,14 +376,14 @@ export const testProject: NewProjectBody = {
       label: 'Multiple choice with free text',
       type: FieldType.MULTIPLE_CHOICE_ADD,
       required: false,
-      index: 6,
+      index: 7,
       choices: ['a', 'b', 'c']
     },
     {
       label: 'Check me',
       type: FieldType.BOOLEAN,
       required: true,
-      index: 7,
+      index: 8,
     }
   ]
 };

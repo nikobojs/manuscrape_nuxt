@@ -29,6 +29,14 @@ export default safeResponseHandler(async (event) => {
   const newProject = await NewProjectSchema.validate(body)
 
   const fieldLabels = newProject.fields.map((f => f.label));
+
+  if (newProject.fields.length === 0) {
+    throw createError({
+      statusMessage: 'Cannot create a project without fields',
+      statusCode: 400,
+    });
+  }
+
   if (fieldLabels.length !== new Set(fieldLabels).size) {
     throw createError({
       statusMessage: 'Two fields cannot have an identical label',
@@ -40,7 +48,7 @@ export default safeResponseHandler(async (event) => {
   const uniqueFieldIndexes = new Set([...fieldIndexes]);
   if (fieldIndexes.length !== uniqueFieldIndexes.size) {
     throw createError({
-      statusMessage: 'Two fields cannot have an identical index',
+      statusMessage: `Two fields cannot have an identical index: ${fieldIndexes.join(',')}`,
       statusCode: 400,
     });
   }
@@ -49,8 +57,11 @@ export default safeResponseHandler(async (event) => {
     data: {
       name: newProject.name,
       authorId: user.id,
-    }
+      authorCanDelockObservations: false,
+      ownerCanDelockObservations: false,
+    },
   });
+
   await prisma.projectAccess.create({
     data: {
       userId: user.id,

@@ -65,6 +65,7 @@ export const useObservations = async (
       immediate: true,
       server: true,
       credentials: 'include',
+
       onResponse: async (context) => {
         if (context.response.status === 200) {
           observations.value = context.response._data?.observations.reverse?.();
@@ -287,6 +288,50 @@ export const useObservations = async (
     return true;
   }
 
+  function observationIsDelockable(
+    obs?: Partial<FullObservation>,
+    user?: CurrentUser,
+    project?: Partial<FullProject>,
+  ): boolean {
+    // TODO: validate types of used variables instead
+    if (!obs || !user || !project) {
+      // report missing arguments
+      console.error('missing arguments in observationIsDeletable()')
+      return false;
+    }
+
+    // report missing author id
+    if (!obs.user?.id) {
+      console.error('missing observation user id')
+      return false;
+    }
+
+    // find user role
+    const role = user.projectAccess.find((a) => a.project.id === project.id)?.role;
+    if (typeof role !== 'string') {
+      // report invalid role
+      console.error(`Project access role '${role}' is not valid`);
+      return false;
+    }
+
+    // find out if user is author of observation
+    const isAuthor = obs.user.id === user.id;
+    const isProjectOwner = role === 'OWNER';
+    const isDraft = obs.isDraft;
+
+    // ensure observation cannot be delocked if already delocked
+    // performs conditional rendering of project permission settings
+    if (isDraft) {
+      return false
+    } else if (isAuthor && project.authorCanDelockObservations) {
+      return true;
+    } else if (isProjectOwner && project.ownerCanDelockObservations) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   return {
     createObservation,
     deleteObservation,
@@ -308,6 +353,7 @@ export const useObservations = async (
     ownership,
     filterOption,
     observationIsDeletable,
+    observationIsDelockable,
     refreshObservations,
   }
 };

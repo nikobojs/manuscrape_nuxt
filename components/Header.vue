@@ -13,20 +13,13 @@
 
         <nav v-if="hasFetched && !!user" class="flex justify-end">
           <div class="w-[250px] flex justify-end items-center" v-if="typeof rawProjectId === 'string'">
-            <USelectMenu
-              value-attribute="id"
-              option-attribute="label"
-              :options="projectMenu"
+            <ProjectDropdown
               class="w-full mr-3 h-7 min-w-[200px]"
-              v-model="selectedProjectId"
-              searchable
-              @change="onProjectChange"
-              placeholder="Loading..."
-            >
-              <template #label>
-                {{ selectedProject?.name || '' }}
-              </template>
-            </USelectMenu>
+              :default-project-id="selectedProjectId"
+              v-if="selectedProjectId"
+              :project="selectedProject"
+              :set-project="onProjectChange"
+            />
           </div>
           <UDropdown class="flex self-center" :items="settingsItems">
             <div class="w-9 h-9 p-1.5">
@@ -64,9 +57,9 @@
 <script setup lang="ts">
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
-  const { user, hasFetched } = await useUser();
+  const { user, hasFetched, projects } = await useUser();
   const { params } = useRoute();
-  const { projects, getProjectById } = await useProjects(params);
+  const { getProjectById } = await useProjects(params);
   const route = useRoute();
   const selectedProjectId = ref<number | undefined>(undefined);
 
@@ -78,48 +71,38 @@
   
   function updateProjectIdFromParams() {
     const projectId = parseInt(route.params.projectId as string);
-    if (!isNaN(projectId) && projectId !== selectedProjectId.value) {
+    const project = projects.value.find((p) => p.id === projectId)
+    if (project && !isNaN(projectId) && projectId !== selectedProjectId.value) {
       selectedProjectId.value = projectId;
+      onProjectChange(project);
     }
   }
 
-  function onProjectChange(projectId: number) {
-    navigateTo(`/projects/${projectId}`)
+  async function onProjectChange(_project: FullProject) {
+    navigateTo(`/projects/${_project.id}`);
   }
 
   watch([rawProjectId], updateProjectIdFromParams);
-  updateProjectIdFromParams();
+  onMounted(() => {
+    if (rawProjectId) updateProjectIdFromParams()
+  });
 
   function onLogoClick() {
     navigateTo('/');
   }
 
-  const projectMenu = computed(() => {
-    if (!user || !projects.value?.length) {
-      return []
-    }
-
-    const result =  projects.value.map((p) => ({
-      label: p.name,
-      href: '/projects/' + p.id,
-      id: p.id,
-    })).sort((a, b) => a.label.localeCompare(b.label));
-
-    return result;
-  });
-  
   const settingsItems = [
     [
       {
-        label: 'Profile',
-        icon: 'i-heroicons-user',
+        label: 'Settings',
+        icon: 'i-mdi-settings-outline',
         click: () => {
           navigateTo('/user')
         }
       },
       {
         label: 'Log out',
-        icon: 'i-heroicons-arrow-right-on-rectangle',
+        icon: 'i-mdi-logout',
         click: () => {
           navigateTo('/logout')
         }

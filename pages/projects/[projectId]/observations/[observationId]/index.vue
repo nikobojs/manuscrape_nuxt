@@ -18,9 +18,8 @@
       <ObservationFormContainer
         v-if="observation && project"
         :project="project"
-        :observation="observation"
+        :observationId="observation.id"
         :onObservationPublished="onSubmit"
-        :disabled="isLocked"
         :awaitImageUpload="awaitImageUpload"
         :onImageUploaded="onImageUploaded"
         :onFormSubmit="onFormSubmit"
@@ -43,6 +42,7 @@
   if (typeof project.value?.id !== 'number') {
     throw new Error('Project is not defined');
   }
+  const { refreshObservations, observations } = await useObservations(project.value?.id);
   const { requireObservationFromParams } = await useObservations(project.value.id);
   const observation = ref<FullObservation | null>(null);
   const awaitImageUpload = computed(() => query?.uploading === '1')
@@ -50,8 +50,19 @@
   const { isElectron } = useDevice();
 
   async function refreshObservation() {
-    const _observation = await requireObservationFromParams(params);
-    observation.value = _observation;
+    if (observation.value !== null) {
+      await refreshObservations();
+      const obs = observations.value.find((o) => o.id === (observation.value || {}).id)
+      if (obs) {
+        observation.value = { ...obs };
+      } else {
+        const _observation = await requireObservationFromParams(params);
+        observation.value = _observation;
+      }
+    } else {
+      const _observation = await requireObservationFromParams(params);
+      observation.value = _observation;
+    }
   }
 
   await refreshObservation();

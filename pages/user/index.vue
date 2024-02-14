@@ -4,6 +4,7 @@
   </UContainer>
   <UContainer :class="`grid gap-8${ isElectron ? ' -mt-8' : ''}`">
     <SettingsScrollshot v-if="isElectron" />
+    <SettingsProjects v-if="user?.projectAccess.length" />
     <SettingsProfile />
   </UContainer>
 </template>
