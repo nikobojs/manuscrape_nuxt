@@ -4,5 +4,8 @@
   },
   "editor.quickSuggestions": {
       "strings": true
+  },
+  "vim.handleKeys": {
+      "<C-p>": false
   }
 }
