@@ -115,7 +115,7 @@
 
   // on mounted, render current settings
   onMounted(() => {
-    if (isElectron) {
+    if (isElectron.value) {
       window.electronAPI?.getSettings((_event: Event, settings: any) => {
         renderScrollshotSettings(settings.scrollshot);
       });
