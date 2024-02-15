@@ -44,10 +44,8 @@
 <script lang="ts" setup>
   const { ensureUserFetched } = await useAuth();
   await ensureUserFetched();
-  const { user } = await useUser();
   const { isElectron } = useDevice();
   const saving = useState('savingDeviceSettings', () => false);
-  const openDeleteModal = ref(false);
   const error = ref('');
 
   async function savingDone() {
