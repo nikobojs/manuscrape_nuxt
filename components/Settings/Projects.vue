@@ -112,7 +112,6 @@
         });
       }
 
-      console.log()
     } catch (err: any) {
         console.log(' caught error:', {err})
         const msg = getErrMsg(err);

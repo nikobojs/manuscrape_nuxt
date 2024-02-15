@@ -4,6 +4,17 @@ import type { H3Event } from 'h3';
 import archiver from 'archiver'
 import { calculateDynamicFieldValue } from './dynamicFields';
 import { captureException } from '@sentry/node';
+import { Readable } from 'node:stream';
+import { ReadableStream } from 'node:stream/web';
+
+const archiverOptions: archiver.ArchiverOptions = {
+  zlib: {
+    level: 1,
+    memLevel: 9,
+    windowBits: 11
+  },
+  highWaterMark: 2147483648, // max 2gb
+}
 
 
 function generateObservationRow(
@@ -244,30 +255,42 @@ export async function generateProjectUploadsExport (event: H3Event, projectId: n
     });
   }
   
+  const downloads: Promise<any>[] = [];
   for (const upload of fileUploads) {
-    if (upload?.s3Path) {
-      const res = await getS3Upload(upload.s3Path);
-      if (res.$metadata.httpStatusCode === 200 && res.Body) {
-        const byteArr = await res.Body.transformToByteArray();
-        const buffer = Buffer.from(byteArr);
-
-        let filenameDotSplit = upload.originalName.split('.').reverse();
-        let fileEnding = '';
-        if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
-
-        if (!(upload.observationId in obsFileCounts)) {
-          obsFileCounts[upload.observationId] = 0;
-        } else {
-          obsFileCounts[upload.observationId]++;
-        }
-
-        const count = `.${obsFileCounts[upload.observationId]}`;
-
-        archive.append(buffer, { name: upload.observationId + count + fileEnding });
+    if (!upload?.s3Path) continue;
+    // add filedownload as promise to downloads[]
+    const download = getS3Upload(upload.s3Path).then((res) => {
+      if (res.$metadata.httpStatusCode !== 200 || !res.Body) {
+        return;
       }
-    }
+
+      // get fileExtension
+      let filenameDotSplit = upload.originalName.split('.').reverse();
+      let fileEnding = '';
+      if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+
+      // add new file counter for observation if necessary
+      if (!(upload.observationId in obsFileCounts)) {
+        obsFileCounts[upload.observationId] = 0;
+      } else {
+        obsFileCounts[upload.observationId]++;
+      }
+
+      // add upload counter (there might be more for each observation)
+      const count = `.${obsFileCounts[upload.observationId]}`;
+
+      // create and start stream;
+      const _stream = res.Body.transformToWebStream();
+      const stream = Readable.fromWeb(_stream as ReadableStream<any>)
+      archive.append(stream, { name: upload.observationId + count + fileEnding })
+    });
+
+    // add ongoing download promise to an array (so we can wait for all to finish)
+    downloads.push(download);
   }
 
+  // await all parallel downloads and finalize archive
+  await Promise.all(downloads);
   archive.finalize();
 
   // set http header that fixes control over the download filename
@@ -324,23 +347,42 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
     });
   }
 
-  const archive = archiver('zip', {
-    zlib: { level: 9 } // Sets the compression level.
-  });
-  for (const { id, image } of observationImages) {
-    if (image?.s3Path) {
-      const res = await getS3Upload(image.s3Path);
-      if (res.$metadata.httpStatusCode === 200 && res.Body) {
-        const byteArr = await res.Body.transformToByteArray();
-        const buffer = Buffer.from(byteArr);
+  // initialize archiver (zlib) and empty downloads-array
+  const downloads: Promise<any>[] = [];
+  const archive = archiver('zip', archiverOptions);
 
-        let filenameDotSplit = image.originalName.split('.').reverse();
-        let fileEnding = '';
-        if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
-        archive.append(buffer, { name: id + fileEnding });
+  // loop through all observation image and download each one of them
+  for (let i = 0; i < observationImages.length; i++) {
+    const id = observationImages[i].id;
+    const image = observationImages[i].image;
+    if (!image?.s3Path) continue;
+
+    // create single file download promise
+    const download = getS3Upload(image.s3Path).then((res) => {
+      // if result did not end well, reject and return
+      if (res.$metadata.httpStatusCode !== 200 || !res.Body) {
+        return Promise.reject('MinIO server returned ' + res.$metadata.httpStatusCode)
       }
-    }
+
+      // get fileExtension
+      let filenameDotSplit = image.originalName.split('.').reverse();
+      let fileEnding = '';
+      if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+
+      // initialize download stream from s3 directly into zip file
+      const _stream = res.Body.transformToWebStream();
+      const stream = Readable.fromWeb(_stream as ReadableStream<any>)
+      archive.append(stream, { name: id + fileEnding });
+    });
+
+    // add ongoing download promise to an array (so we can wait for all to finish)
+    downloads.push(download);
   }
+
+  // wait for all downloads to finish
+  await Promise.all(downloads);
+
+  // start finalizing
   archive.finalize();
 
   // set http header that fixes control over the download filename
@@ -349,8 +391,6 @@ export async function generateProjectMediaExport (event: H3Event, projectId: num
 
   // set zip mime type
   setHeader(event, 'Content-Type','application/octet-stream');
-
-  // return { observationImages, s3Paths }
   return archive;
 }
 
