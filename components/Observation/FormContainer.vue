@@ -182,18 +182,12 @@
 
     try {
       const res = await patchObservation(props.project.id, props.observationId, { isDraft: true });
-
-      if (isElectron.value) {
-        window.close();
-        return;
-      } else {
-        toast.add({
-          title: 'Observation unlocked successfully',
-          color: 'green',
-          icon: 'i-heroicons-check'
-        });
-        props.onFormSubmit?.();
-      }
+      toast.add({
+        title: 'Observation unlocked successfully',
+        color: 'green',
+        icon: 'i-heroicons-check'
+      });
+      props.onFormSubmit?.();
     } catch(e) {
       const msg = getErrMsg(e);
       toast.add({
