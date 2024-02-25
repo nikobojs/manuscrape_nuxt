@@ -10,6 +10,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
     "migrate": "prisma migrate dev",
     "test-dev": "vitest dev",
     "test": "vitest run --silent",

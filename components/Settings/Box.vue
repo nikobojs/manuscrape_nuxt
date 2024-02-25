@@ -1,11 +1,7 @@
 <script setup lang="ts">
-  const props = defineProps({
-    title: {
-      currentStep: String as PropType<String>,
-    },
-    help: {
-      currentStep: String as PropType<String>,
-    },
+  defineProps({
+    title: requireProp<string>(String),
+    help: requireProp<string>(String),
   });
 </script>
 
