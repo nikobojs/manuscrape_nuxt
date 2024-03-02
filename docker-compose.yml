@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  minio:
+    build:
+      context: .
+      dockerfile: docker/minio.Dockerfile
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio_data:/data
+
+  db:
+    image: postgres:latest
+    ports:
+      - "5500:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: manuscrapedb
+      POSTGRES_USER: manuscrape
+      POSTGRES_PASSWORD: manuscrape
+
+volumes:
+  minio_data:
+  postgres_data:
