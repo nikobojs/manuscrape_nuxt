@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
 import type { PublicRuntimeConfig } from "nuxt/schema";
 import type { NitroApp } from "nitropack";
-import { exit } from "process";
+import { exit } from 'node:process';
 
 export default defineNitroPlugin(async (nitro) => {
   const config = useRuntimeConfig().public;
@@ -47,11 +47,11 @@ async function ensureDbConnected(nitro: NitroApp) {
   try {
     console.info("Executing query to check database connectivity...");
     // Use Promise.race to race the query against a timeout
-    const result = await Promise.race([
+    const _ = await Promise.race([
       prisma.$executeRaw`SELECT 1;`,
       timeout(5000), // 5000 ms = 5 seconds
     ]);
-    await prisma.$executeRaw`SELECT 1;`;
+
     console.info("> connected to db");
   } catch (e: any) {
     // Log detailed error information
@@ -64,3 +64,4 @@ async function ensureDbConnected(nitro: NitroApp) {
     process.exit(1);
   }
 }
+
