@@ -133,7 +133,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { FormError } from '#ui/types/form';
+  import type { FormError } from '#ui/types';
   import { FieldType } from '~/utils/observationFields';
 
   const props = defineProps({
