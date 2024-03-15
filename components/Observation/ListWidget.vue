@@ -103,12 +103,12 @@ const {
   deleteObservation,
 } = await useObservations(props.project.id, props.defaultObservationFilter);
 
-async function addObservationClick() {
+function addObservationClick() {
   if (typeof props.project.id !== 'number') {
     throw new Error('Project is not defined');
   }
   loading.value = true;
-  await createObservation(props.project.id).catch(
+  createObservation(props.project.id).catch(
     (err) => error.value = err?.message
   ).catch(() => loading.value = false).then((res) => {
     // dum ux hack :s

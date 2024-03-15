@@ -4,13 +4,15 @@
     <template #header>
       <div class="h-4 flex justify-between relative">
         <CardHeader>Parameters</CardHeader>
-        <UPopover v-if="isOwner">
-          <UButton icon="i-mdi-dots-vertical" variant="link" color="gray" class="text-lg absolute right-0 -top-2"
-            :ui="{ rounded: 'rounded-full' }" />
-          <template #panel>
-            <UVerticalNavigation :links="parametersMenu"></UVerticalNavigation>
-          </template>
-        </UPopover>
+        <UButton
+          class="-mt-2 -mb-2"
+          variant="outline"
+          color="blue"
+          icon="i-mdi-add"
+          @click="openAddParamModal = true"
+        >
+          Add
+        </UButton>
       </div>
     </template>
 
@@ -20,9 +22,13 @@
           <UBadge size="xs" variant="solid" color="white" class="text-xs">
             {{ getFieldLabel(field.type) }}
           </UBadge>
-          <span class="text-xs text-gray-400">
-            {{ prettyDate(field.createdAt) }}
-          </span>
+          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end'}">
+            <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
+            </UButton>
+            <template #panel>
+              <UVerticalNavigation :links="generateParameterSettings(field)" />
+            </template>
+          </UPopover>
         </div>
         <div class="text-sm">
           <span v-if="field.required" class="text-red-500">*</span>
@@ -34,31 +40,9 @@
 
   <UModal
     v-if="isOwner"
-    v-bind:model-value="openRemoveModal"
-    v-on:close="() => openRemoveModal = false"
-  >
-    <UCard>
-      <UCommandPalette v-if="projectFieldCommandPalette" placeholder="Search parameters..." nullable
-        :empty-state="{ icon: 'i-mdi-magnify', label: 'hello', queryLabel: 'Unable to find parameters with that label' }"
-        :groups="[{ key: 'project-parameters', commands: projectFieldCommandPalette }]"
-        :fuse="{ resultLimit: 1000, fuseOptions: { threshold: 0.1 } }"
-        @update:model-value="(val: any) => {
-          if (val) {
-            selectedParameter = val;
-            openConfirmDeleteParamModal = true;
-            openRemoveModal = false;
-          }
-        }"
-      />
-    </UCard>
-  </UModal>
-
-  <UModal
-    v-if="isOwner"
     v-bind:model-value="openConfirmDeleteParamModal"
     v-on:close="() => {
       openConfirmDeleteParamModal = false;
-      openRemoveModal = false;
     }"
   >
     <UCard>
@@ -90,7 +74,7 @@
           </UButton>
           <UButton
             variant="outline"
-            @click="() => { openConfirmDeleteParamModal = false; openRemoveModal = false; }"
+            @click="() => { openConfirmDeleteParamModal = false; }"
             color="gray"
           >Get me out of here!</UButton>
         </div>
@@ -128,18 +112,25 @@
       </div>
     </UCard>
   </UModal>
+
+  <ProjectSetupChoicesModal
+    :open="openModifyChoicesModal"
+    :onSubmit="handleUpdateField"
+    :onClose="() => openModifyChoicesModal = false"
+    :defaultChoices="selectedParameter?.choices || []"
+  />
 </template>
 
 <script setup lang="ts">
-  import type { Command } from '#ui/types';
+  import { isMultipleChoice } from '~/utils/observationFields';
 
   const openConfirmDeleteParamModal = ref(false);
-  const openRemoveModal = ref(false);
-  const selectedParameter = ref<null | { id: number, label: string }>();
+  const openModifyChoicesModal = ref(false);
+  const selectedParameter = ref<null | Record<string, any>>();
   const openAddParamModal = ref(false);
   const toast = useToast();
   const { params } = useRoute();
-  const { deleteParameter, sortFields, createParameter, isOwner } = await useProjects(params);
+  const { deleteParameter, sortFields, createParameter, isOwner, updateParameter } = await useProjects(params);
   const { report } = useSentry();
 
   const newFieldRequired = ref(false);
@@ -155,24 +146,61 @@
 
   const sortedFields = computed(() => sortFields(props.project));
 
-  const projectFieldCommandPalette = computed<Command[]>(
-    () => sortedFields.value.map((f) => ({
-      label: f.label,
-      id: f.id,
-    })),
-  );
+  async function handleUpdateField(field: Partial<NewProjectField>) {
+    try {
+      if (!selectedParameter.value) {
+        throw new Error('Parameter is not selected when trying to patch it')
+      }
 
-  const parametersMenu = [{
-    label: 'Remove parameter',
-    click: () => {
-      openRemoveModal.value = true
-    },
-  }, {
-    label: 'Add parameter',
-    click: () => {
-      openAddParamModal.value = true
-    },
-  }];
+      await updateParameter(
+        props.project.id,
+        selectedParameter.value.id,
+      field);
+
+      // close modal
+      openModifyChoicesModal.value = false;
+
+      // add toast and call onProjectUpdated callback
+      toast.add({
+        title: 'Parameter was successfully deleted',
+        icon: 'i-heroicons-check',
+        color: 'green',
+      });
+      props.onProjectUpdated();
+    } catch(e: any) {
+      // TODO: handle in UI
+      report('error', e);
+      console.error(e)
+    }
+  }
+
+  function generateParameterSettings(field: NewProjectFieldDraft) {
+    const settings = [];
+
+    // add edit multiple choice option
+    if (field.type && isMultipleChoice(field.type)) {
+      settings.push({
+        label: 'Modify choices',
+        icon: 'i-mdi-pencil-outline',
+        click: () => {
+          selectedParameter.value = field;
+          openModifyChoicesModal.value = true;
+        },
+      });
+    }
+
+    // add delete option
+    settings.push({
+      label: 'Delete',
+      icon: 'i-mdi-close',
+      click: () => {
+        selectedParameter.value = field;
+        openConfirmDeleteParamModal.value = true;
+      },
+    });
+
+    return settings;
+  }
 
 
   function setFieldDraft(draft: NewProjectFieldDraft) {
@@ -241,7 +269,7 @@
 
     deleteParameter(
       props.project.id,
-      selectedParameter.value
+      selectedParameter.value as { id: number }
     ).then(async (res) => {
       if (res.status === 204) {
         toast.add({
@@ -250,7 +278,6 @@
           color: 'green',
         });
         openConfirmDeleteParamModal.value = false;
-        openRemoveModal.value = false;
         props.onProjectUpdated();
       } else {
         const json = await res.json();

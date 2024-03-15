@@ -15,13 +15,13 @@
           v-model="itemName"
           type="text"
           placeholder="Enter option label"
-          id="password-input"
           required
           ref="itemNameInput"
           @keyup.enter="addOption"
         />
         <UButton @click="addOption" variant="outline" color="blue">Add option</UButton>
       </div>
+      <p class="text-sm mt-3 text-gray-600">Hint: You can decide the order of the choices using drag and drop</p>
       <div class="mt-6">
         <!-- added option badges -->
         <draggable
@@ -133,9 +133,9 @@
 
     // warn if there are no default choices
     if (!props.defaultChoices) {
-      console.warn('default choices is not defined!', props.defaultChoices)
+      console.warn('default choices not defined!', props.defaultChoices)
     } else {
-      // set `options` ref value based on `defaultChoices`
+      // set `options` and `itemLabel` refs based on `defaultChoices`
       options.value = props.defaultChoices.map((name, id) => ({ id, name }));
     }
   });

@@ -61,6 +61,26 @@ export async function invite(
   return res;
 }
 
+export async function patchField(
+  token: string,
+  projectId: string | number,
+  fieldId: string | number,
+  json: any
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/fields/${fieldId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export async function removeCollaborator(
   token: string,
   projectId: string | number,

@@ -10,7 +10,8 @@ import {
   defaultPassword,
   getObservations,
   patchProject,
-  invite
+  invite,
+  patchField
 } from './helpers';
 
 const wrongIndexes: any[][] = [
@@ -331,5 +332,5 @@ describe('Project management', () => {
     }, undefined, defaultPassword, {
       name: 'project-1'
     });
-  })
+  });
 });
