@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node .output/server/index.mjs",
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "npm run docker-up && nuxt dev",
+    "docker-up": "docker-compose up --detach",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

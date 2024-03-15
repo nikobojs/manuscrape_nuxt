@@ -45,7 +45,7 @@ async function ensureDbConnected(nitro: NitroApp) {
     );
 
   try {
-    console.info("Executing query to check database connectivity...");
+    console.info("> checking database connectivity...");
     // Use Promise.race to race the query against a timeout
     const _ = await Promise.race([
       prisma.$executeRaw`SELECT 1;`,
