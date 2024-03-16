@@ -1,15 +1,15 @@
 <template>
   <ResourceAccessChecker>
     <UContainer>
-      <BackButton v-if="isElectron && project" :href="`/projects/${project.id}/drafts?electron=1`">
+      <BackButton
+        v-if="isElectron && project"
+        :href="`/projects/${project.id}/drafts?electron=1`">
         Go to drafts
       </BackButton>
       <BackButton v-else-if="!isElectron && project" :href="`/projects/${project.id}`">
         Go to project
       </BackButton>
-      <BackButton v-else :href="'/'">
-        Go back
-      </BackButton>
+      <BackButton v-else :href="'/'"> Go back </BackButton>
       <h2 class="text-3xl mb-6 flex gap-x-4">
         {{ header }}
         <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
@@ -19,7 +19,7 @@
         v-if="observation && project"
         :project="project"
         :observationId="observation.id"
-        :onObservationPublished="onSubmit"
+        :onObservationPublished="onObservationPublished"
         :awaitImageUpload="awaitImageUpload"
         :onImageUploaded="onImageUploaded"
         :onFormSubmit="onFormSubmit"
@@ -27,167 +27,170 @@
         :imageUploaded="imageUploaded"
         :onFileUploaded="onFileUploaded"
         :onFileDeleted="onFileDeleted"
-        :onVideoCaptureUploaded="onVideoCaptureUploaded"
-      />
+        :onVideoCaptureUploaded="onVideoCaptureUploaded" />
     </UContainer>
   </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>
-  const { ensureLoggedIn } = await useAuth();
-  const { refreshUser } = await useUser();
-  await ensureLoggedIn();
-  const { params, query } = useRoute();
-  const { project } = await useProjects(params);
-  if (typeof project.value?.id !== 'number') {
-    throw new Error('Project is not defined');
-  }
-  const { refreshObservations, observations } = await useObservations(project.value?.id);
-  const { requireObservationFromParams } = await useObservations(project.value.id);
-  const observation = ref<FullObservation | null>(null);
-  const awaitImageUpload = computed(() => query?.uploading === '1')
-  const imageInterval = ref<number | null>(null)
-  const { isElectron } = useDevice();
+const { ensureLoggedIn } = await useAuth();
+const { refreshUser } = await useUser();
+await ensureLoggedIn();
+const { params, query } = useRoute();
+const { project } = await useProjects(params);
+if (typeof project.value?.id !== 'number') {
+  throw new Error('Project is not defined');
+}
+const { refreshObservations, observations } = await useObservations(project.value?.id);
+const { requireObservationFromParams } = await useObservations(project.value.id);
+const observation = ref<FullObservation | null>(null);
+const awaitImageUpload = computed(() => query?.uploading === '1');
+const imageInterval = ref<number | null>(null);
+const { isElectron } = useDevice();
 
-  async function refreshObservation() {
-    if (observation.value !== null) {
-      await refreshObservations();
-      const obs = observations.value.find((o) => o.id === (observation.value || {}).id)
-      if (obs) {
-        observation.value = { ...obs };
-      } else {
-        const _observation = await requireObservationFromParams(params);
-        observation.value = _observation;
-      }
+async function refreshObservation() {
+  if (observation.value !== null) {
+    await refreshObservations();
+    const obs = observations.value.find((o) => o.id === (observation.value || {}).id);
+    if (obs) {
+      observation.value = { ...obs };
     } else {
       const _observation = await requireObservationFromParams(params);
       observation.value = _observation;
     }
+  } else {
+    const _observation = await requireObservationFromParams(params);
+    observation.value = _observation;
   }
+}
 
+await refreshObservation();
+
+const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
+const header = computed(() =>
+  isLocked.value ? 'Observation details' : 'Edit observation draft'
+);
+const toast = useToast();
+
+const metadataDone = ref<boolean>(
+  !!observation.value?.data && Object.keys(observation.value?.data).length > 0
+);
+const imageUploaded = computed(() => {
+  const imageFound = typeof observation.value?.image?.id === 'number';
+  const intervalIsRunning = typeof imageInterval.value === 'number';
+  if (imageFound && intervalIsRunning) {
+    window.clearInterval(imageInterval.value!);
+    imageInterval.value = null;
+  }
+  return imageFound;
+});
+
+async function onObservationPublished() {
+  if (isElectron.value) {
+    window.electronAPI.observationCreated?.();
+  } else {
+    if (typeof project.value?.id !== 'number') {
+      throw new Error('Project is not defined');
+    }
+    await refreshUser();
+    // await refreshObservation();
+    toast.add({
+      title: 'Nice job! Observation was submitted.',
+      icon: 'i-heroicons-check',
+      color: 'green',
+    });
+    navigateTo(`/projects/${project.value.id}`);
+  }
+}
+
+async function onFormSubmit() {
+  if (!isElectron.value) {
+    toast.add({
+      title: 'Observation data was saved.',
+    });
+  }
   await refreshObservation();
+  metadataDone.value = true;
+}
 
-  const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
-  const header = computed(() => isLocked.value ? 'Observation details' : 'Edit observation draft');
-  const toast = useToast();
+async function onImageUploaded() {
+  if (!observation.value?.id || !project.value?.id) {
+    toast.add({
+      title: observation ? 'Observation does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    });
+  } else {
+    toast.add({
+      title: 'Image uploaded successfully',
+    });
+  }
+  await refreshObservation();
+}
 
-  const metadataDone = ref<boolean>(!!observation.value?.data && Object.keys(observation.value?.data).length > 0);
-  const imageUploaded = computed(() => {
-    const imageFound = typeof observation.value?.image?.id === 'number';
-    const intervalIsRunning = typeof imageInterval.value === 'number';
-    if (imageFound && intervalIsRunning) {
+async function onFileUploaded(file: File) {
+  if (!observation.value?.id || !project.value?.id) {
+    toast.add({
+      title: observation ? 'Observation does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    });
+  } else {
+    toast.add({
+      title: `'${file.name}' was uploaded successfully`,
+      color: 'green',
+      icon: 'i-heroicons-check',
+    });
+  }
+  await refreshObservation();
+}
+
+async function onFileDeleted() {
+  if (!observation.value?.id || !project.value?.id) {
+    toast.add({
+      title: observation ? 'Observation does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    });
+  } else {
+    toast.add({
+      title: `File was deleted successfully`,
+      color: 'green',
+      icon: 'i-heroicons-check',
+    });
+  }
+  await refreshObservation();
+}
+
+async function onVideoCaptureUploaded() {
+  if (!observation.value?.id || !project.value?.id) {
+    toast.add({
+      title: observation ? 'Observation does not exist' : 'Project does not exist',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'red',
+    });
+  } else {
+    toast.add({
+      title: `Video capture was uploaded successfully`,
+      color: 'green',
+      icon: 'i-heroicons-check',
+    });
+  }
+  await refreshObservation();
+}
+
+onMounted(async () => {
+  if (!imageUploaded.value && awaitImageUpload.value) {
+    imageInterval.value = window.setInterval(async () => {
+      await refreshObservation();
+    }, 1000);
+
+    window.setTimeout(() => {
       window.clearInterval(imageInterval.value!);
       imageInterval.value = null;
-    }
-    return imageFound;
-  });
-
-  async function onSubmit() {
-    if (isElectron.value) {
-      window.electronAPI.observationCreated?.();
-    } else {
-      if (typeof project.value?.id !== 'number') {
-        throw new Error('Project is not defined');
-      }
-      await refreshUser();
-      toast.add({
-        title: 'Nice job! Observation was submitted.',
-        icon: 'i-heroicons-check',
-        color: 'green'
-      });
-      navigateTo(`/projects/${project.value.id}`);
-    }
-  }
-  
-  async function onFormSubmit() {
-    if (!isElectron.value) {
-      toast.add({
-        title: 'Observation data was saved.'
-      });
-    }
-    await refreshObservation();
-    metadataDone.value = true;
-  }
-
-  async function onImageUploaded() {
-    if (!observation.value?.id || !project.value?.id) {
-      toast.add({
-        title: observation ? 'Observation does not exist' : 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-    } else {
-      toast.add({
-        title: 'Image uploaded successfully',
-      });
-    }
+    }, 10000);
+  } else {
     await refreshObservation();
   }
-
-  async function onFileUploaded(file: File) {
-    if (!observation.value?.id || !project.value?.id) {
-      toast.add({
-        title: observation ? 'Observation does not exist' : 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-    } else {
-      toast.add({
-        title: `'${file.name}' was uploaded successfully`,
-        color: 'green',
-        icon: 'i-heroicons-check'
-      });
-    }
-    await refreshObservation();
-  }
-
-  async function onFileDeleted() {
-    if (!observation.value?.id || !project.value?.id) {
-      toast.add({
-        title: observation ? 'Observation does not exist' : 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-    } else {
-      toast.add({
-        title: `File was deleted successfully`,
-        color: 'green',
-        icon: 'i-heroicons-check'
-      });
-    }
-    await refreshObservation();
-  }
-
-  async function onVideoCaptureUploaded() {
-    if (!observation.value?.id || !project.value?.id) {
-      toast.add({
-        title: observation ? 'Observation does not exist' : 'Project does not exist',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red'
-      });
-    } else {
-      toast.add({
-        title: `Video capture was uploaded successfully`,
-        color: 'green',
-        icon: 'i-heroicons-check'
-      });
-    }
-    await refreshObservation();
-  }
-
-  onMounted(async () => {
-    if (!imageUploaded.value && awaitImageUpload.value) {
-
-      imageInterval.value = window.setInterval(async () => {
-        await refreshObservation();
-      }, 1000);
-
-      window.setTimeout(() => {
-        window.clearInterval(imageInterval.value!);
-        imageInterval.value = null;
-      }, 10000)
-    } else {
-      await refreshObservation();
-    }
-  });
+});
 </script>

@@ -7,5 +7,18 @@
   },
   "vim.handleKeys": {
       "<C-p>": false
-  }
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "editor.formatOnSave": true,
+  "prettier.printWidth": 90,
+  "prettier.singleQuote": true,
+  "prettier.semi": true
 }
