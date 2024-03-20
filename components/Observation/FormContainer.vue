@@ -50,7 +50,7 @@
             icon="i-mdi-delete-outline"
             color="red"
             variant="outline"
-            @click="() => handleDiscardObservation()">
+            @click="() => handleDiscardDraft()">
             Delete draft
           </UButton>
         </div>
@@ -59,6 +59,7 @@
           icon="i-mdi-information-outline"
           color="blue"
           title="Submit and lock"
+          v-if="!observationIsDelockable(observation, user, project)"
           description="When an observation is submitted, it will be locked for future editing.
           This includes uploading files, image editing and metadata editing."
           :ui="{ title: 'text-sm font-bold' }" />
@@ -107,6 +108,7 @@
 const props = defineProps({
   onObservationPublished: Function as PropType<Function>,
   onFormSubmit: Function as PropType<Function>,
+  onDelockObservation: Function as PropType<Function>,
   onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
   onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
   onFileDeleted: requireFunctionProp<() => Promise<void>>(),
@@ -121,11 +123,10 @@ const props = defineProps({
   project: requireProjectProp,
 });
 
-const { user, refreshUser } = await useUser();
+const { user } = await useUser();
 
 const observationForm = computed(() => buildForm(props.project.fields));
 const {
-  publishObservation,
   deleteObservation,
   patchObservation,
   observationIsDeletable,
@@ -139,20 +140,52 @@ const observation = computed(() =>
   observations.value.find((o) => o.id === props.observationId)
 );
 const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
-
 const uploadInProgress = computed(() => {
   return observation.value && props.awaitImageUpload && !observation.value?.image?.id;
 });
 
 async function handlePublishObservation() {
-  await publishObservation(props.project.id, props.observationId);
+  const _ = await patchObservation(props.project.id, props.observationId, {
+    isDraft: false,
+  });
   props.onObservationPublished?.();
 }
 
-async function handleDiscardObservation() {
+async function handleDelock() {
   if (!props.project || !observation) {
     throw new Error('Props are not defined');
   }
+  const confirmed = confirm(
+    `Are you sure you want to unlock observation #${props.observationId} ?`
+  );
+  if (!confirmed) return;
+
+  try {
+    const _ = await patchObservation(props.project.id, props.observationId, {
+      isDraft: true,
+    });
+    toast.add({
+      title: 'Observation unlocked successfully',
+      color: 'green',
+      icon: 'i-heroicons-check',
+    });
+    props.onDelockObservation?.();
+  } catch (e) {
+    const msg = getErrMsg(e);
+    toast.add({
+      title: msg,
+      color: 'red',
+    });
+  }
+}
+
+async function handleDiscardDraft() {
+  if (!props.project || !observation) {
+    throw new Error('Props are not defined');
+  }
+  const confirmed = confirm('Are you sure you want to delete this draft?');
+  if (!confirmed) return;
+
   await deleteObservation(props.project.id, props.observationId);
   if (isElectron.value) {
     window.close();
@@ -184,34 +217,6 @@ async function handleDelete() {
       icon: 'i-heroicons-check',
     });
     navigateTo(`/projects/${props.project.id}`);
-  }
-}
-
-async function handleDelock() {
-  if (!props.project || !observation) {
-    throw new Error('Props are not defined');
-  }
-  const confirmed = confirm(
-    `Are you sure you want to unlock observation #${props.observationId} ?`
-  );
-  if (!confirmed) return;
-
-  try {
-    const res = await patchObservation(props.project.id, props.observationId, {
-      isDraft: true,
-    });
-    toast.add({
-      title: 'Observation unlocked successfully',
-      color: 'green',
-      icon: 'i-heroicons-check',
-    });
-    props.onFormSubmit?.();
-  } catch (e) {
-    const msg = getErrMsg(e);
-    toast.add({
-      title: msg,
-      color: 'red',
-    });
   }
 }
 </script>

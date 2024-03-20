@@ -101,7 +101,7 @@ model DynamicProjectField {
   @@unique([field0Id, field1Id, operator])
 }
 
-model ProjectInvitation {
+model ProjectInvitation {E
   id                           Int                    @id @default(autoincrement())
   inviterId                    Int
   projectId                    Int

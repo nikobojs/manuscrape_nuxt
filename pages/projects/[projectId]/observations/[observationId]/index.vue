@@ -23,6 +23,7 @@
         :awaitImageUpload="awaitImageUpload"
         :onImageUploaded="onImageUploaded"
         :onFormSubmit="onFormSubmit"
+        :onDelockObservation="onDelockObservation"
         :metadataDone="metadataDone"
         :imageUploaded="imageUploaded"
         :onFileUploaded="onFileUploaded"
@@ -86,14 +87,13 @@ const imageUploaded = computed(() => {
 });
 
 async function onObservationPublished() {
+  await refreshObservation();
   if (isElectron.value) {
     window.electronAPI.observationCreated?.();
   } else {
     if (typeof project.value?.id !== 'number') {
       throw new Error('Project is not defined');
     }
-    await refreshUser();
-    // await refreshObservation();
     toast.add({
       title: 'Nice job! Observation was submitted.',
       icon: 'i-heroicons-check',
@@ -111,6 +111,10 @@ async function onFormSubmit() {
   }
   await refreshObservation();
   metadataDone.value = true;
+}
+
+async function onDelockObservation() {
+  await refreshObservation();
 }
 
 async function onImageUploaded() {

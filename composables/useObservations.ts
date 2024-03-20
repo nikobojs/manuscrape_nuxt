@@ -164,15 +164,6 @@ export const useObservations = async (
     return res;
   };
 
-  const publishObservation = (
-    projectId: number,
-    obsId: number,
-  ) => patchObservation(
-    projectId,
-    obsId,
-    { isDraft: false }
-  );
-
   const upsertObservationImage = async (
     projectId: number,
     observationId: number,
@@ -296,7 +287,7 @@ export const useObservations = async (
     // TODO: validate types of used variables instead
     if (!obs || !user || !project) {
       // report missing arguments
-      console.error('missing arguments in observationIsDeletable()')
+      console.error('missing arguments in observationIsDelockable()')
       return false;
     }
 
@@ -341,7 +332,6 @@ export const useObservations = async (
     observations,
     page,
     patchObservation,
-    publishObservation,
     requireObservationFromParams,
     totalObservations,
     totalPages,
