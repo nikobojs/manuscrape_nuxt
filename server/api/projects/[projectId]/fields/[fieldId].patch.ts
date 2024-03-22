@@ -33,27 +33,8 @@ export default safeResponseHandler(async (event) => {
     }
   });
 
-  // find project and field count
-  const project = await prisma.project.findFirst({
-    select: {
-      id: true,
-      _count: {
-        select: {
-          fields: true,
-        },
-      },
-      fields: {
-        select: {
-          id: true,
-          index: true,
-        }
-      }
-    },
-    where: { id: projectId },
-  });
-
   // ensure project and field exists
-  if (!field || !project) {
+  if (!field) {
     const err = createError({
       statusCode: 400,
       statusMessage: 'Field is not in project or project does not exist'
