@@ -15,6 +15,7 @@ export function hasValidIndexes(
     for (let i = 0; i < sortedFields.length; i++) {
       if (i !== sortedFields[i].index) {
         isValid = false;
+        break;
       }
     };
 

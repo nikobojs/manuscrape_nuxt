@@ -164,6 +164,23 @@ export const useProjects = async (params?: RouteParams | undefined) => {
     )
   }
 
+  const updateParameter = async (
+    projectId: number,
+    fieldId: number,
+    field: Partial<NewProjectField>
+  ) => {
+    return fetch(
+      `/api/projects/${projectId}/fields/${fieldId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(field),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  }
+
   const isOwner = computed(() =>
     project.value?.id && hasRoles(project.value.id, ['OWNER']),
   );
@@ -174,16 +191,17 @@ export const useProjects = async (params?: RouteParams | undefined) => {
     createParameter,
     createProject,
     deleteParameter,
+    duplicateProject,
     getProjectById,
     hasOwnership,
     isOwner,
     loading,
+    patchCollaborator,
+    patchProject,
     project,
     projects,
     removeCollaborator,
     sortFields,
-    duplicateProject,
-    patchCollaborator,
-    patchProject,
+    updateParameter,
   };
 };

@@ -15,37 +15,47 @@
           v-model="itemName"
           type="text"
           placeholder="Enter option label"
-          id="password-input"
           required
           ref="itemNameInput"
-          @keyup.enter="onAddOption"
+          @keyup.enter="addOption"
         />
-        <UButton @click="onAddOption" variant="outline" color="blue">Add option</UButton>
+        <UButton @click="addOption" variant="outline" color="blue">Add option</UButton>
       </div>
-      <div class="mt-6 flex gap-3 flex-wrap">
+      <p class="text-sm mt-3 text-gray-600">Hint: You can decide the order of the choices using drag and drop</p>
+      <div class="mt-6">
         <!-- added option badges -->
-        <UBadge
-          color="blue"
-          size="lg"
-          v-for="item in items"
-          :ui="{
-            rounded: 'rounded-full'
-          }"
-          class="hover:dark:bg-blue-300 hover:bg-blue-300 cursor-pointer"
-          @click="() => removeOption(item)"
+        <draggable
+          v-model="options"
+          group="picked-items"
+          item-key="id"
+          @start="drag=true"
+          @end="drag=false"
+          class="flex gap-2.5 flex-wrap"
         >
-          {{ item }}
+          <template #item="{element}">
+            <UBadge
+              color="blue"
+              size="lg"
+              :ui="{
+                rounded: 'rounded-full'
+              }"
+              class="hover:dark:bg-blue-300 hover:bg-blue-300 cursor-pointer"
+              @click="() => removeOption(element.id)"
+            >
+              {{ element.name }}
 
-          <!-- close icon for each bach -->
-          <UIcon
-            name="i-mdi-close"
-            class="text-lg ml-1 text-gray-800"
-          />
-        </UBadge>
+              <!-- close icon for each bach -->
+              <UIcon
+                name="i-mdi-close"
+                class="text-lg ml-1 text-gray-800"
+              />
+            </UBadge>
+          </template>
+        </draggable>
       </div>
       <template #footer>
         <div class="flex gap-3 justify-end flex-wrap">
-          <UButton @click="handleSubmit" variant="outline" color="primary" :disabled="items.length === 0">
+          <UButton @click="handleSubmit" variant="outline" color="primary" :disabled="options.length === 0">
             Save field
           </UButton>
           <UButton @click="onClose" color="gray" variant="outline">
@@ -58,6 +68,8 @@
 </template>
 
 <script lang="ts" setup>
+  import draggable from 'vuedraggable';
+
   const props = defineProps({
     ...requireModalProps,
     defaultChoices: requireProp<string[]>(Array),
@@ -65,52 +77,66 @@
   });
 
   const itemNameInput = ref();
-  const items = ref<string[]>([]);
+  const options = ref<{id: number, name: string}[]>([]);
+  const drag = ref(false);
   const itemName = ref('');
   const toast = useToast();
 
-  if (props.defaultChoices) {
-    items.value = [...props.defaultChoices];
-  }
-
   function handleSubmit() {
-    props.onSubmit({ choices: items.value });
+    // call props.onSubmit callback with the dropdown names in same order as draggable
+    const choices = options.value.map(o => o.name);
+    props.onSubmit({ choices });
     props.onClose();
 
     // delay reset to avoid flickr when data resets while modal close animation runs
     setTimeout(() => {
-      items.value = [];
+      options.value = [];
       itemName.value = '';
     }, 300);
   }
   
-  function onAddOption() {
-    if (items.value.includes(itemName.value)) {
+  function addOption() {
+    // get names and ids in seperate arrays
+    const names = options.value.map(o => o.name);
+    const ids = options.value.map(o => o.id);
+
+    // don't allow duplicate names
+    if (names.includes(itemName.value)) {
       toast.add({
         title: 'There is already an option with that label',
         color: 'yellow'
       });
       itemNameInput.value?.input?.focus();
     } else {
-      items.value.push(itemName.value);
+      // get the next id
+      const id = 1 + Math.max(0, ...ids);
+
+      // push option to the options-value (which is bound to draggable component)
+      options.value.push({ id, name: itemName.value });
+
+      // reset name input field and focus
       itemName.value = '';
       itemNameInput.value?.input?.focus();
     }
   }
 
-  function removeOption(option: string) {
-    items.value = [...items.value.filter((i) => i !== option)];
+  // remove option from `options` by id
+  function removeOption(id: number) {
+    options.value = [...options.value.filter((o) => o.id !== id)];
   }
 
-  // TODO: improve readability
-  const _openWatch = computed(() => props.open)
-  watch([_openWatch], () => {
+  // add computed func to listen for changes on `props.open`
+  const computedOpen = computed(() => props.open);
+  watch([computedOpen], () => {
+      // if modal is not open, dont to anything
     if (!props.open) return;
-    if (!props.defaultChoices) {
-      console.warn('default choices is not defined!', props.defaultChoices)
-      return;
-    };
 
-    items.value = [...props.defaultChoices];
+    // warn if there are no default choices
+    if (!props.defaultChoices) {
+      console.warn('default choices not defined!', props.defaultChoices)
+    } else {
+      // set `options` and `itemLabel` refs based on `defaultChoices`
+      options.value = props.defaultChoices.map((name, id) => ({ id, name }));
+    }
   });
 </script>
