@@ -35,7 +35,6 @@
 
 <script lang="ts" setup>
 const { ensureLoggedIn } = await useAuth();
-const { refreshUser } = await useUser();
 await ensureLoggedIn();
 const { params, query } = useRoute();
 const { project } = await useProjects(params);
@@ -87,7 +86,6 @@ const imageUploaded = computed(() => {
 });
 
 async function onObservationPublished() {
-  await refreshObservation();
   if (isElectron.value) {
     window.electronAPI.observationCreated?.();
   } else {
@@ -99,7 +97,7 @@ async function onObservationPublished() {
       icon: 'i-heroicons-check',
       color: 'green',
     });
-    navigateTo(`/projects/${project.value.id}`);
+    await refreshObservation();
   }
 }
 

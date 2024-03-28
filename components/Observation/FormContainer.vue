@@ -64,6 +64,7 @@
           This includes uploading files, image editing and metadata editing."
           :ui="{ title: 'text-sm font-bold' }" />
       </UCard>
+      
       <UCard v-else="observation">
         <template #header>
           <CardHeader>Details</CardHeader>
@@ -131,14 +132,12 @@ const {
   patchObservation,
   observationIsDeletable,
   observationIsDelockable,
-  observations,
+  findObservationById,
 } = await useObservations(props.project.id);
 const toast = useToast();
 const { isElectron } = useDevice();
 
-const observation = computed(() =>
-  observations.value.find((o) => o.id === props.observationId)
-);
+const observation = findObservationById(props.observationId);
 
 const isDeletable = computed(() =>
   observationIsDeletable(observation.value, user.value, props.project)
