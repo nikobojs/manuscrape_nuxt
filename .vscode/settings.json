@@ -17,7 +17,7 @@
   "[vue]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "prettier.printWidth": 90,
   "prettier.singleQuote": true,
   "prettier.semi": true

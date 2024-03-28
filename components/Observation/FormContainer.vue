@@ -46,7 +46,7 @@
             Submit and lock
           </UButton>
           <UButton
-            v-if="observationIsDeletable(observation, user, project)"
+            v-if="isDeletable"
             icon="i-mdi-delete-outline"
             color="red"
             variant="outline"
@@ -59,7 +59,7 @@
           icon="i-mdi-information-outline"
           color="blue"
           title="Submit and lock"
-          v-if="!observationIsDelockable(observation, user, project)"
+          v-if="!isDelockable"
           description="When an observation is submitted, it will be locked for future editing.
           This includes uploading files, image editing and metadata editing."
           :ui="{ title: 'text-sm font-bold' }" />
@@ -80,7 +80,7 @@
           <div>{{ prettyDate(observation.updatedAt, true) }}</div>
         </div>
         <div class="flex gap-x-4">
-          <div class="mt-6" v-if="observationIsDelockable(observation, user, project)">
+          <div class="mt-6" v-if="isDelockable">
             <UButton
               icon="i-mdi-lock-open-variant-outline"
               color="yellow"
@@ -89,7 +89,7 @@
               Unlock observation
             </UButton>
           </div>
-          <div class="mt-6" v-if="observationIsDeletable(observation, user, project)">
+          <div class="mt-6" v-if="isDeletable">
             <UButton
               icon="i-mdi-delete-outline"
               color="red"
@@ -139,7 +139,17 @@ const { isElectron } = useDevice();
 const observation = computed(() =>
   observations.value.find((o) => o.id === props.observationId)
 );
+
+const isDeletable = computed(() =>
+  observationIsDeletable(observation.value, user.value, props.project)
+);
+
+const isDelockable = computed(() =>
+  observationIsDelockable(observation.value, user.value, props.project)
+);
+
 const isLocked = computed(() => observation.value != null && !observation.value.isDraft);
+
 const uploadInProgress = computed(() => {
   return observation.value && props.awaitImageUpload && !observation.value?.image?.id;
 });

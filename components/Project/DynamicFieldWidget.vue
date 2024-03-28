@@ -39,6 +39,7 @@
       </div>
     </div>
   </UCard>
+  
   <ProjectCreateDynamicFieldModal
     v-if="project"
     :project="project"
