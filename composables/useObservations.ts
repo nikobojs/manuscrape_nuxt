@@ -2,10 +2,11 @@ import type { AsyncDataExecuteOptions } from "#app/composables/asyncData";
 import type { RouteParams } from "vue-router";
 import { getErrMsg } from '~/utils/getErrMsg';
 
+
 export const useObservations = async (
   projectId: number,
   defaultObservationFilter?: keyof typeof ObservationFilter
-) => {
+  ) => {
   const observations = useState<FullObservation[]>('observations', () => []);
   const page = useState<number>(() => 1);
   const sort = ref<{column:string; direction:'asc'|'desc'}>({column: 'createdAt',  direction: 'desc'});
@@ -45,9 +46,9 @@ export const useObservations = async (
   }
 
   const {
-    pending: loading,
-    refresh: refreshObservations,
-  } = await useFetch<FullObservation[]>(
+      pending: loading,
+      refresh: refreshObservations,
+    } = await useFetch<FullObservation[]>(
     () => {
       const url = `
         /api/projects/${projectId}/observations?
@@ -83,6 +84,11 @@ export const useObservations = async (
       }
     }
   );
+  
+
+  const findObservationById = (observationId: number) => {
+    return computed(() => observations.value.find(o => o.id === observationId));
+  }
 
   const getObservationById = async (
     obsId: number | string | string[] | null
@@ -164,15 +170,6 @@ export const useObservations = async (
     return res;
   };
 
-  const publishObservation = (
-    projectId: number,
-    obsId: number,
-  ) => patchObservation(
-    projectId,
-    obsId,
-    { isDraft: false }
-  );
-
   const upsertObservationImage = async (
     projectId: number,
     observationId: number,
@@ -203,7 +200,6 @@ export const useObservations = async (
     }
   };
 
-
   const uploadObservationFile = async (
     projectId: number,
     observationId: number,
@@ -229,7 +225,6 @@ export const useObservations = async (
       throw err;
     }
   };
-
 
   const requireObservationFromParams = async (params: RouteParams): Promise<FullObservation> => {
     const _observationId = requireNumber(params?.observationId, 'observationId');
@@ -296,7 +291,7 @@ export const useObservations = async (
     // TODO: validate types of used variables instead
     if (!obs || !user || !project) {
       // report missing arguments
-      console.error('missing arguments in observationIsDeletable()')
+      console.error('missing arguments in observationIsDelockable()')
       return false;
     }
 
@@ -317,13 +312,8 @@ export const useObservations = async (
     // find out if user is author of observation
     const isAuthor = obs.user.id === user.id;
     const isProjectOwner = role === 'OWNER';
-    const isDraft = obs.isDraft;
 
-    // ensure observation cannot be delocked if already delocked
-    // performs conditional rendering of project permission settings
-    if (isDraft) {
-      return false
-    } else if (isAuthor && project.authorCanDelockObservations) {
+    if (isAuthor && project.authorCanDelockObservations) {
       return true;
     } else if (isProjectOwner && project.ownerCanDelockObservations) {
       return true;
@@ -337,11 +327,11 @@ export const useObservations = async (
     deleteObservation,
     deleteObservationFile,
     getObservationById,
+    findObservationById,
     loading,
     observations,
     page,
     patchObservation,
-    publishObservation,
     requireObservationFromParams,
     totalObservations,
     totalPages,

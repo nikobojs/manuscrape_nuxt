@@ -21,11 +21,11 @@ export default safeResponseHandler(async (event) => {
   await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
 
-  // get project id  from url parameters
+  // get project id from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);
 
   // get query values with valid defaults
-  const queryParams = await getQuery(event)
+  const queryParams = getQuery(event)
   const { type } = await ExportProjectSchema.validate(queryParams);
 
   if (type === SupportedExportTypes.nvivo ) {

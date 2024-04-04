@@ -225,4 +225,6 @@ declare global {
   export type AllFieldColumns = Prisma.ProjectFieldGetPayload<{ select: typeof allFieldColumns }>;
   export type AllDynamicFieldColumns = Prisma.DynamicProjectFieldGetPayload<{ select: typeof allDynamicFieldColumns }>;
   export type FullObservationPayload = Prisma.ObservationGetPayload<{ select: typeof observationColumns }>;
+
+  export type ExportType = 'nvivo' | 'media' | 'uploads';
 }
