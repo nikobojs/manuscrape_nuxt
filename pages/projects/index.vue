@@ -1,9 +1,11 @@
 <template>
   <UContainer>
-    <div>Redirecting...</div>
+    <ProjectList />
   </UContainer>
 </template>
 
-<script setup lang="ts">
-  navigateTo('/');
+<script lang="ts" setup>
+  const { ensureLoggedIn } = await useAuth();
+  await useUser();
+  await ensureLoggedIn();
 </script>
