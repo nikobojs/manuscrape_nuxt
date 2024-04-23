@@ -14,7 +14,7 @@ describe('Pages not requiring auth', async () => {
 });
 
 describe('Pages requiring auth', async () => {
-  test('/ returns 302', async () => {
+  test('/ returns 302 to /login', async () => {
     const res = await openIndexPage();
     expectRedirect(res, '/login');
   });

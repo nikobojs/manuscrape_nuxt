@@ -5,5 +5,8 @@
 </template>
 
 <script lang="ts" setup>
-  navigateTo('/web/');
+  const { ensureLoggedIn } = await useAuth();
+  await useUser();
+  await ensureLoggedIn();
+  navigateTo('/projects');
 </script>
