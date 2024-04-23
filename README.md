@@ -19,15 +19,15 @@ ManuScrape makes it very easy to collect screenshots, scrollshots and metadata a
 
 # Nuxt App
 
-This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [manuscrape.org](https://manuscrape.org).
+This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [app.manuscrape.org](https://app.manuscrape.org).
 
 <br />
 
-## Hosting (https://manuscrape.org)
+## Hosting (https://app.manuscrape.org)
 
-There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with your local data processing laws.
+There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with relevant data processing laws.
 
-If you want ManuScrape hosted for you, please contact the Copenhagen-based company, [Code Collective](https://codecollective.dk), who is currently hosting manuscrape.org
+If you want ManuScrape hosted for you, feel free to contact the Copenhagen-based company, [Code Collective](https://codecollective.dk), who is currently hosting app.manuscrape.org
 <br />
 <br />
 
@@ -35,7 +35,7 @@ If you want ManuScrape hosted for you, please contact the Copenhagen-based compa
 
 #### TL;DR:
 
-Clone repositories, look for TODO-comments, make improvement, create feature branch (naming doesn't matter), commit, create PR, and done! The PR will be reviewed by the project maintainers.
+Fork repositories, look for TODO-comments, make improvement, create feature branch (naming doesn't matter), commit, create PR, and done! The PR will be reviewed by the project maintainers.
 
 #### Git conventions
 
