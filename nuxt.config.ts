@@ -2,7 +2,7 @@
 import pkg from './package.json'
 
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_DEV !== 'production' },
   sourcemap: true,
   modules: ['@nuxt/ui', 'nuxt-scheduler', "@nuxt/image"],
   typescript: {
