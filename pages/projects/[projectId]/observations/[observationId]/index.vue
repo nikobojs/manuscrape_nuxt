@@ -10,11 +10,18 @@
         Go to project
       </BackButton>
       <BackButton v-else :href="'/'"> Go back </BackButton>
-      <h2 class="text-3xl mb-6 flex gap-x-4">
-        {{ header }}
-        <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
-        <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
-      </h2>
+      <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-3xl flex gap-x-4">
+          {{ header }}
+          <span v-if="!isLocked" class="text-blue-400 i-heroicons-lock-open block"></span>
+          <span v-else class="text-green-400 i-heroicons-lock-closed block"></span>
+        </h2>
+          <ObservationMetaText
+          class="text-right"
+            v-if="observation"
+            :observation="observation"
+          />
+      </div>
       <ObservationFormContainer
         v-if="observation && project"
         :project="project"
@@ -35,6 +42,7 @@
 
 <script lang="ts" setup>
 const { ensureLoggedIn } = await useAuth();
+await useUser();
 await ensureLoggedIn();
 const { params, query } = useRoute();
 const { project } = await useProjects(params);

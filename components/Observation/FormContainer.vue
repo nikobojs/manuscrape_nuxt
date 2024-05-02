@@ -2,15 +2,16 @@
   <div
     class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-min"
     v-if="observation">
-    <ObservationMetadataWidget
-      class="row-span-4"
-      :project="project"
-      :observationId="observationId"
-      :onSubmit="onFormSubmit"
-      :disabled="isLocked"
-      :metadataDone="metadataDone"
-      :initialState="observationForm.initialState"
-      :inputs="observationForm.inputs" />
+    <div class="row-span-4">
+      <ObservationMetadataWidget
+        :project="project"
+        :observationId="observationId"
+        :onSubmit="onFormSubmit"
+        :disabled="isLocked"
+        :metadataDone="metadataDone"
+        :initialState="observationForm.initialState"
+        :inputs="observationForm.inputs" />
+    </div>
 
     <div class="row-span-3 flex flex-col gap-6">
       <ObservationImageWidget
