@@ -26,7 +26,6 @@ describe('Observations', () => {
         expect(inviteRes.status).toBe(202);
 
         // create new observation
-        console.log('fields:', project.fields);
         const createObsRes = await createObservation(tokenCollaborator, project.id);
         expect(createObsRes.status).toBe(201);
         const createObsJson = await createObsRes.json();
@@ -80,7 +79,6 @@ describe('Observations', () => {
 
       await withTempUser(async (_userB, tokenCollaborator) => {
         // create new observation
-        console.log('fields:', project.fields);
         const createObsRes = await createObservation(tokenCollaborator, project.id);
         expect(createObsRes.status).toBe(201);
         const createObsJson = await createObsRes.json();
