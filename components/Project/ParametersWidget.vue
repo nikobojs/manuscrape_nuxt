@@ -22,11 +22,11 @@
           <UBadge size="xs" variant="solid" color="white" class="text-xs">
             {{ getFieldLabel(field.type) }}
           </UBadge>
-          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end'}">
+          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end' }">
             <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
             </UButton>
-            <template #panel>
-              <UVerticalNavigation :links="generateParameterSettings(field, sortedFields)" />
+            <template #panel="{ close }">
+              <UVerticalNavigation :links="generateParameterSettings(field, sortedFields, close)" />
             </template>
           </UPopover>
         </div>
@@ -175,7 +175,11 @@ import { isMultipleChoice } from '~/utils/observationFields';
     }
   }
 
-  function generateParameterSettings(field: ProjectFieldResponse, allFields: ProjectFieldResponse[]) {
+  function generateParameterSettings(
+    field: ProjectFieldResponse,
+    allFields: ProjectFieldResponse[],
+    closePopover: () => void
+  ) {
     const settings = [];
 
     if (field.index !== 0) {
@@ -184,6 +188,7 @@ import { isMultipleChoice } from '~/utils/observationFields';
         icon: 'i-mdi-arrow-up',
         click: () => {
           handleMoveParameter(props.project, field, true);
+          closePopover();
         }
       });
     }
@@ -194,6 +199,7 @@ import { isMultipleChoice } from '~/utils/observationFields';
         icon: 'i-mdi-arrow-down',
         click: () => {
           handleMoveParameter(props.project, field, false);
+          closePopover();
         }
       });
     }
@@ -206,6 +212,7 @@ import { isMultipleChoice } from '~/utils/observationFields';
         click: () => {
           selectedParameter.value = field;
           openModifyChoicesModal.value = true;
+          closePopover();
         },
       });
     }
@@ -217,6 +224,7 @@ import { isMultipleChoice } from '~/utils/observationFields';
       click: () => {
         selectedParameter.value = field;
         openConfirmDeleteParamModal.value = true;
+        closePopover();
       },
     });
 
