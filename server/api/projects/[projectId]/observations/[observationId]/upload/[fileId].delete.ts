@@ -32,6 +32,37 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
+  const observation = await prisma.observation.findUnique({
+    where: { id: observationId },
+  });
+
+  const projectAccess = await prisma.projectAccess.findFirst({
+    select: {
+      role: true,
+    },
+    where: {
+      projectId: observation?.projectId,
+      userId: event.context.user.id,
+    }
+  });
+
+  if (!projectAccess) {
+    // NOTE: unexpected because of middleware validation
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'You don\'t have access to the observation',
+    });
+  }
+
+  // if observation is published and projectAccess != OWNER, don't allow file deletion
+  if (!observation?.isDraft && projectAccess.role !== 'OWNER') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'You don\'t have permissions to remove file from a published observation',
+    });
+  }
+
+  // delete the file from s3
   let res;
   try {
     res = await deleteS3Files(file.s3Path);
@@ -48,7 +79,9 @@ export default safeResponseHandler(async (event) => {
       statusMessage: 'File could not be deleted',
     })
   }
-  const deleteRes = await prisma.fileUpload.delete({
+
+  // if s3 deletion went well, delete from file metadata from database
+  await prisma.fileUpload.delete({
     where: { id: fileId },
   });
   
