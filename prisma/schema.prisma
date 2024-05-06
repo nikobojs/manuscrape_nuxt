@@ -40,6 +40,7 @@ model User {
   ownedProjects                Project[]              @relation("author")
   projectAccess                ProjectAccess[]        @relation("contributor")
   sentInvitations              ProjectInvitation[]    @relation("inviter")
+  exportLogs                   ExportLog[]            
 }
 
 model ProjectAccess {
@@ -67,6 +68,7 @@ model Project {
   observations                 Observation[]
   contributors                 ProjectAccess[]
   invitations                  ProjectInvitation[]
+  exportLogs                   ExportLog[]
 }
 
 model ProjectField {
@@ -145,4 +147,17 @@ model ImageUpload {
   mimetype                     String
   originalName                 String
   observation                  Observation?
+}
+
+model ExportLog {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  startDate                    DateTime               @default(now()) @db.Timestamp(1)
+  endDate                      DateTime               @default(now()) @db.Timestamp(1)
+  observationsCount            Int
+
+  userId                       Int
+  projectId                    Int
+  user                         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
