@@ -12,10 +12,9 @@
 
 With [ManuScrape](https://manuscrape.org) your can collect, enrich and export research observations containing media files. 
 
-<br />
-<br />
-
 > This is the ManuScrape server-side app that contains a browser application and a JSON API. [Here is the client-side app repository](https://github.com/nikobojs/manuscrape_electron).
+
+<br />
 
 ## Hosting
 
