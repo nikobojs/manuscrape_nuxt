@@ -10,7 +10,7 @@
 <br />
 <br />
 
-With [ManuScrape](https://manuscrape.org) your can collect, enrich and export research observations containing media files. 
+With [ManuScrape](https://manuscrape.org) your can collect, enrich and export research observations containing media files. This repo is based on [Nuxt 3.10](https://nuxt.com/) and depends on a postgres database and an object storage using the s3 api.
 
 > This is the ManuScrape server-side app that contains a browser application and a JSON API. [Here is the client-side app repository](https://github.com/nikobojs/manuscrape_electron).
 
@@ -108,4 +108,4 @@ Locally preview production build:
 yarn preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Check out the [Nuxt 3 deployment docs](https://nuxt.com/docs/getting-started/deployment) for more information.
