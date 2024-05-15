@@ -9,20 +9,17 @@
 </a>
 <br />
 <br />
+
 With [ManuScrape](https://manuscrape.org) your can collect, enrich and export research observations containing media files. 
+
 <br />
 <br />
 
 > This is the ManuScrape server-side app that contains a browser application and a JSON API. [Here is the client-side app repository](https://github.com/nikobojs/manuscrape_electron).
 
-<br />
-
 ## Hosting
 
 At the moment, [Code Collective ApS](codecollective.dk) is hosting the latest stable version free of charge at [app.manuscrape.org](https://app.manuscrape.org). However, there is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. If you do that, you won't need any third-party data processors.
-
-<br />
-<br />
 
 ## Development
 
