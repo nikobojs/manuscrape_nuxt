@@ -30,6 +30,7 @@ export default defineNuxtConfig({
       saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10'),
       tokenSecret: process.env.TOKEN_SECRET,
       cookieDomain: process.env.COOKIE_DOMAIN,
+      cookieSecure: process.env.COOKIE_SECURE?.toLowerCase() === 'true',
       s3AccessKey: process.env.S3_ACCESS_KEY || '',
       s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
       s3Endpoint: process.env.S3_ENDPOINT || '',
