@@ -116,9 +116,9 @@ export default safeResponseHandler(async (event) => {
           statusMessage: 'You are not allowed to delock observation',
         });
       }
-    // if trying to publish the observation, only allow author
+    // if trying to publish the observation, only allow author and project owner
     } else if (!patch.isDraft && observation.isDraft) {
-      if (!isAuthor) {
+      if (!isAuthor && !isProjectOwner) {
         throw createError({
           statusCode: 403,
           statusMessage: 'You are not allowed to publish this observation',
