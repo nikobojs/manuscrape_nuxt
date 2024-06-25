@@ -35,7 +35,7 @@
         :imageUploaded="imageUploaded"
         :onFileUploaded="onFileUploaded"
         :onFileDeleted="onFileDeleted"
-        :onVideoCaptureUploaded="onVideoCaptureUploaded" />
+      />
     </UContainer>
   </ResourceAccessChecker>
 </template>
@@ -165,23 +165,6 @@ async function onFileDeleted() {
   } else {
     toast.add({
       title: `File was deleted successfully`,
-      color: 'green',
-      icon: 'i-heroicons-check',
-    });
-  }
-  await refreshObservation();
-}
-
-async function onVideoCaptureUploaded() {
-  if (!observation.value?.id || !project.value?.id) {
-    toast.add({
-      title: observation ? 'Observation does not exist' : 'Project does not exist',
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
-    });
-  } else {
-    toast.add({
-      title: `Video capture was uploaded successfully`,
       color: 'green',
       icon: 'i-heroicons-check',
     });

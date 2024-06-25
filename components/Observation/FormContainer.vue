@@ -31,7 +31,7 @@
           :project="project"
           :on-file-uploaded="onFileUploaded"
           :on-file-deleted="onFileDeleted"
-          :on-video-capture-uploaded="onVideoCaptureUploaded" />
+        />
       </UCard>
 
       <UCard v-if="!isLocked">
@@ -114,7 +114,6 @@ const props = defineProps({
   onImageUploaded: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
   onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
   onFileDeleted: requireFunctionProp<() => Promise<void>>(),
-  onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
   awaitImageUpload: Boolean as PropType<boolean>,
   metadataDone: Boolean as PropType<boolean>,
   imageUploaded: Boolean as PropType<boolean>,

@@ -6,13 +6,6 @@
           Upload file
         </div>
       </label>
-      <div
-        class="text-sm underline text-green-500 cursor-pointer"
-        @click="captureVideo"
-        v-if="isElectron"
-      >
-        Capture video
-      </div>
       <UTable
         v-show="observation.fileUploads.length > 0"
         class="mt-6"
@@ -58,7 +51,6 @@
   const props = defineProps({
     onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
     onFileDeleted: requireFunctionProp<() => Promise<void>>(),
-    onVideoCaptureUploaded: requireFunctionProp<() => Promise<void>>(),
     observation: requireObservationProp,
     project: requireProjectProp,
   });
@@ -66,7 +58,6 @@
   const config = useRuntimeConfig().public;
   const file = ref<File | undefined>();
   const toast = useToast();
-  const { isElectron } = useDevice();
   const { report } = useSentry();
 
   const fileUploadColumns = [
@@ -181,23 +172,6 @@
     } catch(err) {
       console.error('File upload submit error:', err);
       throw err;
-    }
-  }
-
-  async function captureVideo() {
-    if (!isElectron.value) {
-      toast.add({
-        title: 'Function not available',
-        description: 'Video capture can only be called from within the native application',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red',
-      })
-    } else {
-      window.electronAPI?.beginVideoCapture(
-        props.observation.id,
-        props.project.id,
-        props.onVideoCaptureUploaded,
-      );
     }
   }
 </script>
