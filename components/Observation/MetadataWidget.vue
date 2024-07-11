@@ -2,9 +2,11 @@
   <UForm ref="form" :validate="validate" :state="state" @submit="submit">
     <UCard class="overflow-visible">
       <template #header>
-        <div class="flex justify-between w-full">
-          <CardHeader>Observation parameters</CardHeader>
-          <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
+        <div>
+          <div class="flex justify-between w-full">
+            <CardHeader>Observation parameters</CardHeader>
+            <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
+          </div>
         </div>
       </template>
 

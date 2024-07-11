@@ -65,7 +65,7 @@ describe('Collaborators', () => {
         const resB = await removeCollaborator(token, project.id, 'abcd1ef');
         expect(resB.status).toBe(400);
         const resC = await removeCollaborator(token, project.id, '');
-        expect(resC.status).toBe(400);
+        expect(resC.status).toBe(404);
       }, collaboratorEmail);
     });
   });

@@ -9,69 +9,81 @@
 </a>
 <br />
 <br />
-ManuScrape makes it very easy to collect screenshots, scrollshots and metadata about generic observations.
-<br />
-<br />
 
-> If you are looking for the main ManuScrape presentation, go to the [manuscrape_electron repository](https://github.com/nikobojs/manuscrape_electron).
+With [ManuScrape](https://manuscrape.org) your can collect, enrich and export research observations containing media files. This repo is based on [Nuxt 3.10](https://nuxt.com/) and depends on a postgres database and an object storage using the s3 api.
 
-<br />
-
-# Nuxt App
-
-This is the backend repo used by the [native client side windows app](https://github.com/nikobojs/manuscrape_electron), and is hosted on [app.manuscrape.org](https://app.manuscrape.org).
+> This is the ManuScrape server-side app that contains a browser application and a JSON API. [Here is the client-side app repository](https://github.com/nikobojs/manuscrape_electron).
 
 <br />
 
-## Hosting (https://app.manuscrape.org)
+## Hosting
 
-There is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. That can only help in making you more compliant with relevant data processing laws.
+At the moment, [Code Collective ApS](codecollective.dk) is hosting the latest stable version free of charge at [app.manuscrape.org](https://app.manuscrape.org). However, there is no promise on continuous hosting, and in general, it is recommended that you host the backend yourself. If you do that, you won't need any third-party data processors.
 
-If you want ManuScrape hosted for you, feel free to contact the Copenhagen-based company, [Code Collective](https://codecollective.dk), who is currently hosting app.manuscrape.org
-<br />
 <br />
 
-## Development
+## Development guide
 
-#### TL;DR:
+- Fork repositories
+- Look for TODO-comments or assign yourself to a Github issue
+- Make improvement
+- Make PR
 
-Fork repositories, look for TODO-comments, make improvement, create feature branch (naming doesn't matter), commit, create PR, and done! The PR will be reviewed by the project maintainers.
+The PR will be reviewed by the community and eventually make it into app.manuscrape.org. Visit [manuscrape.org](https://manuscrape.org) to read more about the team and community.
 
-#### Git conventions
 
-Not strict in any way. We'll always figure it out so do your stuff the way you think works best. Pull requests (into "unstable" branch) on feature branches will be reviewed and merged by the current admins of the project.
+#### 1. Install dependencies
 
-#### Install dependencies
-
-Install all the dependencies and add the pre commit hook. The pre-commit hook ensures you cannot commit badly typed code.
+Install npm dependencies and add the pre commit hook. The pre-commit hook ensures you cannot commit badly typed code.
 
 ```bash
 yarn install
 ./devops/add_pre_commit_hook.sh
 ```
 
-#### Run external services
+#### 2. Run database and file storage services
 
-Install docker and docker-compose to get services up and running in seconds
+Use docker and docker-compose to get services up and running quickly. The current docker-compose spins up two services:
 
-- a postgres service called 'db' on port 5500 (to avoid port conflicts in case postgres is running locally)
+- a postgres service called 'db' on port 5500
 - a MinIO service called 'minio' (s3 api-compatible storage)
+
+These services work with the related variables in `.env.example`. If you want to use external instances of MinIO and PostgreSQL, you can skip this step.
+
+Run database and fileserver using docker-compose:
 
 ```bash
 docker-compose up
 ```
 
-#### Migrations
+#### 3. Create .env file
 
-Whenever you update the data structure (`prisma/schema.prisma`), you can migrate the database to the newest changes by using the [prisma cli](https://www.prisma.io/docs/reference/api-reference/command-reference), or by using the yarn script:
+```bash
+cp .env.example .env
+```
+
+Edit the environment file according to your system. (TODO: document the individual environment variables)
+
+#### 4. Migrate database
+
+Whenever there are changes in the database schema (`prisma/schema.prisma`), you can migrate the database using the [prisma cli](https://www.prisma.io/docs/reference/api-reference/command-reference), or by using the yarn script:
 
 ```bash
 yarn migrate
 ```
 
-Run migrations before moving on.
+#### 5. Run tests
 
-#### Run development server
+The testing suite is in development, and is currently primarily consisting of e2e tests, using [Vitest](https://vitest.dev/).
+
+> Check `package.json` for useful testing commands.
+
+Run the tests to ensure you are setup, and ready for solving issues!
+```bash
+yarn test
+```
+
+#### 6. Run development server ⚡
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 Start the development server on `http://localhost:3000`:
@@ -82,7 +94,7 @@ yarn dev
 
 <br />
 
-## Production
+## Run production build
 
 Build the application for production:
 
@@ -96,4 +108,4 @@ Locally preview production build:
 yarn preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Check out the [Nuxt 3 deployment docs](https://nuxt.com/docs/getting-started/deployment) for more information.

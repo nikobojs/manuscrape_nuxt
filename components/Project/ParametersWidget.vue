@@ -22,11 +22,11 @@
           <UBadge size="xs" variant="solid" color="white" class="text-xs">
             {{ getFieldLabel(field.type) }}
           </UBadge>
-          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end'}">
+          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end' }">
             <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
             </UButton>
-            <template #panel>
-              <UVerticalNavigation :links="generateParameterSettings(field)" />
+            <template #panel="{ close }">
+              <UVerticalNavigation :links="generateParameterSettings(field, sortedFields, close)" />
             </template>
           </UPopover>
         </div>
@@ -122,7 +122,8 @@
 </template>
 
 <script setup lang="ts">
-  import { isMultipleChoice } from '~/utils/observationFields';
+  import type { Project } from '@prisma/client';
+import { isMultipleChoice } from '~/utils/observationFields';
 
   const openConfirmDeleteParamModal = ref(false);
   const openModifyChoicesModal = ref(false);
@@ -130,7 +131,7 @@
   const openAddParamModal = ref(false);
   const toast = useToast();
   const { params } = useRoute();
-  const { deleteParameter, sortFields, createParameter, isOwner, updateParameter } = await useProjects(params);
+  const { deleteParameter, sortFields, createParameter, isOwner, updateParameter, moveParameter } = await useProjects(params);
   const { report } = useSentry();
 
   const newFieldRequired = ref(false);
@@ -174,8 +175,34 @@
     }
   }
 
-  function generateParameterSettings(field: NewProjectFieldDraft) {
+  function generateParameterSettings(
+    field: ProjectFieldResponse,
+    allFields: ProjectFieldResponse[],
+    closePopover: () => void
+  ) {
     const settings = [];
+
+    if (field.index !== 0) {
+      settings.push({
+        label: `Move up`,
+        icon: 'i-mdi-arrow-up',
+        click: () => {
+          handleMoveParameter(props.project, field, true);
+          closePopover();
+        }
+      });
+    }
+
+    if (field.index !== allFields.length - 1) {
+      settings.push({
+        label: `Move down`,
+        icon: 'i-mdi-arrow-down',
+        click: () => {
+          handleMoveParameter(props.project, field, false);
+          closePopover();
+        }
+      });
+    }
 
     // add edit multiple choice option
     if (field.type && isMultipleChoice(field.type)) {
@@ -185,6 +212,7 @@
         click: () => {
           selectedParameter.value = field;
           openModifyChoicesModal.value = true;
+          closePopover();
         },
       });
     }
@@ -196,10 +224,33 @@
       click: () => {
         selectedParameter.value = field;
         openConfirmDeleteParamModal.value = true;
+        closePopover();
       },
     });
 
     return settings;
+  }
+
+  function handleMoveParameter(project: Project, field: ProjectFieldResponse, moveUp: boolean) {
+    moveParameter(project.id, field.id, moveUp).then(async (res) => {
+      if (res.status === 204) {
+        toast.add({
+          title: `Parameter was moved ${moveUp ? 'up' : 'down'}.`,
+          icon: 'i-heroicons-check',
+          color: 'green',
+        });
+        props.onProjectUpdated();
+      } else {
+        const json = await res.json();
+        throw new Error(getErrMsg(json))
+      }
+    }).catch((err: Error) => {
+      toast.add({
+        title: err.message,
+        icon: 'i-heroicons-exclamation-triangle',
+        color: 'red',
+      });
+    });
   }
 
 

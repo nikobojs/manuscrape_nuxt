@@ -1,6 +1,6 @@
 
-import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
-import { requireUser } from '../../../../utils/authorize';
+import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
+import { requireUser } from '../../../../../utils/authorize';
 import type { JsonObject } from '@prisma/client/runtime/library';
 import { ProjectRole } from '@prisma/client';
 import { captureException } from '@sentry/node';

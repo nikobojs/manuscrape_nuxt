@@ -29,12 +29,7 @@ export default safeResponseHandler(async (event) => {
       if (user) {
         const expires = new Date(new Date().setDate(new Date().getDate() + 365))
         event.context.user = user;
-        setCookie(event, 'authcookie', token, {
-          expires,
-          httpOnly: true,
-          domain: config.app.cookieDomain,
-          sameSite: 'strict'
-        });
+        updateAuthCookie(event, token, expires);
         return { 'success': true }
       } else {
         return createError({

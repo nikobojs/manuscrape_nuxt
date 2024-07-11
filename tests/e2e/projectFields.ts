@@ -4,7 +4,8 @@ import {
   withTempUser,
   getMe,
   invite,
-  patchField
+  patchField,
+  moveField
 } from './helpers';
 
 describe('Project fields', () => {
@@ -128,6 +129,59 @@ describe('Project fields', () => {
 
       // patch project with an empty object
       const res = await patchField(token, project.id, fieldId, {});
+      expect(res.status).toBe(400);
+    });
+  });
+
+  test('can move top project field down', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // sort fields by index and retrieve top and bot field
+      const sortedFields = project.fields.sort((a, b) => a.index > b.index ? 1 : -1);
+      const topField = sortedFields[0];
+      const botField = sortedFields[sortedFields.length - 1];
+
+      // expect the sorting to be working as expected (top field has lowest index)
+      expect(topField.index).toBeLessThan(botField.index);
+
+      // try moving field downwards and expect success
+      const res = await moveField(token, project.id, topField.id, { up: false });
+      expect(res.status).toBe(204);
+    });
+  });
+
+  test('cannot move top project field up', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // sort fields by index and retrieve top field
+      const sortedFields = project.fields.sort((a, b) => a.index > b.index ? 1 : -1);
+      const topField = sortedFields[0];
+
+      // patch project with an empty object
+      const res = await moveField(token, project.id, topField.id, { up: true });
+      expect(res.status).toBe(400);
+    });
+  });
+
+
+  test('can move bot project field up', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // sort fields by index and retrieve top and bot field
+      const sortedFields = project.fields.sort((a, b) => a.index > b.index ? 1 : -1);
+      const botField = sortedFields[sortedFields.length - 1];
+
+      // try moving field downwards and expect success
+      const res = await moveField(token, project.id, botField.id, { up: true });
+      expect(res.status).toBe(204);
+    });
+  });
+
+  test('cannot move bot project field down', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // sort fields by index and retrieve top field
+      const sortedFields = project.fields.sort((a, b) => a.index > b.index ? 1 : -1);
+      const botField = sortedFields[sortedFields.length - 1];
+
+      // patch project with an empty object
+      const res = await moveField(token, project.id, botField.id, { up: false });
       expect(res.status).toBe(400);
     });
   });

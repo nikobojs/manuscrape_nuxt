@@ -81,6 +81,26 @@ export async function patchField(
   return res;
 }
 
+export async function moveField(
+  token: string,
+  projectId: string | number,
+  fieldId: string | number,
+  json: any
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/fields/${fieldId}/move`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export async function removeCollaborator(
   token: string,
   projectId: string | number,

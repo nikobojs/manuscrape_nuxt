@@ -1,11 +1,37 @@
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
+import type { CookieOptions } from 'nuxt/app';
 import { type User, ProjectRole } from '@prisma/client';
 import { getRequestBeginTime, parseIntParam } from './request';
 import { observationColumns } from './prisma';
 import { captureException } from '@sentry/node';
 
 const config = useRuntimeConfig();
+
+export function updateAuthCookie(
+  event: H3Event<EventHandlerRequest>,
+  token: string | null, // set to null if log out
+  expiresAt?: Date | undefined,
+): void {
+  if (!token) {
+    token = '';
+    expiresAt = new Date(0);
+  }
+
+  const flags: CookieOptions = {
+    expires: expiresAt,
+    httpOnly: true,
+    domain: config.app.cookieDomain,
+    sameSite: 'strict',
+    secure: config.app.cookieSecure,
+  }
+
+  setCookie(event, 'authcookie', token, flags);
+};
+
+export function resetAuthCookie(event: H3Event<EventHandlerRequest>) {
+  return updateAuthCookie(event, null);
+}
 
 export async function authorize(
   event: H3Event,
@@ -15,12 +41,7 @@ export async function authorize(
   event.context.user = user;
   const token = await jwt.sign({ id: user.id }, config.app.tokenSecret);
 
-  setCookie(event, 'authcookie', token, {
-    expires,
-    httpOnly: true,
-    domain: config.app.cookieDomain,
-    sameSite: 'strict'
-  });
+  updateAuthCookie(event, token, expires);
 
   return { token };
 }

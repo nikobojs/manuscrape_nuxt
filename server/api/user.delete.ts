@@ -55,12 +55,7 @@ export default safeResponseHandler(async (event) => {
   
   // logout, user is deleted, right?
   event.context.user = undefined;
-  setCookie(event, 'authcookie', '', {
-    sameSite: 'strict',
-    httpOnly: true,
-    domain: config.app.cookieDomain,
-    expires: new Date(),
-  });
+  resetAuthCookie(event);
 
   // return 204 No content
   setResponseStatus(event, 204);
