@@ -5,13 +5,16 @@ export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_DEV !== 'production' },
   sourcemap: true,
   modules: ['@nuxt/ui', 'nuxt-scheduler', "@nuxt/image"],
+
   typescript: {
     strict: true,
     typeCheck: false,
   },
+
   ui: {
     icons: ['mdi', 'heroicons'],
   },
+
   app: {
     head: {
       charset: 'utf-8',
@@ -25,6 +28,7 @@ export default defineNuxtConfig({
       },
     },
   },
+
   runtimeConfig: {
     app: {
       saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10'),
@@ -47,7 +51,10 @@ export default defineNuxtConfig({
       sentryEnv: process.env.SENTRY_ENV || 'development',
     }
   },
+
   colorMode: {
     preference: 'dark',
   },
+
+  compatibilityDate: '2024-07-11',
 });
