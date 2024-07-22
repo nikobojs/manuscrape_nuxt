@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start MinIO server in the background
-minio server /data &
+minio server /data --console-address ":9001" &
 
 # Wait for the MinIO server to start (adjust the sleep time as necessary)
 sleep 5
