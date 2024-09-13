@@ -31,6 +31,19 @@ enum ProjectRole {
   INVITED
 }
 
+enum ExportType {
+  NVIVO
+  UPLOADS
+  MEDIA
+}
+
+enum ExportStatus {
+  QUEUED
+  GENERATING
+  DONE
+  ERRORED
+}
+
 model User {
   id                           Int                    @id @default(autoincrement())
   email                        String                 @unique
@@ -40,7 +53,7 @@ model User {
   ownedProjects                Project[]              @relation("author")
   projectAccess                ProjectAccess[]        @relation("contributor")
   sentInvitations              ProjectInvitation[]    @relation("inviter")
-  exportLogs                   ExportLog[]            
+  projectExports               ProjectExport[]            
 }
 
 model ProjectAccess {
@@ -63,12 +76,13 @@ model Project {
   author                       User?                  @relation("author", fields: [authorId], references: [id], onDelete: SetNull)
   authorCanDelockObservations  Boolean                @default(false)
   ownerCanDelockObservations   Boolean                @default(false)
+  storageLimit                 Int                    @default(1000000000)
   fields                       ProjectField[]
   dynamicFields                DynamicProjectField[]
   observations                 Observation[]
   contributors                 ProjectAccess[]
   invitations                  ProjectInvitation[]
-  exportLogs                   ExportLog[]
+  projectExports               ProjectExport[]
 }
 
 model ProjectField {
@@ -103,7 +117,7 @@ model DynamicProjectField {
   @@unique([field0Id, field1Id, operator])
 }
 
-model ProjectInvitation {E
+model ProjectInvitation {
   id                           Int                    @id @default(autoincrement())
   inviterId                    Int
   projectId                    Int
@@ -149,15 +163,20 @@ model ImageUpload {
   observation                  Observation?
 }
 
-model ExportLog {
+model ProjectExport {
   id                           Int                    @id @default(autoincrement())
   createdAt                    DateTime               @default(now()) @db.Timestamp(6)
-  startDate                    DateTime               @default(now()) @db.Timestamp(1)
-  endDate                      DateTime               @default(now()) @db.Timestamp(1)
+  startDate                    DateTime
+  endDate                      DateTime
   observationsCount            Int
-
-  userId                       Int
+  s3Path                       String?
+  type                         ExportType
+  status                       ExportStatus
+  mimetype                     String
+  error                        String?
+  userId                       Int?
+  size                         Int
   projectId                    Int
-  user                         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                         User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

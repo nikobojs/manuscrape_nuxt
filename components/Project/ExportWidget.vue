@@ -2,236 +2,166 @@
   <UCard>
     <template #header>
       <div class="flex justify-between items-center h-4">
-        <CardHeader>Export</CardHeader>
+        <CardHeader>Exports</CardHeader>
+        <div class="flex items-center justify-end w-full max-w-[326px]">
+          <div class="px-3 w-full">
+            <ProjectStorageMeter :limit="storageLimit" :used="storageUsage" />
+          </div>
+          <div class="inline-flex gap-3 -mt-2 -mb-2">
+            <UButton :disabled="loading || storageIsFull" icon="i-mdi-plus" variant="outline" @click="() => openNewExportModal = true">
+              Create
+            </UButton>
+          </div>
+        </div>
       </div>
     </template>
-
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2">
-        <p class="text-sm font-bold">Date range</p>
-
-        <UPopover :popper="{ placement: 'bottom-start' }">
-          <UButton icon="i-heroicons-calendar-days-20-solid">
-            {{
-              isFullRangeSelected()
-                ? 'All observations'
-                : `${format(selectedDateRange.start, 'd MMM, yyyy')} - ${format(
-                    selectedDateRange.end,
-                    'd MMM, yyyy'
-                  )}`
-            }}
-          </UButton>
-
-          <template #panel="{ close }">
-            <div class="flex items-center gap-1">
-              <div class="hidden sm:flex flex-col py-4">
-                <UButton
-                  v-for="(range, index) in ranges"
-                  :key="index"
-                  :label="range.label"
-                  variant="outline"
-                  color="blue"
-                  :class="[
-                    isRangeSelected(range.duration)
-                      ? 'bg-gray-100 dark:bg-gray-800'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
-                  ]"
-                  truncate
-                  @click="selectRange(range.duration)" />
-              </div>
-
-              <DatePicker v-model="selectedDateRange" @close="close" />
+    <div
+      v-if="projectExports?.length > 0"
+    >
+      <UTable
+        :loading="loading"
+        :rows="projectExports"
+        :columns="columns"
+      >
+        <template #createdAt-data="{ row }">
+          <Spinner v-if="row.status === 'GENERATING'" />
+          <span v-if="row.status !== 'GENERATING'">
+            {{ prettyDate(row.createdAt) }}
+          </span>
+        </template>
+        <template #startDate-data="{ row }">
+          {{ prettyDate(row.startDate) }}
+        </template>
+        <template #endDate-data="{ row }">
+          {{ prettyDate(row.endDate) }}
+        </template>
+        <template #size-data="{ row }">
+          <span v-if="row.status !== 'GENERATING'">
+            {{ formatKb(row.size) }}
+          </span>
+        </template>
+        <template #actions-data="{ row }">
+          <div class="flex items-center justify-end relative gap-x-3">
+            <NuxtLink
+              v-if="row.status === 'DONE'"
+              class="opacity-100 mt-[2px] -mb-[2px]"
+              target="_blank"
+              :to="`/api/projects/${project.id}/exports/${row.id}/download`"
+            >
+              <UIcon name="i-mdi-arrow-collapse-down" class="cursor-pointer text-lg" />
+            </NuxtLink>
+            <Spinner class="w-[18px] !m-0" v-else-if="row.status === 'GENERATING'" />
+            <div
+              @click="() => handleDeleteExport(row)"
+            >
+              <Icon
+                name="i-heroicons-trash"
+                class="text-red-500 i-heroicons-trash text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
+              />
             </div>
-          </template>
-        </UPopover>
+          </div>
+        </template>
+        <template #user-data="{ row }">
+          <div class="">
+            {{  row.user.email }}
+          </div>
+        </template>
+      </UTable>
+      <div class="flex w-full mt-3 mb-3 justify-center">
+        <UPagination v-if="totalPages > 1" v-model="page" :total="totalExports" :max="8" :page-count="pageSize" />
       </div>
-
-      <div class="flex flex-col gap-2">
-        <p class="text-sm font-bold">Export type</p>
-        <div>
-          <NuxtLink @click.prevent="tryDownload('nvivo')">
-            <UButton
-              :disabled="downloading.includes('nvivo')"
-              :loading="downloading.includes('nvivo')"
-              icon="i-mdi-microsoft-excel"
-              variant="outline"
-              color="blue"
-              class="w-36"
-              >Spreadsheet</UButton
-            >
-          </NuxtLink>
-        </div>
-        <div>
-          <NuxtLink @click.prevent="tryDownload('media')">
-            <UButton
-              :disabled="downloading.includes('media')"
-              :loading="downloading.includes('media')"
-              icon="i-mdi-image-multiple-outline"
-              variant="outline"
-              color="blue"
-              class="w-36"
-              >Images</UButton
-            >
-          </NuxtLink>
-        </div>
-        <div>
-          <NuxtLink @click.prevent="tryDownload('uploads')">
-            <UButton
-              :disabled="downloading.includes('uploads')"
-              :loading="downloading.includes('uploads')"
-              icon="i-mdi-arrow-collapse-down"
-              variant="outline"
-              color="blue"
-              class="w-36"
-              >Uploads</UButton
-            >
-          </NuxtLink>
-        </div>
-      </div>
-
-      <div>{{ observationsCount }} obervations chosen</div>
     </div>
+    <div
+      class="text-sm italic text-gray-400 mb-6"
+      v-else-if="!loading"
+    >
+      No exports
+    </div>
+    <ProjectExportModal
+      :project="project"
+      :open="openNewExportModal"
+      :on-close="() => openNewExportModal = false"
+    />
   </UCard>
 </template>
 
 <script setup lang="ts">
-import { sub, format, isSameDay, type Duration } from 'date-fns';
 
+const openNewExportModal = ref(false);
 const props = defineProps({
   project: requireProjectProp,
 });
 
-onMounted(async () => {
-  observationsCount.value = await getObservationsCount();
-});
+const columns = [{
+  label: 'Created at',
+  key: 'createdAt',
+}, {
+  label: 'Type',
+  key: 'type',
+}, {
+  label: 'From',
+  key: 'startDate',
+}, {
+  label: 'To',
+  key: 'endDate',
+}, {
+  label: 'Size',
+  key: 'size',
+}, {
+  label: 'User',
+  key: 'user'
+}, {
+  label: '',
+  key: 'actions',
+}];
 
-const observationsCount = ref(0);
+await useUser();
 
-const selectedDateRange = ref({
-  start: new Date(props.project.createdAt),
-  end: new Date(),
-});
-const startDate = computed(() => {
-  return format(selectedDateRange.value.start, 'yyyy-MM-dd');
-});
-const endDate = computed(() => {
-  return format(selectedDateRange.value.end, 'yyyy-MM-dd');
-});
+const {
+  projectExports,
+  refreshProjectExports,
+  totalExports,
+  totalPages,
+  page,
+  pageSize,
+  deleteExport,
+  fetching,
+  exportsGenerating,
+  storageUsage,
+  storageLimit,
+  storageIsFull,
+} = await useProjectExports(props.project.id);
 
-const ranges = [
-  { label: 'Last 7 days', duration: { days: 7 } },
-  { label: 'Last 14 days', duration: { days: 14 } },
-  { label: 'Last 30 days', duration: { days: 30 } },
-  { label: 'Last 3 months', duration: { months: 3 } },
-  { label: 'Last 6 months', duration: { months: 6 } },
-  { label: 'Last year', duration: { years: 1 } },
-];
+const loading = computed(() => fetching.value);
 
-function isFullRangeSelected() {
-  return (
-    isSameDay(selectedDateRange.value.start, new Date(props.project.createdAt)) &&
-    isSameDay(selectedDateRange.value.end, new Date())
-  );
+// add notification for finished exports
+const generatingRefresher = ref<ReturnType<typeof setTimeout>>();
+const refreshGeneratingInterval = 3000;
+const refreshTimer = () => {
+  if (generatingRefresher.value) clearTimeout(generatingRefresher.value);
+  generatingRefresher.value = setTimeout(refreshProjectExports, refreshGeneratingInterval);
 }
 
-function isRangeSelected(duration: Duration) {
-  return (
-    isSameDay(selectedDateRange.value.start, sub(new Date(), duration)) &&
-    isSameDay(selectedDateRange.value.end, new Date())
-  );
-}
-
-async function selectRange(duration: Duration) {
-  selectedDateRange.value = { start: sub(new Date(), duration), end: new Date() };
-  observationsCount.value = await getObservationsCount();
-}
+// if generating exports, refetch again in 2 seconds
+watch(exportsGenerating, async () => {
+  if (exportsGenerating.value.length > 0) {
+    refreshTimer();
+  }
+}, { deep: true, immediate: true });
 
 const toast = useToast();
-const downloading = reactive<string[]>([]);
-const doneDownloading = (t: string) => {
-  var index = downloading.indexOf(t);
-  if (index !== -1) {
-    downloading.splice(index, 1);
+
+async function handleDeleteExport(projectExport: FullProjectExport) {
+  const ok = confirm('Are you sure you want to delete the file ?');
+  if (ok) {
+    await deleteExport(projectExport.id);
+    await refreshProjectExports();
+    toast.add({
+      title: `The export file was successfully deleted`,
+      color: 'green',
+      icon: 'i-heroicons-check'
+    });
   }
-};
-
-async function getObservationsCount(): Promise<number> {
-  const url = `/api/projects/${props.project.id}/observations/count?start_date=${startDate.value}&end_date=${endDate.value}`;
-  const res = await fetch(url);
-
-  return res.json();
 }
 
-async function tryDownload(t: string) {
-  const url = `/api/projects/${props.project.id}/export?type=${t}&?start_date=${startDate}&end_date=${endDate}`;
-  downloading.push(t);
-
-  fetch(url).then(async (res) => {
-    // if res is not 200 but it has json content type, raise whatever error was in response
-    if (res.status !== 200 && res.headers.get('content-type') === 'application/json') {
-      let msg = 'An error occured when downloading export';
-      try {
-        const json = await res.json();
-        const _msg = getErrMsg(json);
-        if (_msg) {
-          msg = _msg;
-        }
-        toast.add({
-          title: 'Export error',
-          description: msg,
-          icon: 'i-heroicons-exclamation-triangle',
-          color: 'red',
-        });
-      } catch (e) {
-        toast.add({
-          title: 'Export error',
-          description: msg,
-          icon: 'i-heroicons-exclamation-triangle',
-          color: 'red',
-        });
-      }
-
-      // if status was 200 and header was a kind of file, download it by using the famous hack
-    } else if (
-      (res.status === 200 &&
-        res.headers.get('content-type') === 'application/octet-stream') ||
-      res.headers.get('content-type')?.includes('spreadsheet')
-    ) {
-      const filename = res.headers
-        .get('content-disposition')
-        ?.replaceAll('"', '')
-        .replace('attachment; filename=', '');
-
-      // ensure filename could be extracted from header
-      if (!filename) {
-        toast.add({
-          title: 'Export error',
-          description: 'Server response was not understood',
-          icon: 'i-heroicons-exclamation-triangle',
-          color: 'red',
-        });
-      }
-
-      // famous hack
-      const blob = await res.blob();
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', filename!);
-      link.click();
-      URL.revokeObjectURL(link.href);
-
-      // show toast if response wasnt handled in if else block
-    } else {
-      toast.add({
-        title: 'Export error',
-        description: 'Server response was not understood',
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'red',
-      });
-    }
-
-    // tell the ui the downloading finished
-    doneDownloading(t);
-  });
-}
 </script>

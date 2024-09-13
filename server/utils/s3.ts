@@ -1,5 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ListObjectsCommand } from "@aws-sdk/client-s3";
+import { Upload } from '@aws-sdk/lib-storage';
 import fs from 'fs'
+import { PassThrough } from "stream";
 
 const config = useRuntimeConfig()?.app || {};
 
@@ -24,8 +26,8 @@ const s3 = new S3Client({
 
 
 // upload a file to configured s3
-export async function uploadS3File(key: string, filepath: string) {
-  const contents = fs.readFileSync(filepath);
+export async function uploadS3File(key: string, file: string | Buffer) {
+  const contents = typeof file === 'string' ? fs.readFileSync(file) : file;
 
   return s3.send(
     new PutObjectCommand({
@@ -47,8 +49,8 @@ export async function deleteS3Files(key: string) {
   )
 }
 
-export async function getS3Upload(key: string) {
-  const result = await s3.send(
+export function getS3Upload(key: string) {
+  const result = s3.send(
     new GetObjectCommand({
       Bucket: bucketName,
       Key: key,
@@ -58,8 +60,8 @@ export async function getS3Upload(key: string) {
   return result;
 }
 
-export async function listAllObjects(prefix: string) {
-  const result = await s3.send(
+export function listAllObjects(prefix: string) {
+  const result = s3.send(
     new ListObjectsCommand({
       Bucket: bucketName,
     }),
@@ -67,3 +69,22 @@ export async function listAllObjects(prefix: string) {
 
   return result;
 }
+
+export function archiverUploadPipe(
+  key: string
+): {
+  passThrough: PassThrough;
+  upload: Upload;
+} {
+  const passThrough = new PassThrough();
+  const upload = new Upload({
+    client: s3,
+    params: {
+      Bucket: bucketName,
+      Key: key,
+      Body: passThrough,
+    },
+  });
+  return { upload, passThrough };
+}
+

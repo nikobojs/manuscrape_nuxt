@@ -1,5 +1,7 @@
 import type {
   DynamicProjectField,
+  ExportType as _ExportType,
+  ExportStatus as _ExportStatus,
   FieldOperator,
   FieldType,
   FileUpload,
@@ -16,6 +18,7 @@ import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/i
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
+import { ExportProjectSchema } from '~/server/api/projects/[projectId]/exports/index.post';
 import type {
   exportProjectQuery,
   bigUserQuery,
@@ -44,9 +47,48 @@ declare global {
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
 
+  type FullProjectExport = {
+    id: number;
+    createdAt: Date;
+    projectId: number;
+    mimetype: string;
+    type: $Enums.ExportType;
+    observationsCount: number;
+    startDate: Date | null;
+    endDate: Date | null;
+    status: $Enums.ExportStatus;
+    user: {
+      id: number;
+      email: string;
+    } | null
+  }
+
   interface DynamicFieldsResponse {
     dynamicFields: FullDynamicProjectField[];
   }
+
+  interface ProjectExportsResponse {
+    projectExports: {
+      page: FullProjectExport[];
+      generating: FullProjectExport[];
+      total: number;
+    },
+    storageUsage: number;
+    storageLimit: number;
+  }
+
+  type ExportMeta = {
+    s3Path: string;
+    mimetype: string;
+    observationsCount: number;
+    size: number;
+  };
+
+  type ExportFn = (
+    event: H3Event,
+    projectId: number,
+    observationFilter: Prisma.ObservationWhereInput,
+  ) => Promise<ExportMeta>;
 
   interface ProjectFieldResponse extends Omit<ProjectField, "projectId"> {}
 
@@ -221,10 +263,17 @@ declare global {
     ownership: 'me' | 'everyone';
   }
 
-  export type ExportedProject = Prisma.ProjectGetPayload<{ select: typeof exportProjectQuery }>;
-  export type AllFieldColumns = Prisma.ProjectFieldGetPayload<{ select: typeof allFieldColumns }>;
-  export type AllDynamicFieldColumns = Prisma.DynamicProjectFieldGetPayload<{ select: typeof allDynamicFieldColumns }>;
-  export type FullObservationPayload = Prisma.ObservationGetPayload<{ select: typeof observationColumns }>;
+  type ExportStatus = unknown & _ExportStatus;
+  type ExportType = unknown & _ExportType;
+  type ExportProjectParams = {
+    startDate: Date;
+    endDate: Date;
+    exportType: ExportType;
+  }
 
-  export type ExportType = 'nvivo' | 'media' | 'uploads';
+  type ExportedProject = Prisma.ProjectGetPayload<{ select: typeof exportProjectQuery }>;
+  type AllFieldColumns = Prisma.ProjectFieldGetPayload<{ select: typeof allFieldColumns }>;
+  type AllDynamicFieldColumns = Prisma.DynamicProjectFieldGetPayload<{ select: typeof allDynamicFieldColumns }>;
+  type FullObservationPayload = Prisma.ObservationGetPayload<{ select: typeof observationColumns }>;
+  type ExportProjectPayload = InferType<typeof ExportProjectSchema>;
 }

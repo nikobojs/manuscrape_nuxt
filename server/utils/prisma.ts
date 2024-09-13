@@ -112,15 +112,6 @@ export const exportProjectQuery = {
       userId: true,
     }
   },
-  observations: {
-    select: observationColumns,
-    where: {
-      image: {
-        isNot: null,
-      },
-      isDraft: false,
-    },
-  },
   fields: {
     select: allFieldColumns,
     orderBy: [{
@@ -132,3 +123,23 @@ export const exportProjectQuery = {
       select: { observations: true }
   },
 } satisfies Prisma.ProjectSelect;
+
+export const projectExportQuery = {
+  id: true,
+  projectId: true,
+  type: true,
+  mimetype: true,
+  createdAt: true,
+  startDate: true,
+  endDate: true,
+  size: true,
+  status: true,
+  error: true,
+  observationsCount: true,
+  user: {
+    select: {
+      id: true,
+      email: true,
+    },
+  },
+} satisfies Prisma.ProjectExportSelect;

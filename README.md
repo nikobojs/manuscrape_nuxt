@@ -48,12 +48,16 @@ Use docker and docker-compose to get services up and running quickly. The curren
 - a postgres service called 'db' on port 5500
 - a MinIO service called 'minio' (s3 api-compatible storage)
 
-These services work with the related variables in `.env.example`. If you want to use external instances of MinIO and PostgreSQL, you can skip this step.
+These services work with the values in `.env.example`. If you want to use external instances of MinIO and PostgreSQL, you can skip this step.
 
 Run database and fileserver using docker-compose:
 
 ```bash
-docker-compose up
+docker-compose up -d
+```
+or
+```bash
+yarn docker-up
 ```
 
 #### 3. Create .env file

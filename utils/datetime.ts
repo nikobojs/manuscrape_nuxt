@@ -1,9 +1,12 @@
 export function prettyDate(
-  d: Date | string,
+  d: Date | string | null,
   includeTime = true
 ): string {
   if (typeof d === 'string') {
     d = new Date(d);
+  }
+  if (d === null) {
+    return '';
   }
   const twoDigits = (n: number): string => n < 10 && n > -1 ? '0' + n : '' + n;
   const year = twoDigits(d.getFullYear());

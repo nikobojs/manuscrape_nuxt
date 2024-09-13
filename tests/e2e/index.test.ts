@@ -16,3 +16,4 @@ export * from './deletion';
 export * from './collaborators';
 export * from './observations';
 export * from './dynamicFields';
+export * from './projectExports';

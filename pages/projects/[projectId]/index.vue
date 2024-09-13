@@ -23,11 +23,11 @@
       <div class="mt-6">
         <CollaboratorWidget v-if="isOwner" :project="project" />
       </div>
-      <div class="grid grid-cols-3 gap-6 mt-6" v-if="isOwner">
+      <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
         <div>
           <ProjectExportWidget :project="project" />
         </div>
-        <div class="col-span-2">
+        <div class="col-span-1">
           <ProjectDynamicFieldWidget :project="project" />
         </div>
       </div>

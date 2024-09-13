@@ -53,15 +53,17 @@ async function ensureDbConnected(nitro: NitroApp) {
     ]);
 
     console.info("> connected to db");
-  } catch (e: any) {
+  } catch {
     // Log detailed error information
-    console.error("Error during database connection check:", e.message);
-    console.error("Detailed error:", e);
     console.error(
       "Unable to connect to database... Please verify your postgres setup and env variables"
     );
-    nitro.hooks.callHook("close");
-    process.exit(1);
+
+    // hack to fix logs being hiddenm
+    setTimeout(() => {
+      nitro.hooks.callHook("close");
+      process.exit(1);
+    }, 100)
   }
 }
 

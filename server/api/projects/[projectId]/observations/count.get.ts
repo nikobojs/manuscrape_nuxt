@@ -1,10 +1,5 @@
 import { ensureProjectAccess } from "~/server/utils/projectAccess";
-import * as yup from 'yup';
-
-export const GetObservationsCountSchema = yup.object({
-  start_date: yup.string().required(),
-  end_date: yup.string().required(),
-}).required();
+import { ExportProjectSchema } from "../exports/index.post";
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -15,10 +10,12 @@ export default safeResponseHandler(async (event) => {
   await ensureProjectAccess(event.context.user.id, projectId)
 
   const queryParams = getQuery(event)
-  const { start_date, end_date } = await GetObservationsCountSchema.validate(queryParams)
 
-  const start = new Date(start_date); 
-  const end = new Date(end_date);
+  // NOTE: Using ExportProjectSchema imported from other route. Schemas need seperation from routes ?
+  const { startDate, endDate } = await ExportProjectSchema.validate(queryParams)
+
+  const start = new Date(startDate); 
+  const end = new Date(endDate);
 
   const count = await prisma.observation.count({
     where: {

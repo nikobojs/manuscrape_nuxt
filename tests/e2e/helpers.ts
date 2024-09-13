@@ -372,6 +372,35 @@ export async function inviteToProject(token: string, projectId: number, body: an
   return res;
 }
 
+export async function exportProject(token: string, projectId: number, query: any) {
+  console.log('sending query', query)
+  const res = await fetch(
+    `/api/projects/${projectId}/exports?${new URLSearchParams(query)}`,
+    {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+export async function getExports(token: string, projectId: number | string): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/exports`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export const testProject: NewProjectBody = {
   name: 'Temporary test project',
   fields: [
@@ -488,6 +517,7 @@ export async function withTempProject(
   email: string | undefined = undefined,
   password: string = defaultPassword,
   projectOptions?: Record<string, any>,
+  createObservations = true,
 ): Promise<void> {
   // if email is not defined, set it to some new unique email
   if (email === undefined) {
@@ -517,23 +547,27 @@ export async function withTempProject(
   expect(projectJson.id).toBeTypeOf('number');
 
   // create all test observations
-  for(const testObs of testObservations) {
-    const obsRes = await createObservation(json.token, projectJson.id)
-    expect(obsRes.status).toBe(201);
-    const obs = await obsRes.json();
-    expect(obs?.id).toBeTypeOf('number');
-    const patchRes = await patchObservation(json.token, projectJson.id, obs.id, testObs);
-    expect(patchRes.status).toBe(200);
+  let observations = [];
+  if (createObservations) {
+    console.log('CREATING OBSERVATIONS')
+    for(const testObs of testObservations) {
+      const obsRes = await createObservation(json.token, projectJson.id)
+      expect(obsRes.status).toBe(201);
+      const obs = await obsRes.json();
+      expect(obs?.id).toBeTypeOf('number');
+      const patchRes = await patchObservation(json.token, projectJson.id, obs.id, testObs);
+      expect(patchRes.status).toBe(200);
+    }
+
+    // get all observations in project and test responses
+    const observationRes = await getObservations(json.token, projectJson.id);
+    expect(observationRes.status).toBe(200);
+    const observationsJson = await observationRes.json();
+    expect(observationsJson).toHaveProperty('observations')
+    expect(Array.isArray(observationsJson.observations)).toBe(true)
+    expect(observationsJson.observations.length).toBe(testObservations.length)
+    observations = observationsJson.observations;
   }
-
-  // get all observations in project and test responses
-  const observationRes = await getObservations(json.token, projectJson.id);
-  expect(observationRes.status).toBe(200);
-  const observations = await observationRes.json();
-  expect(observations).toHaveProperty('observations')
-  expect(Array.isArray(observations.observations)).toBe(true)
-  expect(observations.observations.length).toBe(testObservations.length)
-
   // fetch the current user, and check the project is available
   const userRes = await getMe(json.token);
   expect(userRes.status).toBe(200);
@@ -545,5 +579,7 @@ export async function withTempProject(
   expect(project.id).toBe(projectJson.id);
 
   // call the callback function with the new user and a fresh token
-  await callback(user, project, observations.observations, json.token);
+  await callback(user, project, observations, json.token);
 }
+
+export const delay = (ms: number) => new Promise(ok => setTimeout(ok, ms));

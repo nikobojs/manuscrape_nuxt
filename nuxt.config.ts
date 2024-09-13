@@ -51,10 +51,10 @@ export default defineNuxtConfig({
       sentryEnv: process.env.SENTRY_ENV || 'development',
     }
   },
-
+  
   colorMode: {
     preference: 'dark',
   },
 
-  compatibilityDate: '2024-07-11',
+  compatibilityDate: '2024-07-22',
 });
