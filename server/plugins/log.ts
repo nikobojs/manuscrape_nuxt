@@ -13,6 +13,8 @@ export default defineNitroPlugin((nitro) => {
     const diff = now - event.context.requestBegin;
     const status = getResponseStatus(event)
     const statusMsg = getResponseStatusText(event)
+    const headers = getResponseHeaders(event);
+    const contentType = headers['content-type'] || headers['Content-Type'];
     let log = [
       `[${new Date().toISOString()}]`,
       event.req.method,
@@ -20,6 +22,7 @@ export default defineNitroPlugin((nitro) => {
       '->',
       status,
       statusMsg,
+      contentType,
       `(${diff}ms)`,
     ];
 
