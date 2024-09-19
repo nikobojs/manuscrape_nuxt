@@ -16,7 +16,8 @@ export default safeResponseHandler(async (event) => {
   const projectExport = await prisma.projectExport.findUnique({
     where: { id: exportId, projectId },
     select: {
-      s3Path: true,
+      filePath: true,
+      isS3: true,
       status: true,
       mimetype: true,
       type: true,
@@ -31,16 +32,11 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  // if project export has s3Path, there is most likely a file there
+  // if project export has filePath, there is most likely a file there
   // that needs to be deleted
-  if (projectExport.s3Path) {
-    const fileToDelete = projectExport.s3Path;
-    const deleteRes = await deleteS3Files(fileToDelete)
-    if (deleteRes.$metadata.httpStatusCode !== 204) {
-      const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
-      captureException(err);
-      console.error(err)
-    }
+  if (projectExport.filePath) {
+    const fileToDelete = projectExport.filePath;
+    await deleteFiles(fileToDelete, projectExport.isS3);
   }
 
   // delete the db entry

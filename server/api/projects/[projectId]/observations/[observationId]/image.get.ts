@@ -8,7 +8,9 @@ export default safeResponseHandler(async (event) => {
       id: true,
       image: {
         select: {
-          s3Path: true,
+          filePath: true,
+          isS3: true,
+          mimetype: true,
         }
       }
     },
@@ -24,21 +26,17 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  if (typeof observation.image?.s3Path !== 'string') {
+  if (typeof observation.image?.filePath !== 'string') {
     throw createError({
       statusCode: 400,
       statusMessage: 'Observation has no image',
     })
   }
 
-  const res = await getS3Upload(observation.image.s3Path);
+  const res = await getUpload(observation.image.filePath, observation.image.isS3);
+  setHeader(event, 'Content-Type', observation.image.mimetype);
+  // NOTE: this assumes that all images routes uses version query params for cache
+  setHeader(event, 'Cache-Control', 'max-age=31536000'); // one year cache
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Observation image not found',
-    })
-  }
-  
-  return res.Body;
+  return res;
 });

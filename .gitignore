@@ -24,3 +24,6 @@ logs
 *.dump
 
 *.code-workspace
+
+# Default user upload path
+.uploads

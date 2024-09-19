@@ -1,6 +1,7 @@
 import { ExportStatus, ExportType, ProjectRole } from '@prisma/client';
 import * as yup from 'yup';
 import { createEmptyProjectExport, exportErrored } from '~/server/utils/export';
+import { canUseS3 } from '~/server/utils/fileUpload';
 
 export const ExportProjectSchema = yup.object({
   type: yup.mixed<ExportType>().oneOf(
@@ -85,6 +86,7 @@ export default safeResponseHandler(async (event) => {
     filename,
     exportSettings,
     count,
+    canUseS3(),
   );
 
   // begin generating file while responding to user early

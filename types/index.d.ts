@@ -37,10 +37,10 @@ declare global {
     project: Omit<Omit<FullProject, 'observations'>, 'authorId'>;
   }
 
-  type FileUploadResponse = Omit<FileUpload, "s3Path">;
+  type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
 
   interface FullObservation extends Omit<Omit<Observation, 'userId'>, 'projectId'> {
-    image: Omit<ImageUpload, 's3Path'> | null;
+    image: Omit<Omit<ImageUpload, 'filePath'>, 'isS3'> | null;
     fileUploads: Omit<FileUploadResponse, 'observationId'>[];
     user: { email: string; id?: number } | null;
   }
@@ -78,7 +78,8 @@ declare global {
   }
 
   type ExportMeta = {
-    s3Path: string;
+    filePath: string;
+    isS3: boolean;
     mimetype: string;
     observationsCount: number;
     size: number;
@@ -103,7 +104,7 @@ declare global {
     }
   }
 
-  interface FullImage extends Omit<ImageUpload, "s3Path"> {}
+  interface FullImage extends Omit<Omit<ImageUpload, "filePath">, "isS3"> {}
 
   type NewDynamicField = {
     label: string;
@@ -225,7 +226,7 @@ declare global {
     };
   }
 
-  type NewProjectFieldDraft = Omit<NewProjectField, 'type'> & {
+  type NewProjectFieldDraft = Omit<Omit<NewProjectField, 'type'>, 'index'> & {
     type: FieldType | undefined,
   }
 

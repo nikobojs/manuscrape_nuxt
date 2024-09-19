@@ -18,7 +18,8 @@ export default safeResponseHandler(async (event) => {
       projectId
     },
     select: {
-      s3Path: true,
+      filePath: true,
+      isS3: true,
       status: true,
       mimetype: true,
       type: true,
@@ -31,7 +32,7 @@ export default safeResponseHandler(async (event) => {
       statusMessage: 'Project export was not found',
     })
   }
-  if (exportIsDownloadable(projectExport)) {
+  if (!exportIsDownloadable(projectExport)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Project export is not ready for download yet',
@@ -39,18 +40,11 @@ export default safeResponseHandler(async (event) => {
   }
 
   // set http header that fixes control over the download filename
-  const filename = projectExport.s3Path!.split('/').reverse()[0];
+  const filename = projectExport.filePath!.split('/').reverse()[0];
   setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`);
   setHeader(event, 'Content-Type', projectExport.mimetype);
 
   // fetch export from s3 and return it
-  const res = await getS3Upload(projectExport.s3Path!);
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Observation image not found',
-    })
-  }
-  
-  return res.Body;
+  const res = await getUpload(projectExport.filePath, projectExport.isS3);
+  return res;
 });

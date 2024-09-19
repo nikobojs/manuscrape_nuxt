@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3';
-import { Observation, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { ExportStatus, ExportType } from '@prisma/client';
 
 export async function generateProjectExport(
@@ -46,20 +46,22 @@ export async function generateProjectExport(
 export async function createEmptyProjectExport(
   projectId: number,
   userId: number,
-  s3Path: string,
+  filePath: string,
   settings: ExportProjectPayload,
   observationsCount: number,
+  isS3: boolean,
 ): Promise<{id: number}> {
   const res = await prisma.projectExport.create({
     data: {
       userId,
       projectId,
       type: settings.type,
-      ...(settings.startDate ? {startDate: new Date(settings.startDate).toISOString()} : {}),
-      ...(settings.endDate ? {endDate: new Date(settings.endDate).toISOString()} : {}),
+      startDate: new Date(settings.startDate).toISOString(),
+      endDate: new Date(settings.endDate).toISOString(),
       status: ExportStatus.GENERATING,
       mimetype: '',
-      s3Path,
+      filePath,
+      isS3,
       observationsCount,
       size: 0,
     },

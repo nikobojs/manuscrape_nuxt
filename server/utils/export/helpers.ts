@@ -29,13 +29,13 @@ export function generateFilename(
 export function exportIsDownloadable(
   projectExport: {
     status: ExportStatus;
-    s3Path: string | null;
+    filePath: string | null;
     error: string | null;
   }
 ): boolean {
   return !!(
-    projectExport.status !== ExportStatus.DONE
-    || !projectExport.s3Path
-    || projectExport.error
+    projectExport.status === ExportStatus.DONE &&
+    projectExport.filePath &&
+    !projectExport.error
   );
 }

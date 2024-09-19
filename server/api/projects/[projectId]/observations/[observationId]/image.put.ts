@@ -1,6 +1,7 @@
 
 import { captureException } from '@sentry/node';
 import formidable from 'formidable';
+import { canUseS3 } from '~/server/utils/fileUpload';
 
 const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 const config = useRuntimeConfig();
@@ -102,24 +103,17 @@ export default safeResponseHandler(async (event) => {
     _ => randomAlphabet[Math.floor(Math.random() * randomAlphabet.length)]
   ).join('');
 
-  // upload to s3
+  // upload file
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
-  const res = await uploadS3File(newS3Path, file.filepath);
-  if (res.$metadata.httpStatusCode !== 200) {
-    const err = createError({
-      statusCode: res.$metadata.httpStatusCode,
-      statusMessage: 'Unable to delete existing image'
-    });
-    captureException(err);
-    throw err;
-  }
+  await uploadFile(newS3Path, file.filepath, canUseS3());
 
   // create new ImageUpload row
   const newImageUpload = await prisma.imageUpload.create({
     data: {
       mimetype: file.mimetype,
       originalName: file.originalFilename,
-      s3Path: `${newS3Path}`,
+      filePath: `${newS3Path}`,
+      isS3: canUseS3(),
     }
   })
 
@@ -138,7 +132,8 @@ export default safeResponseHandler(async (event) => {
     // delete existing ImageUpload row
     const deletedImage = await prisma.imageUpload.delete({
       select: {
-        s3Path: true,
+        filePath: true,
+        isS3: true,
       },
       where: {
         id: existingImageId,
@@ -147,15 +142,7 @@ export default safeResponseHandler(async (event) => {
 
     // remove existing images on this observation in s3
     try {
-      const deleteRes = await deleteS3Files(deletedImage.s3Path)
-      if (deleteRes.$metadata.httpStatusCode !== 204) {
-        const err = createError({
-          statusCode: deleteRes.$metadata.httpStatusCode,
-          statusMessage: 'Unable to delete existing image'
-        });
-        captureException(err);
-        throw err;
-      }
+      await deleteFiles(deletedImage.filePath, deletedImage.isS3)
     } catch(e: any) {
       // if unable to delete file, handle errors silently
       captureException(e);

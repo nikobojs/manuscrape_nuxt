@@ -3,6 +3,7 @@ import { calculateDynamicFieldValue } from '../dynamicFields';
 import { captureException } from '@sentry/node';
 import type { H3Event } from 'h3';
 import { ExportType, Prisma } from '@prisma/client';
+import { canUseS3 } from '../fileUpload';
 
 function generateObservationRow(
   obs: FullObservationPayload,
@@ -192,21 +193,14 @@ export const generateNvivoExport: ExportFn = async (
   const buffer = await wb.xlsx.writeBuffer();
 
   // upload excel file to s3
-  const newS3Path = generateFilename(projectId, ExportType.NVIVO);
-  const res = await uploadS3File(newS3Path, Buffer.from(buffer));
-  if (res.$metadata.httpStatusCode !== 200) {
-    const err = createError({
-      statusCode: res.$metadata.httpStatusCode,
-      statusMessage: 'Unable to save the exported file on the server. The file will be dropped',
-    });
-    captureException(err);
-    throw err;
-  }
+  const newPath = generateFilename(projectId, ExportType.NVIVO);
+  await uploadFile(newPath, Buffer.from(buffer), canUseS3());
 
   // const mimetype = 'application/vnd.ms-excel';
   const mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   return {
-    s3Path: newS3Path,
+    filePath: newPath,
+    isS3: canUseS3(),
     mimetype,
     observationsCount: observations.length,
     size: buffer.byteLength,

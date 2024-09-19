@@ -37,12 +37,14 @@ export default safeResponseHandler(async (event) => {
       userId: true,
       fileUploads: {
         select: {
-          s3Path: true,
+          filePath: true,
+          isS3: true,
         }
       },
       image: {
         select: {
-          s3Path: true,
+          filePath: true,
+          isS3: true,
         }
       }
     },
@@ -79,23 +81,13 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // retrieve a list of all files to be deleted
-  const filesToDelete = [
-    ...observation.fileUploads.map((f) => f.s3Path), // all file uploads
-    ...(observation.image?.s3Path ? [observation.image.s3Path] : []), // uploaded image, if any
-  ];
+  const filesToDelete = [...observation.fileUploads];
+  if (observation.image?.filePath) filesToDelete.push(observation.image);
 
   // delete all the files from s3 in the array (skips if empty)
   for (const fileToDelete of filesToDelete) {
     try {
-      const deleteRes = await deleteS3Files(fileToDelete)
-      if (deleteRes.$metadata.httpStatusCode !== 204) {
-        const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
-        captureException(err);
-        console.error(err)
-      } else {
-        console.info('deleted file', fileToDelete)
-      }
+      await deleteFiles(fileToDelete.filePath, fileToDelete.isS3);
     } catch(e: any) {
       // if unable to delete file, handle errors silently
       const err = new Error(`Unable to delete observation draft file '${fileToDelete}'`);
@@ -108,7 +100,6 @@ export default safeResponseHandler(async (event) => {
   await prisma.observation.delete({
     where: { id: observationId },
   });
-
 
   // return response
   // TODO: set better response status code (don't forget response handling in frontend)

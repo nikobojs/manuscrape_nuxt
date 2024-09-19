@@ -1,3 +1,6 @@
+import { captureException } from "@sentry/vue";
+
+// TODO: improve export error handling UX
 export const useProjectExports = async (projectId: number) => {
   const projectExports = useState<FullProjectExport[]>('projectExports', () => []);
   const page = useState<number>(() => 1);
@@ -58,10 +61,9 @@ export const useProjectExports = async (projectId: number) => {
             projectExports.value = [];
             await navigateTo('/login', { replace: true });
           } else {
-            // TODO: report error
             // TODO: save error in state and render for the client
             const data = context.response._data
-            console.log('GOT AN ERROR :(', { context, data });
+            captureException(new Error('Export failure'), { data: { response: context.response }});
           }
         },
       }
@@ -88,6 +90,7 @@ export const useProjectExports = async (projectId: number) => {
     const json = res;
     if (typeof json !== 'number') {
       // TODO: capture error!
+      // TODO: improve endpoint to return actual json
       console.error('Response is not a number!')
       console.log(json);
       return null;

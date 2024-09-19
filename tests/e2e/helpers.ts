@@ -373,7 +373,6 @@ export async function inviteToProject(token: string, projectId: number, body: an
 }
 
 export async function exportProject(token: string, projectId: number, query: any) {
-  console.log('sending query', query)
   const res = await fetch(
     `/api/projects/${projectId}/exports?${new URLSearchParams(query)}`,
     {
@@ -549,7 +548,6 @@ export async function withTempProject(
   // create all test observations
   let observations = [];
   if (createObservations) {
-    console.log('CREATING OBSERVATIONS')
     for(const testObs of testObservations) {
       const obsRes = await createObservation(json.token, projectJson.id)
       expect(obsRes.status).toBe(201);

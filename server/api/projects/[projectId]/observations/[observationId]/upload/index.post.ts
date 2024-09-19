@@ -136,22 +136,18 @@ export default safeResponseHandler(async (event) => {
   ).join('');
 
   // upload to s3
-  const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
-  const res = await uploadS3File(newS3Path, file.filepath);
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw createError({
-      statusCode: res.$metadata.httpStatusCode,
-      statusMessage: 'Unable to delete existing image'
-    });
-  }
+  const newPath = `observations/${observationId}/${randomStr}${extension}`;
+  const uploadOnS3 = canUseS3();
+  await uploadFile(newPath, file.filepath, uploadOnS3);
 
-  // create new ImageUpload row
+  // create new FileUpload row
   await prisma.fileUpload.create({
     data: {
       observationId: observationId,
       mimetype: file.mimetype,
       originalName: file.originalFilename,
-      s3Path: `${newS3Path}`,
+      filePath: `${newPath}`,
+      isS3: uploadOnS3,
     }
   })
 

@@ -147,7 +147,8 @@ model Observation {
 model FileUpload {
   id                           Int                    @id @default(autoincrement())
   createdAt                    DateTime               @default(now()) @db.Timestamp(6)
-  s3Path                       String                 @unique
+  isS3                         Boolean
+  filePath                     String                 @unique
   mimetype                     String
   originalName                 String
   observationId                Int
@@ -157,7 +158,8 @@ model FileUpload {
 model ImageUpload {
   id                           Int                    @id @default(autoincrement())
   createdAt                    DateTime               @default(now()) @db.Timestamp(6)
-  s3Path                       String                 @unique
+  isS3                         Boolean
+  filePath                     String                 @unique
   mimetype                     String
   originalName                 String
   observation                  Observation?
@@ -169,7 +171,8 @@ model ProjectExport {
   startDate                    DateTime
   endDate                      DateTime
   observationsCount            Int
-  s3Path                       String?
+  isS3                         Boolean
+  filePath                     String                 @unique
   type                         ExportType
   status                       ExportStatus
   mimetype                     String

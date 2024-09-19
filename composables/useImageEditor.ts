@@ -84,15 +84,13 @@ export function useImageEditor(
   }
 
   const image = computed(() => {
-    const d = lastReload.value;
-
     if (typeof observationId !== "number" || typeof projectId !== "number") {
       throw new Error("Props are not defined correctly");
     }
 
     const bg = new Image();
     bg.src =
-      `/api/projects/${projectId}/observations/${observationId}/image?v=${d.getTime()}`;
+      `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
     bg.addEventListener("load", () => {
       if (canvas.value && context.value) {
         aspectRatio.value = bg.height / bg.width;
@@ -138,7 +136,7 @@ export function useImageEditor(
     window.requestAnimationFrame(() => {
       const bg = new Image();
       bg.src =
-        `/api/projects/${projectId}/observations/${observationId}/image?v=${new Date()}`;
+        `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
       bg.addEventListener("load", () => {
         if (canvas.value && context.value) {
           aspectRatio.value = bg.height / bg.width;

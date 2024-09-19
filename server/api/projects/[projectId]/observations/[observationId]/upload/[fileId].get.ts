@@ -10,7 +10,8 @@ export default safeResponseHandler(async (event) => {
       id: true,
       originalName: true,
       observationId: true,
-      s3Path: true,
+      filePath: true,
+      isS3: true,
     },
     where: {
       id: fileId,
@@ -24,22 +25,23 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  if (typeof file?.s3Path !== 'string') {
+  if (typeof file?.filePath !== 'string') {
     throw createError({
       statusCode: 400,
       statusMessage: 'File wasn\'t uploaded correctly',
     })
   }
 
-  const res = await getS3Upload(file.s3Path);
+  const res = await getUpload(file.filePath, file.isS3);
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'File not found',
-    })
-  }
+  // if (res.$metadata.httpStatusCode !== 200) {
+  //   throw createError({
+  //     statusCode: 404,
+  //     statusMessage: 'File not found',
+  //   })
+  // }
   
   setHeader(event, 'Content-Disposition', `inline; filename="${file.originalName}"`)
-  return res.Body;
+  // return res.Body;
+  return res;
 });

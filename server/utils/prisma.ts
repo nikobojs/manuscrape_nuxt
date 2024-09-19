@@ -69,6 +69,7 @@ export const allDynamicFieldColumns = {
 export const smallProjectQuery = {
   id: true,
   createdAt: true,
+  storageLimit: true,
   name: true,
   fields: {
     select: allFieldColumns,
@@ -106,6 +107,7 @@ export const exportProjectQuery = {
   id: true,
   createdAt: true,
   name: true,
+  storageLimit: true,
   contributors: {
     select: {
       nameInProject: true,

@@ -6,6 +6,6 @@ export default defineAppConfig({
     },
     modal: {
       base: 'relative text-left rtl:text-right overflow-visible w-full flex flex-col',
-    }
+    },
   }
 })

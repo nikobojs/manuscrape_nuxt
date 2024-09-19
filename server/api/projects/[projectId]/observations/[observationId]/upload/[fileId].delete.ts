@@ -11,7 +11,8 @@ export default safeResponseHandler(async (event) => {
       id: true,
       originalName: true,
       observationId: true,
-      s3Path: true,
+      filePath: true,
+      isS3: true,
     },
     where: {
       id: fileId,
@@ -25,7 +26,7 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  if (typeof file?.s3Path !== 'string') {
+  if (typeof file?.filePath !== 'string') {
     throw createError({
       statusCode: 400,
       statusMessage: 'File wasn\'t uploaded correctly',
@@ -65,18 +66,11 @@ export default safeResponseHandler(async (event) => {
   // delete the file from s3
   let res;
   try {
-    res = await deleteS3Files(file.s3Path);
+    res = await deleteFiles(file.filePath, file.isS3);
   } catch(e: any) {
     throw createError({
       statusCode: 500,
       statusMessage: e.message,
-    })
-  }
-
-  if (res.$metadata.httpStatusCode !== 204) {
-    throw createError({
-      statusCode: res.$metadata.httpStatusCode,
-      statusMessage: 'File could not be deleted',
     })
   }
 

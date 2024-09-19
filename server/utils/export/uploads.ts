@@ -4,6 +4,7 @@ import { Readable } from 'node:stream';
 import type { ReadableStream } from 'node:stream/web';
 import { generateFilename } from './helpers';
 import { ExportType, Prisma } from '@prisma/client';
+import { canUseS3 } from '../fileUpload';
 
 
 
@@ -44,7 +45,8 @@ export const generateProjectUploadsExport: ExportFn = async (
     where: { observationId: { in: observationIds }},
     select: {
       id: true,
-      s3Path: true,
+      filePath: true,
+      isS3: true,
       mimetype: true,
       originalName: true,
       observationId: true,
@@ -56,9 +58,6 @@ export const generateProjectUploadsExport: ExportFn = async (
     zlib: { level: 9 } // Sets the compression level.
   });
 
-  archive.on("end", function () {
-    console.log("archive end!", newS3Path)
-  });
   archive.on("error", function (err) {
     throw err;
   });
@@ -66,17 +65,10 @@ export const generateProjectUploadsExport: ExportFn = async (
     console.warn(warn);
   });
 
-  archive.on('data', () => {
-    console.log('GOT DATA IN PIPE')
-  })
-
   // pipe to s3
   const newS3Path = generateFilename(projectId, ExportType.UPLOADS);
-  const { upload, passThrough } = archiverUploadPipe(newS3Path);
+  const { upload, passThrough } = archiverUploadPipe(newS3Path, canUseS3());
   archive.pipe(passThrough);
-  archive.on('finish', () => {
-    console.log('ARCHIVE FINISHED!')
-  })
 
   const obsFileCounts: Record<number, number> = {};
 
@@ -90,13 +82,9 @@ export const generateProjectUploadsExport: ExportFn = async (
   
   const downloads: Promise<any>[] = [];
   for (const upload of fileUploads) {
-    if (!upload?.s3Path) continue;
+    if (!upload?.filePath) continue;
     // add filedownload as promise to downloads[]
-    const download = getS3Upload(upload.s3Path).then((res) => {
-      if (res.$metadata.httpStatusCode !== 200 || !res.Body) {
-        return;
-      }
-
+    const download = getUpload(upload.filePath, canUseS3()).then((readable) => {
       // get fileExtension
       let filenameDotSplit = upload.originalName.split('.').reverse();
       let fileEnding = '';
@@ -108,14 +96,10 @@ export const generateProjectUploadsExport: ExportFn = async (
       } else {
         obsFileCounts[upload.observationId]++;
       }
-
       // add upload counter (there might be more for each observation)
       const count = `.${obsFileCounts[upload.observationId]}`;
 
-      // create and start stream;
-      const _stream = res.Body.transformToWebStream();
-      const stream = Readable.fromWeb(_stream as ReadableStream<any>)
-      archive.append(stream, { name: upload.observationId + count + fileEnding })
+      archive.append(readable, { name: upload.observationId + count + fileEnding });
     });
 
     // add ongoing download promise to an array (so we can wait for all to finish)
@@ -130,7 +114,8 @@ export const generateProjectUploadsExport: ExportFn = async (
   const size = archive.pointer();
 
   return {
-    s3Path: newS3Path,
+    filePath: newS3Path,
+    isS3: canUseS3(),
     mimetype: 'application/zip',
     observationsCount: observationIds.length,
     size,

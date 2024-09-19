@@ -54,7 +54,7 @@
             <div
               @click="() => handleDeleteExport(row)"
             >
-              <Icon
+              <UIcon
                 name="i-heroicons-trash"
                 class="text-red-500 i-heroicons-trash text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
               />
@@ -63,7 +63,7 @@
         </template>
         <template #user-data="{ row }">
           <div class="">
-            {{  row.user.email }}
+            {{  row.user?.email || '<REMOVED>' }}
           </div>
         </template>
       </UTable>
