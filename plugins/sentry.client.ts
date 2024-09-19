@@ -14,18 +14,16 @@ export default defineNuxtPlugin((nuxtApp) => {
   if (!['development', 'production'].includes(config?.sentryEnv)) {
     throw new Error('Sentry environment must be either development or production');
   }
-
+  
   // Initialize Sentry
   Sentry.init({
     dsn: config.sentryDsn,
     environment: config.sentryEnv,
     app: nuxtApp.vueApp,
     integrations: [
-      new Sentry.BrowserTracing({
-        routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      }),
+      Sentry.browserTracingIntegration({ router }),
     ],
-    tracesSampleRate: 0.2,
+    tracesSampleRate: 1.0,
     attachProps: true,
   });
 
