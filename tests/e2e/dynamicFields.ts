@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { createDynamicField, withTempProject } from './helpers';
-import { FieldType } from '@prisma/client';
+import { FieldType } from '@prisma-postgres/client';
 
 describe('Dynamic project fields', async () => {
   test('can create dynamic field (datetime/datetime difference)', async () => {

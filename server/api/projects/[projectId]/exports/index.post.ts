@@ -1,4 +1,4 @@
-import { ExportStatus, ExportType, ProjectRole } from '@prisma/client';
+import { ExportStatus, ExportType, ProjectRole } from '@prisma-postgres/client';
 import * as yup from 'yup';
 import { createEmptyProjectExport, exportErrored } from '~/server/utils/export';
 import { canUseS3 } from '~/server/utils/fileUpload';
@@ -16,7 +16,7 @@ export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
   // get project id from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);
-  const project = await prisma.project.findUnique({
+  const project = await db.project.findUnique({
     select: {
       id: true,
       storageLimit: true,
@@ -34,7 +34,7 @@ export default safeResponseHandler(async (event) => {
   }
   
   // fetch existing exports for calculating storage usage
-  const existingExports = await prisma.projectExport.findMany({
+  const existingExports = await db.projectExport.findMany({
     where: {
       projectId,
       NOT: {
@@ -60,9 +60,22 @@ export default safeResponseHandler(async (event) => {
   // verify there are any observations in this export
   const start = new Date(exportSettings.startDate); 
   const end = new Date(exportSettings.endDate);
-  const count = await prisma.observation.count({
+  const observations = await db.observation.findMany({
+    select: {
+      fileUploads: {
+        select: {
+          id: true,
+        }
+      },
+      image: {
+        select: {
+          id: true,
+        }
+      }
+    },
     where: {
       AND: [
+        { isDraft: { equals: false }},
         { projectId: { equals: projectId }},
         { createdAt: { gte: start } },
         { createdAt: { lte: end } }
@@ -71,11 +84,32 @@ export default safeResponseHandler(async (event) => {
   });
 
   // ensure there will be any observations in this export
-  if (count === 0) {
+  if (observations.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: 'There are no observations in this project within the given time interval',
     });
+  }
+
+  if (exportSettings.type === ExportType.UPLOADS) {
+    const files = observations.map(o => o.fileUploads).flat();
+    if (files.length === 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'There are no uploaded files to export',
+      });
+    }
+  }
+
+  // validate there are images to export
+  if (exportSettings.type === ExportType.MEDIA) {
+    const observationImages = observations.map(o => o.image).flat();
+    if (observationImages.length === 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'There are no observation images to export',
+      });
+    }
   }
 
   // create empty export file record
@@ -85,7 +119,7 @@ export default safeResponseHandler(async (event) => {
     user.id,
     filename,
     exportSettings,
-    count,
+    observations.length,
     canUseS3(),
   );
 

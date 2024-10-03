@@ -1,6 +1,6 @@
 import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../../utils/authorize';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { captureException } from '@sentry/node';
 import * as yup from 'yup';
 
@@ -18,7 +18,7 @@ export default safeResponseHandler(async (event) => {
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
   // find project and field based on params
-  const field = await prisma.projectField.findFirst({
+  const field = await db.projectField.findFirst({
     where: { projectId, id: fieldId },
     select: {
       id: true,
@@ -43,7 +43,7 @@ export default safeResponseHandler(async (event) => {
   const patch = await MoveProjectFieldSchema.validate(body);
 
   // find all fields in project
-  const fields = await prisma.projectField.findMany({
+  const fields = await db.projectField.findMany({
     where: { projectId },
     select: {
       id: true,

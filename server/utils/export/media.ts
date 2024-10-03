@@ -1,9 +1,7 @@
 import type { H3Event } from 'h3';
 import archiver from 'archiver'
-import { Readable } from 'node:stream';
-import type { ReadableStream } from 'node:stream/web';
 import { generateFilename } from './helpers';
-import { ExportType, Prisma } from '@prisma/client';
+import { ExportType, Prisma } from '@prisma-postgres/client';
 import { canUseS3 } from '../fileUpload';
 
 const archiverOptions: archiver.ArchiverOptions = {
@@ -22,7 +20,7 @@ export const generateProjectMediaExport: ExportFn = async (
   observationFilter: Prisma.ObservationWhereInput,
 ) => {
   // get project by projectId
-  const project: ExportedProject | null = await prisma.project.findUnique({
+  const project: ExportedProject | null = await db.project.findUnique({
     where: {
       id: projectId
     },
@@ -38,7 +36,7 @@ export const generateProjectMediaExport: ExportFn = async (
   }
 
   // get observation images for download by observationIds
-  const observationImages = await prisma.observation.findMany({
+  const observationImages = await db.observation.findMany({
     where: observationFilter,
     select: {
       id: true,
@@ -61,7 +59,7 @@ export const generateProjectMediaExport: ExportFn = async (
   }
 
   // initialize archiver (zlib) and empty downloads-array
-  const downloads: Promise<any>[] = [];
+  const downloadPromises: Promise<any>[] = [];
   const archive = archiver('zip', archiverOptions);
 
   // pipe to file uploads destination
@@ -88,14 +86,14 @@ export const generateProjectMediaExport: ExportFn = async (
     });
 
     // add ongoing download promise to an array (so we can wait for all to finish)
-    downloads.push(download);
+    downloadPromises.push(download);
   }
 
   // wait for all downloads to finish
-  await Promise.all(downloads);
+  await Promise.allSettled(downloadPromises);
 
   // start finalizing
-  archive.finalize();
+  await archive.finalize();
   await upload.done();
 
   const size = archive.pointer();

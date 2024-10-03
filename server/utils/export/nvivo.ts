@@ -2,7 +2,7 @@ import excel from 'exceljs';
 import { calculateDynamicFieldValue } from '../dynamicFields';
 import { captureException } from '@sentry/node';
 import type { H3Event } from 'h3';
-import { ExportType, Prisma } from '@prisma/client';
+import { ExportType, Prisma } from '@prisma-postgres/client';
 import { canUseS3 } from '../fileUpload';
 
 function generateObservationRow(
@@ -11,6 +11,9 @@ function generateObservationRow(
   dynamicFields: AllDynamicFieldColumns[],
   access: { nameInProject: string, userId: number }[],
 ) {
+  // try json parse observation data (let it throw)
+  const data = JSON.parse(obs.data);
+
   // get list of field labels (which are also data-keys)
   const fieldLabels = fields.map(f => f.label);
 
@@ -18,7 +21,7 @@ function generateObservationRow(
   const fieldValues = new Array(fields.length + dynamicFields.length);
 
   // for each data entry
-  const entries = Object.entries(obs.data as any)
+  const entries = Object.entries(data as any)
   for(let i = 0; i < entries.length; i++) {
     const [key, rawVal] = entries[i];
 
@@ -136,7 +139,7 @@ export const generateNvivoExport: ExportFn = async (
   observationFilter: Prisma.ObservationWhereInput,
 ) => {
   // get project by projectId
-  const project: ExportedProject | null = await prisma.project.findUnique({
+  const project: ExportedProject | null = await db.project.findUnique({
     where: {
       id: projectId,
     },
@@ -152,10 +155,12 @@ export const generateNvivoExport: ExportFn = async (
   }
 
   // fetch related observations
-  const observations: FullObservationPayload[] = await prisma.observation.findMany({
+  const observations: FullObservationPayload[] = await db.observation.findMany({
     where: observationFilter,
     select: observationColumns,
   });
+  console.info('> generating excel with', observations.length, 'observations');
+
 
   // initialize a few shortcut variables
   const fields: AllFieldColumns[] = project.fields;
@@ -181,10 +186,15 @@ export const generateNvivoExport: ExportFn = async (
   sheet.columns = getWorksheetColumns(fields, dynamicFields);
 
   // create all our observation rows for this project
-  const observationRows = observations.map((obs) => {
-    const row = generateObservationRow(obs, fields, dynamicFields, project.contributors);
-    return row;
-  });
+  const observationRows = [];
+  for(const obs of observations) {
+    try {
+      const row = generateObservationRow(obs, fields, dynamicFields, project.contributors);
+      observationRows.push(row);
+    } catch(e) {
+      captureException(e);
+    }
+  }
 
   // add the observation rows to the sheet
   sheet.addRows(observationRows)

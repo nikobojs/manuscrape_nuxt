@@ -3,7 +3,7 @@ export default safeResponseHandler(async (event) => {
   const params = event.context.params;
   await ensureURLResourceAccess(event, event.context.user);
   const observationId = parseIntParam(params?.observationId);
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     select: {
       id: true,
       image: {

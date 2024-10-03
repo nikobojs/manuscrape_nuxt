@@ -18,7 +18,7 @@ export default safeResponseHandler(async (event) => {
   patch = removeKeysByUndefinedValue(patch);
 
   // fetch existing observation
-  const project = await prisma.project.findUnique({
+  const project = await db.project.findUnique({
     select: {
       id: true,
       authorCanDelockObservations: true,
@@ -39,7 +39,7 @@ export default safeResponseHandler(async (event) => {
 
 
   // fetch existing observation
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     select: {
       id: true,
       isDraft: true,
@@ -64,7 +64,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // find user role
-  const access = await prisma.projectAccess.findUnique({
+  const access = await db.projectAccess.findUnique({
     where: {
       projectId_userId: {
         userId: user.id,
@@ -128,13 +128,14 @@ export default safeResponseHandler(async (event) => {
 
   }
 
-  const result = await prisma.observation.update({
+  const result = await db.observation.update({
     select: {
       id: true,
     }, where: {
       id: observationId,
     }, data: {
-      ...patch,
+      data: JSON.stringify(patch.data),
+      isDraft: patch.isDraft,
       updatedAt: new Date().toISOString(),
     }
   });

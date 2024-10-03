@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma-postgres/client'
 import { type EventHandler, type H3Event, H3Error } from 'h3'
 import { ValidationError } from 'yup'
 import { errors as formidableErrors } from 'formidable';

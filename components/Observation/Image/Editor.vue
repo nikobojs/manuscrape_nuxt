@@ -1,6 +1,6 @@
 <template>
   <UCard
-    v-if="typeof observation?.imageId === 'number'"
+    v-if="typeof observation?.image?.id === 'number'"
     class="overflow-visible"
   >
     <template #header>
@@ -328,7 +328,7 @@
     onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
   });
 
-  if (!props.observation?.imageId) {
+  if (!props.observation?.image?.id) {
     console.error('Observation does not have an image!')
     navigateTo('/')
   }

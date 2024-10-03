@@ -1,7 +1,8 @@
-import { FieldType, ProjectRole } from '@prisma/client'
+import { type Prisma, FieldType, ProjectRole } from '@prisma-postgres/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../utils/safeResponseHandler';
 import { requireUser } from '../../utils/authorize';
+import { serializeChoices } from '~/utils/observationFields';
 
 const fieldTypeValues = Object.values(FieldType);
 
@@ -53,7 +54,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const createdProject = await prisma.project.create({
+  const createdProject = await db.project.create({
     data: {
       name: newProject.name,
       authorId: user.id,
@@ -62,7 +63,7 @@ export default safeResponseHandler(async (event) => {
     },
   });
 
-  await prisma.projectAccess.create({
+  await db.projectAccess.create({
     data: {
       userId: user.id,
       projectId: createdProject.id,
@@ -72,20 +73,20 @@ export default safeResponseHandler(async (event) => {
   });
 
   const newProjectFields = newProject.fields.map((f) => ({
-    label: f.label,
-    type: f.type,
+    label: f.label!,
+    type: f.type!,
     required: f.required,
     projectId: createdProject.id,
-    choices: f.choices || [],
+    choices: serializeChoices(f.choices || null),
     index: f.index,
-  }));
+  })) satisfies Prisma.ProjectFieldCreateManyInput[];
 
-  await prisma.projectField.createMany({
+  await db.projectField.createMany({
     data: newProjectFields,
   });
 
   // get the updated fields to ensure indexes are ok
-  const updatedFields = await prisma.projectField.findMany({
+  const updatedFields = await db.projectField.findMany({
     where: { projectId: createdProject.id },
     select: { id: true, index: true }
   });

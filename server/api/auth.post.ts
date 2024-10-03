@@ -3,7 +3,6 @@ import { safeResponseHandler } from '../utils/safeResponseHandler';
 import { authorize, delayedError, delayedResponse } from '../utils/authorize';
 import * as yup from 'yup';
 
-
 export const SignInRequestSchema = yup.object({
   // email: yup.string().required('Email is required'),
   // password: yup.string().required('Password is required'),
@@ -26,7 +25,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch user from db with email from request body
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: {
       email: parsed.email,
     },

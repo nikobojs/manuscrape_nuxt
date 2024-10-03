@@ -40,7 +40,7 @@
       </template>
       <template #actions-data="{ row }">
         <div class="w-full justify-end flex gap-x-3">
-          <div v-if="typeof row.imageId === 'number'" @click="() => openObservationImage(row)">
+          <div v-if="typeof row.image?.id === 'number'" @click="() => openObservationImage(row)">
             <span
               class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"></span>
           </div>
@@ -148,7 +148,7 @@ const columns = [
 ];
 
 function openObservationImage(row: any) {
-  if (typeof row?.imageId !== 'number') {
+  if (typeof row?.image?.id !== 'number') {
     throw new Error('Image id is not a number')
   } else {
     selectedObservation.value = row;

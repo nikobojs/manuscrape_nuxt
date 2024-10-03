@@ -1,5 +1,5 @@
 
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
 import { parseIntParam } from '~/server/utils/request';
 import { requireUser } from '~/server/utils/authorize';
@@ -45,7 +45,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // get collaborator access
-  const collaboratorAccess = await prisma.projectAccess.findUnique({
+  const collaboratorAccess = await db.projectAccess.findUnique({
     where: {
       projectId_userId: {
         projectId: projectId,
@@ -65,7 +65,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
   // patch actual projectAccess row
-  await prisma.projectAccess.update({
+  await db.projectAccess.update({
     where: {
       projectId_userId: {
         projectId: projectId,

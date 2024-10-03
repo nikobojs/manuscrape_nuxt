@@ -15,7 +15,7 @@ export default safeResponseHandler(async (event) => {
     const decoded = await jwt.verify(token, config.app.tokenSecret);
     if (typeof decoded !== 'string' && decoded?.id) {
 
-      const user = await prisma.user.findFirst({
+      const user = await db.user.findFirst({
         where: { id: decoded.id },
         select: {
           ...bigUserQuery,

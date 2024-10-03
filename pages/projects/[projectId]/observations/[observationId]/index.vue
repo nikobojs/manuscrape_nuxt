@@ -80,9 +80,12 @@ const header = computed(() =>
 );
 const toast = useToast();
 
-const metadataDone = ref<boolean>(
-  !!observation.value?.data && Object.keys(observation.value?.data).length > 0
-);
+const metadataDone = ref(false);
+watch([observation], ([obs]) => {
+  const isDone = metadataIsDone(obs?.data);
+  metadataDone.value = isDone;
+}, {deep: true});
+
 const imageUploaded = computed(() => {
   const imageFound = typeof observation.value?.image?.id === 'number';
   const intervalIsRunning = typeof imageInterval.value === 'number';
@@ -92,6 +95,24 @@ const imageUploaded = computed(() => {
   }
   return imageFound;
 });
+
+// TODO: validate using actual project field definition
+function metadataIsDone(data: any): boolean {
+  if (!data) return false;
+  let json: Record<string,any>;
+  try {
+    if (typeof data === 'string') {
+      json = JSON.parse(data)
+    } else {
+      throw new Error('Observation data is not a string');
+    }
+  } catch(e) {
+    return false;
+  }
+  if (!json) return false;
+  if (Object.keys(json).length === 0) return false;
+  return true;
+}
 
 async function onObservationPublished() {
   if (isElectron.value) {

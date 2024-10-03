@@ -1,7 +1,8 @@
-import { ProjectRole } from '@prisma/client'
+import { ProjectRole } from '@prisma-postgres/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 import { NewProjectFieldSchema } from '../../index.post';
+import { serializeChoices } from '~/utils/observationFields';
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
@@ -16,8 +17,8 @@ export default safeResponseHandler(async (event) => {
   const body = await readBody(event);
   const newField = await NewProjectFieldSchema.validate(body)
 
-  // ensure index is ok
-  const existing = await prisma.projectField.findMany({
+  // grab existing project fields to validate conflicts with new one
+  const existing = await db.projectField.findMany({
     where: { projectId },
     select: {
       id: true,
@@ -38,14 +39,16 @@ export default safeResponseHandler(async (event) => {
   // ensure indexes are in order like [0, 1, 2, 3, 4, ...]
   await enforceCorrectIndexes(existing);
 
-  // calculate the next index (correct one for the new field)
-  newField.index = existing.length;
-
   // create new field
-  await prisma.projectField.create({
+  await db.projectField.create({
     data: {
-      ...newField,
       projectId,
+      index: existing.length, // next index is same as length because 0-index
+      createdAt: new Date(),
+      label: newField.label,
+      type: newField.type,
+      required: newField.required,
+      choices: serializeChoices(newField.choices || null),
     }
   });
 

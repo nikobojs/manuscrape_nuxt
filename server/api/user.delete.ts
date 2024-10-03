@@ -22,7 +22,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch user from db with email from request body
-  const user = await prisma.user.findFirst({
+  const user = await db.user.findFirst({
     where: { id },
     select: { password: true },
   });
@@ -38,8 +38,83 @@ export default safeResponseHandler(async (event) => {
     return await delayedError(event, 403, 'Wrong password');
   }
 
-  // delete projects where user is the only one with access
-  await prisma.project.deleteMany({
+  await db.projectAccess.deleteMany({
+    where: {
+      userId: id,
+    },
+  });
+
+  await db.observation.updateMany({
+    where: {
+      userId: id,
+    },
+    data: {
+      userId: null,
+    }
+  });
+  
+  await db.projectExport.updateMany({
+    where: {
+      userId: id,
+    },
+    data: {
+      userId: null,
+    }
+  });
+
+
+  
+  // retrieve affected projects to be deleted
+  // NOTE: fetches projects where user is the only one with access
+  const deleteProjects = (await db.project.findMany({
+    where: {
+      authorId: id,
+      contributors: {
+        every: {
+          userId: id,
+        },
+      },
+    },
+    select: { id: true },
+  })).map(p => p.id);
+  
+  await db.observation.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+  
+  await db.projectExport.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+
+  await db.projectAccess.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+
+  await db.projectField.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+
+  await db.projectInvitation.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+
+  await db.dynamicProjectField.deleteMany({
+    where: {
+      projectId: { in: deleteProjects },
+    },
+  });
+
+  await db.project.deleteMany({
     where: {
       authorId: id,
       contributors: {
@@ -51,7 +126,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // delete user
-  await prisma.user.delete({ where: { id }});
+  await db.user.delete({ where: { id }});
   
   // logout, user is deleted, right?
   event.context.user = undefined;

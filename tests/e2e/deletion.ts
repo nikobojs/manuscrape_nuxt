@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { withTempUser, testProject, deleteUser, createProject, getMe, inviteToProject } from './helpers';
-import { prisma } from './helpers';
+import { db } from './helpers';
 
 describe('User deletion', async () => {
   test('delete user without token returns 401', async () => {
@@ -30,7 +30,7 @@ describe('User deletion', async () => {
     }, email, password);
 
     // expect user is deleted in database
-    const noUser = await prisma.user.findFirst({
+    const noUser = await db.user.findFirst({
       where: { id: userId },
     });
     expect(noUser).toBe(null);
@@ -57,7 +57,7 @@ describe('User deletion', async () => {
 
     // expect project is deleted from database as well
     expect(typeof projectId).toBe('number');
-    const project = await prisma.project.findFirst({ where: { id: projectId! }});
+    const project = await db.project.findFirst({ where: { id: projectId! }});
     expect(project).toBe(null);
   });
 
@@ -98,7 +98,7 @@ describe('User deletion', async () => {
     expect(typeof projectId).toBe('number');
 
     // expect that project still exists and has author set to null
-    const project = prisma.project.findFirst({
+    const project = db.project.findFirst({
       where: { id: projectId! },
       select: { author: true }
     });

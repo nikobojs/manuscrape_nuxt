@@ -38,6 +38,7 @@ export default defineNuxtConfig({
       s3BucketName: process.env.S3_BUCKET_NAME || '',
       authResponseTime: 120,
       invitationSalt: process.env.INVITATION_SALT || 'saltyFreciousTrembleCat42',
+      databaseType: process.env.DATABASE_TYPE || 'postgres',
     },
     public: {
       baseUrl: process.env.BASE_URL || '',

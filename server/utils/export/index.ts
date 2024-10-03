@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3';
-import { Prisma } from '@prisma/client';
-import { ExportStatus, ExportType } from '@prisma/client';
+import { Prisma } from '@prisma-postgres/client';
+import { ExportStatus, ExportType } from '@prisma-postgres/client';
 
 export async function generateProjectExport(
   event: H3Event,
@@ -51,7 +51,7 @@ export async function createEmptyProjectExport(
   observationsCount: number,
   isS3: boolean,
 ): Promise<{id: number}> {
-  const res = await prisma.projectExport.create({
+  const res = await db.projectExport.create({
     data: {
       userId,
       projectId,
@@ -76,7 +76,7 @@ export async function finishedProjectExport(
   exportId: number,
   meta: ExportMeta,
 ): Promise<void> {
-  await prisma.projectExport.update({
+  await db.projectExport.update({
     data: {
       ...meta,
       status: ExportStatus.DONE,
@@ -92,7 +92,7 @@ export async function exportErrored(
   err?: string | Error,
 ): Promise<void> {
   const errMsg = err instanceof Error ? err.message : err
-  await prisma.projectExport.update({
+  await db.projectExport.update({
     data: {
       error: errMsg || 'Unknown error',
       status: ExportStatus.ERRORED,

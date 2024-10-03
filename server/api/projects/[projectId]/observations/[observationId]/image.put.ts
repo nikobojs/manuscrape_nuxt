@@ -11,10 +11,14 @@ export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     select: {
       id: true,
-      imageId: true,
+      image: {
+        select: {
+          id: true,
+        }
+      },
       isDraft: true,
     },
     where: {
@@ -37,7 +41,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const existingImageId = observation.imageId;
+  const existingImageId = observation.image?.id;
 
   // define our fileupload helper config
   const form = formidable({
@@ -88,7 +92,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // set observation.uploadInProgress to true
-  await prisma.observation.update({
+  await db.observation.update({
     where: { id: observation.id },
     data: { uploadInProgress: true, updatedAt: new Date() }
   });
@@ -107,30 +111,10 @@ export default safeResponseHandler(async (event) => {
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
   await uploadFile(newS3Path, file.filepath, canUseS3());
 
-  // create new ImageUpload row
-  const newImageUpload = await prisma.imageUpload.create({
-    data: {
-      mimetype: file.mimetype,
-      originalName: file.originalFilename,
-      filePath: `${newS3Path}`,
-      isS3: canUseS3(),
-    }
-  })
-
-  // make observation point to new image
-  await prisma.observation.update({
-    where: { id: observationId },
-    data: {
-      uploadInProgress: false,
-      imageId: newImageUpload.id,
-      updatedAt: new Date(),
-    }
-  })
-
   // remove existing image from database and s3
   if (existingImageId) {
     // delete existing ImageUpload row
-    const deletedImage = await prisma.imageUpload.delete({
+    const deletedImage = await db.imageUpload.delete({
       select: {
         filePath: true,
         isS3: true,
@@ -148,6 +132,26 @@ export default safeResponseHandler(async (event) => {
       captureException(e);
     }
   }
+
+  // create new ImageUpload row
+  const _newImageUpload = await db.imageUpload.create({
+    data: {
+      mimetype: file.mimetype,
+      originalName: file.originalFilename,
+      filePath: `${newS3Path}`,
+      isS3: canUseS3(),
+      observationId: observation.id,
+    }
+  })
+
+  // adjust progress and updated at
+  await db.observation.update({
+    where: { id: observationId },
+    data: {
+      uploadInProgress: false,
+      updatedAt: new Date(),
+    }
+  })
 
   return { success: true };
 });

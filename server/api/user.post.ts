@@ -1,4 +1,4 @@
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { hash } from 'bcrypt';
 import { authorize, delayedError, delayedResponse, passwordStrongEnough, isValidEmail } from '../utils/authorize';
 import { safeResponseHandler } from '../utils/safeResponseHandler';
@@ -25,7 +25,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // ensure user isn't already created
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await db.user.findFirst({
     where: { email: parsed.email },
     select: { id: true }
   });
@@ -49,7 +49,7 @@ export default safeResponseHandler(async (event) => {
   const hashedPassword = await hash(parsed.password, saltRounds);
 
   // create user
-  const user = await prisma.user.create({
+  const user = await db.user.create({
     data: {
       email: parsed.email,
       password: hashedPassword,
@@ -63,7 +63,7 @@ export default safeResponseHandler(async (event) => {
 
   // get all pending invitations
   const emailHash = generateInvitationHash(parsed.email);
-  const invitations = await prisma.projectInvitation.findMany({
+  const invitations = await db.projectInvitation.findMany({
     select: {
       id: true,
       projectId: true,
@@ -78,7 +78,7 @@ export default safeResponseHandler(async (event) => {
 
   // accept invitations if any
   if (invitations.length > 0) {
-    await prisma.projectAccess.createMany({
+    await db.projectAccess.createMany({
       data: invitations.map((inv) => ({
         projectId: inv.projectId,
         userId: user.id,
@@ -91,7 +91,7 @@ export default safeResponseHandler(async (event) => {
   // delete accepted invitations
   if (invitations.length > 0) {
     const projectInvitationIds = invitations.map((i) => i.id);
-    await prisma.projectInvitation.deleteMany({
+    await db.projectInvitation.deleteMany({
       where: {
         id: { in: projectInvitationIds },
       },

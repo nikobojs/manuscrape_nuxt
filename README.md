@@ -31,7 +31,6 @@ At the moment, [Code Collective ApS](codecollective.dk) is hosting the latest st
 
 The PR will be reviewed by the community and eventually make it into app.manuscrape.org. Visit [manuscrape.org](https://manuscrape.org) to read more about the team and community.
 
-
 #### 1. Install dependencies
 
 Install npm dependencies and add the pre commit hook. The pre-commit hook ensures you cannot commit badly typed code.
@@ -41,14 +40,19 @@ yarn install
 ./devops/add_pre_commit_hook.sh
 ```
 
-#### 2. Run database and file storage services
+#### 2. Generate Prisma types
+```bash
+yarn compile-prisma
+```
+
+#### 3. Run database and file storage services
 
 Use docker and docker-compose to get services up and running quickly. The current docker-compose spins up two services:
 
 - a postgres service called 'db' on port 5500
 - a MinIO service called 'minio' (s3 api-compatible storage)
 
-These services work with the values in `.env.example`. If you want to use external instances of MinIO and PostgreSQL, you can skip this step.
+These services work with the values in `.env.example`. If you want to use external instances of MinIO and PostgreSQL or MSSQL, you can skip this step.
 
 Run database and fileserver using docker-compose:
 
@@ -60,15 +64,15 @@ or
 yarn docker-up
 ```
 
-#### 3. Create .env file
+#### 4. Create .env file
 
 ```bash
 cp .env.example .env
 ```
 
-Edit the environment file according to your system. (TODO: document the individual environment variables)
+Edit the environment file according to your system.
 
-#### 4. Migrate database
+#### 5. Migrate database
 
 Whenever there are changes in the database schema (`prisma/schema.prisma`), you can migrate the database using the [prisma cli](https://www.prisma.io/docs/reference/api-reference/command-reference), or by using the yarn script:
 
@@ -76,18 +80,19 @@ Whenever there are changes in the database schema (`prisma/schema.prisma`), you 
 yarn migrate
 ```
 
-#### 5. Run tests
+#### 6. Run tests
 
 The testing suite is in development, and is currently primarily consisting of e2e tests, using [Vitest](https://vitest.dev/).
 
 > Check `package.json` for useful testing commands.
+> Ensure your `TEST_*` environment variables are set in `.env`
 
 Run the tests to ensure you are setup, and ready for solving issues!
 ```bash
-yarn test
+yarn full-test
 ```
 
-#### 6. Run development server ⚡
+#### 7. Run development server ⚡
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 Start the development server on `http://localhost:3000`:

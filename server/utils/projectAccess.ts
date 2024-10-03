@@ -1,5 +1,5 @@
 export async function ensureProjectAccess(userId: number, projectId: number) {
-  const projectAccess = await prisma.projectAccess.findFirst({
+  const projectAccess = await db.projectAccess.findFirst({
     select: {
       role: true,
     },

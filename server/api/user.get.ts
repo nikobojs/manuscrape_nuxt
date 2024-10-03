@@ -5,7 +5,7 @@ import { bigUserQuery } from '../utils/prisma';
 export default safeResponseHandler(async (event) => {
     const { id } = await requireUser(event);
     
-    const user = await prisma.user.findFirst({
+    const user = await db.user.findFirst({
         where: { id: id },
         select: bigUserQuery,
     });

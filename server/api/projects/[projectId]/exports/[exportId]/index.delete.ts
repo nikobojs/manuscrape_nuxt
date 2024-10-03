@@ -1,4 +1,4 @@
-import { ExportStatus, ProjectRole } from '@prisma/client'
+import { ExportStatus, ProjectRole } from '@prisma-postgres/client'
 import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../../utils/authorize';
 import { captureException } from '@sentry/node';
@@ -13,7 +13,7 @@ export default safeResponseHandler(async (event) => {
   const exportId = parseIntParam(event.context.params?.exportId);
 
   // fetch project export
-  const projectExport = await prisma.projectExport.findUnique({
+  const projectExport = await db.projectExport.findUnique({
     where: { id: exportId, projectId },
     select: {
       filePath: true,
@@ -40,7 +40,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // delete the db entry
-  await prisma.projectExport.delete({
+  await db.projectExport.delete({
     where: { id: exportId },
   });
 

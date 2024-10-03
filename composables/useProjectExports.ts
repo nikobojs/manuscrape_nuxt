@@ -4,7 +4,7 @@ import { captureException } from "@sentry/vue";
 export const useProjectExports = async (projectId: number) => {
   const projectExports = useState<FullProjectExport[]>('projectExports', () => []);
   const page = useState<number>(() => 1);
-  const pageSize = 4;
+  const pageSize = 5;
   const skip = computed(() => (page.value - 1) * pageSize);
   const totalExports = useState<number>('totalProjectExports', () => 1); // should change after first fetch
   const totalPages = useState<number>('totalProjectPages', () => Math.ceil(totalExports.value / pageSize)); // should change after first fetch
@@ -230,6 +230,26 @@ export const useProjectExports = async (projectId: number) => {
     d.setUTCMilliseconds(999);
     return d;
   }
+
+  const exportTypeOptions = [{
+    value: 'NVIVO',
+    shortLabel: 'Excel',
+    label: 'Excel mastersheet',
+    help: '.xlsx file with observations including id column for cross-referencing with file exports',
+    icon: 'mdi:microsoft-excel'
+  }, {
+    value: 'UPLOADS',
+    shortLabel: 'Uploads',
+    label: 'Uploaded observation files',
+    help: 'All uploaded files on observations except the primary observation image',
+    icon: 'mdi:folder-file'
+  }, {
+    value: 'MEDIA',
+    shortLabel: 'Images',
+    label: 'Observation images',
+    help: 'All primary images of observations',
+    icon: 'mdi:folder-multiple-image'
+  }];
   
   return {
     getDayBegin,
@@ -251,5 +271,6 @@ export const useProjectExports = async (projectId: number) => {
     storageLimit,
     storageUsage,
     storageIsFull,
+    exportTypeOptions,
   };
 };

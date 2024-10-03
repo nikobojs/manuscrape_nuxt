@@ -1,4 +1,4 @@
-import { ExportStatus, ProjectRole } from '@prisma/client'
+import { ExportStatus, ProjectRole } from '@prisma-postgres/client'
 import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../../utils/authorize';
 import { exportIsDownloadable } from '~/server/utils/export/helpers';
@@ -12,7 +12,7 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
   const exportId = parseIntParam(event.context.params?.exportId);
 
-  const projectExport = await prisma.projectExport.findUnique({
+  const projectExport = await db.projectExport.findUnique({
     where: {
       id: exportId,
       projectId

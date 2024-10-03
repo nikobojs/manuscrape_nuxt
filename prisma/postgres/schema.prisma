@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma-postgres/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FieldType {
+  DATE
+  STRING
+  INT
+  FLOAT
+  DATETIME
+  BOOLEAN
+  CHOICE
+  MULTIPLE_CHOICE_ADD
+  AUTOCOMPLETE
+  AUTOCOMPLETE_ADD
+  TEXTAREA
+}
+
+enum FieldOperator {
+  DIFF
+  SUM
+}
+
+enum ProjectRole {
+  OWNER
+  INVITED
+}
+
+enum ExportType {
+  NVIVO
+  UPLOADS
+  MEDIA
+}
+
+enum ExportStatus {
+  QUEUED
+  GENERATING
+  DONE
+  ERRORED
+}
+
+model User {
+  id                           Int                    @id @default(autoincrement())
+  email                        String                 @unique
+  password                     String
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  observations                 Observation[]
+  ownedProjects                Project[]              @relation("author")
+  projectAccess                ProjectAccess[]        @relation("contributor")
+  sentInvitations              ProjectInvitation[]    @relation("inviter")
+  projectExports               ProjectExport[]            
+}
+
+// TODO: make sure this is deleted correctly on MSSQL on project deletion
+model ProjectAccess {
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  role                         ProjectRole            @default(value: OWNER)
+  nameInProject                String
+  userId                       Int
+  projectId                    Int
+  user                         User                   @relation("contributor", fields: [userId], references: [id], onDelete: Cascade)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([projectId, userId])
+}
+
+model Project {
+  id                           Int                    @id @default(autoincrement())
+  name                         String
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  authorId                     Int?
+  author                       User?                  @relation("author", fields: [authorId], references: [id], onDelete: SetNull)
+  authorCanDelockObservations  Boolean                @default(false)
+  ownerCanDelockObservations   Boolean                @default(false)
+  storageLimit                 Int                    @default(1000000000)
+  fields                       ProjectField[]
+  dynamicFields                DynamicProjectField[]
+  observations                 Observation[]
+  contributors                 ProjectAccess[]
+  invitations                  ProjectInvitation[]
+  projectExports               ProjectExport[]
+}
+
+// TODO: ensure application knows that `choices` can be either String or String[] depending on db
+model ProjectField {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  label                        String
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type                         FieldType
+  choices                      String?
+  required                     Boolean                @default(false)
+  index                        Int
+  dynamicFields0s              DynamicProjectField[]  @relation("field0_id")
+  dynamicFields1s              DynamicProjectField[]  @relation("field1_id")
+
+  @@unique([projectId, index])
+  @@unique([projectId, label])
+}
+
+// TODO: ensure application deletes dynamic fields using a project field that gets deleted
+model DynamicProjectField {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  label                        String
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  operator                     FieldOperator
+  field0Id                     Int
+  field1Id                     Int
+  field0                       ProjectField           @relation("field0_id", fields: [field0Id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  field1                       ProjectField           @relation("field1_id", fields: [field1Id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([field0Id, field1Id, operator])
+}
+
+// TODO: ensure this gets deleted when related project is deleted
+model ProjectInvitation {
+  id                           Int                    @id @default(autoincrement())
+  inviterId                    Int
+  projectId                    Int
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  expiresAt                    DateTime
+  emailHash                    String
+  inviter                      User                   @relation("inviter", fields: [inviterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// TODO: ensure observation is modified correctly when deleting author user
+model Observation {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  updatedAt                    DateTime               @default(now()) @db.Timestamp(6)
+  projectId                    Int
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                       Int?
+  user                         User?                  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  data                         String                 @default("{}")
+  image                        ImageUpload?           @relation("observation_image")
+  uploadInProgress             Boolean                @default(false)
+  isDraft                      Boolean                @default(true)
+  fileUploads                  FileUpload[]
+}
+
+model FileUpload {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  isS3                         Boolean
+  filePath                     String                 @unique
+  mimetype                     String
+  originalName                 String
+  observationId                Int
+  observation                  Observation           @relation(fields: [observationId], references: [id], onDelete: Cascade)
+}
+
+model ImageUpload {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  isS3                         Boolean
+  filePath                     String                 @unique
+  mimetype                     String
+  originalName                 String
+  observationId                Int                    @unique
+  observation                  Observation            @relation("observation_image", fields: [observationId], references: [id], onDelete: Cascade)
+}
+
+// TODO: ensure projectExports are modified correctly when removing related user or project
+model ProjectExport {
+  id                           Int                    @id @default(autoincrement())
+  createdAt                    DateTime               @default(now()) @db.Timestamp(6)
+  startDate                    DateTime
+  endDate                      DateTime
+  observationsCount            Int
+  isS3                         Boolean
+  filePath                     String                 @unique
+  type                         ExportType
+  status                       ExportStatus
+  mimetype                     String
+  error                        String?
+  userId                       Int?
+  size                         Int
+  projectId                    Int
+  user                         User?                  @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project                      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}

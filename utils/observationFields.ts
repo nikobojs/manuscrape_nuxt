@@ -34,10 +34,6 @@ export const ObservationFieldTypes: Record<string, string> = {
   'Whole number': 'INT',
 }
 
-export function isMultipleChoice(field: string): boolean {
-  return ['CHOICE', 'AUTOCOMPLETE', 'AUTOCOMPLETE_ADD', 'MULTIPLE_CHOICE_ADD'].includes(field)
-}
-
 export function getFieldLabel(fieldType: string): string {
   const label = Object.entries(ObservationFieldTypes).find(
     ([_, key]) => key === fieldType
@@ -49,3 +45,17 @@ export function getFieldLabel(fieldType: string): string {
 
   return label[0];
 }
+
+
+
+export function isMultipleChoice(field: string): boolean {
+  return ['CHOICE', 'AUTOCOMPLETE', 'AUTOCOMPLETE_ADD', 'MULTIPLE_CHOICE_ADD'].includes(field)
+}
+
+// helpers that convert choices (as string[] into concattedString)
+export const choicesSeperator = '_%%%%%%_';
+export const cleanChoiceStr = (s: string | undefined) => s ? s.replaceAll(choicesSeperator, '') : undefined;
+export const serializeChoices = (c: string[] | null): string | undefined =>
+  c ? c.map(cleanChoiceStr).join(choicesSeperator) : undefined;
+export const deserializeChoices = (r: string | null | undefined): string[] | undefined =>
+  r ? r.split(choicesSeperator) : undefined;

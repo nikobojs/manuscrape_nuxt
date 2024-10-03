@@ -10,6 +10,7 @@
           color="blue"
           icon="i-mdi-add"
           @click="openAddParamModal = true"
+          v-if="isOwner"
         >
           Add
         </UButton>
@@ -117,12 +118,12 @@
     :open="openModifyChoicesModal"
     :onSubmit="handleUpdateField"
     :onClose="() => openModifyChoicesModal = false"
-    :defaultChoices="selectedParameter?.choices || []"
+    :defaultChoices="deserializeChoices(selectedParameter?.choices) || []"
   />
 </template>
 
 <script setup lang="ts">
-  import type { Project } from '@prisma/client';
+  import type { Project } from '@prisma-postgres/client';
 import { isMultipleChoice } from '~/utils/observationFields';
 
   const openConfirmDeleteParamModal = ref(false);

@@ -5,7 +5,7 @@
         <div>
           <div class="flex justify-between w-full">
             <CardHeader>Observation parameters</CardHeader>
-            <span v-if="!$props.disabled && metadataDone" class="ml-2 i-heroicons-check text-lg text-green-500"></span>
+            <UIcon v-if="!$props.disabled && metadataDone" class="ml-2 text-lg text-green-500" name="i-heroicons-check" />
           </div>
         </div>
       </template>
@@ -62,6 +62,7 @@
                   }"
                 />
               </div>
+              <!-- TODO: not working -->
               <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
                 <USelectMenu
                   class="min-w-[200px]"
@@ -76,21 +77,22 @@
                   <template #option-create="{ option }">
                     <span class="flex-shrink-0 text-gray-400 text-xs">Custom:</span>
                     <span>
-                      {{ option.label }}
+                      {{ option?.label || option }}
                     </span>
                   </template>
                 </USelectMenu>
               </div>
+              <!-- TODO: not working -->
               <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
                 <USelectMenu
                   :name="field.label"
                   class="min-w-[200px]"
-                  :options="getMultipleChoiceAddOptions(field as ProjectFieldResponse)"
+                  :options="getMultipleChoiceAddOptions({
+                    choices: field.choices,
+                    label: field.label,
+                  })"
                   v-model="state[field.label]"
                   :placeholder="field.required ? 'Select options or type freely' : 'Nothing picked'"
-                  option-attribute="label"
-                  :search-attributes="['label']"
-                  :value-attributes="'label'"
                   multiple
                   searchable
                   creatable
@@ -102,6 +104,10 @@
                     <span>
                       {{ option.label }}
                     </span>
+                  </template>
+                  <template #label>
+                    <span v-if="state[field.label].length" class="truncate">{{ state[field.label].length }} selected</span>
+                    <span v-else>Select multiple options</span>
                   </template>
                 </USelectMenu>
               </div>
@@ -155,18 +161,22 @@
   const { sortFields } = await useProjects(params);
   const { patchObservation, observations } = await useObservations(props.project.id);
 
-  function getMultipleChoiceAddOptions(field: ProjectFieldResponse) {
-    const updatedOptions = (field.choices || [])
+  function getMultipleChoiceAddOptions(
+    field: { choices: string[] | undefined, label: string },
+  ): {
+    label:string,
+  }[] {
+    const updatedOptions: string[] = (field?.choices || []);
+    const result = updatedOptions
       .concat(getCustomFieldChoices(field, state))
-      .map((o) => ({ label: o }));
-    return updatedOptions;
+      .map((o: string) => ({ label: o }));
+    return result;
   }
 
   const form = ref();
   const sortedFields = computed(() => sortFields(props.project));
   const observation = computed(() => observations.value.find((o) => o.id === props.observationId))
-  const state = ref(Object.assign({ ...props.initialState }, observation.value?.data as any));
-
+  const state = ref(Object.assign({ ...props.initialState }, JSON.parse(observation.value?.data as any || {})));
 
   // TODO: validation function doesn't seem completely functional
   //       - manuel edge-case testing required

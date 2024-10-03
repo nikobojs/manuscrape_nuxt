@@ -1,4 +1,4 @@
-import { ExportStatus, ProjectRole } from '@prisma/client';
+import { ExportStatus, ProjectRole } from '@prisma-postgres/client';
 import { projectExportQuery } from '~/server/utils/prisma';
 import { numberBetween } from '~/utils/validate';
 
@@ -11,7 +11,7 @@ export default safeResponseHandler(async (event) => {
   const exportId = parseIntParam(event.context.params?.exportId);
 
   // get project export
-  const projectExport: FullProjectExport | null = await prisma.projectExport.findUnique({
+  const projectExport: FullProjectExport | null = await db.projectExport.findUnique({
     where: {
       id: exportId,
       projectId

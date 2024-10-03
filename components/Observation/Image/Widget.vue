@@ -12,13 +12,13 @@
         <UInput class="hidden" type="file" accept="image/png, image/jpeg"  :on:change="onFilePicked" />
         <div class="text-sm">
           <div v-if="!$props.disabled" class="underline text-green-500 cursor-pointer">
-            {{ observation?.imageId ? 'Change image' : 'Choose image' }}
+            {{ observation?.image ? 'Change image' : 'Choose image' }}
           </div>
         </div>
       </label>
       <div v-if="uploaded">
         <NuxtLink
-          v-if="observation?.imageId && !$props.disabled"
+          v-if="observation?.image && !$props.disabled"
           class="text-sm underline text-green-500 cursor-pointer"
           :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image${isElectron ? '?electron=1' : ''}`"
         >

@@ -1,4 +1,4 @@
-import { FieldType, FieldOperator } from "@prisma/client";
+import { FieldType, FieldOperator } from "@prisma-postgres/client";
 import { captureException } from "@sentry/node";
 import yup from 'yup';
 

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import type { H3Event, EventHandlerRequest } from 'h3';
 import type { CookieOptions } from 'nuxt/app';
-import { type User, ProjectRole } from '@prisma/client';
+import { type User, ProjectRole } from '@prisma-postgres/client';
 import { getRequestBeginTime, parseIntParam } from './request';
 import { observationColumns } from './prisma';
 import { captureException } from '@sentry/node';
@@ -59,7 +59,7 @@ export async function requireUser(
   if (!event.context.user?.email) {
     // TODO: why is email not kept between requests?
     console.warn('refetching user as only id missing in H3Event context (FIXME)');
-    const user = await prisma.user.findFirst({
+    const user = await db.user.findFirst({
       where: {id: event.context.user.id },
       select: bigUserQuery,
     });
@@ -72,7 +72,7 @@ export async function requireUser(
 export async function getObservationsByProject(
   projectId: number,
 ): Promise<{observations: FullObservation[], contributors: { userId: number; role: string}[]}> {
-  const project = await prisma.project.findFirst({
+  const project = await db.project.findFirst({
     where: { id: projectId },
     select: {
       contributors: {

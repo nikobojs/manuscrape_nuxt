@@ -1319,7 +1319,7 @@
   dependencies:
     "@tanstack/vue-virtual" "^3.0.0-beta.60"
 
-"@iconify-json/heroicons@^1.1.23":
+"@iconify-json/heroicons@^1.1.23", "@iconify-json/heroicons@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@iconify-json/heroicons/-/heroicons-1.2.0.tgz#6ac769329c869d51630d81fd1d6d6f5ad61eb2e0"
   integrity sha512-EmvGN0L9EUJCmQ82rkLGZ4tkz0YGQfZV7ugKT6UvHni/bxNitQrD0gLj6NJj2W9zsSoXyNHyCX236+EJmO4pmA==

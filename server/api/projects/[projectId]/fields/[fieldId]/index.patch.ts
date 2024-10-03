@@ -1,14 +1,16 @@
 import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../../utils/authorize';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { captureException } from '@sentry/node';
 import * as yup from 'yup';
 import { isMultipleChoice } from '~/utils/observationFields';
+import { serializeChoices } from '~/utils/observationFields';
 
 export const PatchProjectFieldSchema = yup.object({
   label: yup.string(),
   required: yup.boolean(),
-  choices: yup.array().of(yup.string()),
+  // choices: yup.array().of(yup.string().required()).optional(),
+  choices: yup.array(yup.string().required()),
   index: yup.number(),
 }).required();
 
@@ -23,7 +25,7 @@ export default safeResponseHandler(async (event) => {
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
   // find project and field based on params
-  const field = await prisma.projectField.findFirst({
+  const field = await db.projectField.findFirst({
     where: { projectId, id: fieldId },
     select: {
       id: true,
@@ -60,11 +62,15 @@ export default safeResponseHandler(async (event) => {
   // filter in patch by value if null or undefined
   const cleanedPatch = Object.entries(patch).reduce((result, entry) => {
     const [key, val] = entry;
-    if (![null, undefined].includes(val as any)) {
+    if (key === 'choices') {
+      if (val === undefined || (Array.isArray(val) && val.length && typeof val[0] === 'string')) {
+        (result as Record<string, any>)['choices'] = serializeChoices(val);
+      }
+    } else if (![null, undefined].includes(val as any)) {
       (result as Record<string, any>)[key] = val;
     }
     return result;
-  }, {} as Partial<NewProjectField>);
+  }, {} as Partial<Omit<NewProjectField, "choices">>); // TODO: fix type hack
 
   // ensure the patch actually contains something
   if (Object.keys(cleanedPatch).length === 0) {
@@ -77,7 +83,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // execute the update statement
-  await prisma.projectField.update({
+  await db.projectField.update({
     data: cleanedPatch,
     where: {
       id: field.id,
@@ -85,7 +91,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // fetch updated fields
-  const fields = await prisma.projectField.findMany({
+  const fields = await db.projectField.findMany({
     where: { projectId },
     select: { id: true, index: true, },
   });

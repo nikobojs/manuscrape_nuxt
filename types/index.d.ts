@@ -12,7 +12,7 @@ import type {
   ProjectField,
   ProjectRole,
   User,
-} from "@prisma/client";
+} from "@prisma-mssql/client";
 import type { H3Event } from "h3";
 import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/index.post";
 import type { InferType } from "yup";
@@ -26,7 +26,6 @@ import type {
   allFieldColumns,
   allDynamicFieldColumns,
 } from "~/server/utils/prisma";
-import { Prisma } from '@prisma/client';
 
 declare global {
   interface CurrentUser extends User {
@@ -40,9 +39,10 @@ declare global {
   type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
 
   interface FullObservation extends Omit<Omit<Observation, 'userId'>, 'projectId'> {
-    image: Omit<Omit<ImageUpload, 'filePath'>, 'isS3'> | null;
+    image: Omit<Omit<Omit<ImageUpload, 'filePath'>, 'isS3'>, 'observationId'> | null;
     fileUploads: Omit<FileUploadResponse, 'observationId'>[];
     user: { email: string; id?: number } | null;
+    data: string | null;
   }
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
@@ -104,7 +104,7 @@ declare global {
     }
   }
 
-  interface FullImage extends Omit<Omit<ImageUpload, "filePath">, "isS3"> {}
+  interface FullImage extends Omit<Omit<Omit<ImageUpload, "filePath">, "isS3">, "observationId"> {}
 
   type NewDynamicField = {
     label: string;

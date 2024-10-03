@@ -2,7 +2,7 @@
 import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../../utils/authorize';
 import type { JsonObject } from '@prisma/client/runtime/library';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { captureException } from '@sentry/node';
 
 export default safeResponseHandler(async (event) => {
@@ -15,7 +15,7 @@ export default safeResponseHandler(async (event) => {
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
   // find project and field based on params
-  const field = await prisma.projectField.findFirst({
+  const field = await db.projectField.findFirst({
     where: { projectId, id: fieldId },
     select: {
       id: true,
@@ -26,7 +26,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // find project and field count
-  const project = await prisma.project.findFirst({
+  const project = await db.project.findFirst({
     select: {
       id: true,
       _count: {
@@ -56,7 +56,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // get all the affected observations and update with their original 'data' value
-  const affectedObservations = await prisma.observation.findMany({
+  const affectedObservations = await db.observation.findMany({
     where: { projectId },
     select: { data: true, id: true }
   })
@@ -82,20 +82,20 @@ export default safeResponseHandler(async (event) => {
   });
 
   // update related observations and delete projec
-  await prisma.$transaction([
+  await db.$transaction([
     ...dataUpdates.map(o =>
-      prisma.observation.update({
+      db.observation.update({
         data: { data: o.data || {} },
         where: { id: o.id },
       }),
     ),
-    prisma.projectField.delete({
+    db.projectField.delete({
       where: { id: fieldId }
     }),
   ]);
 
   // get the updated fields to ensure indexes are ok
-  const updatedFields = await prisma.projectField.findMany({
+  const updatedFields = await db.projectField.findMany({
     where: { projectId },
     select: { id: true, index: true }
   })

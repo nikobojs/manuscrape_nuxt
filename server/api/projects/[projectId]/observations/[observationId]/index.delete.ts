@@ -1,4 +1,4 @@
-import { ProjectRole } from "@prisma/client";
+import { ProjectRole } from "@prisma-postgres/client";
 import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
@@ -9,7 +9,7 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(params?.projectId);
 
   // retrieve the user access role for the project
-  const projectAccess = await prisma.projectAccess.findFirst({
+  const projectAccess = await db.projectAccess.findFirst({
     where: {
       userId: user.id,
       projectId: projectId,
@@ -29,7 +29,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch existing observation
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     select: {
       id: true,
       isDraft: true,
@@ -97,7 +97,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // delete the observation (cascades to its files as well)
-  await prisma.observation.delete({
+  await db.observation.delete({
     where: { id: observationId },
   });
 

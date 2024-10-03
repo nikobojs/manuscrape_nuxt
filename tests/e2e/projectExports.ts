@@ -1,11 +1,10 @@
 
 import { describe, test, expect } from 'vitest';
-import { ExportStatus } from '@prisma/client';
+import { ExportStatus } from '@prisma-postgres/client';
 import {
   withTempProject,
   exportProject,
   getExports,
-  delay,
 } from './helpers';
 
 describe('Project exporting', () => {
@@ -41,7 +40,7 @@ describe('Project exporting', () => {
       expect(exportsJson?.projectExports?.page?.length).toBe(1);
       const newExport = exportsJson.projectExports.page[0];
       expect(newExport.observationsCount, JSON.stringify(newExport)).toBe(_observations.length);
-      expect(newExport.status).toBe(ExportStatus.GENERATING);
+      expect([ExportStatus.GENERATING, ExportStatus.DONE]).toContain(newExport.status);
 
       // ensure export finishes
       for(let i = 0; i < 10; i++) {

@@ -17,12 +17,13 @@ export default safeResponseHandler(async (event) => {
   const start = new Date(startDate); 
   const end = new Date(endDate);
 
-  const count = await prisma.observation.count({
+  const count = await db.observation.count({
     where: {
       AND: [
-        { projectId: { equals: projectId }},
-        { createdAt: { gte: start } }, 
-        { createdAt: { lte: end } }   
+        { projectId: { equals: projectId } },
+        { createdAt: { gte: start } },
+        { createdAt: { lte: end } },
+        { isDraft: { equals: false } },
       ]
     }
   });

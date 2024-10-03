@@ -6,7 +6,7 @@ export default safeResponseHandler(async (event) => {
   const observationId = parseIntParam(params?.observationId);
   const fileId = parseIntParam(params?.fileId);
 
-  const file = await prisma.fileUpload.findUnique({
+  const file = await db.fileUpload.findUnique({
     select: {
       id: true,
       originalName: true,
@@ -33,11 +33,11 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     where: { id: observationId },
   });
 
-  const projectAccess = await prisma.projectAccess.findFirst({
+  const projectAccess = await db.projectAccess.findFirst({
     select: {
       role: true,
     },
@@ -75,7 +75,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // if s3 deletion went well, delete from file metadata from database
-  await prisma.fileUpload.delete({
+  await db.fileUpload.delete({
     where: { id: fileId },
   });
   

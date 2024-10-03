@@ -29,6 +29,14 @@
             {{ prettyDate(row.createdAt) }}
           </span>
         </template>
+        <template #type-data="{ row }">
+          <div class="flex items-center gap-x-2">
+            <UIcon :name="getIconByExportType(row.type)" />
+            <div>
+              {{ getShortLabelByExportType(row.type) }}
+            </div>
+          </div>
+        </template>
         <template #startDate-data="{ row }">
           {{ prettyDate(row.startDate) }}
         </template>
@@ -39,6 +47,11 @@
           <span v-if="row.status !== 'GENERATING'">
             {{ formatKb(row.size) }}
           </span>
+        </template>
+        <template #user-data="{ row }">
+          <div class="">
+            {{  row.user?.email || '<REMOVED>' }}
+          </div>
         </template>
         <template #actions-data="{ row }">
           <div class="flex items-center justify-end relative gap-x-3">
@@ -61,14 +74,9 @@
             </div>
           </div>
         </template>
-        <template #user-data="{ row }">
-          <div class="">
-            {{  row.user?.email || '<REMOVED>' }}
-          </div>
-        </template>
       </UTable>
       <div class="flex w-full mt-3 mb-3 justify-center">
-        <UPagination v-if="totalPages > 1" v-model="page" :total="totalExports" :max="8" :page-count="pageSize" />
+        <UPagination v-if="totalPages > 1" v-model="page" :total="totalExports" :max="5" :page-count="pageSize" />
       </div>
     </div>
     <div
@@ -91,6 +99,11 @@ const openNewExportModal = ref(false);
 const props = defineProps({
   project: requireProjectProp,
 });
+
+const getIconByExportType = (name: string) =>
+  exportTypeOptions.find(o => o.value === name)?.icon || 'mdi:file-question-outline';
+const getShortLabelByExportType = (name: string) =>
+  exportTypeOptions.find(o => o.value === name)?.shortLabel || 'Unknown';
 
 const columns = [{
   label: 'Created at',
@@ -130,6 +143,7 @@ const {
   storageUsage,
   storageLimit,
   storageIsFull,
+  exportTypeOptions
 } = await useProjectExports(props.project.id);
 
 const loading = computed(() => fetching.value);

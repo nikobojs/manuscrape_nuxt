@@ -1,12 +1,9 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-
-export const prisma = new PrismaClient();
+import { Prisma } from '@prisma-postgres/client';
 
 export const observationColumns = {
   createdAt: true,
   data: true,
   id: true,
-  imageId: true,
   isDraft: true,
   updatedAt: true,
   uploadInProgress: true,

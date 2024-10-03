@@ -1,10 +1,10 @@
 import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
-import { FieldType } from '@prisma/client';
+import { FieldType } from '@prisma-postgres/client';
 import { daysInFuture } from "../../utils/datetime";
-import { PrismaClient } from '@prisma/client';
+import { db as _db } from "../../server/utils/prismaClient";
 
-export const prisma = new PrismaClient();
+export const db = _db;
 
 const contentTypeJson = {
   "Content-Type": "application/json",

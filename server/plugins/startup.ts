@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
 import type { PublicRuntimeConfig } from "nuxt/schema";
 import type { NitroApp } from "nitropack";
-import { exit } from 'node:process';
 
 export default defineNitroPlugin(async (nitro) => {
   const config = useRuntimeConfig().public;
@@ -11,7 +10,12 @@ export default defineNitroPlugin(async (nitro) => {
 
   // ensure db is connected on startup
   // TODO: make exit() work with `yarn dev` forever/pm2/etc setup
-  await ensureDbConnected(nitro);
+  console.log('will try to init db connection...')
+  try {
+    await ensureDbConnected(nitro);
+  } catch(e) {
+    throw e;
+  }
 });
 
 function initSentry(config: PublicRuntimeConfig): void {
@@ -48,7 +52,7 @@ async function ensureDbConnected(nitro: NitroApp) {
     console.info("> checking database connectivity...");
     // Use Promise.race to race the query against a timeout
     const _ = await Promise.race([
-      prisma.$executeRaw`SELECT 1;`,
+      db.$executeRaw`SELECT 1;`,
       timeout(5000), // 5000 ms = 5 seconds
     ]);
 
@@ -56,7 +60,7 @@ async function ensureDbConnected(nitro: NitroApp) {
   } catch {
     // Log detailed error information
     console.error(
-      "Unable to connect to database... Please verify your postgres setup and env variables"
+      "Unable to connect to database... Please verify your db server and env variables"
     );
 
     // hack to fix logs being hiddenm

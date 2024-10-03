@@ -2,7 +2,7 @@
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../utils/safeResponseHandler';
 import { requireUser } from '../../../utils/authorize';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { smallProjectQuery } from '~/server/utils/prisma';  // TODO: does auto import work?
 import { getNewFieldId } from '~/server/utils/projectFields';
 import type { NuxtError } from 'nuxt/app';
@@ -25,7 +25,7 @@ export default safeResponseHandler(async (event) => {
   newName = newName.trim();
 
   // get source project we want to duplicate from
-  const sourceProject = await prisma.project.findFirst({
+  const sourceProject = await db.project.findFirst({
     select: smallProjectQuery,
     where: {
       id: projectId
@@ -72,13 +72,13 @@ export default safeResponseHandler(async (event) => {
   };
 
   // execute projects table insert query
-  const { id: createdProjectId } = await prisma.project.create({
+  const { id: createdProjectId } = await db.project.create({
     data: newProject,
     select: { id: true },
   });
 
   // fetch the project we just created
-  const createdProject = await prisma.project.findFirst({
+  const createdProject = await db.project.findFirst({
     where: { id: createdProjectId },
     select: smallProjectQuery,
   });
@@ -92,7 +92,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // add ownership of duplicated project
-  await prisma.projectAccess.create({
+  await db.projectAccess.create({
     data: {
       projectId: createdProject.id,
       userId: user.id,
@@ -116,7 +116,7 @@ export default safeResponseHandler(async (event) => {
       };
     });
 
-    await prisma.dynamicProjectField.createMany({
+    await db.dynamicProjectField.createMany({
       data: newDynamicFields,
     });
   }

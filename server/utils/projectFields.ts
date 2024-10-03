@@ -45,9 +45,9 @@ export async function enforceCorrectIndexes(
   }
 
   // update indexes for existing fields
-  await prisma.$transaction(
+  await db.$transaction(
     sortedExisting.map(field =>
-      prisma.projectField.update({
+      db.projectField.update({
         where: { id: field.id },
         data: { index: field.index },
       })
@@ -96,10 +96,10 @@ export async function moveProjectField(
   }
 
   // swap indexes
-  await prisma.$transaction([
-    prisma.projectField.update({ where: { id: fieldId }, data: { index: -1 }}),
-    prisma.projectField.update({ where: { id: swapField.id }, data: { index: fieldIndex }}),
-    prisma.projectField.update({ where: { id: fieldId }, data: { index: swapIndex }}),
+  await db.$transaction([
+    db.projectField.update({ where: { id: fieldId }, data: { index: -1 }}),
+    db.projectField.update({ where: { id: swapField.id }, data: { index: fieldIndex }}),
+    db.projectField.update({ where: { id: fieldId }, data: { index: swapIndex }}),
   ]);
 }
 
@@ -108,8 +108,8 @@ export async function moveProjectField(
 // TODO: improve typing and test coverage
 export function getNewFieldId (
   oldId: number,
-  sourceProject: Partial<FullProject>,
-  createdProject: Partial<FullProject>,
+  sourceProject: {fields: {id: number, label: string}[]},
+  createdProject: {fields: {id: number, label: string}[]},
 ) {
   const oldField = sourceProject.fields?.find((f) => f.id === oldId);
   if (!oldField) {

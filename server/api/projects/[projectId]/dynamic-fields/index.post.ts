@@ -1,4 +1,4 @@
-import { ProjectRole } from '@prisma/client'
+import { ProjectRole } from '@prisma-postgres/client'
 import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
 import { requireUser } from '../../../../utils/authorize';
 import { requireAllowedMatch } from '~/server/utils/dynamicFields';
@@ -17,7 +17,7 @@ export default safeResponseHandler(async (event) => {
 
   // ensure same setup (fields and operation) is not present in project
   // NOTE: the reason it is project specific, is because projecFieldsIds are not shared
-  const existing = await prisma.dynamicProjectField.findFirst({
+  const existing = await db.dynamicProjectField.findFirst({
     where: {
       field0Id: field.field0Id,
       field1Id: field.field1Id,
@@ -48,7 +48,7 @@ export default safeResponseHandler(async (event) => {
     id: number,
     label: string;
     type: string;
-  }[] = await prisma.projectField.findMany({
+  }[] = await db.projectField.findMany({
     select: {
       id: true,
       label: true,
@@ -82,7 +82,7 @@ export default safeResponseHandler(async (event) => {
   requireAllowedMatch(fields[0], fields[1], field.operator)
 
   // create dynamic field
-  const createdField = await prisma.dynamicProjectField.create({
+  const createdField = await db.dynamicProjectField.create({
     data: {
       field0Id: field.field0Id,
       field1Id: field.field1Id,

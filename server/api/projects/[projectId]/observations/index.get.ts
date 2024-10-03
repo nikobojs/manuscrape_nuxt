@@ -4,7 +4,7 @@ import { requireUser } from '../../../../utils/authorize';
 import { numberBetween } from '~/utils/validate';
 import { queryParam } from '~/server/utils/queryParam';
 import { observationColumns } from '~/server/utils/prisma';
-import { ProjectRole, Prisma } from '@prisma/client';
+import { ProjectRole, Prisma } from '@prisma-postgres/client';
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -13,7 +13,7 @@ export default safeResponseHandler(async (event) => {
 
   // fetch project access object from db
   const projectId = parseIntParam(event.context.params?.projectId);
-  const projectAccess = await prisma.projectAccess.findFirst({
+  const projectAccess = await db.projectAccess.findFirst({
     select: {
       role: true,
     },
@@ -112,12 +112,12 @@ export default safeResponseHandler(async (event) => {
     : { id: orderDirection }
 
   // count how many observations where are in total (with filters applied)
-  const total = await prisma.observation.count({
+  const total = await db.observation.count({
     where: whereStatement,
   });
 
   // make the call
-  const result = await prisma.observation.findMany({
+  const result = await db.observation.findMany({
     take,
     skip,
     where: whereStatement,

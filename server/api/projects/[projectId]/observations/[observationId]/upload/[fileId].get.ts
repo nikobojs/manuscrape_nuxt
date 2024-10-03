@@ -5,7 +5,7 @@ export default safeResponseHandler(async (event) => {
   const observationId = parseIntParam(params?.observationId);
   const fileId = parseIntParam(params?.fileId);
 
-  const file = await prisma.fileUpload.findUnique({
+  const file = await db.fileUpload.findUnique({
     select: {
       id: true,
       originalName: true,

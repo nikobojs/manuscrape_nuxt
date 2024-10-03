@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
         try {
             const decoded = await jwt.verify(authToken, config.app.tokenSecret);
             if (typeof decoded !== 'string' && decoded?.id) {
-                const user = await prisma.user.findFirst({
+                const user = await db.user.findFirst({
                     where: { id: decoded.id },
                     select: {...bigUserQuery, password: true},
                 });

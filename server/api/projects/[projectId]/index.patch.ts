@@ -1,4 +1,4 @@
-import { FieldType, ProjectRole } from '@prisma/client'
+import { FieldType, ProjectRole } from '@prisma-postgres/client'
 import * as yup from 'yup';
 import { safeResponseHandler } from '../../../utils/safeResponseHandler';
 import { requireUser } from '../../../utils/authorize';
@@ -19,7 +19,7 @@ export default safeResponseHandler(async (event) => {
   const body = await readBody(event);
   const patch = await PatchProjectFieldSchema.validate(body)
 
-  const patchedProject = await prisma.project.update({
+  const patchedProject = await db.project.update({
     data: patch,
     where: { id: projectId },
   });

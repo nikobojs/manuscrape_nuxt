@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Observation" ALTER COLUMN "data" DROP NOT NULL,
+ALTER COLUMN "data" SET DATA TYPE TEXT;

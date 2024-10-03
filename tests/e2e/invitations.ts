@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { testProject, withTempUser, createProject, getMe, inviteToProject, signup } from './helpers';
-import { prisma } from './helpers';
+import { db } from './helpers';
 
 describe('Project invitations', () => {
   test('invitations are accepted if user exists', async () =>  {
@@ -25,7 +25,7 @@ describe('Project invitations', () => {
       expect(typeof projectId).toBe('number');
 
       // get length of invitations (to assert that none will be created)
-      const invCountBefore = await prisma.projectInvitation.count()
+      const invCountBefore = await db.projectInvitation.count()
 
       // create new user and invite him to project
       await withTempUser(async (_userB) => {
@@ -33,7 +33,7 @@ describe('Project invitations', () => {
         expect(res.status).toBe(202);
 
         // get length of invitations again (to assert that none is created)
-        const invCountAfter = await prisma.projectInvitation.count()
+        const invCountAfter = await db.projectInvitation.count()
         expect(invCountBefore).toBe(invCountAfter)
       });
     });
@@ -62,14 +62,14 @@ describe('Project invitations', () => {
       expect(typeof projectId).toBe('number');
 
       // get length of invitations (to assert that one is created later)
-      const invCountBefore = await prisma.projectInvitation.count()
+      const invCountBefore = await db.projectInvitation.count()
 
       // create invitation to non-existing user
       const res = await inviteToProject(tokenA, projectId, { email: nonExistingEmail });
       expect(res.status).toBe(201);
 
       // get length of invitations again (to assert it was created)
-      const invCountAfter = await prisma.projectInvitation.count()
+      const invCountAfter = await db.projectInvitation.count()
       expect(invCountBefore).toBe(invCountAfter - 1);
     });
   });

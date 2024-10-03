@@ -5,13 +5,12 @@ export default defineNitroPlugin(() => {
   startScheduler()
 });
 
-
 function startScheduler() {
   const scheduler = useScheduler();
 
   scheduler.run(async () => {
     try {
-      const deleted = await prisma.projectInvitation.deleteMany({
+      const deleted = await db.projectInvitation.deleteMany({
         where: { expiresAt : { lte: new Date() }},
       });
 

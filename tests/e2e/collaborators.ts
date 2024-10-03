@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { testProject, withTempUser, createProject, patchCollaborator, invite, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
-import { prisma } from './helpers';
 import { daysInFuture } from '../../utils/datetime';
+import { db } from './helpers';
 
 describe('Collaborators', () => {
   test('project owner can invite a unique email 1 time', async () =>  {
@@ -256,7 +256,7 @@ describe('Collaborators', () => {
       expect(inviteRes.status).toBe(201);
 
       // set expiration date back to ten days ago
-      await prisma.projectInvitation.updateMany({
+      await db.projectInvitation.updateMany({
         where: { projectId },
         data: {
           expiresAt: daysInFuture(-10),
@@ -274,7 +274,7 @@ describe('Collaborators', () => {
       }, inviteEmail);
 
       // set expiration date 20 days in future
-      await prisma.projectInvitation.updateMany({
+      await db.projectInvitation.updateMany({
         where: { projectId },
         data: {
           expiresAt: daysInFuture(20),
@@ -311,7 +311,7 @@ describe('Collaborators', () => {
       expect(inviteRes.status).toBe(201);
 
       // set expiration date back to ten days ago
-      await prisma.projectInvitation.updateMany({
+      await db.projectInvitation.updateMany({
         where: { projectId },
         data: {
           expiresAt: daysInFuture(-10),

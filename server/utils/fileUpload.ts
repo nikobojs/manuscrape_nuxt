@@ -199,10 +199,13 @@ export function archiverUploadPipe(
   } else if (uploadsPath && !isS3) {
     // retrieve file and dir path
     const fullPath = path.join(uploadsPath, key);
-    ensureFilePathExists(fullPath);
+    const dirPath = fullPath.split('/').slice(0, -1).join('/');
+
+    // make dirs if they dont exist
+    fs.mkdirSync(dirPath, { recursive: true });
 
     // create and return the writable file stream
-    const writable = fs.createWriteStream(path.join(uploadsPath, key));
+    const writable = fs.createWriteStream(fullPath);
     return {
       passThrough: writable,
       upload: {
@@ -225,6 +228,7 @@ function ensureFilePathExists(filePath: string) {
       statusCode: 404,
       statusMessage: error.message,
     });
+  } else {
   }
 }
 

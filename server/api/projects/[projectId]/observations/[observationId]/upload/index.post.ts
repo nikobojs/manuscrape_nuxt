@@ -51,7 +51,7 @@ export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
-  const observation = await prisma.observation.findUnique({
+  const observation = await db.observation.findUnique({
     select: {
       id: true,
       isDraft: true,
@@ -141,7 +141,7 @@ export default safeResponseHandler(async (event) => {
   await uploadFile(newPath, file.filepath, uploadOnS3);
 
   // create new FileUpload row
-  await prisma.fileUpload.create({
+  await db.fileUpload.create({
     data: {
       observationId: observationId,
       mimetype: file.mimetype,

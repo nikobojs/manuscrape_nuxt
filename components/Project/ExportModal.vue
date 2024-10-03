@@ -7,14 +7,28 @@
       <template #header>
         <CardHeader>Create new project export</CardHeader>
       </template>
-      <div class="flex flex-col gap-y-9 gap-x-9 w-full">
+      <div class="flex flex-col gap-y-6 gap-x-9 w-full">
         <div class="flex flex-col gap-y-3">
-          <label class="">Type of export:</label>
-          <URadio
-            v-for="option in exportTypeOptions"
-            v-bind="option"
-            v-model="exportType"
-          />
+          <!-- <label class="mb-2">Choose the type of export:</label> -->
+
+          <div>
+            <div
+              v-for="option in exportTypeOptions"
+              class="border border-gray-500 px-3 py-3 [&:not(:last-child)]:mb-3 cursor-pointer transition-colors rounded-sm"
+              :class="{'border-green-600 color-green-600': exportType === option.value}"
+              @click="() => exportType = option.value"
+            >
+              <div class="flex gap-x-3">
+                <div class="relative">
+                  <UIcon class="text-lg pt-6 block" :name="option.icon" />
+                </div>
+                <div class="flex flex-col gap-y-1 text-sm">
+                  <p>{{ option.label }}</p>
+                  <p class="text-gray-400">{{ option.help }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="flex flex-col gap-y-3">
           <label class="">Observations to include:</label>
@@ -58,7 +72,7 @@
       </div>
       <div class="mt-6">
         <div class="text-red-500 mb-6 -mt-3" v-if="observationsCount === 0">
-          There are no observations in the selected range
+          There are no observations in the selected range.
         </div>
         <div class="flex items-center gap-x-3">
           <NuxtLink @click.prevent="submitExport()">
@@ -89,6 +103,7 @@ const {
   getObservationsCount,
   getExportParams,
   getDayBegin,
+  exportTypeOptions
 } = await useProjectExports(props.project.id);
 
 const observationsCount = ref<number | null>(null);
@@ -151,22 +166,6 @@ const ranges = [
   { label: 'Last 6 months', duration: { months: 6 } },
   { label: 'Last year', duration: { years: 1 } },
 ];
-const exportTypeOptions = [{
-  value: 'NVIVO',
-  label: 'Excel mastersheet',
-  help: '.xlsx file with observations including id column for cross-referencing with file exports',
-  icon: 'i-heroicons-academic-cap'
-}, {
-  value: 'UPLOADS',
-  label: 'Uploaded observation files',
-  help: 'All uploaded files on observations except the primary observation image',
-  icon: 'i-heroicons-academic-cap'
-}, {
-  value: 'MEDIA',
-  label: 'Observation images',
-  help: 'All primary images of observations',
-  icon: 'i-heroicons-academic-cap'
-}];
 
 const filterTypeOptions = [{
   value: 'ALL',

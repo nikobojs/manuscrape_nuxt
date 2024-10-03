@@ -7,12 +7,12 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
   await ensureURLResourceAccess(event, event.context.user);
 
-  const result = await prisma.observation.create({
+  const result = await db.observation.create({
     data: {
       userId: user.id,
       projectId: projectId,
       isDraft: true,
-      data: {}
+      data: '{}',
     }
   });
 

@@ -1,6 +1,6 @@
 
 import * as yup from 'yup';
-import { ProjectRole } from '@prisma/client';
+import { ProjectRole } from '@prisma-postgres/client';
 import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
 import { parseIntParam } from '~/server/utils/request';
 import { requireUser } from '~/server/utils/authorize';
@@ -30,7 +30,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // todo: abstract this to util
-  const access = await prisma.projectAccess.findUnique({
+  const access = await db.projectAccess.findUnique({
     where: {
       projectId_userId: {
         projectId: projectId,
@@ -54,7 +54,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const collaborator = await prisma.user.findFirst({
+  const collaborator = await db.user.findFirst({
     where: {
       email: parsed.email,
     },
@@ -65,7 +65,7 @@ export default safeResponseHandler(async (event) => {
   // if collaborator is already an existing user,
   // just let them join the project immediatly
   if (collaborator) {
-    const existing = await prisma.projectAccess.findFirst({
+    const existing = await db.projectAccess.findFirst({
       where: {
         user: { email: parsed.email },
         projectId,
@@ -80,7 +80,7 @@ export default safeResponseHandler(async (event) => {
       });
     }
 
-    await prisma.projectAccess.create({
+    await db.projectAccess.create({
       data: {
         projectId,
         userId: collaborator.id,
@@ -97,7 +97,7 @@ export default safeResponseHandler(async (event) => {
     const hash = generateInvitationHash(body.email);
 
     // check if invitation is already sent to user
-    const existing = await prisma.projectInvitation.findFirst({
+    const existing = await db.projectInvitation.findFirst({
       where: {
         emailHash: hash,
         projectId: projectId,
@@ -116,7 +116,7 @@ export default safeResponseHandler(async (event) => {
     }
 
     // create invitation
-    await prisma.projectInvitation.create({
+    await db.projectInvitation.create({
       data: {
         projectId,
         inviterId: user.id,

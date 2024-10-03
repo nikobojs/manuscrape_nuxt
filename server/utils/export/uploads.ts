@@ -3,7 +3,7 @@ import archiver from 'archiver'
 import { Readable } from 'node:stream';
 import type { ReadableStream } from 'node:stream/web';
 import { generateFilename } from './helpers';
-import { ExportType, Prisma } from '@prisma/client';
+import { ExportType, Prisma } from '@prisma-postgres/client';
 import { canUseS3 } from '../fileUpload';
 
 
@@ -14,7 +14,7 @@ export const generateProjectUploadsExport: ExportFn = async (
   observationFilter: Prisma.ObservationWhereInput,
 ) => {
   // get project by projectId
-  const project: ExportedProject | null = await prisma.project.findUnique({
+  const project: ExportedProject | null = await db.project.findUnique({
     where: {
       id: projectId
     },
@@ -31,7 +31,7 @@ export const generateProjectUploadsExport: ExportFn = async (
 
   
   // fetch related observations
-  const observations: { id: number }[] = await prisma.observation.findMany({
+  const observations: { id: number }[] = await db.observation.findMany({
     where: observationFilter,
     select: { id: true },
   });
@@ -41,7 +41,7 @@ export const generateProjectUploadsExport: ExportFn = async (
   const observationIds = observations.map(o => o.id);
 
   // get observation images for download by observationIds
-  const fileUploads = await prisma.fileUpload.findMany({
+  const fileUploads = await db.fileUpload.findMany({
     where: { observationId: { in: observationIds }},
     select: {
       id: true,
@@ -53,6 +53,13 @@ export const generateProjectUploadsExport: ExportFn = async (
     }
   });
 
+  // ensure there is something to export
+  if (fileUploads.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'There are no files to export'
+    });
+  }
 
   const archive = archiver('zip', {
     zlib: { level: 9 } // Sets the compression level.
@@ -107,7 +114,7 @@ export const generateProjectUploadsExport: ExportFn = async (
   }
 
   // await all parallel downloads and finalize archive
-  await Promise.all(downloads);
+  await Promise.allSettled(downloads);
   await archive.finalize();
   await upload.done();
 

@@ -1,3 +1,22 @@
+import { deserializeChoices } from './observationFields';
+
+function extractField(
+  field: ProjectFieldResponse,
+  inputArgs: CMSMultipleChoiceProps | CMSInputProps | CMSTextAreaProps | CMSCheckboxProps,
+): CMSInput {
+  const newField: CMSInput = {
+    field: {
+      type: field.type as FieldType,
+      index: field.index,
+      label: field.label,
+      choices: field.choices ? deserializeChoices(field.choices) : undefined,
+      required: field.required,
+    },
+    props: inputArgs,
+  };
+  return newField;
+}
+
 export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, inputs: CMSInput[] } {
   const inputs: CMSInput[] = [];
   const initialState: any = {}
@@ -28,29 +47,27 @@ export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, 
         throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
       }
 
-      inputs.push({
-        field,
-        props: inputArgs,
-      });
+      const newField = extractField(field, inputArgs);
+      inputs.push(newField);
     // else if field is a special kind
     } else {
       if (typ == FieldType.BOOLEAN) {
-        inputs.push({
-          field,
-          props: {
-            label: field.label,
-            name: field.label,
-            type: 'checkbox',
-            checked: false,
-          } as CMSCheckboxProps,
-        });
+        inputs.push(extractField(field, {
+          label: field.label,
+          name: field.label,
+          type: 'checkbox',
+          checked: false,
+        } as CMSCheckboxProps));
+        inputs.push(extractField(field, {
+          label: field.label,
+          name: field.label,
+          type: 'checkbox',
+          checked: false,
+        } as CMSCheckboxProps));
       } else if(typ == FieldType.TEXTAREA) {
-        inputs.push({
-          field,
-          props: {
-            name: field.label,
-          } as CMSTextAreaProps,
-        });
+        inputs.push(extractField(field, {
+          name: field.label,
+        } as CMSTextAreaProps));
       // multiple choice includes a few different file types
       } else if (isMultipleChoice(typ)) {
         if (!field.choices?.length) {
@@ -64,12 +81,9 @@ export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, 
           }
         } 
 
-        inputs.push({
-          field,
-          props: {
-            name: field.label,
-          } as CMSMultipleChoiceProps,
-        });
+        inputs.push(extractField(field, {
+          name: field.label,
+        } as CMSMultipleChoiceProps));
       } else {
         throw new Error(`Field with type '${field.type}' is not supported :(`);
       }
@@ -84,15 +98,26 @@ export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, 
 
 // find custom user-added choices for multiple choice fields.
 // this enables adding custom choices to choices-array, which will make them render on page load
-export function getCustomFieldChoices(field: ProjectFieldResponse, state: Ref<any>): string[] {
+export function getCustomFieldChoices(
+  field: { label: string, choices: string[] | undefined },
+  state: Ref<any>
+): string[] {
   if (!field.label) throw new Error('Field does not have a label');
   if (!Object.keys(state.value).includes(field.label)) return [];
 
+  console.log('getting custom field choices')
+
   // if custom choices are picked, add them to field.choices
-  const customChoices = state.value[field.label]
-    .map((v: { label: string }) => v.label)
-    .filter((v: string) => !field.choices.includes(v));
-  
-  const stateForField = state.value[field.label]
-  return customChoices;
+  if (!Array.isArray(field.choices) || field.choices.length == 0) {
+    return [];
+  } else {
+
+    // TODO: fix ! when typescript fixed itself...
+    const customChoices = state.value[field.label]
+      .map((v: { label: string }) => v.label)
+      .filter((v: string) => !field.choices!.includes(v));
+    
+    // const stateForField = state.value[field.label] - TODO: what is this?
+    return customChoices;
+  }
 }

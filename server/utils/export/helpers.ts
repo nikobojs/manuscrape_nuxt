@@ -1,4 +1,4 @@
-import { ExportStatus, ExportType } from '@prisma/client';
+import { ExportStatus, ExportType } from '@prisma-postgres/client';
 import archiver from 'archiver';
 
 export const archiverOptions: archiver.ArchiverOptions = {

@@ -1,4 +1,4 @@
-import { ExportStatus, ProjectRole } from '@prisma/client';
+import { ExportStatus, ProjectRole } from '@prisma-postgres/client';
 import { projectExportQuery } from '~/server/utils/prisma';
 import { numberBetween } from '~/utils/validate';
 
@@ -26,7 +26,7 @@ export default safeResponseHandler(async (event) => {
     required: true,
   });
 
-  const project = await prisma.project.findUnique({
+  const project = await db.project.findUnique({
     where: { id: projectId },
     select: { storageLimit: true },
   });
@@ -40,7 +40,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch existing exports for calculating storage usage
-  const existingExports = await prisma.projectExport.findMany({
+  const existingExports = await db.projectExport.findMany({
     where: {
       projectId,
       NOT: {
@@ -54,7 +54,7 @@ export default safeResponseHandler(async (event) => {
 
   const storageUsage = existingExports.reduce((sum, current) => current.size + sum, 0);
 
-  const projectExportsGenerating = await prisma.projectExport.findMany({
+  const projectExportsGenerating = await db.projectExport.findMany({
     where: {
       projectId,
       status: ExportStatus.GENERATING,
@@ -65,7 +65,7 @@ export default safeResponseHandler(async (event) => {
     select: projectExportQuery,
   });
 
-  const projectExports: FullProjectExport[] = await prisma.projectExport.findMany({
+  const projectExports: FullProjectExport[] = await db.projectExport.findMany({
     where: {
       projectId,
       NOT: {
