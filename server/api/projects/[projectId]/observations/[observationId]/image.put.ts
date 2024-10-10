@@ -1,7 +1,6 @@
 
 import { captureException } from '@sentry/node';
 import formidable from 'formidable';
-import { canUseS3 } from '~/server/utils/fileUpload';
 
 const allowedMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 const config = useRuntimeConfig();

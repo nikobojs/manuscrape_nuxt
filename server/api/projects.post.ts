@@ -1,7 +1,5 @@
 import { type Prisma, FieldType, ProjectRole } from '@prisma-postgres/client'
 import * as yup from 'yup';
-import { safeResponseHandler } from '../../utils/safeResponseHandler';
-import { requireUser } from '../../utils/authorize';
 import { serializeChoices } from '~/utils/observationFields';
 
 const fieldTypeValues = Object.values(FieldType);

@@ -1,7 +1,4 @@
 import { ProjectRole } from '@prisma-postgres/client';
-import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
-import { parseIntParam } from '../../../../utils/request';
-import { requireUser } from '../../../../utils/authorize';
 
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);

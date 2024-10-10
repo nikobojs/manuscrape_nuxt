@@ -1,6 +1,5 @@
 import * as yup from 'yup';
 import jwt from 'jsonwebtoken';
-import { safeResponseHandler } from '../utils/safeResponseHandler';
 
 const config = useRuntimeConfig();
 const TokenAuthBody = yup.object({

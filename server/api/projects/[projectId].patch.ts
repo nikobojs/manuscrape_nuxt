@@ -1,7 +1,5 @@
 import { FieldType, ProjectRole } from '@prisma-postgres/client'
 import * as yup from 'yup';
-import { safeResponseHandler } from '../../../utils/safeResponseHandler';
-import { requireUser } from '../../../utils/authorize';
 
 export const PatchProjectFieldSchema = yup.object({
   name: yup.string().optional(),

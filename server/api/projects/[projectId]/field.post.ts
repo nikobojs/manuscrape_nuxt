@@ -1,7 +1,5 @@
 import { ProjectRole } from '@prisma-postgres/client'
-import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
-import { requireUser } from '../../../../utils/authorize';
-import { NewProjectFieldSchema } from '../../index.post';
+import { NewProjectFieldSchema } from '../../projects.post';
 import { serializeChoices } from '~/utils/observationFields';
 
 // TODO: prettify code

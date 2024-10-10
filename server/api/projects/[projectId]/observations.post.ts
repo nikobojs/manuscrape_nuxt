@@ -1,7 +1,3 @@
-import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
-import { parseIntParam } from '../../../../utils/request';
-import { requireUser } from '../../../../utils/authorize';
-
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);

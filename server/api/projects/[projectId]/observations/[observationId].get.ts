@@ -1,5 +1,3 @@
-import { safeResponseHandler } from '~/server/utils/safeResponseHandler';
-
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);

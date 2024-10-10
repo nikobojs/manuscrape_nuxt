@@ -1,4 +1,3 @@
-import { safeResponseHandler } from "../utils/safeResponseHandler";
 import { compare } from 'bcrypt';
 import * as yup from 'yup';
 

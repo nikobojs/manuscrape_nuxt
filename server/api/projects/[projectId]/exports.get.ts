@@ -1,5 +1,4 @@
 import { ExportStatus, ProjectRole } from '@prisma-postgres/client';
-import { projectExportQuery } from '~/server/utils/prisma';
 import { numberBetween } from '~/utils/validate';
 
 export default safeResponseHandler(async (event) => {

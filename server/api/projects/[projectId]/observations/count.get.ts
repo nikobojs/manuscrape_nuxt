@@ -1,5 +1,4 @@
-import { ensureProjectAccess } from "~/server/utils/projectAccess";
-import { ExportProjectSchema } from "../exports/index.post";
+import { ExportProjectSchema } from "../exports.post";
 
 export default safeResponseHandler(async (event) => {
   // require login

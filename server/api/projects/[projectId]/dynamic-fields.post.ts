@@ -1,7 +1,4 @@
 import { ProjectRole } from '@prisma-postgres/client'
-import { safeResponseHandler } from '../../../../utils/safeResponseHandler';
-import { requireUser } from '../../../../utils/authorize';
-import { requireAllowedMatch } from '~/server/utils/dynamicFields';
 import { captureException } from '@sentry/node';
 
 export default safeResponseHandler(async (event) => {

@@ -1,10 +1,7 @@
-import { safeResponseHandler } from '../../../../../utils/safeResponseHandler';
-import { requireUser } from '../../../../../utils/authorize';
 import { ProjectRole } from '@prisma-postgres/client';
 import { captureException } from '@sentry/node';
 import * as yup from 'yup';
-import { isMultipleChoice } from '~/utils/observationFields';
-import { serializeChoices } from '~/utils/observationFields';
+import { isMultipleChoice, serializeChoices } from '~/utils/observationFields';
 
 export const PatchProjectFieldSchema = yup.object({
   label: yup.string(),

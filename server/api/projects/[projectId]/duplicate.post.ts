@@ -1,10 +1,6 @@
 
 import * as yup from 'yup';
-import { safeResponseHandler } from '../../../utils/safeResponseHandler';
-import { requireUser } from '../../../utils/authorize';
 import { ProjectRole } from '@prisma-postgres/client';
-import { smallProjectQuery } from '~/server/utils/prisma';  // TODO: does auto import work?
-import { getNewFieldId } from '~/server/utils/projectFields';
 import type { NuxtError } from 'nuxt/app';
 
 export const DuplicateProjectSchema = yup.object({
