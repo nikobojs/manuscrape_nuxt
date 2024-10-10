@@ -14,5 +14,7 @@ export function generateInvitationHash(
     hash = hasher.digest('hex');
   }
 
+  console.log('generated invitation hash:', hash)
+
   return hash;
 }

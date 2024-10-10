@@ -14,11 +14,11 @@ import type {
   User,
 } from "@prisma-mssql/client";
 import type { H3Event } from "h3";
-import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/index.post";
+import { NewProjectFieldSchema, NewProjectSchema } from "~/server/api/projects/project.post";
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~/server/api/auth.post";
 import { SignUpRequestSchema } from "~/server/api/user.post";
-import { ExportProjectSchema } from '~/server/api/projects/[projectId]/exports/index.post';
+import { ExportProjectSchema } from '~/server/api/projects/[projectId]/exports/exports.post';
 import type {
   exportProjectQuery,
   bigUserQuery,

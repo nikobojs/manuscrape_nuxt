@@ -128,10 +128,8 @@ export default safeResponseHandler(async (event) => {
 
   }
 
-  const result = await db.observation.update({
-    select: {
-      id: true,
-    }, where: {
+  await db.observation.update({
+    where: {
       id: observationId,
     }, data: {
       data: JSON.stringify(patch.data),
@@ -141,7 +139,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   return {
-    id: result.id,
+    id: observationId,
     msg: 'observation draft patched!'
   }
 })

@@ -105,8 +105,6 @@ export function getCustomFieldChoices(
   if (!field.label) throw new Error('Field does not have a label');
   if (!Object.keys(state.value).includes(field.label)) return [];
 
-  console.log('getting custom field choices')
-
   // if custom choices are picked, add them to field.choices
   if (!Array.isArray(field.choices) || field.choices.length == 0) {
     return [];

@@ -159,7 +159,6 @@ export const generateNvivoExport: ExportFn = async (
     where: observationFilter,
     select: observationColumns,
   });
-  console.info('> generating excel with', observations.length, 'observations');
 
 
   // initialize a few shortcut variables

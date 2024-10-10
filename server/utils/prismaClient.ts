@@ -15,10 +15,11 @@ if (!['postgres', 'mssql'].includes(dbType)) {
 
 export function getdb(): PostgresClient | MSSqlClient {
   if (dbType === 'postgres') {
-    console.warn('DATABASE_URL:', process.env.DATABASE_URL);
-    return new PostgresClient({ datasources: {db: {url: process.env.DATABASE_URL}}});
+    console.info('> database type: postgres')
+    return new PostgresClient({ datasourceUrl: process.env.PG_DATABASE_URL });
   } else {
-    return new MSSqlClient();
+    console.info('> database type: mssql')
+    return new MSSqlClient({ datasourceUrl: process.env.MSSQL_DATABASE_URL });
   }
 }
 

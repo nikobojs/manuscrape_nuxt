@@ -10,7 +10,6 @@ export default defineNitroPlugin(async (nitro) => {
 
   // ensure db is connected on startup
   // TODO: make exit() work with `yarn dev` forever/pm2/etc setup
-  console.log('will try to init db connection...')
   try {
     await ensureDbConnected(nitro);
   } catch(e) {

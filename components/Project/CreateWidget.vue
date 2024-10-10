@@ -157,7 +157,7 @@
         }, 300);
       }
     } catch (err: any) {
-        console.log(' caught error:', {err})
+        console.error(' caught error:', {err})
         const msg = getErrMsg(err);
         error.value = msg;
     } finally {

@@ -37,8 +37,6 @@ export async function enforceCorrectIndexes(
     return;
   }
 
-  console.warn('Auto correcting broken project field indexes')
-
   // calculate correct indexes
   for (let i = 0; i < sortedExisting.length; i++) {
     sortedExisting[i].index = i;

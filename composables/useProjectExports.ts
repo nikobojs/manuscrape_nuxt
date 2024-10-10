@@ -92,7 +92,7 @@ export const useProjectExports = async (projectId: number) => {
       // TODO: capture error!
       // TODO: improve endpoint to return actual json
       console.error('Response is not a number!')
-      console.log(json);
+      console.error(json);
       return null;
     }
     return json;

@@ -7,8 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import { useDevice } from '~/composables/useDevice';
-
   const { version } = useRuntimeConfig().public;
   const { isElectron } = useDevice();
 </script>
