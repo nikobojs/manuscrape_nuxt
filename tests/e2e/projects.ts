@@ -10,7 +10,7 @@ import {
   defaultPassword,
   getObservations,
   patchProject,
-  invite,
+  inviteToProject,
   patchField
 } from './helpers';
 
@@ -122,7 +122,7 @@ describe('Project management', () => {
     const collaboratorEmail = 'update-settings-collaborator-0@codecollective.dk';
     await withTempProject(async (user, project, _obs, token) => {
       // invite collaborator
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },

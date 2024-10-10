@@ -3,8 +3,10 @@ import { fetch } from "@nuxt/test-utils";
 import { FieldType } from '@prisma-postgres/client';
 import { daysInFuture } from "../../utils/datetime";
 import { db as _db } from "../../server/utils/prismaClient";
+import { PrismaClient as PostgresClient } from "@prisma-postgres/client";
+import { PrismaClient as MSSqlClient } from "@prisma-mssql/client";
 
-export const db = _db;
+export const db: PostgresClient & MSSqlClient = _db;
 
 const contentTypeJson = {
   "Content-Type": "application/json",
@@ -36,25 +38,6 @@ export async function signup(json: any): Promise<Response> {
       body: JSON.stringify(json),
       headers: {
         ...contentTypeJson,
-      },
-    },
-  );
-  return res;
-}
-
-export async function invite(
-  token: string,
-  projectId: string | number,
-  json: any
-): Promise<Response> {
-  const res = await fetch(
-    `/api/projects/${projectId}/collaborators`,
-    {
-      method: "POST",
-      body: JSON.stringify(json),
-      headers: {
-        ...contentTypeJson,
-        ...authHeader(token),
       },
     },
   );
@@ -358,8 +341,9 @@ export async function expectRedirect(
 }
 
 export async function inviteToProject(token: string, projectId: number, body: any) {
+  console.error("INVITE TO PROJECT FETCH:", body)
   const res = await fetch(
-    `/api/projects/${projectId}/collaborators`,
+    `/api/projects/${projectId}/collaborators/`,
     {
       method: 'POST',
       body: JSON.stringify(body),

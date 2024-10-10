@@ -1,9 +1,13 @@
 import type { H3Event } from 'h3';
 
 export default defineNitroPlugin((nitro) => {
+  // always set `requestBegin` (also used by auth)
   nitro.hooks.hook("request", ((event: H3Event) => {
     event.context.requestBegin = new Date().getTime();
   }) as never);
+
+  const enableLogs = useRuntimeConfig().app?.enableHttpLog;
+  if (!enableLogs) return;
 
   nitro.hooks.hook('afterResponse', (async (
     event: H3Event,

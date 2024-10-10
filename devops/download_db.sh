@@ -10,7 +10,7 @@ set -e
 rm -f manuscrape.dump
 
 # use specific pg_dump binary
-read -e -p "Enter pg_dump path: " -i "$PG_DUMP" pg_dump
+read -e -p "Enter pg_dump path: " -i "$PG_TEST_DUMP" pg_dump
 
 # retrieve db string
 printf "Enter postgres connection string: "

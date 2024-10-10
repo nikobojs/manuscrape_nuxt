@@ -39,6 +39,7 @@ export default defineNuxtConfig({
       authResponseTime: 120,
       invitationSalt: process.env.INVITATION_SALT || 'saltyFreciousTrembleCat42',
       databaseType: process.env.DATABASE_TYPE || 'postgres',
+      enableHttpLog: process.env.LOG_HTTP_REQUESTS === 'true',
     },
     public: {
       baseUrl: process.env.BASE_URL || '',
@@ -47,7 +48,7 @@ export default defineNuxtConfig({
       maxFileSize: 100 * 1000 * 1000,
       sentryDsn: process.env.SENTRY_DSN || '',
       sentryEnv: process.env.SENTRY_ENV || 'development',
-    }
+    },
   },
   
   colorMode: {

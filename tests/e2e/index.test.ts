@@ -9,23 +9,21 @@ await setup({
     DATABASE_URL: process.env.TEST_DATABASE_URL,
     DATABASE_TYPE: process.env.TEST_DATABASE_TYPE,
   },
-  logLevel: 0, // experimental, not documented?
+  logLevel: 0,
 });
 
 beforeEach(async () => {
   // TODO: extract to seperate function and utilize cascade
-  await db.observation.deleteMany({ where: {} });
-  await db.projectInvitation.deleteMany({ where: {} });
-  await db.dynamicProjectField.deleteMany({ where: {} });
-  await db.projectField.deleteMany({ where: {} });
-  await db.projectExport.deleteMany({ where: {} });
-  await db.projectAccess.deleteMany({ where: {} });
-  await db.imageUpload.deleteMany({ where: {} });
-  await db.fileUpload.deleteMany({ where: {} });
-  await db.project.deleteMany({ where: {} });
-  await db.user.deleteMany({
-    where: {}
-  });
+  console.log('begin delete all')
+  const err = (err: any) => {
+    console.error(err);
+    throw err;
+  };
+
+  await db.projectAccess.deleteMany().catch(err);
+  await db.project.deleteMany().catch(err);
+  await db.user.deleteMany().catch(err);
+  console.log('done delete all')
 });
 
 export * from './auth';

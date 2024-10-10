@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { testProject, withTempUser, createProject, patchCollaborator, invite, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
+import { testProject, withTempUser, createProject, patchCollaborator, inviteToProject, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
 import { daysInFuture } from '../../utils/datetime';
 import { db } from './helpers';
 
@@ -12,12 +12,12 @@ describe('Collaborators', () => {
       expect(Object.keys(json)).toContain('id');
       expect(typeof json['id']).toBe('number');
       const projectId: number = json['id'];
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         projectId,
         { email: 'invitationtest@codecollective.dk' },
       );
-      const inviteRes2 = await invite(
+      const inviteRes2 = await inviteToProject(
         token,
         projectId,
         { email: 'invitationtest@codecollective.dk' },
@@ -31,7 +31,7 @@ describe('Collaborators', () => {
   test('project owner can remove collaborator', async () =>  {
     const collaboratorEmail = 'collaborator-0@codecollective.dk';
     await withTempProject(async (_user, project, _obs, tokenA) => {
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         tokenA,
         project.id,
         { email: collaboratorEmail },
@@ -50,7 +50,7 @@ describe('Collaborators', () => {
   test('remove collaborator returns 400 or 404 on bad user id', async () =>  {
     const collaboratorEmail = 'collaborator-1@codecollective.dk';
     await withTempProject(async (_user, project, _obs, token) => {
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },
@@ -77,13 +77,13 @@ describe('Collaborators', () => {
     await withTempProject(async (_user, project, _obs, token) => {
 
       // invite two collaborators
-      const inviteRes0 = await invite(
+      const inviteRes0 = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail0 },
       );
       expect(inviteRes0.status).toBe(201);
-      const inviteRes1 = await invite(
+      const inviteRes1 = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail1 },
@@ -108,7 +108,7 @@ describe('Collaborators', () => {
     // create project manager and project
     await withTempProject(async (_user, project, _obs, token) => {
       // invite collaborator
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },
@@ -136,7 +136,7 @@ describe('Collaborators', () => {
     // create project manager and project
     await withTempProject(async (_user, project, _obs, token) => {
       // invite collaborator
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },
@@ -164,7 +164,7 @@ describe('Collaborators', () => {
     // create project manager and project
     await withTempProject(async (user, project, _obs, token) => {
       // invite collaborator
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },
@@ -192,7 +192,7 @@ describe('Collaborators', () => {
       expect(Object.keys(json)).toContain('id');
       expect(typeof json['id']).toBe('number');
       const projectId: number = json['id'];
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         projectId,
         { email: inviteEmail },
@@ -218,7 +218,7 @@ describe('Collaborators', () => {
       const projectId: number = json['id'];
 
       await withTempUser(async (_user2, token2) => {
-        const inviteRes = await invite(
+        const inviteRes = await inviteToProject(
           token,
           projectId,
           { email: inviteEmail },
@@ -248,7 +248,7 @@ describe('Collaborators', () => {
       expect(typeof json['id']).toBe('number');
       const projectId: number = json['id'];
 
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         projectId,
         { email: inviteEmail },
@@ -303,7 +303,7 @@ describe('Collaborators', () => {
       expect(typeof json['id']).toBe('number');
       const projectId: number = json['id'];
 
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         projectId,
         { email: inviteEmail },
@@ -326,7 +326,7 @@ describe('Collaborators', () => {
         expect(access.length).toBe(0);
 
         // create a new invitation
-        const invite2Res = await invite(
+        const invite2Res = await inviteToProject(
           token,
           projectId,
           { email: inviteEmail },

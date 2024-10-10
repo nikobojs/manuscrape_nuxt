@@ -3,7 +3,7 @@ import {
   withTempProject,
   withTempUser,
   getMe,
-  invite,
+  inviteToProject,
   patchField,
   moveField
 } from './helpers';
@@ -51,7 +51,7 @@ describe('Project fields', () => {
       expect(fieldId).toBeTypeOf('number');
 
       // invite future collaborator
-      const inviteRes = await invite(
+      const inviteRes = await inviteToProject(
         token,
         project.id,
         { email: collaboratorEmail },
