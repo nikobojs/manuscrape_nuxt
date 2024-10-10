@@ -19,7 +19,9 @@
     "migrate-mssql": "npx prisma migrate dev --schema=prisma/mssql/schema.prisma",
     "test-dev": "vitest dev",
     "test": "vitest run",
-    "full-test": "./tests/run_all.sh",
+    "full-test-mssql": "./tests/run_all_mssql.sh",
+    "full-test-postgres": "./tests/run_all_postgres.sh",
+    "full-test": "yarn full-test-mssql; yarn full-test-postgres",
     "test-ui": "vitest --ui"
   },
   "devDependencies": {
@@ -62,8 +64,5 @@
     "vitest": "^2.0.2",
     "vue-tsc": "^2.0.26",
     "yup": "^1.4.0"
-  },
-  "resolutions": {
-    "vue": "3.5.4"
   }
 }
