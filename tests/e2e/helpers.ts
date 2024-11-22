@@ -64,6 +64,43 @@ export async function patchField(
   return res;
 }
 
+export async function createField(
+  token: string,
+  projectId: string | number,
+  json: any
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/fields`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+export async function deleteField(
+  token: string,
+  projectId: string | number,
+  fieldId: string | number,
+): Promise<Response> {
+  const res = await fetch(
+    `/api/projects/${projectId}/fields/${fieldId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
 export async function moveField(
   token: string,
   projectId: string | number,

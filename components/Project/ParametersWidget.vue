@@ -164,7 +164,7 @@ import { isMultipleChoice } from '~/utils/observationFields';
 
       // add toast and call onProjectUpdated callback
       toast.add({
-        title: 'Parameter was successfully deleted',
+        title: 'Parameter was successfully updated',
         icon: 'i-heroicons-check',
         color: 'green',
       });

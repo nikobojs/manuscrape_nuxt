@@ -61,19 +61,32 @@ export default safeResponseHandler(async (event) => {
 
   // define array of affected observation id and its new 'data' value
   const dataUpdates = affectedObservations.map((o) => {
-    if (typeof o.data !== 'object' || !o.data) {
+    if (typeof o.data !== 'string' || !o.data) {
+      // capture error without telling user. Skip modifying this observation
       const err = createError({
         statusCode: 500,
-        statusMessage: 'Observation has no data'
+        statusMessage: 'Observation has no data is not a valid string'
       });
       captureException(err);
-      throw err;
+      return o;
     }
 
-    if (!(field.label in o.data)) {
-      captureException('Field label not found in affectedObservations');
-    } else {
-      delete (o.data as JsonObject)[field.label]
+    // try parse observation json
+    try {
+      const data = JSON.parse(o.data);
+      // if deleted field is not in data, skip
+      if (field.label in data) {
+        // delete field data from observation data
+        delete (data as JsonObject)[field.label];
+        o.data = JSON.stringify(data);
+      }
+    } catch(e) {
+      // capture error without telling user. Skip modifying this observation
+      const err = createError({
+        statusCode: 500,
+        statusMessage: `Observation #${o.id} data could not be parsed to JSON`
+      });
+      captureException(err);
     }
 
     return o;

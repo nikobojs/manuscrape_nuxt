@@ -5,10 +5,67 @@ import {
   getMe,
   inviteToProject,
   patchField,
-  moveField
+  deleteField,
+  moveField,
+  createField,
 } from './helpers';
 
 describe('Project fields', () => {
+
+  test('project owner can create field label', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      const projectId = project.id;
+      expect(projectId).toBeTypeOf('number');
+
+      const newField = {
+        choices: ["awd", "d"],
+        index:	2,
+        label:	"asdasd",
+        required:	false,
+        type:	"MULTIPLE_CHOICE_ADD",
+      }
+
+      // get the number of fields to verify it gets created
+      const fieldLength = project.fields.length;
+
+      const res = await createField(token, projectId, newField);
+      expect(res.status).toBe(201);
+
+      // get updated project to verify the field was deleted
+      const meRes = await getMe(token);
+      const meJson = await meRes.json();
+      const updatedProject = meJson?.projectAccess?.find((a: any) => a.projectId === projectId)?.project as FullProject;
+      expect(updatedProject).toBeTruthy();
+      expect(updatedProject.fields.length).toEqual(fieldLength + 1);
+    });
+  });
+
+  test('project owner can delete field label', async () => {
+    await withTempProject(async (user, project, _obs, token) => {
+      // ensure projectId is a number
+      const projectId = project.id;
+      expect(projectId).toBeTypeOf('number');
+
+      // ensure project has a field with a valid id
+      const fieldId = project.fields?.[0]?.id;
+      expect(fieldId).toBeTypeOf('number');
+
+      // get the number of fields to verify it gets deleted
+      const fieldLength = project.fields.length;
+
+      // delete field
+      const res = await deleteField(token, projectId, fieldId);
+      expect(res.status).toBe(204);
+
+      // get updated project to verify the field was deleted
+      const meRes = await getMe(token);
+      const meJson = await meRes.json();
+      const updatedProject = meJson?.projectAccess?.find((a: any) => a.projectId === projectId)?.project as FullProject;
+      expect(updatedProject).toBeTruthy();
+      expect(updatedProject.fields.length).toEqual(fieldLength - 1);
+    });
+  });
 
   test('project owner can patch field label', async () => {
     await withTempProject(async (user, project, _obs, token) => {
