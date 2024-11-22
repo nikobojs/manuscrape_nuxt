@@ -58,12 +58,6 @@ export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, 
           type: 'checkbox',
           checked: false,
         } as CMSCheckboxProps));
-        inputs.push(extractField(field, {
-          label: field.label,
-          name: field.label,
-          type: 'checkbox',
-          checked: false,
-        } as CMSCheckboxProps));
       } else if(typ == FieldType.TEXTAREA) {
         inputs.push(extractField(field, {
           name: field.label,
