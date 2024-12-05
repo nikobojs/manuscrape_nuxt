@@ -4,7 +4,7 @@
     <main class="pt-9 pb-6">
       <slot />
     </main>
-    <Footer v-if="!isElectron" />
+    <Footer />
   </div>
   <UNotifications />
 </template>

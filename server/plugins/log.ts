@@ -3,7 +3,10 @@ import type { H3Event } from 'h3';
 export default defineNitroPlugin((nitro) => {
   // always set `requestBegin` (also used by auth)
   nitro.hooks.hook("request", ((event: H3Event) => {
+    const headers = getRequestHeaders(event);
+    const userAgent = headers['user-agent'] || headers['User-Agent'];
     event.context.requestBegin = new Date().getTime();
+    event.context.requestUserAgent = userAgent;
   }) as never);
 
   const enableLogs = useRuntimeConfig().app?.enableHttpLog;
@@ -23,6 +26,7 @@ export default defineNitroPlugin((nitro) => {
       `[${new Date().toISOString()}]`,
       event.req.method,
       getRequestURL(event).pathname,
+      event.context.requestUserAgent,
       '->',
       status,
       statusMsg,
