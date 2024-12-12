@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
 import type { PublicRuntimeConfig } from "nuxt/schema";
-import type { NitroApp } from "nitropack";
+import type { NitroApp } from "nitropack/types";
 
 export default defineNitroPlugin(async (nitro) => {
   const config = useRuntimeConfig().public;
