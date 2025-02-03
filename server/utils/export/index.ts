@@ -92,6 +92,7 @@ export async function exportErrored(
   err?: string | Error,
 ): Promise<void> {
   const errMsg = err instanceof Error ? err.message : err
+  console.error('Project export failed with err:', errMsg);
   await db.projectExport.update({
     data: {
       error: errMsg || 'Unknown error',
