@@ -62,12 +62,17 @@ export const generateProjectUploadsExport: ExportFn = async (
   }
 
   const archive = archiver('zip', {
-    zlib: { level: 9 } // Sets the compression level.
+    zlib: {
+      level: 1,
+      memLevel: 9,
+      windowBits: 11
+    },
+    highWaterMark: 2147483648, // max 2gb
   });
 
-  archive.on("error", function (err) {
-    throw err;
-  });
+  // archive.on("error", function (err) {
+  //   throw err;
+  // });
   archive.on("warning", function (warn) {
     console.warn(warn);
   });
@@ -88,10 +93,12 @@ export const generateProjectUploadsExport: ExportFn = async (
   }
   
   const downloads: Promise<any>[] = [];
+  console.log('adding these fileUploads to archive:', fileUploads);
   for (const upload of fileUploads) {
     if (!upload?.filePath) continue;
+
     // add filedownload as promise to downloads[]
-    const download = getUpload(upload.filePath, canUseS3()).then(({ readable, s3 }) => {
+    const download = getUpload(upload.filePath, upload.isS3).then(({ readable, s3 }) => {
       // get fileExtension
       let filenameDotSplit = upload.originalName.split('.').reverse();
       let fileEnding = '';
@@ -121,10 +128,14 @@ export const generateProjectUploadsExport: ExportFn = async (
     downloads.push(download);
   }
 
+  console.log('awaiting these promises:', downloads)
+
   // await all parallel downloads and finalize archive
   await Promise.allSettled(downloads);
   await archive.finalize();
   await upload.done();
+
+  console.log('done calling finalize and stuff');
 
   const size = archive.pointer();
 
