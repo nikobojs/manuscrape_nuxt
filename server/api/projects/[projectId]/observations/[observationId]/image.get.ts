@@ -33,10 +33,18 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
-  const res = await getUpload(observation.image.filePath, observation.image.isS3);
+  const { readable, s3 } = await getUpload(observation.image.filePath, observation.image.isS3);
   setHeader(event, 'Content-Type', observation.image.mimetype);
   // NOTE: this assumes that all images routes uses version query params for cache
   setHeader(event, 'Cache-Control', 'max-age=31536000'); // one year cache
 
-  return res;
+  // clean up open sockets just in case
+  readable.on('end', () => {
+    if (s3) s3.destroy();
+  });
+  readable.on('close', () => {
+    if (s3) s3.destroy();
+  });
+
+  return readable;
 });

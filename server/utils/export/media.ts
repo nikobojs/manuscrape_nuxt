@@ -64,7 +64,7 @@ export const generateProjectMediaExport: ExportFn = async (
 
   // pipe to file uploads destination
   const newFilePath = generateFilename(projectId, ExportType.MEDIA);
-  const isTargetS3 = canUseS3();
+  const isTargetS3: boolean = canUseS3();
   const { upload, passThrough } = archiverUploadPipe(newFilePath, isTargetS3);
   archive.pipe(passThrough);
 
@@ -75,11 +75,19 @@ export const generateProjectMediaExport: ExportFn = async (
     if (!image?.filePath) continue;
 
     // create single file download promise
-    const download = getUpload(image.filePath, image.isS3).then((readable) => {
+    const download = getUpload(image.filePath, image.isS3).then(({ readable, s3 }) => {
       // get fileExtension
       let filenameDotSplit = image.originalName.split('.').reverse();
       let fileEnding = '';
       if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+
+      // clean up open sockets just in case
+      readable.on('end', () => {
+        if (s3) s3.destroy();
+      });
+      readable.on('close', () => {
+        if (s3) s3.destroy();
+      });
 
       // initialize download stream from s3 directly into zip file
       archive.append(readable, { name: id + fileEnding });

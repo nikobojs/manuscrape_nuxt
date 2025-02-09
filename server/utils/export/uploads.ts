@@ -91,7 +91,7 @@ export const generateProjectUploadsExport: ExportFn = async (
   for (const upload of fileUploads) {
     if (!upload?.filePath) continue;
     // add filedownload as promise to downloads[]
-    const download = getUpload(upload.filePath, canUseS3()).then((readable) => {
+    const download = getUpload(upload.filePath, canUseS3()).then(({ readable, s3 }) => {
       // get fileExtension
       let filenameDotSplit = upload.originalName.split('.').reverse();
       let fileEnding = '';
@@ -105,6 +105,14 @@ export const generateProjectUploadsExport: ExportFn = async (
       }
       // add upload counter (there might be more for each observation)
       const count = `.${obsFileCounts[upload.observationId]}`;
+
+      // clean up open sockets just in case
+      readable.on('end', () => {
+        if (s3) s3.destroy();
+      });
+      readable.on('close', () => {
+        if (s3) s3.destroy();
+      });
 
       archive.append(readable, { name: upload.observationId + count + fileEnding });
     });

@@ -43,6 +43,15 @@ export default safeResponseHandler(async (event) => {
   setHeader(event, 'Content-Type', projectExport.mimetype);
 
   // fetch export from s3 and return it
-  const res = await getUpload(projectExport.filePath, projectExport.isS3);
-  return res;
+  const { readable, s3 } = await getUpload(projectExport.filePath, projectExport.isS3);
+  
+  // clean up open sockets just in case
+  readable.on('end', () => {
+    if (s3) s3.destroy();
+  });
+  readable.on('close', () => {
+    if (s3) s3.destroy();
+  });
+
+  return readable;
 });

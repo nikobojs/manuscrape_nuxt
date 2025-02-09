@@ -31,17 +31,18 @@ export default safeResponseHandler(async (event) => {
       statusMessage: 'File wasn\'t uploaded correctly',
     })
   }
-
-  const res = await getUpload(file.filePath, file.isS3);
-
-  // if (res.$metadata.httpStatusCode !== 200) {
-  //   throw createError({
-  //     statusCode: 404,
-  //     statusMessage: 'File not found',
-  //   })
-  // }
   
   setHeader(event, 'Content-Disposition', `inline; filename="${file.originalName}"`)
-  // return res.Body;
-  return res;
+
+  const { readable, s3 } = await getUpload(file.filePath, file.isS3);
+
+  // clean up open sockets just in case
+  readable.on('end', () => {
+    if (s3) s3.destroy();
+  });
+  readable.on('close', () => {
+    if (s3) s3.destroy();
+  });
+  
+  return readable;
 });

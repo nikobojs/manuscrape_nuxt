@@ -4,6 +4,7 @@ import { captureException } from '@sentry/node';
 import type { H3Event } from 'h3';
 import { ExportType, Prisma } from '@prisma-postgres/client';
 import { canUseS3 } from '../fileUpload';
+import { generateFilename } from './helpers';
 
 function generateObservationRow(
   obs: FullObservationPayload,
