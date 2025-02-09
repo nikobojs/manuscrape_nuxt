@@ -93,7 +93,6 @@ export const generateProjectUploadsExport: ExportFn = async (
   }
   
   const downloads: Promise<any>[] = [];
-  console.log('adding these fileUploads to archive:', fileUploads);
   for (const upload of fileUploads) {
     if (!upload?.filePath) continue;
 
@@ -128,14 +127,10 @@ export const generateProjectUploadsExport: ExportFn = async (
     downloads.push(download);
   }
 
-  console.log('awaiting these promises:', downloads)
-
   // await all parallel downloads and finalize archive
   await Promise.allSettled(downloads);
   await archive.finalize();
   await upload.done();
-
-  console.log('done calling finalize and stuff');
 
   const size = archive.pointer();
 
