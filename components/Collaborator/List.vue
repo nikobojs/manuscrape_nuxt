@@ -14,8 +14,8 @@
       <span class="flex items-start gap-x-2">
         {{ row.nameInProject }}
         <UIcon
-          name="i-mdi-pencil-outline opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
-          class="text-lg"
+          name="i-mdi-pencil-outline"
+          class="opacity-80 hover:opacity-100 transition-opacity cursor-pointer text-lg"
           @click="() => onEditAlias(row)"
         />
       </span>
