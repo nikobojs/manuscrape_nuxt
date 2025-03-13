@@ -602,3 +602,24 @@ export async function withTempProject(
 }
 
 export const delay = (ms: number) => new Promise(ok => setTimeout(ok, ms));
+
+export async function removeStuff () {
+  try {
+    // TODO: delete all dynamic tables
+    console.log('begin delete all')
+    await db.projectAccess.deleteMany()
+    await db.projectExport.deleteMany();
+    await db.projectInvitation.deleteMany();
+    await db.dynamicProjectField.deleteMany();
+    await db.projectField.deleteMany();
+    await db.fileUpload.deleteMany();
+    await db.imageUpload.deleteMany();
+    await db.observation.deleteMany();
+    await db.project.deleteMany();
+    await db.user.deleteMany();
+    console.log('done delete all');
+  } catch(e) {
+    console.error(e);
+    throw e;
+  }
+}

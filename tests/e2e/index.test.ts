@@ -1,30 +1,29 @@
-import { beforeEach } from 'vitest';
+import { beforeEach, beforeAll } from 'vitest';
 import { setup } from '@nuxt/test-utils';
-import { db } from './helpers';
+import { removeStuff } from './helpers';
 
 // TODO: add minio & upload test vars to avoid poisening the prod envs
 
+const dbType = process.env.TEST_DATABASE_TYPE;
+let dbUrl = process.env.PG_TEST_DATABASE_URL;
+if (dbType === 'mssql') {
+  dbUrl = process.env.MSSQL_TEST_DATABASE_URL;
+}
+
+if (!dbUrl) {
+  throw new Error('Test database URL could not be determined from .env file')
+}
+
 await setup({
   env: {
-    DATABASE_URL: process.env.TEST_DATABASE_URL,
-    DATABASE_TYPE: process.env.TEST_DATABASE_TYPE,
+    DATABASE_URL: dbUrl,
+    DATABASE_TYPE: dbType,
   },
   logLevel: 0,
 });
 
-beforeEach(async () => {
-  // TODO: extract to seperate function and utilize cascade
-  console.log('begin delete all')
-  const err = (err: any) => {
-    console.error(err);
-    throw err;
-  };
-
-  await db.projectAccess.deleteMany().catch(err);
-  await db.project.deleteMany().catch(err);
-  await db.user.deleteMany().catch(err);
-  console.log('done delete all')
-});
+beforeAll(removeStuff);
+beforeEach(removeStuff);
 
 export * from './auth';
 export * from './projects';
