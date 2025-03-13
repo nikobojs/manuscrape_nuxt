@@ -184,7 +184,9 @@
     // look for all booleans to set their default value (avoid `undefined`)
     if (sortedFields.value?.length && isNewObservation) {
       for (const field of sortedFields.value) {
-        if (field.type === FieldType.BOOLEAN) {
+        const isBool = field.type === FieldType.BOOLEAN;
+        const isUndefined = typeof state.value[field.label] !== 'boolean';
+        if (isBool && isUndefined) {
           state.value[field.label] = false;
         }
       }
