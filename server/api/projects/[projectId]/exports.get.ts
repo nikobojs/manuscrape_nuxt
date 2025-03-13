@@ -3,10 +3,43 @@ import { numberBetween } from '~/utils/validate';
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED])
 
   // get project id from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);
+
+  // fetch role to ensure either owner or project.contributorsCanExport
+  const projectAccess = await db.projectAccess.findFirst({
+    select: {
+      role: true,
+    },
+    where: {
+      projectId,
+      userId: event.context.user.id,
+    }
+  });
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: { storageLimit: true, contributorsCanExport: true },
+  });
+
+  // ensure project exists
+  if (!project) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Project was not found',
+    });
+  }
+
+
+  const isOwner = projectAccess?.role === ProjectRole.OWNER;
+  if (!isOwner && !project.contributorsCanExport) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Exporting is disabled for all except the project owner',
+    });
+  }
 
   const take = queryParam<number>({
     name: 'take',
@@ -24,19 +57,6 @@ export default safeResponseHandler(async (event) => {
     validate: numberBetween(0, 1999999999),
     required: true,
   });
-
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-    select: { storageLimit: true },
-  });
-
-  // ensure project exists
-  if (!project) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Project was not found',
-    });
-  }
 
   // fetch existing exports for calculating storage usage
   const existingExports = await db.projectExport.findMany({

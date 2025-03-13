@@ -42,6 +42,7 @@ model Project {
   authorCanDelockObservations        Boolean               @default(false)
   ownerCanDelockObservations         Boolean               @default(false)
   contributorsCanReadAllObservations Boolean               @default(false)
+  contributorsCanExport              Boolean               @default(false)
   storageLimit                       Int                   @default(1000000000)
   fields                             ProjectField[]
   dynamicFields                      DynamicProjectField[]

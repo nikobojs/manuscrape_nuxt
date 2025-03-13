@@ -154,10 +154,18 @@ const uploadInProgress = computed(() => {
 });
 
 async function handlePublishObservation() {
-  const _ = await patchObservation(props.project.id, props.observationId, {
-    isDraft: false,
-  });
-  props.onObservationPublished?.();
+  try {
+    const _ = await patchObservation(props.project.id, props.observationId, {
+      isDraft: false,
+    });
+    props.onObservationPublished?.();
+  } catch (e) {
+    const msg = getErrMsg(e);
+    toast.add({
+      title: msg,
+      color: 'red',
+    });
+  }
 }
 
 async function handleDelock() {

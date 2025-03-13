@@ -2,12 +2,23 @@ import { ProjectRole } from '@prisma-postgres/client'
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  const user = await requireUser(event);
+  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
   const exportId = parseIntParam(event.context.params?.exportId);
+
+  // fetch role to ensure either owner or project.contributorsCanExport
+  const projectAccess = await db.projectAccess.findFirst({
+    select: {
+      role: true,
+    },
+    where: {
+      projectId,
+      userId: event.context.user.id,
+    }
+  });
 
   // fetch project export
   const projectExport = await db.projectExport.findUnique({
@@ -18,8 +29,17 @@ export default safeResponseHandler(async (event) => {
       status: true,
       mimetype: true,
       type: true,
+      userId: true,
     },
   });
+  const isOwner = projectAccess?.role === ProjectRole.OWNER;
+  const isAuthor = projectExport?.userId === user.id;
+  if (!isOwner && !isAuthor) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'You cannot delete other users\' exports unless you are project owner',
+    });
+  }
 
   // ensure project export db entry exists
   if (!projectExport) {

@@ -131,6 +131,7 @@ export async function ensureURLResourceAccess(
 
   const params = getRouterParams(event);
   let projectIdInt: undefined | number;
+  let contributorsCanReadAllObservations = false;
 
   // validate params.projectId if it exists
   if (typeof params?.projectId === 'string') {
@@ -151,6 +152,8 @@ export async function ensureURLResourceAccess(
       captureException(err);
       throw err;
     }
+
+    contributorsCanReadAllObservations = projectAccess.project.contributorsCanReadAllObservations;
   }
 
   // validate params.observationId if it exists
@@ -158,7 +161,7 @@ export async function ensureURLResourceAccess(
     // ensure observationId is parsed to integer
     const observationIdInt = parseIntParam(params.observationId);
 
-    // get observations beloning to project
+    // get observations belonging to project
     const { observations, contributors } = await getObservationsByProject(projectIdInt)
     const access = contributors.find((c) => c.userId === user.id);
     const observation = observations.find((o) => o.id === observationIdInt);
@@ -171,7 +174,7 @@ export async function ensureURLResourceAccess(
     }
 
     const isOwner = access.role === ProjectRole.OWNER;
-    if (!isOwner && access.userId !== observation.user?.id) {
+    if (!isOwner && access.userId !== observation.user?.id && !contributorsCanReadAllObservations) {
       throw createError({
         statusCode: 403,
         statusMessage: 'You don\'t have the right permission to interact with this observation'

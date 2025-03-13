@@ -77,6 +77,7 @@ export const smallProjectQuery = {
   authorCanDelockObservations: true,
   ownerCanDelockObservations: true,
   contributorsCanReadAllObservations: true,
+  contributorsCanExport: true,
   dynamicFields: { select: allDynamicFieldColumns },
   _count: {
       select: { observations: true }

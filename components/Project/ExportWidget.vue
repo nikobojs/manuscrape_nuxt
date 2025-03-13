@@ -168,13 +168,21 @@ const toast = useToast();
 async function handleDeleteExport(projectExport: FullProjectExport) {
   const ok = confirm('Are you sure you want to delete the file ?');
   if (ok) {
-    await deleteExport(projectExport.id);
-    await refreshProjectExports();
-    toast.add({
-      title: `The export file was successfully deleted`,
-      color: 'green',
-      icon: 'i-heroicons-check'
-    });
+    try {
+      await deleteExport(projectExport.id);
+      await refreshProjectExports();
+      toast.add({
+        title: `The export file was successfully deleted`,
+        color: 'green',
+        icon: 'i-heroicons-check'
+      });
+    } catch (e) {
+      const msg = getErrMsg(e);
+      toast.add({
+        title: msg,
+        color: 'red',
+      });
+    }
   }
 }
 

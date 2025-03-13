@@ -55,6 +55,14 @@
               :disabled="loading || !isOwner"
             />
           </div>
+          <div class="flex justify-between items-baseline">
+            <label>Contributors can read/write/delete exports</label>
+            <UToggle
+              id="enable-contributors-full-read-access"
+              v-model="contributorsCanExport"
+              :disabled="loading || !isOwner || !contributorsCanReadAllObservations"
+            />
+          </div>
           <div v-if="isOwner">
             <UButton class="mt-4" type="submit" :disabled="loading">Save settings</UButton>
           </div>
@@ -76,6 +84,8 @@
   const authorCanDelockObservations = ref(false);
   const ownerCanDelockObservations = ref(false);
   const contributorsCanReadAllObservations = ref(false);
+  const contributorsCanExport = ref(false);
+
   const projectName = ref('');
   const toast = useToast();
   const error = ref('');
@@ -88,7 +98,14 @@
     authorCanDelockObservations.value = _project.authorCanDelockObservations;
     ownerCanDelockObservations.value = _project.ownerCanDelockObservations;
     contributorsCanReadAllObservations.value = _project.contributorsCanReadAllObservations;
+    contributorsCanExport.value = _project.contributorsCanExport;
   }
+
+  watch(contributorsCanReadAllObservations, (n, o) => {
+    if (n === false && o === true && contributorsCanExport.value) {
+      contributorsCanExport.value = false;
+    }
+  });
 
   async function saveSettings() {
     error.value = '';
@@ -103,6 +120,7 @@
       authorCanDelockObservations: authorCanDelockObservations.value,
       ownerCanDelockObservations: ownerCanDelockObservations.value,
       contributorsCanReadAllObservations: contributorsCanReadAllObservations.value,
+      contributorsCanExport: contributorsCanExport.value && contributorsCanReadAllObservations.value,
       name: projectName.value,
     };
 
