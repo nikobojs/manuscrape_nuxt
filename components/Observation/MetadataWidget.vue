@@ -19,6 +19,7 @@
                 v-model="state[field.label]"
                 v-bind="props"
                 :disabled="!!$props.disabled"
+                :default-value="false"
               />
               <UTextarea
                 v-else-if="field.type === 'TEXTAREA'"
@@ -177,6 +178,18 @@
   const sortedFields = computed(() => sortFields(props.project));
   const observation = computed(() => observations.value.find((o) => o.id === props.observationId))
   const state = ref(Object.assign({ ...props.initialState }, JSON.parse(observation.value?.data as any || {})));
+
+  onMounted(() => {
+    const isNewObservation = observation.value?.data === '{}';
+    // look for all booleans to set their default value (avoid `undefined`)
+    if (sortedFields.value?.length && isNewObservation) {
+      for (const field of sortedFields.value) {
+        if (field.type === FieldType.BOOLEAN) {
+          state.value[field.label] = false;
+        }
+      }
+    }
+  });
 
   // TODO: validation function doesn't seem completely functional
   //       - manuel edge-case testing required
