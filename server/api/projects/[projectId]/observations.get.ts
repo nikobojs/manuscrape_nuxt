@@ -27,6 +27,13 @@ export default safeResponseHandler(async (event) => {
     })
   }
 
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: {
+      contributorsCanReadAllObservations: true,
+    },
+  });
+
   // define helper variables
   const isOwner = projectAccess.role === ProjectRole.OWNER;
 
@@ -88,7 +95,7 @@ export default safeResponseHandler(async (event) => {
 
   // set observation ownership filter in where statement
   // NOTE: only allow project OWNER to see everyone's observations
-  if (ownership === 'me' || !isOwner) {
+  if (ownership === 'me' || (!isOwner && !project?.contributorsCanReadAllObservations)) {
     whereStatement.userId = event.context.user.id;
   }
 

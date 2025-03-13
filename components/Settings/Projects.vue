@@ -47,6 +47,14 @@
               :disabled="loading || !isOwner"
             />
           </div>
+          <div class="flex justify-between items-baseline">
+            <label>Contributors can see each others' observations</label>
+            <UToggle
+              id="enable-contributors-full-read-access"
+              v-model="contributorsCanReadAllObservations"
+              :disabled="loading || !isOwner"
+            />
+          </div>
           <div v-if="isOwner">
             <UButton class="mt-4" type="submit" :disabled="loading">Save settings</UButton>
           </div>
@@ -67,6 +75,7 @@
 
   const authorCanDelockObservations = ref(false);
   const ownerCanDelockObservations = ref(false);
+  const contributorsCanReadAllObservations = ref(false);
   const projectName = ref('');
   const toast = useToast();
   const error = ref('');
@@ -78,6 +87,7 @@
     projectName.value = _project.name;
     authorCanDelockObservations.value = _project.authorCanDelockObservations;
     ownerCanDelockObservations.value = _project.ownerCanDelockObservations;
+    contributorsCanReadAllObservations.value = _project.contributorsCanReadAllObservations;
   }
 
   async function saveSettings() {
@@ -92,6 +102,7 @@
     const patch = {
       authorCanDelockObservations: authorCanDelockObservations.value,
       ownerCanDelockObservations: ownerCanDelockObservations.value,
+      contributorsCanReadAllObservations: contributorsCanReadAllObservations.value,
       name: projectName.value,
     };
 

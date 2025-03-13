@@ -5,6 +5,7 @@ export const PatchProjectFieldSchema = yup.object({
   name: yup.string().optional(),
   canDelockObservations: yup.boolean().optional(),
   ownerCanPatchObservations: yup.boolean().optional(),
+  contributorsCanReadAllObservations: yup.boolean().optional(),
 }).required();
 
 export default safeResponseHandler(async (event) => {
