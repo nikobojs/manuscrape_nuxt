@@ -54,6 +54,7 @@ describe('Project exporting', () => {
         } else if(i === 9) {
           expect(newExport.status, 'After 10 delayed retries, export was not generated').toBe(ExportStatus.DONE);
         }
+        await new Promise((ok) => setTimeout(ok, 400));
       }
     });
   });
