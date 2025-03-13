@@ -56,5 +56,5 @@ export default defineNuxtConfig({
     preference: 'dark',
   },
 
-  compatibilityDate: '2024-07-22',
+  compatibilityDate: '2025-03-13',
 });
