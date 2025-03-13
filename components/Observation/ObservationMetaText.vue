@@ -9,6 +9,10 @@
         <span class="">{{ prettyDate(observation.createdAt) }}</span>
       </div>
       <div v-if="observation">
+        <span>Created by:</span>
+        <span class="">{{ observation.user.email }}</span>
+      </div>
+      <div v-if="observation">
         <span>Last updated:</span>
         <span class="">{{ prettyDate(observation.updatedAt) }}</span>
       </div>
