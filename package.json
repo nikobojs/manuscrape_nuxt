@@ -17,6 +17,8 @@
     "typecheck": "nuxt typecheck",
     "migrate-postgres": "npx prisma migrate dev --schema=prisma/postgres/schema.prisma",
     "migrate-mssql": "npx prisma migrate dev --schema=prisma/mssql/schema.prisma",
+    "deploy-postgres": "npx prisma migrate deploy --schema=prisma/postgres/schema.prisma",
+    "deploy-mssql": "npx prisma migrate deploy --schema=prisma/mssql/schema.prisma",
     "test-dev": "vitest dev",
     "test": "vitest run",
     "full-test-mssql": "./tests/run_all_mssql.sh",
