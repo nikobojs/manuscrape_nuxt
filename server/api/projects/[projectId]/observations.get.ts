@@ -117,6 +117,13 @@ export default safeResponseHandler(async (event) => {
   const total = await db.observation.count({
     where: whereStatement,
   });
+  // count the number of observations which is
+  const totalDraft = await db.observation.count({
+    where: {
+      ...whereStatement,
+      isDraft: true,
+    },
+  });
 
   // make the call
   const result = await db.observation.findMany({
@@ -131,5 +138,6 @@ export default safeResponseHandler(async (event) => {
   return {
     observations: result,
     total,
+    totalDraft
   };
 });

@@ -2,7 +2,15 @@
   <UCard class="mb-4 overflow-visible col-span-5 h-full">
     <template #header>
       <div class="flex justify-between items-center">
-        <CardHeader>Observations</CardHeader>
+        <div class="flex gap-3">
+          <CardHeader>Observations</CardHeader>
+          <UBadge
+          variant="soft">{{ totalObservations }} total</UBadge>
+          <UBadge 
+          color="yellow"
+          variant="soft">{{ totalDraftObservations }} draft</UBadge>
+        </div>
+        
         <div class="inline-flex gap-3 -mt-2 -mb-2">
           <div class="w-56">
             <USelectMenu variant="outline" :options="observationFilterMenuItems" v-model="filterOption"
@@ -95,6 +103,7 @@ const {
   observations,
   totalPages,
   totalObservations,
+  totalDraftObservations,
   page,
   pageSize,
   sort,

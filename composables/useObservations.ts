@@ -15,6 +15,7 @@ export const useObservations = async (
   const filter = useState<'all' | 'drafts' | 'published'>(() => 'all' as 'all' | 'drafts' | 'published');
   const ownership = useState<'me' | 'everyone'>(() => 'everyone' as 'everyone' | 'me');
   const totalObservations = useState<number>('totalObservations', () => 1); // should change after first fetch
+  const totalDraftObservations = useState<number>('totalDraftObservations', () => 0); // should change after first fetch
   const totalPages = computed(() => Math.ceil(totalObservations.value / pageSize));
 
   const filterOption = useState<ObservationFilterConfig>(
@@ -71,6 +72,7 @@ export const useObservations = async (
         if (context.response.status === 200) {
           observations.value = context.response._data?.observations.reverse?.();
           totalObservations.value = context.response._data?.total;
+          totalDraftObservations.value = context.response._data?.totalDraft;
         } else if (context.response.status === 401) {
           observations.value = [];
           await navigateTo('/login', { replace: true })
@@ -334,6 +336,7 @@ export const useObservations = async (
     patchObservation,
     requireObservationFromParams,
     totalObservations,
+    totalDraftObservations,
     totalPages,
     pageSize,
     uploadObservationFile,
