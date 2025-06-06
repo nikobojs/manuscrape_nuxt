@@ -117,7 +117,7 @@ export default safeResponseHandler(async (event) => {
   const total = await db.observation.count({
     where: whereStatement,
   });
-  // count the number of observations which is
+  // count the number of observations which is in draft
   const totalDraft = await db.observation.count({
     where: {
       ...whereStatement,
