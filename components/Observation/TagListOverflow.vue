@@ -33,27 +33,25 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
-  const props = defineProps<{
-    tags: { name: string; id?: number }[];
-  }>()
-  const sortedTags = props.tags
-        .sort((a, b) => a.name.localeCompare(b.name))
+const props = defineProps<{
+  tags: { name: string; id?: number }[];
+}>()
 
-  const container = ref<HTMLElement | null>(null)
-  const visibleTags = ref<typeof sortedTags>([])
-  const hiddenTags = ref<typeof sortedTags>([])
-  
+const container = ref<HTMLElement | null>(null)
+const visibleTags = ref<typeof props.tags>([])
+const hiddenTags = ref<typeof props.tags>([])
 
-  const MAX_VISIBLE_TAGS = 3
+const MAX_VISIBLE_TAGS = 3
 
-  const calculateVisibleTags = () => {
-    visibleTags.value = props.tags.slice(0, MAX_VISIBLE_TAGS)
-    hiddenTags.value = props.tags.slice(MAX_VISIBLE_TAGS)
-  }
+const calculateVisibleTags = () => {
+  const sortedTags = [...props.tags].sort((a, b) => a.name.localeCompare(b.name))
+  visibleTags.value = sortedTags.slice(0, MAX_VISIBLE_TAGS)
+  hiddenTags.value = sortedTags.slice(MAX_VISIBLE_TAGS)
+}
 
+onMounted(() => calculateVisibleTags())
 
-  onMounted(() => calculateVisibleTags())
-  watch(() => sortedTags, calculateVisibleTags)
+watch(() => props.tags, calculateVisibleTags, { deep: true })
 </script>
