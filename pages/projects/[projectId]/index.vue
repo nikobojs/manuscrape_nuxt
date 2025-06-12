@@ -33,6 +33,11 @@
           <ProjectDynamicFieldWidget :project="project" />
         </div>
       </div>
+      <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
+        <div class="col-span-1">
+          <ProjectTagsWidget :project="project "/>
+        </div>
+      </div>
     </UContainer>
   </ResourceAccessChecker>
     

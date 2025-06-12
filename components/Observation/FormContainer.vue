@@ -102,6 +102,11 @@
           </div>
         </div>
       </UCard>
+      <ObservationTagsWidget
+        :project="project"
+        :observation-id="observation.id"
+        :tags-on-observation="observation.tags"
+      />
     </div>
   </div>
 </template>

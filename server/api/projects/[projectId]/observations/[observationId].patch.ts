@@ -3,6 +3,13 @@ import * as yup from 'yup';
 const patchObservationSchema = yup.object({
   isDraft: yup.bool().optional(),
   data: yup.object().optional(),
+  tags: yup.object().shape({
+    connect: yup.array().of(
+      yup.object({
+        id: yup.number().required(),
+      })
+    ).optional()
+  }).optional()
 }).required()
 
 
@@ -131,9 +138,11 @@ export default safeResponseHandler(async (event) => {
   await db.observation.update({
     where: {
       id: observationId,
-    }, data: {
+    }, 
+    data: {
       data: JSON.stringify(patch.data),
       isDraft: patch.isDraft,
+      tags: patch.tags,
       updatedAt: new Date().toISOString(),
     }
   });

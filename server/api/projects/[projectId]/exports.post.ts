@@ -9,6 +9,7 @@ export const ExportProjectSchema = yup.object({
   ).required(),
   startDate: yup.string().required().test((s) => !isNaN(new Date(s).getDate())),
   endDate: yup.string().required().test((s) => !isNaN(new Date(s).getDate())),
+  includeTags: yup.string().required().oneOf(['true', 'false'], 'Must be "true" or "false"')
 }).required();
 
 export default safeResponseHandler(async (event) => {
@@ -91,7 +92,12 @@ export default safeResponseHandler(async (event) => {
         select: {
           id: true,
         }
-      }
+      },
+      ...(exportSettings.includeTags === 'true' && {
+        tags: {
+          select: { name: true },
+        },
+      }),
     },
     where: {
       AND: [

@@ -55,6 +55,7 @@ model User {
   projectAccess   ProjectAccess[]     @relation("contributor")
   sentInvitations ProjectInvitation[] @relation("inviter")
   projectExports  ProjectExport[]
+  createdTags     Tag[]               @relation("UserCreatedTags")
 }
 
 // TODO: make sure this is deleted correctly on MSSQL on project deletion
@@ -84,6 +85,7 @@ model Project {
   fields                             ProjectField[]
   dynamicFields                      DynamicProjectField[]
   observations                       Observation[]
+  tags                               Tag[]
   contributors                       ProjectAccess[]
   invitations                        ProjectInvitation[]
   projectExports                     ProjectExport[]
@@ -149,6 +151,21 @@ model Observation {
   uploadInProgress Boolean      @default(false)
   isDraft          Boolean      @default(true)
   fileUploads      FileUpload[]
+  tags             Tag[]
+}
+
+
+model Tag {
+  id           Int           @id @default(autoincrement())
+  name         String
+  projectId    Int
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  observations Observation[]
+  createdById  Int?
+  createdBy    User?         @relation("UserCreatedTags", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  archived     Boolean
+
+  @@unique([projectId, name]) // Tags are unique per project
 }
 
 model FileUpload {

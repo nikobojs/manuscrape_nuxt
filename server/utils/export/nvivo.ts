@@ -11,6 +11,7 @@ function generateObservationRow(
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
   access: { nameInProject: string, userId: number }[],
+  allTags: string[]
 ) {
   // try json parse observation data (let it throw)
   const data = JSON.parse(obs.data);
@@ -59,22 +60,27 @@ function generateObservationRow(
   const { nameInProject } = access.find((a) => a.userId === obs.user?.id)
     || { nameInProject: '<deleted user>' };
 
+  const tagSet = new Set(obs.tags.map((t: { name: string }) => t.name));
+  const tagFlags = allTags.map(tag => tagSet.has(tag) ? '1' : '');
+
   // define values in this observation row
   const row = [
     obs.id, 
     obs.createdAt,
     obs.updatedAt,
     nameInProject,
-    ...fieldValues
+    ...tagFlags
   ];
 
   // return the row
   return row;
 }
 
+
 function getWorksheetColumns(
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
+  allTags: string[]
 ): Partial<excel.Column>[] {
   const predefinedColumns = [{
     id: 0,
@@ -110,7 +116,13 @@ function getWorksheetColumns(
     };
   });
 
-  return [...predefinedColumns, ...dataColumns, ...dynamicColumns];
+  const tagColumns: Partial<excel.Column>[] = allTags.map((tag, i) => ({
+    header: tag,
+    width: Math.max(10, tag.length + 2),
+    id: i + 1000, // just make sure there's no conflict
+  }));
+
+  return [...predefinedColumns, ...dataColumns, ...dynamicColumns, ...tagColumns];
 }
 
 // NOTE: this is a very random thing to do. Should be replaced
@@ -174,6 +186,10 @@ export const generateNvivoExport: ExportFn = async (
     });
   }
 
+  const allTags = Array.from(new Set(
+    observations.flatMap(obs => obs.tags.map((t: { name: string }) => t.name))
+  ));
+
   // create workbook and set some metadata
   const wb = new excel.Workbook();
   wb.created = new Date();
@@ -183,13 +199,13 @@ export const generateNvivoExport: ExportFn = async (
   const sheet = wb.addWorksheet('Observations');
 
   // set the columns (adds column widths and column header cells)
-  sheet.columns = getWorksheetColumns(fields, dynamicFields);
+  sheet.columns = getWorksheetColumns(fields, dynamicFields, allTags);
 
   // create all our observation rows for this project
   const observationRows = [];
   for(const obs of observations) {
     try {
-      const row = generateObservationRow(obs, fields, dynamicFields, project.contributors);
+      const row = generateObservationRow(obs, fields, dynamicFields, project.contributors, allTags);
       observationRows.push(row);
     } catch(e) {
       captureException(e);
