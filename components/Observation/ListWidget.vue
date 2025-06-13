@@ -65,8 +65,10 @@
           </div>
         </div>
       </template>
+      <template #tags-data="{ row }">
+        <ObservationTagListOverflow :tags="row.tags" />
+      </template>
     </UTable>
-
     <div class="flex w-full mt-3 -mb-7 justify-center">
       <UPagination v-if="totalPages > 1" v-model="page" :total="totalObservations" :max="8" :page-count="pageSize" />
     </div>
@@ -153,6 +155,11 @@ const columns = [
     sortable: false,
     key: 'actions',
     class: 'text-right'
+  },
+  {
+  label: 'Tags',
+  key: 'tags',
+  sortable: false,
   },
 ];
 

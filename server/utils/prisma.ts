@@ -28,6 +28,13 @@ export const observationColumns = {
       email: true,
       id: true,
     }
+  },
+  tags: {
+    select: {
+      id: true,
+      name: true,
+      archived: true,
+    }
   }
 } satisfies Prisma.ObservationSelect;
 

@@ -167,6 +167,7 @@ export const useProjectExports = async (projectId: number) => {
     addParam('startDate', getDayBegin(params.startDate).toISOString());
     addParam('endDate', getDayEnd(params.endDate).toISOString());
     addParam('type', params.exportType);
+    addParam('includeTags', params.includeTags.toString())
     return arr.join('&')
   }
 

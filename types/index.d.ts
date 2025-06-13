@@ -43,6 +43,7 @@ declare global {
     fileUploads: Omit<FileUploadResponse, 'observationId'>[];
     user: { email: string; id?: number } | null;
     data: string | null;
+    tags: Tag[];
   }
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
@@ -100,6 +101,7 @@ declare global {
     fields: ProjectFieldResponse[];
     dynamicFields: Omit<DynamicProjectField, "projectId">[];
     observations: Observation[];
+    tags: Tag[];
     _count: {
       observations: number;
     }
@@ -255,6 +257,17 @@ declare global {
     };
   };
 
+  type Tag = {
+    id: number;
+    name: string;
+    projectId: number;
+    createdById: number | null;
+    archived: boolean;
+    project: { id: number; name: string }; // pick relevant project fields
+    observations: Array<{ id: number; data: string }>; // pick relevant observation fields
+    createdBy: { id: number; email: string } | null;
+  };
+
   interface ObservationFilterConfigs {
     [key: string]: ObservationFilterConfig;
   }
@@ -271,6 +284,7 @@ declare global {
     startDate: Date;
     endDate: Date;
     exportType: ExportType;
+    includeTags: Boolean
   }
 
   type ExportedProject = Prisma.ProjectGetPayload<{ select: typeof exportProjectQuery }>;

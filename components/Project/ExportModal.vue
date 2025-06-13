@@ -38,6 +38,16 @@
             v-model="filterType"
           />
         </div>
+        <div class="flex flex-col gap-y-3"
+          v-if="exportType=='NVIVO'"
+          >
+          <label class="">Should tags be included:</label>
+          <URadio
+            v-for="option in includeTagsOptions"
+            v-bind="option"
+            v-model="tagOption"
+          />
+        </div>
       </div>
       <div class="mt-3" v-if="filterType === 'RANGE'">
         <UPopover :popper="{ placement: 'bottom-start' }">
@@ -125,6 +135,7 @@ const open = computed(() => props.open);
 
 const exportType = ref<ExportType>('NVIVO');
 const filterType = ref('ALL');
+const tagOption = ref(true);
 
 // set selectedDateRange to project.createdAt -> now when exporting ALL observations
 watch([filterType], async ([newFilterType]) => {
@@ -140,6 +151,7 @@ async function calculateNewCount() {
     startDate: startDate.value,
     endDate: endDate.value,
     exportType: exportType.value,
+    includeTags: tagOption.value,
   });
   const newCount = await getObservationsCount(params);
   if (typeof newCount === 'number') {
@@ -175,6 +187,14 @@ const filterTypeOptions = [{
   label: 'Observations in date range'
 }];
 
+const includeTagsOptions = [{
+  value: true,
+  label: 'Include tags'
+}, {
+  value: false,
+  label: 'Do not include tags'
+}];
+
 // function to figure out of duration preset is selected
 function isDurationPresetSelected(duration: Duration): boolean {
   const targetBeginDay = sub(new Date(), duration);
@@ -200,6 +220,7 @@ async function selectDurationPreset(duration: Duration): Promise<void> {
     startDate: startDate.value,
     endDate: endDate.value,
     exportType: exportType.value,
+    includeTags: tagOption.value,
   });
   const newCount = await getObservationsCount(params);
   if (typeof newCount === 'number') {
@@ -212,6 +233,7 @@ async function submitExport(): Promise<void> {
     exportType: exportType.value,
     startDate: startDate.value,
     endDate: endDate.value,
+    includeTags: tagOption.value
   };
 
   await generateExport(config);
