@@ -86,7 +86,6 @@ export const useObservations = async (
       }
     }
   );
-  
 
   const findObservationById = (observationId: number) => {
     return computed(() => observations.value.find(o => o.id === observationId));
@@ -181,21 +180,27 @@ export const useObservations = async (
     form.append('file', file);
 
     try {
-      const uploadRes = await useAsyncData('file', () =>
-        $fetch(`/api/projects/${projectId}/observations/${observationId}/image`, {
-          method: 'PUT',
-          body: form,
-        }),
-      );
-
-      if (uploadRes.status.value !== 'success') {
-        const statusCode = uploadRes.error.value?.statusCode;
-        if (statusCode === 413) {
-          throw new Error('The uploaded file is to large');
+      await $fetch(`/api/projects/${projectId}/observations/${observationId}/image`, {
+        method: 'PUT',
+        body: form,
+        onRequest: (ctx) => {
+          console.log('begin uploading image..')
+        },
+        onRequestError: (ctx) => {
+          throw (ctx.error || new Error('Unknown client error when uploading image'));
+        },
+        onResponse: (ctx) => {
+          console.log('image uploaded successfully, status is', ctx.response.status);
+        },
+        onResponseError: (ctx) => {
+          const statusCode = ctx.response?.status;
+          if (statusCode === 413) {
+            throw new Error('The uploaded file is to large');
+          }
+          const msg = getErrMsg(ctx.response?._data);
+          throw new Error(msg || 'It seems that the fileupload failed :(')
         }
-        const msg = getErrMsg(uploadRes);
-        throw new Error(msg || 'It seems that the fileupload failed :(')
-      }
+      });
     } catch(err: any) {
       console.error('upload image to observation err:', err);
       throw err;
@@ -211,17 +216,27 @@ export const useObservations = async (
     form.append('file', file);
 
     try {
-      const uploadRes = await useAsyncData('file', () =>
-        $fetch(`/api/projects/${projectId}/observations/${observationId}/upload`, {
-          method: 'POST',
-          body: form,
-        }),
-      );
-
-      if (uploadRes.status.value !== 'success') {
-        const msg = getErrMsg(uploadRes);
-        throw new Error(msg || 'It seems that the fileupload failed :(')
-      }
+      await $fetch(`/api/projects/${projectId}/observations/${observationId}/upload`, {
+        method: 'POST',
+        body: form,
+        onRequest: (ctx) => {
+          console.log('begin uploading file..')
+        },
+        onRequestError: (ctx) => {
+          throw (ctx.error || new Error('Unknown client error when uploading file'));
+        },
+        onResponse: (ctx) => {
+          console.log('file uploaded successfully, status is', ctx.response.status);
+        },
+        onResponseError: (ctx) => {
+          const statusCode = ctx.response?.status;
+          if (statusCode === 413) {
+            throw new Error('The uploaded file is to large');
+          }
+          const msg = getErrMsg(ctx.response?._data);
+          throw new Error(msg || 'It seems that the fileupload failed :(')
+        }
+      });
     } catch(err: any) {
       console.error('upload image to observation err:', err);
       throw err;

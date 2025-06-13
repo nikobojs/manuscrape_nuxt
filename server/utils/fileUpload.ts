@@ -53,16 +53,6 @@ if (!canUseS3() && !canUseFileSystem()) {
 
 // optional clients that can be shared by different commands
 const uploadsPath = canUseFileSystem() ? config.fileUploadPath : null;
-// const s3 = canUseS3() ? new S3Client({
-//   region: 'us-west-2', // TODO: use as env var to support aws s3
-//   credentials: {
-//     accessKeyId: config.s3AccessKey as string,
-//     secretAccessKey: config.s3SecretAccessKey as string,
-//   },
-
-//   endpoint: config.s3Endpoint as string,
-//   forcePathStyle: true,
-// }) : null;
 
 console.info(`> using ${canUseS3() ? 's3' : 'file system'} to store user uploaded data`);
 
@@ -93,6 +83,7 @@ export async function uploadFile(
         throw err;
       }
     } catch(e) {
+      console.error('The server is unable to connect to S3');
       console.error(e)
       captureException(e);
       if (e instanceof Error) {

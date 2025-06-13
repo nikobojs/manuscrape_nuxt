@@ -51,8 +51,8 @@ export default safeResponseHandler(async (event) => {
   });
 
   // parse files
-  const [_fields, files] = await form.parse(event.req)
-  
+  const [_fields, files] = await form.parse(event.node.req)
+
   // validate file was sent and save into variable 'file'
   if (!Object.keys(files).includes('file')) {
     throw createError({
