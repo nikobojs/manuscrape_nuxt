@@ -1,3 +1,5 @@
+import { extractTagsFromObservation } from '~/utils/extractTagsFromObservation';
+
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
@@ -9,5 +11,9 @@ export default safeResponseHandler(async (event) => {
     select: observationColumns,
   });
 
-  return observation;
+  if (!observation) {
+    throw createError({ statusCode: 404, statusMessage: 'Observation not found' });
+  }
+
+  return extractTagsFromObservation(observation)
 });

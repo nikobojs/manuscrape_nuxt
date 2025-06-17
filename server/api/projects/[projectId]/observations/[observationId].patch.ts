@@ -5,10 +5,11 @@ const patchObservationSchema = yup.object({
   data: yup.object().optional(),
   tags: yup.object().shape({
     connect: yup.array().of(
-      yup.object({
-        id: yup.number().required(),
-      })
-    ).optional()
+      yup.object({ id: yup.number().required() })
+    ).optional(),
+    disconnect: yup.array().of(
+      yup.object({ id: yup.number().required() })
+    ).optional(),
   }).optional()
 }).required()
 
@@ -135,17 +136,60 @@ export default safeResponseHandler(async (event) => {
 
   }
 
-  await db.observation.update({
-    where: {
-      id: observationId,
-    }, 
-    data: {
-      data: JSON.stringify(patch.data),
-      isDraft: patch.isDraft,
-      tags: patch.tags,
-      updatedAt: new Date().toISOString(),
+  if (patch.tags?.connect?.length) {
+    const validTagIds = await db.tag.findMany({
+      where: {
+        id: { in: patch.tags.connect.map(t => t.id) },
+        projectId: projectId,
+      },
+      select: { id: true },
+    });
+
+    const validTagIdSet = new Set(validTagIds.map(t => t.id));
+
+    for (const tag of patch.tags.connect) {
+      if (!validTagIdSet.has(tag.id)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: `Tag ${tag.id} does not belong to project ${projectId}`,
+        });
+      }
     }
-  });
+  }
+
+  await db.$transaction([
+    ...(patch.tags?.disconnect?.length
+      ? patch.tags.disconnect.map(({ id }) =>
+          db.observationTag.deleteMany({
+            where: {
+              observationId,
+              tagId: id,
+            },
+          })
+        )
+      : []),
+
+    ...(patch.tags?.connect?.length
+      ? patch.tags.connect.map(({ id }) =>
+          db.observationTag.create({
+            data: {
+              observationId,
+              tagId: id,
+              createdById: user.id,
+            },
+          })
+        )
+      : []),
+
+    db.observation.update({
+      where: { id: observationId },
+      data: {
+        ...(patch.data ? { data: JSON.stringify(patch.data) } : {}),
+        ...(typeof patch.isDraft === 'boolean' ? { isDraft: patch.isDraft } : {}),
+        updatedAt: new Date(),
+      },
+    }),
+  ]);
 
   return {
     id: observationId,
