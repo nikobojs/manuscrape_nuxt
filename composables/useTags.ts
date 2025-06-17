@@ -49,7 +49,6 @@ export const useTags = (projectId: number) => {
 
   const deleteTag = async (tagId: number): Promise<boolean> => {
     try {
-      // Check usage first
       const { usageCount } = await $fetch<{ usageCount: number }>(
           `/api/projects/${projectId}/tags/${tagId}/count-connected-observations`,
           {

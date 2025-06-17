@@ -147,12 +147,12 @@
   async function handleDeleteTag(tagId: number) {
     try {
       const success = await deleteTag(tagId);
-      if(success){
-        toast.add({
-        title: 'Tag deleted!',
-        icon: 'i-heroicons-check',
-        color: 'green',
-      });
+        if(success){
+          toast.add({
+          title: 'Tag deleted!',
+          icon: 'i-heroicons-check',
+          color: 'green',
+        });
       }
     } catch (err: any) {
       toast.add({
