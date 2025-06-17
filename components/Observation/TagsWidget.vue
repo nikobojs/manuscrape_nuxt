@@ -86,6 +86,10 @@ const {
   detachTagFromObservation,
 } = useTags(props.project.id);
 
+const {
+  refreshObservations
+} = await useObservations(props.project.id)
+
 onMounted(fetchTags);
 
 const sortedTags = computed(() =>
@@ -134,6 +138,7 @@ async function handleCreateTag() {
     newTagError.value = '';
     openAddTagModal.value = false;
     await fetchTags();
+    await refreshObservations();
   } catch (err: any) {
     toast.add({
       title: err.message,
