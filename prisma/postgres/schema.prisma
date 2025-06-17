@@ -175,7 +175,7 @@ model Tag {
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdById  Int?
   createdBy    User?         @relation("UserCreatedTags", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  archived     Boolean
+  
   observationTags ObservationTag[]
 
   @@unique([projectId, name]) // Tags are unique per project

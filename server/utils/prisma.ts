@@ -35,7 +35,6 @@ export const observationColumns = {
         select: {
           id: true,
           name: true,
-          archived: true,
         },
       },
     },

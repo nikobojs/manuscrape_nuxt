@@ -96,7 +96,6 @@ onMounted(fetchTags);
 
 const sortedTags = computed(() =>
   [...tags.value]
-    .filter(t => !t.archived)
     .sort((a, b) => a.name.localeCompare(b.name))
 );
 

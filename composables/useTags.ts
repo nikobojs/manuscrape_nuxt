@@ -47,6 +47,36 @@ export const useTags = (projectId: number) => {
     }
   };
 
+  const deleteTag = async (tagId: number): Promise<boolean> => {
+    try {
+      // Check usage first
+      const { usageCount } = await $fetch<{ usageCount: number }>(
+          `/api/projects/${projectId}/tags/${tagId}/count-connected-observations`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+
+      if(usageCount > 0){
+        const confirmed = confirm(`This tag is used in ${usageCount} observation(s). Do you wish to delete it anyway? This action is irriversable.`);
+      if (!confirmed) return false;
+      }
+
+      await $fetch(`/api/projects/${projectId}/tags/${tagId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      await fetchTags();
+      return true;
+    } catch (err: any) {
+      error.value = err;
+      throw err;
+    }
+  };
+
+
   const attachTagToObservation = async (tagId: number, observationId: number) => {
     try {
       await $fetch(`/api/projects/${projectId}/observations/${observationId}`, {
@@ -81,5 +111,6 @@ export const useTags = (projectId: number) => {
     createTag,
     attachTagToObservation,
     detachTagFromObservation,
+    deleteTag
   };
 };
