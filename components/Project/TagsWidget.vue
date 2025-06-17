@@ -10,7 +10,7 @@
             icon="i-mdi-add"
             @click="openAddTagModal = true"
           >
-            Add
+            Create new
           </UButton>
         </div>
       </template>
@@ -23,7 +23,7 @@
           color="white"
           class="text-xs px-2 py-1 w-fit text-nowrap"
         >
-          {{ tag.name }}
+          #{{ tag.name }}
         </UBadge>
       </div>
     </UCard>
@@ -34,7 +34,7 @@
     >
       <UCard>
         <template #header>
-          <div>Add new tag</div>
+          <div>Create new tag</div>
         </template>
   
         <div class="flex flex-col gap-3">
