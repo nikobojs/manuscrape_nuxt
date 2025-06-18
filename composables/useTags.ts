@@ -59,7 +59,7 @@ export const useTags = (projectId: number) => {
 
       if(usageCount > 0){
         const confirmed = confirm(`This tag is used in ${usageCount} observation(s). Do you wish to delete it anyway? This action is irriversable.`);
-      if (!confirmed) return false;
+        if (!confirmed) return false;
       }
 
       await $fetch(`/api/projects/${projectId}/tags/${tagId}`, {
