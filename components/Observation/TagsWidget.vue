@@ -8,14 +8,16 @@
           variant="outline"
           color="blue"
           icon="i-mdi-add"
-          @click="openAddTagModal = true"
+          @click="openCreateNewTagModal = true"
         >
-          Add
+          Create new
         </UButton>
       </div>
     </template>
-
-    <div class="flex flex-wrap gap-2 -mt-2 -mb-2">
+    <div class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic">
+        Click tags to add or remove
+    </div>
+    <div class="flex flex-wrap gap-2">          
       <UBadge
         v-for="tag in sortedTags"
         :key="tag.id"
@@ -24,19 +26,19 @@
         class="text-xs px-2 py-1 cursor-pointer"
         @click="toggleTag(tag.id)"
       >
-        {{ tag.name }}
+        #{{ tag.name }}
       </UBadge>
     </div>
   </UCard>
 
   
   <UModal
-    v-model="openAddTagModal"
+    v-model="openCreateNewTagModal"
     :ui="{ width: 'sm:max-w-xs max-w-xs' }"
   >
     <UCard>
       <template #header>
-        <div>Add new tag</div>
+        <div>Create new tag</div>
       </template>
 
       <div class="flex flex-col gap-3">
@@ -68,7 +70,7 @@ const props = defineProps({
 });
 
 const toast = useToast();
-const openAddTagModal = ref(false);
+const openCreateNewTagModal = ref(false);
 const newTagName = ref('');
 const newTagError = ref('');
 
@@ -86,11 +88,14 @@ const {
   detachTagFromObservation,
 } = useTags(props.project.id);
 
+const {
+  refreshObservations
+} = await useObservations(props.project.id)
+
 onMounted(fetchTags);
 
 const sortedTags = computed(() =>
   [...tags.value]
-    .filter(t => !t.archived)
     .sort((a, b) => a.name.localeCompare(b.name))
 );
 
@@ -132,8 +137,9 @@ async function handleCreateTag() {
     });
     newTagName.value = '';
     newTagError.value = '';
-    openAddTagModal.value = false;
+    openCreateNewTagModal.value = false;
     await fetchTags();
+    await refreshObservations();
   } catch (err: any) {
     toast.add({
       title: err.message,

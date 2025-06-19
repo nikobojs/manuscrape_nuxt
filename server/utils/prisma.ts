@@ -29,12 +29,16 @@ export const observationColumns = {
       id: true,
     }
   },
-  tags: {
+  observationTags: {
     select: {
-      id: true,
-      name: true,
-      archived: true,
-    }
+      tag: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+
   }
 } satisfies Prisma.ObservationSelect;
 

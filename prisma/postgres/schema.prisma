@@ -137,6 +137,19 @@ model ProjectInvitation {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
+model ObservationTag {
+  observation   Observation @relation(fields: [observationId], references: [id])
+  observationId Int
+  tag           Tag         @relation(fields: [tagId], references: [id])
+  tagId         Int
+
+
+  createdById   Int?
+  createdAt     DateTime    @default(now())
+
+  @@id([observationId, tagId])
+}
+
 // TODO: ensure observation is modified correctly when deleting author user
 model Observation {
   id               Int          @id @default(autoincrement())
@@ -151,7 +164,7 @@ model Observation {
   uploadInProgress Boolean      @default(false)
   isDraft          Boolean      @default(true)
   fileUploads      FileUpload[]
-  tags             Tag[]
+  observationTags ObservationTag[]
 }
 
 
@@ -160,10 +173,10 @@ model Tag {
   name         String
   projectId    Int
   project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  observations Observation[]
   createdById  Int?
   createdBy    User?         @relation("UserCreatedTags", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  archived     Boolean
+  
+  observationTags ObservationTag[]
 
   @@unique([projectId, name]) // Tags are unique per project
 }

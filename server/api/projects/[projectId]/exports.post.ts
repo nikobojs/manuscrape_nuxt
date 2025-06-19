@@ -94,7 +94,7 @@ export default safeResponseHandler(async (event) => {
         }
       },
       ...(exportSettings.includeTags === 'true' && {
-        tags: {
+        observationTags: {
           select: { name: true },
         },
       }),

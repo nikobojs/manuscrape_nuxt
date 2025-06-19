@@ -262,7 +262,6 @@ declare global {
     name: string;
     projectId: number;
     createdById: number | null;
-    archived: boolean;
     project: { id: number; name: string }; // pick relevant project fields
     observations: Array<{ id: number; data: string }>; // pick relevant observation fields
     createdBy: { id: number; email: string } | null;

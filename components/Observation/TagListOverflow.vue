@@ -7,7 +7,7 @@
         :color="'blue'"
         size="xs"
       >
-        {{ tag.name }}
+        #{{ tag.name }}
       </UBadge>
 
       <UTooltip v-if="hiddenTags.length">
@@ -19,7 +19,7 @@
               size="xs"
               color="gray"
             >
-              {{ tag.name }}
+              #{{ tag.name }}
             </UBadge>
           </div>
         </template>

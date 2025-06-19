@@ -35,7 +35,6 @@ export default safeResponseHandler(async (event) => {
       name: newTag.name,
       projectId,
       createdById: userId,
-      archived: false,
     },
     select: {
       id: true,

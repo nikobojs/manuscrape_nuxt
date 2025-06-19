@@ -1,5 +1,6 @@
 import { ProjectRole, Prisma } from '@prisma-postgres/client';
 import { numberBetween } from '~/utils/validate';
+import { extractTagsFromObservation } from '~/utils/extractTagsFromObservation';
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -136,7 +137,7 @@ export default safeResponseHandler(async (event) => {
 
   // return the data!
   return {
-    observations: result,
+    observations: result.map(obs => extractTagsFromObservation(obs)),
     total,
     totalDraft
   };
