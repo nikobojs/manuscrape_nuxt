@@ -4,9 +4,7 @@ import { generateFilename } from './helpers';
 import { ExportType, Prisma } from '@prisma-postgres/client';
 import { canUseS3 } from '../fileUpload';
 
-
-
-export const generateProjectUploadsExport: ExportFn = async (
+export const generateProjectUploadsExport = async (
   event: H3Event,
   projectId: number,
   observationFilter: Prisma.ObservationWhereInput,
@@ -27,13 +25,12 @@ export const generateProjectUploadsExport: ExportFn = async (
     });
   }
 
-  
+
   // fetch related observations
   const observations: { id: number }[] = await db.observation.findMany({
     where: observationFilter,
     select: { id: true },
   });
-
 
   // array of observation ids
   const observationIds = observations.map(o => o.id);
@@ -89,7 +86,7 @@ export const generateProjectUploadsExport: ExportFn = async (
       statusMessage: 'There are no files uploaded to any observations'
     });
   }
-  
+
   const downloads: Promise<any>[] = [];
   for (const upload of fileUploads) {
     if (!upload?.filePath) continue;

@@ -14,7 +14,7 @@ const archiverOptions: archiver.ArchiverOptions = {
 }
 
 
-export const generateProjectMediaExport: ExportFn = async (
+export const generateProjectMediaExport = async (
   event: H3Event,
   projectId: number,
   observationFilter: Prisma.ObservationWhereInput,

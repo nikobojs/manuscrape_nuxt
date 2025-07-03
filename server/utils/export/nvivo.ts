@@ -11,7 +11,8 @@ function generateObservationRow(
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
   access: { nameInProject: string, userId: number }[],
-  allTags: string[]
+  allTags: string[],
+  includeTags: boolean,
 ) {
   // try json parse observation data (let it throw)
   const data = JSON.parse(obs.data);
@@ -23,7 +24,7 @@ function generateObservationRow(
   const fieldValues = new Array(fields.length + dynamicFields.length);
 
   // for each data entry
-  const entries = Object.entries(data as any)
+  const entries = Object.entries(data as any);
   for(let i = 0; i < entries.length; i++) {
     const [key, rawVal] = entries[i];
 
@@ -32,6 +33,7 @@ function generateObservationRow(
 
     // if label doesn't exist, it must be from some older fields that wasn't deleted correctly
     if (columnIndex === -1) {
+      console.error(`Label '${key}' does not exist`);
       captureException(`Label '${key}' does not exist`);
       return;
     }
@@ -48,7 +50,7 @@ function generateObservationRow(
     fieldValues[columnIndex] = val;
   }
 
-  // calculate and add the dynamic values to the row 
+  // calculate and add the dynamic values to the row
   const dynamicFieldsIndexOffset = fieldValues.length - dynamicFields.length;
   for (let i = 0; i < dynamicFields.length; i++) {
     const val = calculateDynamicFieldValue(dynamicFields[i], fields, obs);
@@ -60,15 +62,19 @@ function generateObservationRow(
   const { nameInProject } = access.find((a) => a.userId === obs.user?.id)
     || { nameInProject: '<deleted user>' };
 
-  const tagSet = new Set(obs.tags.map((t: { name: string }) => t.name));
-  const tagFlags = allTags.map(tag => tagSet.has(tag) ? '1' : '');
+  let tagFlags: boolean[] = [];
+  if (includeTags) {
+    const tagSet = new Set(obs.observationTags.map((t: { tag: {name: string} }) => t.tag.name));
+    tagFlags = allTags.map(tag => tagSet.has(tag) ? true : false);
+  }
 
   // define values in this observation row
   const row = [
-    obs.id, 
+    obs.id,
     obs.createdAt,
     obs.updatedAt,
     nameInProject,
+    ...fieldValues,
     ...tagFlags
   ];
 
@@ -146,10 +152,11 @@ function calculateTextWidth(label: string): number {
   return Math.max(length, 16);
 }
 
-export const generateNvivoExport: ExportFn = async (
+export const generateNvivoExport = async (
   event: H3Event,
   projectId: number,
   observationFilter: Prisma.ObservationWhereInput,
+  includeTags: boolean,
 ) => {
   // get project by projectId
   const project: ExportedProject | null = await db.project.findUnique({
@@ -186,14 +193,18 @@ export const generateNvivoExport: ExportFn = async (
     });
   }
 
-  const allTags = Array.from(new Set(
-    observations.flatMap(obs => obs.tags.map((t: { name: string }) => t.name))
-  ));
+  // add tag headers if enabled
+  let allTags: string[] = [];
+  if (includeTags) {
+    allTags = Array.from(new Set(
+      observations.flatMap(obs => obs.observationTags.map((t: { tag: { name: string } }) => t.tag.name))
+    ));
+  }
 
   // create workbook and set some metadata
   const wb = new excel.Workbook();
   wb.created = new Date();
-  wb.modified = new Date();  
+  wb.modified = new Date();
 
   // create our first (and only?) sheet
   const sheet = wb.addWorksheet('Observations');
@@ -205,15 +216,19 @@ export const generateNvivoExport: ExportFn = async (
   const observationRows = [];
   for(const obs of observations) {
     try {
-      const row = generateObservationRow(obs, fields, dynamicFields, project.contributors, allTags);
+      const row = generateObservationRow(obs, fields, dynamicFields, project.contributors, allTags, includeTags);
       observationRows.push(row);
     } catch(e) {
+      console.error('Error when generating observation row. Will skip this observation');
+      console.error(e);
       captureException(e);
     }
   }
 
+  // TODO: check if there are more than 0 observationRows
+
   // add the observation rows to the sheet
-  sheet.addRows(observationRows)
+  sheet.addRows(observationRows);
 
   // write a buffer to ram
   const buffer = await wb.xlsx.writeBuffer();
@@ -230,5 +245,5 @@ export const generateNvivoExport: ExportFn = async (
     mimetype,
     observationsCount: observations.length,
     size: buffer.byteLength,
-  }
+  };
 }

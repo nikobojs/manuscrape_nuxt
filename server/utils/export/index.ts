@@ -12,22 +12,7 @@ export async function generateProjectExport(
   config: ExportProjectPayload
 ): Promise<ExportMeta> {
   // get the correct export function based on json body
-  const { type, startDate, endDate } = config;
-  let generateExportFn: ExportFn;
-
-  if (type === ExportType.NVIVO ) {
-    generateExportFn = generateNvivoExport;
-  } else if(type === ExportType.MEDIA) {
-    generateExportFn = generateProjectMediaExport;
-  } else if(type === ExportType.UPLOADS) {
-    generateExportFn = generateProjectUploadsExport;
-  } else {
-    throw createError({
-      statusCode: 400,
-      statusMessage:
-        'Export type is not supported.',
-    });
-  }
+  const { type, startDate, endDate, includeTags } = config;
 
   // create basic observation filter for export (published & related to project)
   const observationFilter: Prisma.ObservationWhereInput = {
@@ -43,7 +28,19 @@ export async function generateProjectExport(
     };
   }
 
-  return generateExportFn(event, projectId, observationFilter)
+  if (type === ExportType.NVIVO) {
+    return generateNvivoExport(event, projectId, observationFilter, includeTags);
+  } else if (type === ExportType.MEDIA) {
+    return generateProjectMediaExport(event, projectId, observationFilter)
+  } else if (type === ExportType.UPLOADS) {
+    return generateProjectUploadsExport(event, projectId, observationFilter);
+  } else {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        'Export type is not supported.',
+    });
+  }
 }
 
 export async function createEmptyProjectExport(

@@ -86,12 +86,6 @@ declare global {
     size: number;
   };
 
-  type ExportFn = (
-    event: H3Event,
-    projectId: number,
-    observationFilter: Prisma.ObservationWhereInput,
-  ) => Promise<ExportMeta>;
-
   interface ProjectFieldResponse extends Omit<ProjectField, "projectId"> {}
 
   interface FullProject extends Project {
@@ -246,7 +240,7 @@ declare global {
       pairs: Array<[FieldType, FieldType]>;
     };
   };
-  
+
   type Collaborator = {
     createdAt: Date;
     role: string;

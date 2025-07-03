@@ -9,7 +9,7 @@ export const ExportProjectSchema = yup.object({
   ).required(),
   startDate: yup.string().required().test((s) => !isNaN(new Date(s).getDate())),
   endDate: yup.string().required().test((s) => !isNaN(new Date(s).getDate())),
-  includeTags: yup.string().required().oneOf(['true', 'false'], 'Must be "true" or "false"')
+  includeTags: yup.boolean().required(),
 }).required();
 
 export default safeResponseHandler(async (event) => {
@@ -53,7 +53,7 @@ export default safeResponseHandler(async (event) => {
       statusMessage: 'Exporting is disabled for all except the project owner',
     });
   }
-  
+
   // fetch existing exports for calculating storage usage
   const existingExports = await db.projectExport.findMany({
     where: {
@@ -79,7 +79,7 @@ export default safeResponseHandler(async (event) => {
   const exportSettings = await ExportProjectSchema.validate(queryParams);
 
   // verify there are any observations in this export
-  const start = new Date(exportSettings.startDate); 
+  const start = new Date(exportSettings.startDate);
   const end = new Date(exportSettings.endDate);
   const observations = await db.observation.findMany({
     select: {
@@ -93,11 +93,6 @@ export default safeResponseHandler(async (event) => {
           id: true,
         }
       },
-      ...(exportSettings.includeTags === 'true' && {
-        observationTags: {
-          select: { name: true },
-        },
-      }),
     },
     where: {
       AND: [
