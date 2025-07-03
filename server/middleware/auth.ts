@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
     else if (typeof authToken == 'string' && authToken.length > 0) {
         try {
-            const decoded = await jwt.verify(authToken, config.app.tokenSecret);
+            const decoded = jwt.verify(authToken, config.tokenSecret);
             if (typeof decoded !== 'string' && decoded?.id) {
                 const user = await db.user.findFirst({
                     where: { id: decoded.id },
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    if (loginSuccesfull && ['/user/new', '/login'].includes(event.path) && event.req.method === 'GET') {
+    if (loginSuccesfull && ['/user/new', '/login'].includes(event.path) && event.node.req.method === 'GET') {
         await sendRedirect(event, '/', 302);
     }
 });

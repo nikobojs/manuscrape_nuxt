@@ -43,7 +43,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // salt and hash password
-  const saltRounds = config.app.saltRounds ?? 10;
+  const saltRounds = config.saltRounds ?? 10;
   const hashedPassword = await hash(parsed.password, saltRounds);
 
   // create user

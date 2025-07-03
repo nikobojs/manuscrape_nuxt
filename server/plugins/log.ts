@@ -9,7 +9,7 @@ export default defineNitroPlugin((nitro) => {
     event.context.requestUserAgent = userAgent;
   }) as never);
 
-  const enableLogs = useRuntimeConfig().app?.enableHttpLog;
+  const enableLogs = useRuntimeConfig().enableHttpLog;
   if (!enableLogs) return;
 
   nitro.hooks.hook('afterResponse', (async (

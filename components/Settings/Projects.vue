@@ -9,7 +9,7 @@
         <ProjectDropdown
           :project="project"
           :setProject="setProject"
-          class="max-w-[350px] mr-3 h-7 w-[230px]"
+          classes="max-w-[350px] mr-3 h-7 w-[230px]"
         />
       </div>
       <div class="max-w-sm mb-4" v-if="project && !isOwner">

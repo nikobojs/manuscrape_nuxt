@@ -11,7 +11,7 @@ export default safeResponseHandler(async (event) => {
     const body = await readBody(event);
     const { token } = await TokenAuthBody.validate(body)
 
-    const decoded = await jwt.verify(token, config.app.tokenSecret);
+    const decoded = jwt.verify(token, config.tokenSecret);
     if (typeof decoded !== 'string' && decoded?.id) {
 
       const user = await db.user.findFirst({

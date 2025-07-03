@@ -14,7 +14,7 @@ import path from 'node:path';
 import { PassThrough } from 'stream';
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
-const config = useRuntimeConfig()?.app || {};
+const config = useRuntimeConfig() || {};
 
 export const canUseS3 = (): boolean => {
   return !!(

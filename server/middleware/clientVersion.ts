@@ -1,7 +1,7 @@
 import * as semver from 'semver';
 
 export default defineEventHandler(async (event) => {
-  const versionRequirement = useRuntimeConfig().app.manuscrapeClientVersionRequirement;
+  const versionRequirement = useRuntimeConfig().manuscrapeClientVersionRequirement;
   const userAgent = event.context.requestUserAgent;
   if (!userAgent) {
     throw createError({

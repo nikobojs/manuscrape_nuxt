@@ -28,12 +28,12 @@ import type {
 } from "~/server/utils/prisma";
 
 declare global {
-  interface CurrentUser extends User {
+  interface CurrentUser extends Omit<User, 'tags'> {
     projectAccess: ExtendedProjectAccess[];
   }
 
   interface ExtendedProjectAccess extends Omit<ProjectAccess, "userId"> {
-    project: Omit<Omit<FullProject, 'observations'>, 'authorId'>;
+    project: Omit<Omit<Omit<FullProject, 'observations'>, 'authorId'>, 'tags'>;
   }
 
   type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
@@ -43,7 +43,7 @@ declare global {
     fileUploads: Omit<FileUploadResponse, 'observationId'>[];
     user: { email: string; id?: number } | null;
     data: string | null;
-    tags: Tag[];
+    observationTags: { tag: { name: string; id: number} }[];
   }
 
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;

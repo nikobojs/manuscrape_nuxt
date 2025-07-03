@@ -5,7 +5,7 @@ let dbType = 'postgres'
 if (process.env.DATABASE_TYPE) {
   dbType = process.env.DATABASE_TYPE
 } else {
-  const config = useRuntimeConfig().app;
+  const config = useRuntimeConfig();
   dbType = config.databaseType
 }
 

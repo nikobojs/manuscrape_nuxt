@@ -21,9 +21,9 @@ export function updateAuthCookie(
   const flags: CookieOptions = {
     expires: expiresAt,
     httpOnly: true,
-    domain: config.app.cookieDomain,
+    domain: config.cookieDomain,
     sameSite: 'strict',
-    secure: config.app.cookieSecure,
+    secure: config.cookieSecure,
   }
 
   setCookie(event, 'authcookie', token, flags);
@@ -39,7 +39,7 @@ export async function authorize(
 ): Promise<{ token: string }> {
   const expires = new Date(new Date().setDate(new Date().getDate() + 365));
   event.context.user = user;
-  const token = await jwt.sign({ id: user.id }, config.app.tokenSecret);
+  const token = jwt.sign({ id: user.id }, config.tokenSecret);
 
   updateAuthCookie(event, token, expires);
 
@@ -84,6 +84,12 @@ export async function getObservationsByProject(
       },
       observations: {
         select: observationColumns,
+      },
+      tags: {
+        select: {
+          name: true,
+          id: true,
+        }
       }
     }
   });
@@ -187,12 +193,12 @@ export async function ensureURLResourceAccess(
 export async function delayedResponse(
   event: H3Event,
   response: Record<string, any> | (() => Record<string, any>),
-  responseTimeMs: number = config.app.authResponseTime,
+  responseTimeMs: number = config.authResponseTime,
 ): Promise<Record<string, any>> {
   const nowMs = new Date().getTime();
   const startTime = getRequestBeginTime(event)
   const alreadyTookMs = nowMs - startTime;
-  
+
   // calculate how many ms response should be delayed
   let waitMs = responseTimeMs - alreadyTookMs;
   if (waitMs < 0) waitMs = 0;
@@ -215,7 +221,7 @@ export async function delayedError(
   statusCode: number,
   statusMessage: string,
   _report: boolean = false,
-  responseTimeMs: number = config.app.authResponseTime,
+  responseTimeMs: number = config.authResponseTime,
 ) {
   captureException(new Error(statusMessage))
   return await delayedResponse(event, () =>

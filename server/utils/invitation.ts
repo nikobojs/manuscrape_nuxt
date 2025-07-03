@@ -3,7 +3,7 @@ const config = useRuntimeConfig();
 
 export function generateInvitationHash(
   email: string,
-  salt = config.app.invitationSalt || 'salt',
+  salt = config.invitationSalt || 'salt',
   rounds = 5,
   algo = 'md5'
 ): string {

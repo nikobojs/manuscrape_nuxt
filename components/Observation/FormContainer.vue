@@ -65,7 +65,7 @@
           This includes uploading files, image editing and metadata editing."
           :ui="{ title: 'text-sm font-bold' }" />
       </UCard>
-      
+
       <UCard v-else="observation">
         <template #header>
           <CardHeader>Details</CardHeader>
@@ -105,7 +105,7 @@
       <ObservationTagsWidget
         :project="project"
         :observation-id="observation.id"
-        :tags-on-observation="observation.tags"
+        :tags-on-observation="(observation as any).tags"
       />
     </div>
   </div>

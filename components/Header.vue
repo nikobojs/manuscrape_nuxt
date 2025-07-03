@@ -14,7 +14,7 @@
         <nav v-if="hasFetched && !!user" class="flex justify-end">
           <div class="w-[250px] flex justify-end items-center" v-if="typeof rawProjectId === 'string'">
             <ProjectDropdown
-              class="w-full mr-3 h-7 min-w-[200px]"
+              classes="w-full mr-3 h-7 min-w-[200px]"
               :default-project-id="selectedProjectId"
               v-if="selectedProjectId"
               :project="selectedProject"
@@ -68,7 +68,7 @@
     return getProjectById(selectedProjectId.value);
   })
   const rawProjectId = computed(() => route.params?.projectId);
-  
+
   function updateProjectIdFromParams() {
     const projectId = parseInt(route.params.projectId as string);
     const project = projects.value.find((p) => p.id === projectId)

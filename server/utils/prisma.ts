@@ -38,7 +38,6 @@ export const observationColumns = {
         },
       },
     },
-
   }
 } satisfies Prisma.ObservationSelect;
 
@@ -84,6 +83,12 @@ export const smallProjectQuery = {
     orderBy: [{
       index: 'asc'
     }]
+  },
+  tags: {
+    select: {
+      id: true,
+      name: true,
+    },
   },
   authorCanDelockObservations: true,
   ownerCanDelockObservations: true,

@@ -3,7 +3,7 @@
     value-attribute="id"
     option-attribute="label"
     :options="projectMenu"
-    :class="class"
+    :class="classes"
     v-model="selectedProjectId"
     searchable
     @change="onProjectChange"
@@ -24,7 +24,7 @@
       required: false,
       default: undefined,
     },
-    class: {
+    classes: {
       type: String,
       required: false,
       default: true,
