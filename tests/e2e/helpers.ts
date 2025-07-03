@@ -378,7 +378,6 @@ export async function expectRedirect(
 }
 
 export async function inviteToProject(token: string, projectId: number, body: any) {
-  console.error("INVITE TO PROJECT FETCH:", body)
   const res = await fetch(
     `/api/projects/${projectId}/collaborators/`,
     {
@@ -614,6 +613,7 @@ export async function removeStuff () {
     await db.projectField.deleteMany();
     await db.fileUpload.deleteMany();
     await db.imageUpload.deleteMany();
+    await db.observationTag.deleteMany();
     await db.observation.deleteMany();
     await db.project.deleteMany();
     await db.user.deleteMany();

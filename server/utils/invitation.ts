@@ -14,7 +14,9 @@ export function generateInvitationHash(
     hash = hasher.digest('hex');
   }
 
-  console.log('generated invitation hash:', hash)
+  if (config.public.mode === 'development') {
+    console.info('generated invitation hash:', hash)
+  }
 
   return hash;
 }

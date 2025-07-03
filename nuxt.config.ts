@@ -44,6 +44,7 @@ export default defineNuxtConfig({
       manuscrapeClientVersionRequirement: ">=1.0.9",
     },
     public: {
+      mode: process.env.NODE_ENV || 'development',
       baseUrl: process.env.BASE_URL || '',
       version: pkg.version,
       maxImageSize: 30 * 1000 * 1000,

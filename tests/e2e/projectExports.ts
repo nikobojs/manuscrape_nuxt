@@ -26,6 +26,7 @@ describe('Project exporting', () => {
         type: 'NVIVO',
         startDate: '2000-09-13T00:00:00.000Z',
         endDate: new Date().toISOString(),
+        includeTags: true,
       });
 
       expect(exportRes.status).toBe(201);
