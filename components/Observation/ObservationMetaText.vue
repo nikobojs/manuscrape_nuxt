@@ -6,7 +6,7 @@
       </div>
       <div v-if="observation">
         <span>Created at:</span>
-        <span>{{ prettyDate(observation.createdAt) }}</spanvw>
+        <span>{{ prettyDate(observation.createdAt) }}</span>
       </div>
       <div v-if="observation">
         <span>Created by:</span>
