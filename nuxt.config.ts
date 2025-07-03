@@ -35,6 +35,7 @@ export default defineNuxtConfig({
       s3AccessKey: process.env.S3_ACCESS_KEY || '',
       s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
       s3Endpoint: process.env.S3_ENDPOINT || '',
+      s3Region: process.env.S3_REGION || '',
       s3BucketName: process.env.S3_BUCKET_NAME || '',
       authResponseTime: 120,
       invitationSalt: process.env.INVITATION_SALT || 'saltyFreciousTrembleCat42',
@@ -51,7 +52,7 @@ export default defineNuxtConfig({
       sentryEnv: process.env.SENTRY_ENV || 'development',
     },
   },
-  
+
   colorMode: {
     preference: 'dark',
   },

@@ -21,13 +21,14 @@ export const canUseS3 = (): boolean => {
     config.s3AccessKey &&
     config.s3SecretAccessKey &&
     config.s3Endpoint &&
-    config.s3BucketName
+    config.s3BucketName &&
+    config.s3Region
   );
 };
 
 const createS3Client = (): S3Client => {
   return new S3Client({
-    region: 'us-west-2', // TODO: use as env var to support aws s3
+    region: config.s3Region,
     credentials: {
       accessKeyId: config.s3AccessKey as string,
       secretAccessKey: config.s3SecretAccessKey as string,
