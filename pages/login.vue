@@ -52,6 +52,9 @@
             Log in
           </UButton>
         </form>
+        <div class="mt-5">
+          <UButton @click="loginWithSaml">Login with WAYF</UButton>
+        </div>
       </div>
     </UContainer>
   </div>
@@ -67,6 +70,9 @@
   const loading = ref(false);
   const passwordInput = ref();
   const emailInput = ref();
+  const loginWithSaml = () => {
+    window.location.href = '/api/auth/saml/login';
+  };
 
   async function handleLogin() {
     const em = emailInput.value?.input?.value;

@@ -48,8 +48,10 @@ enum ExportStatus {
 model User {
   id              Int                 @id @default(autoincrement())
   email           String              @unique
-  password        String
-  createdAt       DateTime            @default(now()) @db.Timestamp(6)
+  password        String?             
+  samlNameId      String?             @unique 
+  authSource      String              @default("LOCAL")
+  createdAt       DateTime            @default(now())
   observations    Observation[]
   ownedProjects   Project[]           @relation("author")
   projectAccess   ProjectAccess[]     @relation("contributor")

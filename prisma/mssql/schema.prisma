@@ -11,7 +11,9 @@ datasource db {
 model User {
   id              Int                 @id @default(autoincrement())
   email           String              @unique
-  password        String
+  password        String?             
+  samlNameId      String?             @unique 
+  authSource      String              @default("LOCAL")
   createdAt       DateTime            @default(now())
   observations    Observation[]
   ownedProjects   Project[]           @relation("author")

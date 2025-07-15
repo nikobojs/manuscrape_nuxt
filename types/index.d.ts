@@ -26,9 +26,11 @@ import type {
   allFieldColumns,
   allDynamicFieldColumns,
 } from "~/server/utils/prisma";
+import { AuthSource } from "./auth-source";
 
 declare global {
   interface CurrentUser extends User {
+    authSource: AuthSource;
     projectAccess: ExtendedProjectAccess[];
   }
 

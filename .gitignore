@@ -27,3 +27,5 @@ logs
 
 # Default user upload path
 .uploads
+
+certs

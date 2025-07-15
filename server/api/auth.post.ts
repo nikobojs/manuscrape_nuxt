@@ -1,5 +1,6 @@
 import { compare } from 'bcrypt';
 import * as yup from 'yup';
+import { AuthSource } from '~/types/auth-source';
 
 export const SignInRequestSchema = yup.object({
   // email: yup.string().required('Email is required'),
@@ -31,6 +32,8 @@ export default safeResponseHandler(async (event) => {
       id: true,
       email: true,
       password: true,
+      samlNameId: true,
+      authSource: true,
       createdAt: true,
     },
   });
@@ -38,6 +41,10 @@ export default safeResponseHandler(async (event) => {
   // handle if user does not exist
   if (!user) {
     return await delayedError(event, 403, 'User does not exist');
+  }
+
+  if(!user.password || user.authSource === AuthSource.SAML){
+    return await delayedError(event, 403, 'User is a SAML user');
   }
 
   // handle if password mismatch
