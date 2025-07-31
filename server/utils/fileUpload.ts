@@ -39,6 +39,7 @@ const createS3Client = (): S3Client => {
     }),
     endpoint: config.s3Endpoint as string,
     forcePathStyle: true,
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 };
 
