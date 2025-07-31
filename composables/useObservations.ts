@@ -195,7 +195,7 @@ export const useObservations = async (
         onResponseError: (ctx) => {
           const statusCode = ctx.response?.status;
           if (statusCode === 413) {
-            throw new Error('The uploaded file is to large');
+            throw new Error('The uploaded observation image is too large');
           }
           const msg = getErrMsg(ctx.response?._data);
           throw new Error(msg || 'It seems that the fileupload failed :(')
@@ -231,7 +231,7 @@ export const useObservations = async (
         onResponseError: (ctx) => {
           const statusCode = ctx.response?.status;
           if (statusCode === 413) {
-            throw new Error('The uploaded file is to large');
+            throw new Error('The uploaded file is too large');
           }
           const msg = getErrMsg(ctx.response?._data);
           throw new Error(msg || 'It seems that the fileupload failed :(')
