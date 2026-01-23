@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { testProject, withTempUser, createProject, patchCollaborator, inviteToProject, getMe, removeCollaborator, deleteUser, withTempProject } from './helpers';
-import { daysInFuture } from '../../utils/datetime';
+import { daysInFuture } from '#shared/utils/datetime';
 import { db } from './helpers';
 
 describe('Collaborators', () => {

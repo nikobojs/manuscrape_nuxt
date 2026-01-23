@@ -1,14 +1,13 @@
-import { ProjectRole } from '@prisma-postgres/client'
-import { captureException } from '@sentry/node';
+import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER])
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
 
   // get parameters and body
   const body = await readBody(event);
-  const field = await NewDynamicFieldSchema.validate(body)
+  const field = await NewDynamicFieldSchema.validate(body);
 
   const projectId = parseIntParam(event.context.params?.projectId);
 
@@ -19,12 +18,12 @@ export default safeResponseHandler(async (event) => {
       field0Id: field.field0Id,
       field1Id: field.field1Id,
       operator: field.operator,
-    }
+    },
   });
   if (existing) {
     const err = createError({
       statusCode: 400,
-      statusMessage: 'An identical dynamic field already exists',
+      statusMessage: "An identical dynamic field already exists",
     });
     captureException(err);
     throw err;
@@ -34,7 +33,8 @@ export default safeResponseHandler(async (event) => {
   if (field.field0Id === field.field1Id) {
     const err = createError({
       statusCode: 400,
-      statusMessage: 'Dynamic field cannot operate on two identical static fields',
+      statusMessage:
+        "Dynamic field cannot operate on two identical static fields",
     });
     captureException(err);
     throw err;
@@ -42,7 +42,7 @@ export default safeResponseHandler(async (event) => {
 
   // get field types
   const fields: {
-    id: number,
+    id: number;
     label: string;
     type: string;
   }[] = await db.projectField.findMany({
@@ -55,28 +55,28 @@ export default safeResponseHandler(async (event) => {
       AND: [
         {
           id: {
-            in: [field.field0Id, field.field1Id]
+            in: [field.field0Id, field.field1Id],
           },
         },
         {
           projectId: projectId,
-        }
-      ]
-    }
+        },
+      ],
+    },
   });
 
   // ensure both fields exists and is in project
   if (fields.length !== 2) {
     const err = createError({
       statusCode: 400,
-      statusMessage: 'One or both provided static fields could not be found',
+      statusMessage: "One or both provided static fields could not be found",
     });
     captureException(err);
     throw err;
   }
 
   // ensure dynamic field operation is allowed on these fields
-  requireAllowedMatch(fields[0], fields[1], field.operator)
+  requireAllowedMatch(fields[0], fields[1], field.operator);
 
   // create dynamic field
   const createdField = await db.dynamicProjectField.create({
@@ -86,7 +86,7 @@ export default safeResponseHandler(async (event) => {
       label: field.label,
       operator: field.operator,
       projectId: projectId,
-    }
+    },
   });
 
   // return 201 Created

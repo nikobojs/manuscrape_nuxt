@@ -1,30 +1,30 @@
+import { describe, test, expect } from "vitest";
+import { withTempProject, exportProject, getExports } from "./helpers";
 
-import { describe, test, expect } from 'vitest';
-import { ExportStatus } from '@prisma-postgres/client';
-import {
-  withTempProject,
-  exportProject,
-  getExports,
-} from './helpers';
-
-describe('Project exporting', () => {
-  test('project owner cannot export an empty project', async () =>  {
-    await withTempProject(async (_user, project, observations, token) => {
-      expect(observations.length).toBe(0)
-      const emptyExportRes = await exportProject(token, project.id, {
-        type: 'NVIVO',
-        startDate: '2000-09-13T00:00:00.000Z',
-        endDate: new Date().toISOString(),
-      });
-      expect(emptyExportRes.status).toBe(400);
-    }, undefined, undefined, undefined, false);
+describe("Project exporting", () => {
+  test("project owner cannot export an empty project", async () => {
+    await withTempProject(
+      async (_user, project, observations, token) => {
+        expect(observations.length).toBe(0);
+        const emptyExportRes = await exportProject(token, project.id, {
+          type: "NVIVO",
+          startDate: "2000-09-13T00:00:00.000Z",
+          endDate: new Date().toISOString(),
+        });
+        expect(emptyExportRes.status).toBe(400);
+      },
+      undefined,
+      undefined,
+      undefined,
+      false,
+    );
   });
 
-  test('project owner can export a project with observations', async () =>  {
+  test("project owner can export a project with observations", async () => {
     await withTempProject(async (_user, project, _observations, token) => {
       const exportRes = await exportProject(token, project.id, {
-        type: 'NVIVO',
-        startDate: '2000-09-13T00:00:00.000Z',
+        type: "NVIVO",
+        startDate: "2000-09-13T00:00:00.000Z",
         endDate: new Date().toISOString(),
         includeTags: true,
       });
@@ -40,11 +40,15 @@ describe('Project exporting', () => {
       expect(exportsJson?.projectExports?.total).toBe(1);
       expect(exportsJson?.projectExports?.page?.length).toBe(1);
       const newExport = exportsJson.projectExports.page[0];
-      expect(newExport.observationsCount, JSON.stringify(newExport)).toBe(_observations.length);
-      expect([ExportStatus.GENERATING, ExportStatus.DONE]).toContain(newExport.status);
+      expect(newExport.observationsCount, JSON.stringify(newExport)).toBe(
+        _observations.length,
+      );
+      expect([ExportStatus.GENERATING, ExportStatus.DONE]).toContain(
+        newExport.status,
+      );
 
       // ensure export finishes
-      for(let i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i++) {
         const exportsRes = await getExports(token, project.id);
         const exportsJson = await exportsRes.json();
         const newExport = exportsJson.projectExports.page[0];
@@ -52,19 +56,22 @@ describe('Project exporting', () => {
           expect(newExport.error).toBe(null);
           expect(newExport.size).toBeGreaterThan(0);
           break;
-        } else if(i === 9) {
-          expect(newExport.status, 'After 10 delayed retries, export was not generated').toBe(ExportStatus.DONE);
+        } else if (i === 9) {
+          expect(
+            newExport.status,
+            "After 10 delayed retries, export was not generated",
+          ).toBe(ExportStatus.DONE);
         }
         await new Promise((ok) => setTimeout(ok, 400));
       }
     });
   });
 
-  test('project owner cannot export a project with invalid type', async () =>  {
+  test("project owner cannot export a project with invalid type", async () => {
     await withTempProject(async (_user, project, _observations, token) => {
       const exportRes = await exportProject(token, project.id, {
-        type: 'INVALID_TYPE',
-        startDate: '2000-09-13T00:00:00.000Z',
+        type: "INVALID_TYPE",
+        startDate: "2000-09-13T00:00:00.000Z",
         endDate: new Date().toISOString(),
       });
 

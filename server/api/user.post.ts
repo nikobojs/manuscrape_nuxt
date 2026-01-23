@@ -1,13 +1,20 @@
-import { ProjectRole } from '@prisma-postgres/client';
-import { hash } from 'bcrypt';
-import * as yup from 'yup';
+import { hash } from "bcrypt";
+import * as yup from "yup";
 
 const config = useRuntimeConfig();
 
-export const SignUpRequestSchema = yup.object({
-  email: yup.string().required('Email is required').typeError('Email is not valid'),
-  password: yup.string().required('Password is required').typeError('Password is not valid'),
-}).required();
+export const SignUpRequestSchema = yup
+  .object({
+    email: yup
+      .string()
+      .required("Email is required")
+      .typeError("Email is not valid"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .typeError("Password is not valid"),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
   // read body and initiate parsed body
@@ -17,23 +24,23 @@ export default safeResponseHandler(async (event) => {
   // validate with yup and save to variable 'parsed'
   try {
     parsed = await SignUpRequestSchema.validate(body);
-  } catch(e: any) {
-    const msg = e?.message || 'Missing required body parameters';
+  } catch (e: any) {
+    const msg = e?.message || "Missing required body parameters";
     return await delayedError(event, 400, msg, true);
   }
 
   // ensure user isn't already created
   const existingUser = await db.user.findFirst({
     where: { email: parsed.email },
-    select: { id: true }
+    select: { id: true },
   });
   if (existingUser) {
-    return await delayedError(event, 409, 'User already exists');
+    return await delayedError(event, 409, "User already exists");
   }
 
   // validate email
   if (!isValidEmail(parsed.email)) {
-    return await delayedError(event, 400, 'Invalid email')
+    return await delayedError(event, 400, "Invalid email");
   }
 
   // validate password
@@ -51,12 +58,13 @@ export default safeResponseHandler(async (event) => {
     data: {
       email: parsed.email,
       password: hashedPassword,
-    }, select: {
+    },
+    select: {
       id: true,
       email: true,
       password: true,
       createdAt: true,
-    }
+    },
   });
 
   // get all pending invitations
@@ -80,9 +88,9 @@ export default safeResponseHandler(async (event) => {
       data: invitations.map((inv) => ({
         projectId: inv.projectId,
         userId: user.id,
-        role: ProjectRole.INVITED,
+        role: "INVITED",
         nameInProject: user.email,
-      }))
+      })),
     });
   }
 
@@ -97,7 +105,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // authorize user
-  const { token } = await authorize(event, user)
+  const { token } = await authorize(event, user);
 
   // return delayed response
   setResponseStatus(event, 201);

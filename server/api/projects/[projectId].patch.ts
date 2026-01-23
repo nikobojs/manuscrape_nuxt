@@ -1,22 +1,24 @@
-import { FieldType, ProjectRole } from '@prisma-postgres/client'
-import * as yup from 'yup';
+import { FieldType, ProjectRole } from "@prisma-postgres/client";
+import * as yup from "yup";
 
-export const PatchProjectFieldSchema = yup.object({
-  name: yup.string().optional(),
-  canDelockObservations: yup.boolean().optional(),
-  ownerCanPatchObservations: yup.boolean().optional(),
-  contributorsCanReadAllObservations: yup.boolean().optional(),
-}).required();
+export const PatchProjectFieldSchema = yup
+  .object({
+    name: yup.string().optional(),
+    canDelockObservations: yup.boolean().optional(),
+    ownerCanPatchObservations: yup.boolean().optional(),
+    contributorsCanReadAllObservations: yup.boolean().optional(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
 
   const body = await readBody(event);
-  const patch = await PatchProjectFieldSchema.validate(body)
+  const patch = await PatchProjectFieldSchema.validate(body);
 
   const patchedProject = await db.project.update({
     data: patch,

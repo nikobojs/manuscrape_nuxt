@@ -1,8 +1,8 @@
-import type { H3Event } from 'h3';
-import archiver from 'archiver'
-import { generateFilename } from './helpers';
-import { ExportType, Prisma } from '@prisma-postgres/client';
-import { canUseS3 } from '../fileUpload';
+import type { H3Event } from "h3";
+import archiver from "archiver";
+import { generateFilename } from "./helpers";
+import { Prisma } from "@prisma-postgres/client";
+import { canUseS3 } from "../fileUpload";
 
 export const generateProjectUploadsExport = async (
   event: H3Event,
@@ -12,7 +12,7 @@ export const generateProjectUploadsExport = async (
   // get project by projectId
   const project: ExportedProject | null = await db.project.findUnique({
     where: {
-      id: projectId
+      id: projectId,
     },
     select: exportProjectQuery,
   });
@@ -21,10 +21,9 @@ export const generateProjectUploadsExport = async (
   if (!project) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Project does not exist'
+      statusMessage: "Project does not exist",
     });
   }
-
 
   // fetch related observations
   const observations: { id: number }[] = await db.observation.findMany({
@@ -33,11 +32,11 @@ export const generateProjectUploadsExport = async (
   });
 
   // array of observation ids
-  const observationIds = observations.map(o => o.id);
+  const observationIds = observations.map((o) => o.id);
 
   // get observation images for download by observationIds
   const fileUploads = await db.fileUpload.findMany({
-    where: { observationId: { in: observationIds }},
+    where: { observationId: { in: observationIds } },
     select: {
       id: true,
       filePath: true,
@@ -45,22 +44,22 @@ export const generateProjectUploadsExport = async (
       mimetype: true,
       originalName: true,
       observationId: true,
-    }
+    },
   });
 
   // ensure there is something to export
   if (fileUploads.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'There are no files to export'
+      statusMessage: "There are no files to export",
     });
   }
 
-  const archive = archiver('zip', {
+  const archive = archiver("zip", {
     zlib: {
       level: 1,
       memLevel: 9,
-      windowBits: 11
+      windowBits: 11,
     },
     highWaterMark: 2147483648, // max 2gb
   });
@@ -83,7 +82,7 @@ export const generateProjectUploadsExport = async (
   if (fileUploads.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'There are no files uploaded to any observations'
+      statusMessage: "There are no files uploaded to any observations",
     });
   }
 
@@ -92,31 +91,35 @@ export const generateProjectUploadsExport = async (
     if (!upload?.filePath) continue;
 
     // add filedownload as promise to downloads[]
-    const download = getUpload(upload.filePath, upload.isS3).then(({ readable, s3 }) => {
-      // get fileExtension
-      let filenameDotSplit = upload.originalName.split('.').reverse();
-      let fileEnding = '';
-      if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+    const download = getUpload(upload.filePath, upload.isS3).then(
+      ({ readable, s3 }) => {
+        // get fileExtension
+        let filenameDotSplit = upload.originalName.split(".").reverse();
+        let fileEnding = "";
+        if (filenameDotSplit.length > 1) fileEnding = "." + filenameDotSplit[0];
 
-      // add new file counter for observation if necessary
-      if (!(upload.observationId in obsFileCounts)) {
-        obsFileCounts[upload.observationId] = 0;
-      } else {
-        obsFileCounts[upload.observationId]++;
-      }
-      // add upload counter (there might be more for each observation)
-      const count = `.${obsFileCounts[upload.observationId]}`;
+        // add new file counter for observation if necessary
+        if (!(upload.observationId in obsFileCounts)) {
+          obsFileCounts[upload.observationId] = 0;
+        } else {
+          obsFileCounts[upload.observationId]++;
+        }
+        // add upload counter (there might be more for each observation)
+        const count = `.${obsFileCounts[upload.observationId]}`;
 
-      // clean up open sockets just in case
-      readable.on('end', () => {
-        if (s3) s3.destroy();
-      });
-      readable.on('close', () => {
-        if (s3) s3.destroy();
-      });
+        // clean up open sockets just in case
+        readable.on("end", () => {
+          if (s3) s3.destroy();
+        });
+        readable.on("close", () => {
+          if (s3) s3.destroy();
+        });
 
-      archive.append(readable, { name: upload.observationId + count + fileEnding });
-    });
+        archive.append(readable, {
+          name: upload.observationId + count + fileEnding,
+        });
+      },
+    );
 
     // add ongoing download promise to an array (so we can wait for all to finish)
     downloads.push(download);
@@ -132,8 +135,8 @@ export const generateProjectUploadsExport = async (
   return {
     filePath: newS3Path,
     isS3: canUseS3(),
-    mimetype: 'application/zip',
+    mimetype: "application/zip",
     observationsCount: observationIds.length,
     size,
   };
-}
+};

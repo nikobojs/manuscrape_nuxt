@@ -1,39 +1,41 @@
+import * as yup from "yup";
+import type { NuxtError } from "nuxt/app";
 
-import * as yup from 'yup';
-import { ProjectRole } from '@prisma-postgres/client';
-import type { NuxtError } from 'nuxt/app';
-
-export const DuplicateProjectSchema = yup.object({
-  name: yup.string().required(),
-}).required()
-
+export const DuplicateProjectSchema = yup
+  .object({
+    name: yup.string().required(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
 
   // get newName from body and trim it
   const body = await readBody(event);
-  let { name: newName } = await DuplicateProjectSchema.validate(body)
+  let { name: newName } = await DuplicateProjectSchema.validate(body);
   newName = newName.trim();
 
   // get source project we want to duplicate from
   const sourceProject = await db.project.findFirst({
     select: smallProjectQuery,
     where: {
-      id: projectId
-    }
+      id: projectId,
+    },
   });
 
   // ensure source project exists
   if (!sourceProject) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Project could not be found'
-    } as Partial<NuxtError>)
+      statusMessage: "Project could not be found",
+    } as Partial<NuxtError>);
   }
 
   // ensure new project name differs from source project name
@@ -41,10 +43,11 @@ export default safeResponseHandler(async (event) => {
   if (sourceProject.name === newName) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'The name of a project duplicate must differ from the source project'
+      statusMessage:
+        "The name of a project duplicate must differ from the source project",
     });
   }
-  
+
   // create new fields lists (whitelists what to copy)
   const newFields = sourceProject.fields.map((f) => {
     return {
@@ -54,9 +57,9 @@ export default safeResponseHandler(async (event) => {
       label: f.label,
       type: f.type,
       required: f.required,
-    }
+    };
   });
-  
+
   // prepare project create query prisma statement
   const newProject = {
     fields: {
@@ -80,10 +83,10 @@ export default safeResponseHandler(async (event) => {
   });
 
   // ensure prisma project query returned something
-  if (!createdProject || typeof createdProject.id !== 'number') {
+  if (!createdProject || typeof createdProject.id !== "number") {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Project was unreachable after creation'
+      statusMessage: "Project was unreachable after creation",
     });
   }
 
@@ -92,14 +95,13 @@ export default safeResponseHandler(async (event) => {
     data: {
       projectId: createdProject.id,
       userId: user.id,
-      role: ProjectRole.OWNER,
+      role: "OWNER",
       nameInProject: user.email,
-    }
+    },
   });
 
   // try copying dynamic fields if there are any
   if (sourceProject.dynamicFields.length > 0) {
-
     // prepare the new dynamic fields
     const newDynamicFields = sourceProject.dynamicFields.map((f) => {
       return {

@@ -1,53 +1,58 @@
-import { type Prisma, FieldType, ProjectRole } from '@prisma-postgres/client'
-import * as yup from 'yup';
-import { serializeChoices } from '~/utils/observationFields';
+import { type Prisma, FieldType, ProjectRole } from "@prisma-postgres/client";
+import * as yup from "yup";
+import { serializeChoices } from "#shared/utils/observationFields";
 
 const fieldTypeValues = Object.values(FieldType);
 
-export const NewProjectFieldSchema = yup.object({
-  label: yup.string().required(),
-  type: yup.mixed<typeof fieldTypeValues[number]>().required().oneOf(
-    Object.values(FieldType)
-  ).required(),
-  required: yup.boolean().required(),
-  choices: yup.array().of(yup.string().required()).optional(),
-  index: yup.number().required(),
-}).required();
+export const NewProjectFieldSchema = yup
+  .object({
+    label: yup.string().required(),
+    type: yup
+      .mixed<(typeof fieldTypeValues)[number]>()
+      .required()
+      .oneOf(Object.values(FieldType))
+      .required(),
+    required: yup.boolean().required(),
+    choices: yup.array().of(yup.string().required()).optional(),
+    index: yup.number().required(),
+  })
+  .required();
 
-export const NewProjectSchema = yup.object({
-  name: yup.string().required(),
-  fields: yup.array().of(NewProjectFieldSchema).required(),
-}).required()
-
+export const NewProjectSchema = yup
+  .object({
+    name: yup.string().required(),
+    fields: yup.array().of(NewProjectFieldSchema).required(),
+  })
+  .required();
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
 
   const body = await readBody(event);
-  const newProject = await NewProjectSchema.validate(body)
+  const newProject = await NewProjectSchema.validate(body);
 
-  const fieldLabels = newProject.fields.map((f => f.label));
+  const fieldLabels = newProject.fields.map((f) => f.label);
 
   if (newProject.fields.length === 0) {
     throw createError({
-      statusMessage: 'Cannot create a project without fields',
+      statusMessage: "Cannot create a project without fields",
       statusCode: 400,
     });
   }
 
   if (fieldLabels.length !== new Set(fieldLabels).size) {
     throw createError({
-      statusMessage: 'Two fields cannot have an identical label',
+      statusMessage: "Two fields cannot have an identical label",
       statusCode: 400,
     });
   }
 
-  const fieldIndexes = newProject.fields.map((f => f.index));
+  const fieldIndexes = newProject.fields.map((f) => f.index);
   const uniqueFieldIndexes = new Set([...fieldIndexes]);
   if (fieldIndexes.length !== uniqueFieldIndexes.size) {
     throw createError({
-      statusMessage: `Two fields cannot have an identical index: ${fieldIndexes.join(',')}`,
+      statusMessage: `Two fields cannot have an identical index: ${fieldIndexes.join(",")}`,
       statusCode: 400,
     });
   }
@@ -66,8 +71,8 @@ export default safeResponseHandler(async (event) => {
       userId: user.id,
       projectId: createdProject.id,
       nameInProject: user.email,
-      role: ProjectRole.OWNER,
-    }
+      role: "OWNER",
+    },
   });
 
   const newProjectFields = newProject.fields.map((f) => ({
@@ -86,11 +91,11 @@ export default safeResponseHandler(async (event) => {
   // get the updated fields to ensure indexes are ok
   const updatedFields = await db.projectField.findMany({
     where: { projectId: createdProject.id },
-    select: { id: true, index: true }
+    select: { id: true, index: true },
   });
 
   // verify and update indexes if needed
-  await enforceCorrectIndexes(updatedFields)
+  await enforceCorrectIndexes(updatedFields);
 
   setResponseStatus(event, 201);
   return createdProject;

@@ -1,15 +1,14 @@
+import * as yup from "yup";
 
-import { ProjectRole } from '@prisma-postgres/client';
-import * as yup from 'yup';
-
-const PatchCollaboratorBody = yup.object({
-  nameInProject: yup.string(),
-  role: yup.string(),
-}).required();
-
+const PatchCollaboratorBody = yup
+  .object({
+    nameInProject: yup.string(),
+    role: yup.string(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
   await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
@@ -19,10 +18,10 @@ export default safeResponseHandler(async (event) => {
   const patch: any = {};
 
   // validate role in body and set in patch
-  if (role && !['OWNER', 'INVITED'].includes(role)) {
+  if (role && !["OWNER", "INVITED"].includes(role)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Project role is not recognized!',
+      statusMessage: "Project role is not recognized!",
     });
   } else if (role) {
     patch.role = role;
@@ -37,8 +36,8 @@ export default safeResponseHandler(async (event) => {
   if (Object.keys(patch).length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Collaborator patch cannot be empty'
-    })
+      statusMessage: "Collaborator patch cannot be empty",
+    });
   }
 
   // get collaborator access
@@ -47,18 +46,18 @@ export default safeResponseHandler(async (event) => {
       projectId_userId: {
         projectId: projectId,
         userId: collaboratorId,
-      }
+      },
     },
     select: {
       role: true,
-    }
+    },
   });
 
   // ensure collaborator marked for patching is actually connected to project
   if (!collaboratorAccess) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Collaborator is not connected to project'
+      statusMessage: "Collaborator is not connected to project",
     });
   }
   // patch actual projectAccess row
@@ -67,10 +66,10 @@ export default safeResponseHandler(async (event) => {
       projectId_userId: {
         projectId: projectId,
         userId: collaboratorId,
-      }
+      },
     },
     data: { ...patch },
-  })
+  });
 
   return { success: true };
 });

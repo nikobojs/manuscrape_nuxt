@@ -1,5 +1,3 @@
-import { ProjectRole } from '@prisma-postgres/client';
-
 export default safeResponseHandler(async (event) => {
   // Require login
   await requireUser(event);
@@ -20,14 +18,14 @@ export default safeResponseHandler(async (event) => {
   if (!projectAccess) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'You don\'t have access to this project',
+      statusMessage: "You don't have access to this project",
     });
   }
 
   // Fetch tags ordered alphabetically by name
   const tags = await db.tag.findMany({
     where: { projectId },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
     select: {
       id: true,
       name: true,
@@ -35,9 +33,9 @@ export default safeResponseHandler(async (event) => {
         select: {
           id: true,
           email: true,
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
   return {

@@ -1,10 +1,9 @@
-import { ProjectRole } from '@prisma-postgres/client';
-import * as yup from 'yup';
+import * as yup from "yup";
 
 export default safeResponseHandler(async (event) => {
   // Auth & access control
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
 
   const projectId = parseIntParam(event.context.params?.projectId);
   const userId = event.context.user.id;

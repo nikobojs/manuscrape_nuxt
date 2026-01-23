@@ -1,0 +1,314 @@
+<template>
+  <UForm ref="form" :validate="validate" :state="state" @submit="submit">
+    <UCard class="overflow-visible">
+      <template #header>
+        <div>
+          <div class="flex justify-between w-full">
+            <CardHeader>Observation parameters</CardHeader>
+            <UIcon
+              v-if="!$props.disabled && metadataDone"
+              class="ml-2 text-lg text-green-500"
+              name="i-heroicons-check"
+            />
+          </div>
+        </div>
+      </template>
+
+      <div class="flex flex-col gap-4">
+        <div v-for="{ props, field } in inputs">
+          <UFormGroup :name="field.label" :label="`${field.label}:`">
+            <div class="inline-block">
+              <UCheckbox
+                v-if="field.type === 'BOOLEAN'"
+                v-model="state[field.label]"
+                v-bind="props"
+                :disabled="!!$props.disabled"
+                :default-value="false"
+              />
+              <UTextarea
+                v-else-if="field.type === 'TEXTAREA'"
+                v-model="state[field.label]"
+                v-bind="props"
+                variant="outline"
+                :disabled="!!$props.disabled"
+              />
+              <UInput
+                v-else-if="field.type === 'DATE' || field.type === 'DATETIME'"
+                v-model="state[field.label]"
+                v-bind="props"
+                class="flex-shrink"
+                :disabled="!!$props.disabled"
+                @input="(asd: Event) => fourDigitYear(asd)"
+              />
+              <div v-else-if="field.type === 'CHOICE'">
+                <div
+                  class="flex items-center gap-2"
+                  v-for="choice in field.choices"
+                >
+                  <URadio
+                    :id="`radio-${choice}`"
+                    :key="choice"
+                    v-model="state[field.label]"
+                    :name="field.label"
+                    :value="choice"
+                    :disabled="!!$props.disabled"
+                  />
+                  <label :for="`radio-${choice}`">{{ choice }}</label>
+                </div>
+              </div>
+              <div v-else-if="field.type === 'AUTOCOMPLETE'">
+                <USelectMenu
+                  class="min-w-[200px]"
+                  :options="field.choices"
+                  v-model="state[field.label]"
+                  :placeholder="
+                    field.required ? 'Select option' : 'None chosen'
+                  "
+                  :disabled="!!$props.disabled"
+                  :popper="{
+                    adaptive: false,
+                    offsetDistance: -3,
+                    placement: 'bottom-start',
+                  }"
+                />
+              </div>
+              <!-- TODO: not working -->
+              <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
+                <USelectMenu
+                  class="min-w-[200px]"
+                  :options="field.choices"
+                  v-model="state[field.label]"
+                  :placeholder="
+                    field.required ? 'Select or type option' : 'None chosen'
+                  "
+                  creatable
+                  searchable
+                  :searchable-placeholder="
+                    field.required
+                      ? 'Search or write custom text...'
+                      : 'None chosen'
+                  "
+                  :disabled="!!$props.disabled"
+                >
+                  <template #option-create="{ option }">
+                    <span class="flex-shrink-0 text-gray-400 text-xs"
+                      >Custom:</span
+                    >
+                    <span>
+                      {{ option?.label || option }}
+                    </span>
+                  </template>
+                </USelectMenu>
+              </div>
+              <!-- TODO: not working -->
+              <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
+                <USelectMenu
+                  :name="field.label"
+                  class="min-w-[200px]"
+                  :options="
+                    getMultipleChoiceAddOptions({
+                      choices: field.choices,
+                      label: field.label,
+                    })
+                  "
+                  v-model="state[field.label]"
+                  :placeholder="
+                    field.required
+                      ? 'Select options or type freely'
+                      : 'Nothing picked'
+                  "
+                  multiple
+                  searchable
+                  creatable
+                  by="label"
+                  :disabled="!!$props.disabled"
+                >
+                  <template #option-create="{ option }">
+                    <span class="flex-shrink-0 text-gray-400 text-xs"
+                      >Custom:</span
+                    >
+                    <span>
+                      {{ option.label }}
+                    </span>
+                  </template>
+                  <template #label>
+                    <span v-if="state[field.label].length" class="truncate"
+                      >{{ state[field.label].length }} selected</span
+                    >
+                    <span v-else>Select multiple options</span>
+                  </template>
+                </USelectMenu>
+              </div>
+              <UInput
+                v-else
+                v-model="state[field.label]"
+                v-bind="props"
+                :disabled="!!$props.disabled"
+              />
+            </div>
+          </UFormGroup>
+        </div>
+      </div>
+
+      <!-- <template #footer> -->
+      <div class="-ml-6 -mr-6 my-6">
+        <div class="border-b border-gray-800 w-full"></div>
+      </div>
+      <UButton
+        v-if="!props.disabled"
+        variant="outline"
+        type="submit"
+        :disabled="!!$props.disabled"
+      >
+        Save metadata
+      </UButton>
+      <!-- </template> -->
+    </UCard>
+  </UForm>
+</template>
+
+<script lang="ts" setup>
+import type { FormError } from "#ui/types";
+import { FieldType } from "#imports";
+
+const props = defineProps({
+  observationId: {
+    type: Number,
+    required: true,
+  },
+  project: requireProjectProp,
+  onSubmit: Function as PropType<Function>,
+  disabled: Boolean as PropType<Boolean>,
+  metadataDone: Boolean as PropType<Boolean>,
+  initialState: Object as PropType<any>,
+  inputs: requireProp<CMSInput[]>(),
+});
+
+const { params } = useRoute();
+const { sortFields } = await useProjects(params);
+const { patchObservation, observations } = await useObservations(
+  props.project.id,
+);
+
+function getMultipleChoiceAddOptions(field: {
+  choices: string[] | undefined;
+  label: string;
+}): {
+  label: string;
+}[] {
+  const updatedOptions: string[] = field?.choices || [];
+  const result = updatedOptions
+    .concat(getCustomFieldChoices(field, state))
+    .map((o: string) => ({ label: o }));
+  return result;
+}
+
+const form = ref();
+const sortedFields = computed(() => sortFields(props.project));
+const observation = computed(() =>
+  observations.value.find((o) => o.id === props.observationId),
+);
+const state = ref(
+  Object.assign(
+    { ...props.initialState },
+    JSON.parse((observation.value?.data as any) || {}),
+  ),
+);
+
+onMounted(() => {
+  const isNewObservation = observation.value?.data === "{}";
+  // look for all booleans to set their default value (avoid `undefined`)
+  if (sortedFields.value?.length && isNewObservation) {
+    for (const field of sortedFields.value) {
+      const isBool = field.type === FieldType.BOOLEAN;
+      const isUndefined = typeof state.value[field.label] !== "boolean";
+      if (isBool && isUndefined) {
+        state.value[field.label] = false;
+      }
+    }
+  }
+});
+
+// TODO: validation function doesn't seem completely functional
+//       - manuel edge-case testing required
+function validate(state: any): FormError[] {
+  const errors = [] as FormError[];
+
+  // scan for missing fields
+  const missingFields = sortedFields.value.filter((f) => {
+    return (
+      f.required &&
+      !Object.keys(state).includes(f.label) &&
+      f.type !== FieldType.BOOLEAN
+    );
+  });
+
+  if (missingFields.length > 0) {
+    for (const field of missingFields) {
+      errors.push({ path: field.label, message: "Field is required" });
+    }
+  }
+
+  // validate each state value
+  for (const [key, value] of Object.entries(state)) {
+    // validate field (field)
+    const field = sortedFields.value.find((field) => field.label == key);
+    if (!field) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Field '${key}' does not exist :(`,
+      });
+    }
+
+    // check if field is required or optional
+    if (field.required && (value === null || value === undefined)) {
+      errors.push({ path: key, message: "Required" });
+    }
+
+    // validate numbers
+    const typ = field.type;
+    if (typ == FieldType.FLOAT || typ == FieldType.INT) {
+      const valueFloat = parseFloat("" + value);
+      if (isNaN(valueFloat)) {
+        errors.push({ path: key, message: "Invalid number" });
+      }
+    }
+
+    // validate strings
+    if (typ == FieldType.STRING) {
+      // TODO: explain why
+      if (("" + value).length === 0) {
+        errors.push({ path: key, message: "Text field is required" });
+      }
+    }
+
+    // validate dates
+    // NOTE: only acceps dates in ISO string
+    // TODO: check if field is required or optional
+    else if (typ == FieldType.DATE || typ == FieldType.DATETIME) {
+      const valueDate = new Date("" + value);
+      if (isNaN(valueDate.getTime())) {
+        errors.push({ path: key, message: "Date field is invalid" });
+      }
+    }
+  }
+
+  return errors;
+}
+
+async function submit() {
+  try {
+    await form.value!.validate();
+  } catch (e) {
+    // Do nothing as library takes care of errors
+    // NOTE: this is to avoid uncaught rejected promises
+    return;
+  }
+
+  const _res = await patchObservation(props.project.id, props.observationId, {
+    data: state.value,
+  });
+
+  props.onSubmit?.();
+}
+</script>

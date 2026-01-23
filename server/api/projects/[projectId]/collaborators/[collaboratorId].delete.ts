@@ -1,7 +1,8 @@
-import { ProjectRole } from '@prisma-postgres/client';
-
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
   const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
@@ -12,25 +13,27 @@ export default safeResponseHandler(async (event) => {
       projectId_userId: {
         projectId: projectId,
         userId: user.id,
-      }
+      },
     },
     select: {
       role: true,
-    }
+    },
   });
 
   // ensure user has access
-  if (!access) throw createError({
-    statusCode: 403,
-    statusMessage: 'You do not have access to this project'
-  });
+  if (!access)
+    throw createError({
+      statusCode: 403,
+      statusMessage: "You do not have access to this project",
+    });
 
   // if not owner, only allow deletion of self
-  const isOwner = access.role === ProjectRole.OWNER;
+  const isOwner = access.role === "OWNER";
   if (!isOwner && collaboratorId !== user.id) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'You are not allowed to disconnect other collaborators from project'
+      statusMessage:
+        "You are not allowed to disconnect other collaborators from project",
     });
   }
 
@@ -40,25 +43,25 @@ export default safeResponseHandler(async (event) => {
       projectId_userId: {
         projectId: projectId,
         userId: collaboratorId,
-      }
+      },
     },
     select: {
       role: true,
-    }
+    },
   });
 
   // ensure collaborator marked for deletion is actually connected to project
   if (!collaboratorAccess) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Collaborator is not connected to project'
+      statusMessage: "Collaborator is not connected to project",
     });
   }
 
   // remove collaborator access to project
   await db.projectAccess.deleteMany({
     where: { userId: collaboratorId, projectId: projectId },
-  })
+  });
 
   return { success: true };
 });

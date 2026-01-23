@@ -1,15 +1,16 @@
-import { ProjectRole } from '@prisma-postgres/client';
-import { captureException } from '@sentry/node';
-import * as yup from 'yup';
+import { captureException } from "@sentry/node";
+import * as yup from "yup";
 
-export const MoveProjectFieldSchema = yup.object({
-  up: yup.boolean().required(),
-}).required();
+export const MoveProjectFieldSchema = yup
+  .object({
+    up: yup.boolean().required(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
@@ -23,14 +24,14 @@ export default safeResponseHandler(async (event) => {
       choices: true,
       label: true,
       type: true,
-    }
+    },
   });
 
   // ensure project and field exists
   if (!field) {
     const err = createError({
       statusCode: 400,
-      statusMessage: 'Field is not in project or project does not exist'
+      statusMessage: "Field is not in project or project does not exist",
     });
     captureException(err);
     throw err;
@@ -46,7 +47,7 @@ export default safeResponseHandler(async (event) => {
     select: {
       id: true,
       index: true,
-    }
+    },
   });
 
   // move project field up or down depending on json body

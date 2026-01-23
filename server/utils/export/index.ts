@@ -1,15 +1,14 @@
-import type { H3Event } from 'h3';
-import { Prisma } from '@prisma-postgres/client';
-import { ExportStatus, ExportType } from '@prisma-postgres/client';
-import { generateProjectMediaExport } from './media';
-import { generateNvivoExport } from './nvivo';
-import { generateProjectUploadsExport } from './uploads';
+import type { H3Event } from "h3";
+import { Prisma } from "@prisma-postgres/client";
+import { generateProjectMediaExport } from "./media";
+import { generateNvivoExport } from "./nvivo";
+import { generateProjectUploadsExport } from "./uploads";
 
 export async function generateProjectExport(
   event: H3Event,
   projectId: number,
   userId: number,
-  config: ExportProjectPayload
+  config: ExportProjectPayload,
 ): Promise<ExportMeta> {
   // get the correct export function based on json body
   const { type, startDate, endDate, includeTags } = config;
@@ -29,16 +28,20 @@ export async function generateProjectExport(
   }
 
   if (type === ExportType.NVIVO) {
-    return generateNvivoExport(event, projectId, observationFilter, includeTags);
+    return generateNvivoExport(
+      event,
+      projectId,
+      observationFilter,
+      includeTags,
+    );
   } else if (type === ExportType.MEDIA) {
-    return generateProjectMediaExport(event, projectId, observationFilter)
+    return generateProjectMediaExport(event, projectId, observationFilter);
   } else if (type === ExportType.UPLOADS) {
     return generateProjectUploadsExport(event, projectId, observationFilter);
   } else {
     throw createError({
       statusCode: 400,
-      statusMessage:
-        'Export type is not supported.',
+      statusMessage: "Export type is not supported.",
     });
   }
 }
@@ -50,7 +53,7 @@ export async function createEmptyProjectExport(
   settings: ExportProjectPayload,
   observationsCount: number,
   isS3: boolean,
-): Promise<{id: number}> {
+): Promise<{ id: number }> {
   const res = await db.projectExport.create({
     data: {
       userId,
@@ -59,7 +62,7 @@ export async function createEmptyProjectExport(
       startDate: new Date(settings.startDate).toISOString(),
       endDate: new Date(settings.endDate).toISOString(),
       status: ExportStatus.GENERATING,
-      mimetype: '',
+      mimetype: "",
       filePath,
       isS3,
       observationsCount,
@@ -91,11 +94,11 @@ export async function exportErrored(
   exportId: number,
   err?: string | Error,
 ): Promise<void> {
-  const errMsg = err instanceof Error ? err.message : err
-  console.error('Project export failed with err:', errMsg);
+  const errMsg = err instanceof Error ? err.message : err;
+  console.error("Project export failed with err:", errMsg);
   await db.projectExport.update({
     data: {
-      error: errMsg || 'Unknown error',
+      error: errMsg || "Unknown error",
       status: ExportStatus.ERRORED,
     },
     where: {

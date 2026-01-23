@@ -1,6 +1,5 @@
-import { ProjectRole, Prisma } from '@prisma-postgres/client';
-import { numberBetween } from '~/utils/validate';
-import { extractTagsFromObservation } from '~/utils/extractTagsFromObservation';
+import { numberBetween } from "#shared/utils/validate";
+import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObservation";
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -16,7 +15,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId,
       userId: event.context.user.id,
-    }
+    },
   });
 
   // require access to project
@@ -24,8 +23,8 @@ export default safeResponseHandler(async (event) => {
     // TODO: report error
     throw createError({
       statusCode: 403,
-      statusMessage: 'You don\'t have access to this project'
-    })
+      statusMessage: "You don't have access to this project",
+    });
   }
 
   const project = await db.project.findUnique({
@@ -36,12 +35,12 @@ export default safeResponseHandler(async (event) => {
   });
 
   // define helper variables
-  const isOwner = projectAccess.role === ProjectRole.OWNER;
+  const isOwner = projectAccess.role === "OWNER";
 
   // define all query parameters
   // TODO: decrease amount of code somehow
   const take = queryParam<number>({
-    name: 'take',
+    name: "take",
     event: event,
     defaultValue: 10,
     parse: (v: string) => parseInt(v),
@@ -49,70 +48,74 @@ export default safeResponseHandler(async (event) => {
     required: true,
   });
   const skip = queryParam<number>({
-    name: 'skip',
+    name: "skip",
     event: event,
     defaultValue: 0,
     parse: (v: string) => parseInt(v),
     validate: numberBetween(0, 1999999999),
     required: true,
   });
-  const orderDirection = queryParam<'asc' | 'desc'>({
-    name: 'orderDirection',
+  const orderDirection = queryParam<"asc" | "desc">({
+    name: "orderDirection",
     event: event,
-    defaultValue: 'desc',
-    parse: (v) => v as 'asc' | 'desc',
-    validate: (v) => ['asc', 'desc'].includes(v),
+    defaultValue: "desc",
+    parse: (v) => v as "asc" | "desc",
+    validate: (v) => ["asc", "desc"].includes(v),
     required: true,
   });
-  const orderBy = queryParam<'user' | 'createdAt' | 'id'>({
-    name: 'orderBy',
+  const orderBy = queryParam<"user" | "createdAt" | "id">({
+    name: "orderBy",
     event: event,
-    defaultValue: 'createdAt',
-    parse: (v) => v as 'user' | 'createdAt' | 'id',
-    validate: (v) => ['user', 'createdAt', 'id'].includes(v),
+    defaultValue: "createdAt",
+    parse: (v) => v as "user" | "createdAt" | "id",
+    validate: (v) => ["user", "createdAt", "id"].includes(v),
     required: true,
   });
-  const filter = queryParam<'all' | 'published' | 'drafts'>({
-    name: 'filter',
+  const filter = queryParam<"all" | "published" | "drafts">({
+    name: "filter",
     event: event,
-    defaultValue: 'all',
-    parse: (v: string) => v as 'all' | 'published' | 'drafts',
-    validate: (v) => ['all', 'published', 'drafts'].includes(v),
+    defaultValue: "all",
+    parse: (v: string) => v as "all" | "published" | "drafts",
+    validate: (v) => ["all", "published", "drafts"].includes(v),
     required: true,
   });
-  const ownership = queryParam<'me' | 'everyone'>({
-    name: 'ownership',
+  const ownership = queryParam<"me" | "everyone">({
+    name: "ownership",
     event: event,
-    defaultValue: 'everyone',
-    parse: (v: string) => v as 'me' | 'everyone',
-    validate: (v) => ['me', 'everyone'].includes(v),
+    defaultValue: "everyone",
+    parse: (v: string) => v as "me" | "everyone",
+    validate: (v) => ["me", "everyone"].includes(v),
     required: true,
   });
 
   // create initial observation where statement
   const whereStatement: Prisma.ObservationWhereInput = {
     projectId,
-  }
+  };
 
   // set observation ownership filter in where statement
   // NOTE: only allow project OWNER to see everyone's observations
-  if (ownership === 'me' || (!isOwner && !project?.contributorsCanReadAllObservations)) {
+  if (
+    ownership === "me" ||
+    (!isOwner && !project?.contributorsCanReadAllObservations)
+  ) {
     whereStatement.userId = event.context.user.id;
   }
 
   // set published/drafts/all filter in where statement
-  if (filter === 'drafts') {
+  if (filter === "drafts") {
     whereStatement.isDraft = true;
-  } else if (filter === 'published') {
+  } else if (filter === "published") {
     whereStatement.isDraft = false;
   }
 
   // create order by / sorting statement
-  const orderByStatement = orderBy === 'createdAt'
-    ? { createdAt: orderDirection }
-    : orderBy === 'user'
-    ? { user: { email: orderDirection } }
-    : { id: orderDirection }
+  const orderByStatement =
+    orderBy === "createdAt"
+      ? { createdAt: orderDirection }
+      : orderBy === "user"
+        ? { user: { email: orderDirection } }
+        : { id: orderDirection };
 
   // count how many observations where are in total (with filters applied)
   const total = await db.observation.count({
@@ -137,8 +140,8 @@ export default safeResponseHandler(async (event) => {
 
   // return the data!
   return {
-    observations: result.map(obs => extractTagsFromObservation(obs)),
+    observations: result.map((obs) => extractTagsFromObservation(obs)),
     total,
-    totalDraft
+    totalDraft,
   };
 });

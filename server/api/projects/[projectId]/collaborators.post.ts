@@ -1,27 +1,27 @@
+import * as yup from "yup";
+import { daysInFuture } from "#shared/utils/datetime";
 
-import * as yup from 'yup';
-import { ProjectRole } from '@prisma-postgres/client';
-import { daysInFuture } from '~/utils/datetime';
-
-const AddCollaboratorSchema = yup.object({
-  email: yup.string().required(),
-}).required();
+const AddCollaboratorSchema = yup
+  .object({
+    email: yup.string().required(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER]);
+  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
   const body = await readBody(event);
   const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
-  const allowedRoles: ProjectRole[] = [ProjectRole.OWNER];
-  let parsed: {email: string} | undefined;
+  const allowedRoles: ProjectRole[] = ["OWNER"];
+  let parsed: { email: string } | undefined;
 
   // validate with yup
   try {
     parsed = await AddCollaboratorSchema.validate(body);
-  } catch(e: any) {
+  } catch (e: any) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Missing required body parameters',
+      statusMessage: "Missing required body parameters",
     });
   }
 
@@ -31,22 +31,24 @@ export default safeResponseHandler(async (event) => {
       projectId_userId: {
         projectId: projectId,
         userId: user.id,
-      }
+      },
     },
     select: {
       role: true,
-    }
+    },
   });
 
-  if (!access) throw createError({
-    statusCode: 403,
-    statusMessage: 'You do not have access to this project'
-  });
+  if (!access)
+    throw createError({
+      statusCode: 403,
+      statusMessage: "You do not have access to this project",
+    });
 
   if (!allowedRoles.includes(access.role)) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'You do not have the required project permissions to invite collaborators'
+      statusMessage:
+        "You do not have the required project permissions to invite collaborators",
     });
   }
 
@@ -54,9 +56,8 @@ export default safeResponseHandler(async (event) => {
     where: {
       email: parsed.email,
     },
-    select: { id: true, email: true }
+    select: { id: true, email: true },
   });
-
 
   // if collaborator is already an existing user,
   // just let them join the project immediatly
@@ -66,13 +67,13 @@ export default safeResponseHandler(async (event) => {
         user: { email: parsed.email },
         projectId,
       },
-      select: { projectId: true }
+      select: { projectId: true },
     });
 
     if (existing) {
       throw createError({
         statusCode: 409,
-        statusMessage: 'User already has access to project'
+        statusMessage: "User already has access to project",
       });
     }
 
@@ -80,7 +81,7 @@ export default safeResponseHandler(async (event) => {
       data: {
         projectId,
         userId: collaborator.id,
-        role: ProjectRole.INVITED,
+        role: "INVITED",
         nameInProject: collaborator.email,
       },
     });
@@ -88,7 +89,7 @@ export default safeResponseHandler(async (event) => {
     setResponseStatus(event, 202);
     return { success: true };
 
-  // if user does not exist in db, create projectInvitation and return the link
+    // if user does not exist in db, create projectInvitation and return the link
   } else {
     const hash = generateInvitationHash(body.email);
 
@@ -99,15 +100,16 @@ export default safeResponseHandler(async (event) => {
         projectId: projectId,
         expiresAt: {
           gte: new Date(),
-        }
-      }
-    })
+        },
+      },
+    });
 
     // if invitation already exists, throw up
     if (existing) {
       throw createError({
         statusCode: 409,
-        statusMessage: 'User is already invited to project. They just need to sign up on ManuScrape to get access.'
+        statusMessage:
+          "User is already invited to project. They just need to sign up on ManuScrape to get access.",
       });
     }
 

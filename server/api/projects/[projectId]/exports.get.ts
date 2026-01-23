@@ -1,9 +1,11 @@
-import { ExportStatus, ProjectRole } from '@prisma-postgres/client';
-import { numberBetween } from '~/utils/validate';
+import { numberBetween } from "#shared/utils/validate";
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED])
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
 
   // get project id from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);
@@ -16,7 +18,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId,
       userId: event.context.user.id,
-    }
+    },
   });
 
   const project = await db.project.findUnique({
@@ -28,21 +30,20 @@ export default safeResponseHandler(async (event) => {
   if (!project) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Project was not found',
+      statusMessage: "Project was not found",
     });
   }
 
-
-  const isOwner = projectAccess?.role === ProjectRole.OWNER;
+  const isOwner = projectAccess?.role === "OWNER";
   if (!isOwner && !project.contributorsCanExport) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Exporting is disabled for all except the project owner',
+      statusMessage: "Exporting is disabled for all except the project owner",
     });
   }
 
   const take = queryParam<number>({
-    name: 'take',
+    name: "take",
     event: event,
     defaultValue: 10,
     parse: (v: string) => parseInt(v),
@@ -50,7 +51,7 @@ export default safeResponseHandler(async (event) => {
     required: true,
   });
   const skip = queryParam<number>({
-    name: 'skip',
+    name: "skip",
     event: event,
     defaultValue: 0,
     parse: (v: string) => parseInt(v),
@@ -63,15 +64,18 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId,
       NOT: {
-        status: ExportStatus.ERRORED
-      }
+        status: ExportStatus.ERRORED,
+      },
     },
     select: {
       size: true,
     },
   });
 
-  const storageUsage = existingExports.reduce((sum, current) => current.size + sum, 0);
+  const storageUsage = existingExports.reduce(
+    (sum, current) => current.size + sum,
+    0,
+  );
 
   const projectExportsGenerating = await db.projectExport.findMany({
     where: {
@@ -79,7 +83,7 @@ export default safeResponseHandler(async (event) => {
       status: ExportStatus.GENERATING,
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
     select: projectExportQuery,
   });
@@ -88,11 +92,11 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId,
       NOT: {
-        status: ExportStatus.ERRORED
-      }
+        status: ExportStatus.ERRORED,
+      },
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
     take,
     skip,

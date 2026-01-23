@@ -1,18 +1,17 @@
-import type { H3Event } from 'h3';
-import archiver from 'archiver'
-import { generateFilename } from './helpers';
-import { ExportType, Prisma } from '@prisma-postgres/client';
-import { canUseS3 } from '../fileUpload';
+import type { H3Event } from "h3";
+import archiver from "archiver";
+import { generateFilename } from "./helpers";
+import { Prisma } from "@prisma-postgres/client";
+import { canUseS3 } from "../fileUpload";
 
 const archiverOptions: archiver.ArchiverOptions = {
   zlib: {
     level: 1,
     memLevel: 9,
-    windowBits: 11
+    windowBits: 11,
   },
   highWaterMark: 2147483648, // max 2gb
-}
-
+};
 
 export const generateProjectMediaExport = async (
   event: H3Event,
@@ -22,7 +21,7 @@ export const generateProjectMediaExport = async (
   // get project by projectId
   const project: ExportedProject | null = await db.project.findUnique({
     where: {
-      id: projectId
+      id: projectId,
     },
     select: exportProjectQuery,
   });
@@ -31,7 +30,7 @@ export const generateProjectMediaExport = async (
   if (!project) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Project does not exist'
+      statusMessage: "Project does not exist",
     });
   }
 
@@ -45,22 +44,22 @@ export const generateProjectMediaExport = async (
           isS3: true,
           filePath: true,
           originalName: true,
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
   // ensure export is meaningful
   if (observationImages.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'There are currenctly no images to download'
+      statusMessage: "There are currenctly no images to download",
     });
   }
 
   // initialize archiver (zlib) and empty downloads-array
   const downloadPromises: Promise<any>[] = [];
-  const archive = archiver('zip', archiverOptions);
+  const archive = archiver("zip", archiverOptions);
 
   // pipe to file uploads destination
   const newFilePath = generateFilename(projectId, ExportType.MEDIA);
@@ -75,23 +74,25 @@ export const generateProjectMediaExport = async (
     if (!image?.filePath) continue;
 
     // create single file download promise
-    const download = getUpload(image.filePath, image.isS3).then(({ readable, s3 }) => {
-      // get fileExtension
-      let filenameDotSplit = image.originalName.split('.').reverse();
-      let fileEnding = '';
-      if (filenameDotSplit.length > 1) fileEnding = '.' + filenameDotSplit[0];
+    const download = getUpload(image.filePath, image.isS3).then(
+      ({ readable, s3 }) => {
+        // get fileExtension
+        let filenameDotSplit = image.originalName.split(".").reverse();
+        let fileEnding = "";
+        if (filenameDotSplit.length > 1) fileEnding = "." + filenameDotSplit[0];
 
-      // clean up open sockets just in case
-      readable.on('end', () => {
-        if (s3) s3.destroy();
-      });
-      readable.on('close', () => {
-        if (s3) s3.destroy();
-      });
+        // clean up open sockets just in case
+        readable.on("end", () => {
+          if (s3) s3.destroy();
+        });
+        readable.on("close", () => {
+          if (s3) s3.destroy();
+        });
 
-      // initialize download stream from s3 directly into zip file
-      archive.append(readable, { name: id + fileEnding });
-    });
+        // initialize download stream from s3 directly into zip file
+        archive.append(readable, { name: id + fileEnding });
+      },
+    );
 
     // add ongoing download promise to an array (so we can wait for all to finish)
     downloadPromises.push(download);
@@ -109,8 +110,8 @@ export const generateProjectMediaExport = async (
   return {
     filePath: newFilePath,
     isS3: isTargetS3,
-    mimetype: 'application/zip',
+    mimetype: "application/zip",
     observationsCount: observationImages.length,
     size,
   };
-}
+};

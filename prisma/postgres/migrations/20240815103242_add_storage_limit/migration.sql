@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Project" ADD COLUMN     "storageLimit" INTEGER NOT NULL DEFAULT 1000000000;

@@ -1,9 +1,10 @@
-import { ProjectRole } from '@prisma-postgres/client'
-
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
   const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [ProjectRole.OWNER, ProjectRole.INVITED]);
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
@@ -17,7 +18,7 @@ export default safeResponseHandler(async (event) => {
     where: {
       projectId,
       userId: event.context.user.id,
-    }
+    },
   });
 
   // fetch project export
@@ -32,12 +33,13 @@ export default safeResponseHandler(async (event) => {
       userId: true,
     },
   });
-  const isOwner = projectAccess?.role === ProjectRole.OWNER;
+  const isOwner = projectAccess?.role === "OWNER";
   const isAuthor = projectExport?.userId === user.id;
   if (!isOwner && !isAuthor) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'You cannot delete other users\' exports unless you are project owner',
+      statusMessage:
+        "You cannot delete other users' exports unless you are project owner",
     });
   }
 
@@ -45,8 +47,8 @@ export default safeResponseHandler(async (event) => {
   if (!projectExport) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Project export was not found',
-    })
+      statusMessage: "Project export was not found",
+    });
   }
 
   // if project export has filePath, there is most likely a file there

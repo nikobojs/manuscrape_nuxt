@@ -1,4 +1,4 @@
-import { extractTagsFromObservation } from '~/utils/extractTagsFromObservation';
+import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObservation";
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
@@ -6,14 +6,17 @@ export default safeResponseHandler(async (event) => {
   const observationId = parseIntParam(event.context.params?.observationId);
   const observation = await db.observation.findUnique({
     where: {
-      id: observationId
+      id: observationId,
     },
     select: observationColumns,
   });
 
   if (!observation) {
-    throw createError({ statusCode: 404, statusMessage: 'Observation not found' });
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Observation not found",
+    });
   }
 
-  return extractTagsFromObservation(observation)
+  return extractTagsFromObservation(observation);
 });
