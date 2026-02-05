@@ -1,51 +1,62 @@
-import { FieldType, FieldOperator } from "@prisma-postgres/client";
 import { captureException } from "@sentry/node";
-import yup from 'yup';
+import yup from "yup";
+import { dynamicProjectFields, projectFields } from "../drizzle/schema";
+import { and, eq, inArray } from "drizzle-orm";
 
-export const fieldOperators = Object.values(FieldOperator);
+type DynamicFieldSelect = Partial<
+  Record<keyof typeof dynamicProjectFields.$inferSelect, boolean>
+>;
+type DynamicFieldInsert = Omit<
+  typeof dynamicProjectFields.$inferSelect,
+  "id" | "createdAt"
+>;
 
+export const fieldOperators: FieldOperator[] = ["DIFF", "SUM"];
 
-export const NewDynamicFieldSchema = yup.object({
-  field0Id: yup.number().required(),
-  field1Id: yup.number().required(),
-  label: yup.string().required(),
-  operator: yup.mixed<typeof fieldOperators[number]>().required().oneOf(
-    Object.values(FieldOperator)
-  ).required(),
-}).required();
-
+export const NewDynamicFieldSchema = yup
+  .object({
+    field0Id: yup.number().required(),
+    field1Id: yup.number().required(),
+    label: yup.string().required(),
+    operator: yup
+      .mixed<(typeof fieldOperators)[number]>()
+      .required()
+      .oneOf(fieldOperators)
+      .required(),
+  })
+  .required();
 
 export const DynamicFieldsConfig: DynamicFieldsConfig = {
-  [FieldOperator.DIFF]: {
+  DIFF: {
     pairs: [
-      [FieldType.DATE, FieldType.DATE],
-      [FieldType.DATETIME, FieldType.DATETIME],
-      [FieldType.DATETIME, FieldType.DATE],
-      [FieldType.INT, FieldType.INT],
-      [FieldType.FLOAT, FieldType.FLOAT],
-      [FieldType.FLOAT, FieldType.INT],
-    ]
+      ["DATE", "DATE"],
+      ["DATETIME", "DATETIME"],
+      ["DATETIME", "DATE"],
+      ["INT", "INT"],
+      ["FLOAT", "FLOAT"],
+      ["FLOAT", "INT"],
+    ],
   },
-  [FieldOperator.SUM]: {
+  SUM: {
     pairs: [
-      [FieldType.INT, FieldType.INT],
-      [FieldType.FLOAT, FieldType.FLOAT],
-      [FieldType.FLOAT, FieldType.INT],
-    ]
-  }
-}
-
+      ["INT", "INT"],
+      ["FLOAT", "FLOAT"],
+      ["FLOAT", "INT"],
+    ],
+  },
+};
 
 export function requireAllowedMatch(
-  field0: { label: string, type: FieldType | string },
-  field1: { label: string, type: FieldType | string },
-  operator: FieldOperator
+  field0: { label: string; type: FieldType | string },
+  field1: { label: string; type: FieldType | string },
+  operator: FieldOperator,
 ) {
   const allowedPairs = DynamicFieldsConfig[operator].pairs;
   const targetFieldTypes = [field0.type, field1.type];
-  const allowedMatch = allowedPairs.find(([a, b]) =>
-    a === targetFieldTypes[0] && b === targetFieldTypes[1] ||
-    a === targetFieldTypes[1] && b === targetFieldTypes[0]
+  const allowedMatch = allowedPairs.find(
+    ([a, b]) =>
+      (a === targetFieldTypes[0] && b === targetFieldTypes[1]) ||
+      (a === targetFieldTypes[1] && b === targetFieldTypes[0]),
   );
 
   if (!allowedMatch) {
@@ -59,7 +70,6 @@ export function requireAllowedMatch(
 
   return allowedMatch;
 }
-
 
 export function calculateDynamicFieldValue(
   dynamicField: AllDynamicFieldColumns,
@@ -75,47 +85,49 @@ export function calculateDynamicFieldValue(
   let val0 = (obs.data as any)?.[field0.label];
   let val1 = (obs.data as any)?.[field1.label];
   const rawVals = [val0, val1];
-  const types: (keyof typeof FieldType)[] = [field0.type, field1.type];
+  const types: FieldType[] = [field0.type, field1.type];
   const vals: number[] = [];
   let convertResultToDate = false;
   let result;
 
-  if (dynamicField.operator === FieldOperator.DIFF) {
+  if (dynamicField.operator === "DIFF") {
     for (let i = 0; i < 2; i++) {
-      if ([FieldType.DATE, FieldType.DATETIME].some((t) => t === types[i])) {
+      if (["DATE", "DATETIME"].some((t) => t === types[i])) {
         vals[i] = new Date(rawVals[i]).getTime();
         convertResultToDate = true;
-      } else if ([FieldType.FLOAT].some((t) => t === types[i])) {
+      } else if (["FLOAT"].some((t) => t === types[i])) {
         vals[i] = parseFloat(rawVals[i]);
-      } else if ([FieldType.INT].some((t) => t === types[i])) {
+      } else if (["INT"].some((t) => t === types[i])) {
         vals[i] = parseInt(rawVals[i]);
       } else {
         throw createError({
-          statusMessage: 'Dynamic field error: Provided fieldtypes is not supported',
+          statusMessage:
+            "Dynamic field error: Provided fieldtypes is not supported",
           statusCode: 501,
         });
       }
     }
 
-    result = vals[0] - vals[1];
-  } else if (dynamicField.operator === FieldOperator.SUM) {
+    result = vals[0]! - vals[1]!;
+  } else if (dynamicField.operator === "SUM") {
     for (let i = 0; i < 2; i++) {
-      if ([FieldType.FLOAT].some((t) => t === types[i])) {
+      if (["FLOAT"].some((t) => t === types[i])) {
         vals[i] = parseFloat(rawVals[i]);
-      } else if ([FieldType.INT].some((t) => t === types[i])) {
+      } else if (["INT"].some((t) => t === types[i])) {
         vals[i] = parseInt(rawVals[i]);
       } else {
         throw createError({
-          statusMessage: 'Dynamic field error: Provided fieldtypes is not supported',
+          statusMessage:
+            "Dynamic field error: Provided fieldtypes is not supported",
           statusCode: 501,
         });
       }
     }
 
-    result = vals[0] + vals[1];
+    result = vals[0]! + vals[1]!;
   } else {
     throw createError({
-      statusMessage: 'Dynamic field error: The operation is not supported yet',
+      statusMessage: "Dynamic field error: The operation is not supported yet",
       statusCode: 501,
     });
   }
@@ -127,10 +139,76 @@ export function calculateDynamicFieldValue(
     const mins = secs / 60;
     const hours = mins / 60;
     const days = Math.abs(Math.round(hours / 24));
-    if (isNaN(days)) return '';
+    if (isNaN(days)) return "";
     return `${days} days`;
   } else {
     return result;
   }
 }
 
+export async function getDynamicFieldsByProjectIds<
+  T extends Partial<Record<keyof DynamicFieldSelect, boolean>>,
+>(projectIds: number[], select: T) {
+  const res = await db.query.dynamicProjectFields.findMany({
+    where: inArray(dynamicProjectFields.projectId, projectIds),
+    columns: select,
+  });
+  return res;
+}
+
+export function createDynamicFields(
+  projectId: number,
+  fields: DynamicFieldInsert[],
+) {
+  const newDynamicFields = fields.map((f) => ({
+    label: f.label!,
+    operator: f.operator,
+    field0Id: f.field0Id,
+    field1Id: f.field1Id,
+    projectId: projectId,
+  }));
+
+  return db.insert(dynamicProjectFields).values(newDynamicFields).returning({
+    id: dynamicProjectFields.id,
+  });
+}
+
+export async function getProjectFieldsInDynamicField(
+  field: { field0Id: number; field1Id: number },
+  projectId: number,
+) {
+  const fields = await db.query.projectFields.findMany({
+    where: and(
+      inArray(projectFields.id, [field.field0Id, field.field1Id]),
+      eq(projectFields.projectId, projectId),
+    ),
+    columns: {
+      id: true,
+      choices: true,
+      createdAt: true,
+      index: true,
+      label: true,
+      projectId: true,
+      required: true,
+      type: true,
+    },
+  });
+  return fields;
+}
+
+export function findDuplicateDynamicField(field: {
+  field0Id: number;
+  field1Id: number;
+  operator: "DIFF" | "SUM";
+}) {
+  return db.query.dynamicProjectFields.findFirst({
+    where: and(
+      eq(dynamicProjectFields.field0Id, field.field0Id),
+      eq(dynamicProjectFields.field1Id, field.field1Id),
+      eq(dynamicProjectFields.operator, field.operator),
+    ),
+    columns: {
+      id: true,
+    },
+  });
+}

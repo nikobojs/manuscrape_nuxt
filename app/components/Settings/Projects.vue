@@ -60,93 +60,102 @@
             <UToggle
               id="enable-contributors-full-read-access"
               v-model="contributorsCanExport"
-              :disabled="loading || !isOwner || !contributorsCanReadAllObservations"
+              :disabled="
+                loading || !isOwner || !contributorsCanReadAllObservations
+              "
             />
           </div>
           <div v-if="isOwner">
-            <UButton class="mt-4" type="submit" :disabled="loading">Save settings</UButton>
+            <UButton class="mt-4" type="submit" :disabled="loading"
+              >Save settings</UButton
+            >
           </div>
-          <span class="text-red-500 block mt-2 mb-2" v-if="error">{{ error }}</span>
+          <span class="text-red-500 block mt-2 mb-2" v-if="error">{{
+            error
+          }}</span>
         </form>
       </UCard>
     </div>
   </SettingsBox>
 </template>
 
-
 <script lang="ts" setup>
-  const { ensureUserFetched } = await useAuth();
-  await ensureUserFetched();
-  const { hasRoles } = await useUser();
-  const { patchProject } = await useProjects();
-  const project = ref<FullProject | null>(null);
+const { ensureUserFetched } = await useAuth();
+await ensureUserFetched();
+const { hasRoles } = await useUser();
+const { patchProject } = await useProjects();
+const project = ref<FullProject | null>(null);
 
-  const authorCanDelockObservations = ref(false);
-  const ownerCanDelockObservations = ref(false);
-  const contributorsCanReadAllObservations = ref(false);
-  const contributorsCanExport = ref(false);
+const authorCanDelockObservations = ref(false);
+const ownerCanDelockObservations = ref(false);
+const contributorsCanReadAllObservations = ref(false);
+const contributorsCanExport = ref(false);
 
-  const projectName = ref('');
-  const toast = useToast();
-  const error = ref('');
-  const loading = ref(false);
-  const isOwner = computed(() => !!project.value && hasRoles(project.value.id, ['OWNER']));
+const projectName = ref("");
+const toast = useToast();
+const error = ref("");
+const loading = ref(false);
+const isOwner = computed(
+  () => !!project.value && hasRoles(project.value.id, ["OWNER"]),
+);
 
-  async function setProject(_project: FullProject) {
-    project.value = _project;
-    projectName.value = _project.name;
-    authorCanDelockObservations.value = _project.authorCanDelockObservations;
-    ownerCanDelockObservations.value = _project.ownerCanDelockObservations;
-    contributorsCanReadAllObservations.value = _project.contributorsCanReadAllObservations;
-    contributorsCanExport.value = _project.contributorsCanExport;
+async function setProject(_project: FullProject) {
+  project.value = _project;
+  projectName.value = _project.name;
+  authorCanDelockObservations.value = _project.authorCanDelockObservations;
+  ownerCanDelockObservations.value = _project.ownerCanDelockObservations;
+  contributorsCanReadAllObservations.value =
+    _project.contributorsCanReadAllObservations;
+  contributorsCanExport.value = _project.contributorsCanExport;
+}
+
+watch(contributorsCanReadAllObservations, (n, o) => {
+  if (n === false && o === true && contributorsCanExport.value) {
+    contributorsCanExport.value = false;
+  }
+});
+
+async function saveSettings() {
+  error.value = "";
+  loading.value = false;
+
+  if (!project.value) {
+    error.value = "You need to pick a project";
+    return;
   }
 
-  watch(contributorsCanReadAllObservations, (n, o) => {
-    if (n === false && o === true && contributorsCanExport.value) {
-      contributorsCanExport.value = false;
+  const patch = {
+    authorCanDelockObservations: authorCanDelockObservations.value,
+    ownerCanDelockObservations: ownerCanDelockObservations.value,
+    contributorsCanReadAllObservations:
+      contributorsCanReadAllObservations.value,
+    contributorsCanExport:
+      contributorsCanExport.value && contributorsCanReadAllObservations.value,
+    name: projectName.value,
+  };
+
+  try {
+    const res = await patchProject(project.value.id, patch);
+    if (res.status !== 200) {
+      console.error(`patchProject api response returned ${res.status}`);
+      toast.add({
+        title: "Server error :(",
+        color: "red",
+        description: `We're working to fix this as soon as possible`,
+      });
+      // TODO: report
+    } else {
+      toast.add({
+        title: "Project settings updated successfully",
+        color: "green",
+      });
     }
-  });
-
-  async function saveSettings() {
-    error.value = '';
-    loading.value = false;
-
-    if (!project.value) {
-      error.value = 'You need to pick a project';
-      return;
-    }
-
-    const patch = {
-      authorCanDelockObservations: authorCanDelockObservations.value,
-      ownerCanDelockObservations: ownerCanDelockObservations.value,
-      contributorsCanReadAllObservations: contributorsCanReadAllObservations.value,
-      contributorsCanExport: contributorsCanExport.value && contributorsCanReadAllObservations.value,
-      name: projectName.value,
-    };
-
-    try {
-      const res = await patchProject(project.value.id, patch);
-      if (res.status !== 200) {
-        console.error(`patchProject api response returned ${res.status}`);
-        toast.add({
-          title: 'Server error :(',
-          color: 'red',
-          description: `We're working to fix this as soon as possible`
-        });
-        // TODO: report
-      } else {
-        toast.add({
-          title: 'Project settings updated successfully',
-          color: 'green',
-        });
-      }
-
-    } catch (err: any) {
-        console.error(' caught error:', {err})
-        const msg = getErrMsg(err);
-        error.value = msg;
-    } finally {
-      setTimeout(() => loading.value = false, 300);
-    }
+  } catch (err: any) {
+    console.error(" caught error:", { err });
+    const msg = getErrMsg(err);
+    error.value = msg;
+  } finally {
+    setTimeout(() => (loading.value = false), 300);
   }
+}
 </script>

@@ -1,8 +1,17 @@
-import { EditorMode, type ImageEditorActionConfig, adjustCameraToZoom, applyCamera, applyZoom, mousePosition, mouseRect, scale } from "~/utils/imageEditor";
+import {
+  EditorMode,
+  type ImageEditorActionConfig,
+  adjustCameraToZoom,
+  applyCamera,
+  applyZoom,
+  mousePosition,
+  mouseRect,
+  scale,
+} from "~/utils/imageEditor";
 
 let _imageChangeId = 0;
 const imageChangeId = () => _imageChangeId++;
-const maxZoom = 10;   // 1000%
+const maxZoom = 10; // 1000%
 const minZoom = 0.1; // 10%
 const defaultTextSize = 16;
 
@@ -18,7 +27,7 @@ export function useImageEditor(
   container: Ref<HTMLDivElement | undefined>,
   textInput: Ref<HTMLInputElement | undefined>,
   frontColor: Ref<string>,
-  backColor: Ref<string>
+  backColor: Ref<string>,
 ) {
   const aspectRatio = ref(1);
   const zoom = ref(1);
@@ -32,17 +41,22 @@ export function useImageEditor(
   const grabbing = ref(false);
   const changes = ref<ImageChanges>([]);
   const draftTextPosition = ref<[number, number] | undefined>();
-  const grabbed = ref<{ x: number; y: number } | undefined>()
+  const grabbed = ref<{ x: number; y: number } | undefined>();
   const writing = ref<boolean>(false);
   const shiftKeyDown = ref<boolean>(false);
   const controlKeyDown = ref<boolean>(false);
-  const textDraft = ref<string>('');
+  const textDraft = ref<string>("");
   const textSize = ref<number>(45);
   const textDraftSolidBg = ref<boolean>(true);
-  const draftTextMinRect = ref<{ x: number; y: number }>({x: 0, y: 0});
+  const draftTextMinRect = ref<{ x: number; y: number }>({ x: 0, y: 0 });
   const lineWidth = ref<number>(5);
   const cameraPosition = ref<[number, number]>([0, 0]);
-  const hasPendingChanges = computed(() => boxes.value.length > 0 || texts.value.length > 0 || lines.value.length > 0);
+  const hasPendingChanges = computed(
+    () =>
+      boxes.value.length > 0 ||
+      texts.value.length > 0 ||
+      lines.value.length > 0,
+  );
   const { report } = useSentry();
 
   function draw() {
@@ -69,10 +83,10 @@ export function useImageEditor(
   const mode = ref<EditorMode>(EditorMode.DISABLED);
   const previousMode = ref<EditorMode | undefined>();
   const lastReload = ref(new Date());
-  const cursor = ref('grab');
+  const cursor = ref("grab");
   const texts = ref<TextBox[]>([]);
   const context = computed(() =>
-    canvas.value ? canvas.value.getContext("2d") : null
+    canvas.value ? canvas.value.getContext("2d") : null,
   );
   const canvasRect = computed(() => ({
     x: container.value?.clientWidth || 0,
@@ -89,8 +103,7 @@ export function useImageEditor(
     }
 
     const bg = new Image();
-    bg.src =
-      `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+    bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
     bg.addEventListener("load", () => {
       if (canvas.value && context.value) {
         aspectRatio.value = bg.height / bg.width;
@@ -135,8 +148,7 @@ export function useImageEditor(
 
     window.requestAnimationFrame(() => {
       const bg = new Image();
-      bg.src =
-        `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+      bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
       bg.addEventListener("load", () => {
         if (canvas.value && context.value) {
           aspectRatio.value = bg.height / bg.width;
@@ -176,16 +188,22 @@ export function useImageEditor(
     const imageSize = resizeToFit
       ? canvasRect.value
       : {
-        x: image.value.width,
-        y: image.value.height
-      };
+          x: image.value.width,
+          y: image.value.height,
+        };
 
     const { x: zoomedX, y: zoomedY } = scale(imageSize, zoom.value);
 
-    context.value.drawImage(image.value, cameraPosition.value[0], cameraPosition.value[1], zoomedX, zoomedY);
+    context.value.drawImage(
+      image.value,
+      cameraPosition.value[0],
+      cameraPosition.value[1],
+      zoomedX,
+      zoomedY,
+    );
   }
 
-  function registerImageUpdate (
+  function registerImageUpdate(
     type: ImageChangeType,
     id: number,
     component: TextBox | Line | Box,
@@ -198,7 +216,7 @@ export function useImageEditor(
       type,
       id,
       applied: true,
-      component
+      component,
     });
   }
 
@@ -206,34 +224,40 @@ export function useImageEditor(
   const actions: ImageEditorActionConfig = {
     [EditorMode.GRAB]: {
       menuIndex: 0,
-      cursor: 'grab',
+      cursor: "grab",
       icon: "i-mdi-hand-right",
       onActionPicked: () => {
-        grabbed.value = undefined
+        grabbed.value = undefined;
         grabbing.value = false;
-        cursor.value = 'grab'
+        cursor.value = "grab";
       },
       mouseEvents: {
         up: (_ev) => {
           if (grabbing.value) {
             grabbing.value = false;
-            cursor.value = 'grab'
+            cursor.value = "grab";
             draw();
           }
         },
         down: (ev) => {
           if (!grabbing.value && canvas.value) {
-            const { x, y, w, h } = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
+            const { x, y, w, h } = mouseRect(
+              ev,
+              canvas.value,
+              beginX.value,
+              beginY.value,
+              zoom.value,
+            );
             beginX.value = x;
             beginY.value = y;
 
             // TODO: use some vector math helper func for grabbed x y
             grabbed.value = {
               x: x + w - cameraPosition.value[0],
-              y: y + h - cameraPosition.value[1]
+              y: y + h - cameraPosition.value[1],
             };
             grabbing.value = true;
-            cursor.value = 'grabbing'
+            cursor.value = "grabbing";
             draw();
           }
         },
@@ -241,8 +265,8 @@ export function useImageEditor(
           if (grabbing.value && grabbed.value && canvas.value) {
             let { x, y } = mousePosition(ev, canvas.value);
             // TODO: use some vector math helper func for x and y
-            x = (x - grabbed.value.x);
-            y = (y - grabbed.value.y);
+            x = x - grabbed.value.x;
+            y = y - grabbed.value.y;
             const move: [number, number] = [x, y];
             cameraPosition.value = move;
             draw();
@@ -253,25 +277,25 @@ export function useImageEditor(
         },
         rightUp: (ev) => {
           actions[EditorMode.GRAB].mouseEvents.up?.(ev);
-        }
+        },
       },
     },
     [EditorMode.LINE]: {
       menuIndex: 3,
-      cursor: 'crosshair',
-      icon: 'i-mdi-vector-line',
+      cursor: "crosshair",
+      icon: "i-mdi-vector-line",
       onActionPicked: () => {
-        cursor.value = 'crosshair';
+        cursor.value = "crosshair";
       },
       mouseEvents: {
         up: () => {
           if (dragging.value) {
             dragging.value = false;
             if (!draftLine.value) {
-              throw new Error('Draft line is not set!')
+              throw new Error("Draft line is not set!");
             }
 
-            registerImageUpdate('line', draftLine.value.id, draftLine.value);
+            registerImageUpdate("line", draftLine.value.id, draftLine.value);
             lines.value.push(draftLine.value);
             draftLine.value = undefined;
           }
@@ -286,7 +310,13 @@ export function useImageEditor(
         },
         move: (ev) => {
           if (dragging.value && canvas.value) {
-            const square = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
+            const square = mouseRect(
+              ev,
+              canvas.value,
+              beginX.value,
+              beginY.value,
+              zoom.value,
+            );
             // TODO: use some vector math helper func for x and y
             draftLine.value = {
               x: square.x - cameraPosition.value[0],
@@ -305,16 +335,22 @@ export function useImageEditor(
     },
     [EditorMode.RECT]: {
       menuIndex: 2,
-      cursor: 'crosshair',
+      cursor: "crosshair",
       icon: "i-mdi-crop-square",
       onActionPicked: () => {
         dragging.value = false;
-        cursor.value = 'crosshair';
+        cursor.value = "crosshair";
       },
       mouseEvents: {
         up: (ev) => {
           if (dragging.value && canvas.value) {
-            const square = mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value);
+            const square = mouseRect(
+              ev,
+              canvas.value,
+              beginX.value,
+              beginY.value,
+              zoom.value,
+            );
             // TODO: use some vector math helper func
             square.x -= cameraPosition.value[0]; // WORKS
             square.y -= cameraPosition.value[1]; // WORKS
@@ -323,12 +359,11 @@ export function useImageEditor(
 
             const box: Box = {
               ...square,
-              fillColor:
-              backColor.value,
+              fillColor: backColor.value,
               id: changeId,
-            }
+            };
 
-            registerImageUpdate('box', changeId, box);
+            registerImageUpdate("box", changeId, box);
 
             boxes.value.push(box);
             dragging.value = false;
@@ -345,12 +380,29 @@ export function useImageEditor(
         },
         move: (ev) => {
           if (dragging.value && canvas.value) {
-            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
+            const square = applyZoom(
+              mouseRect(
+                ev,
+                canvas.value,
+                beginX.value,
+                beginY.value,
+                zoom.value,
+              ),
+              zoom.value,
+            );
             const [x, y, w, h] = square;
             clearCanvas();
             drawImage();
             drawBoxes();
-            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
+            drawBox({
+              x,
+              y,
+              w,
+              h,
+              fillColor: backColor.value,
+              z: zoom.value,
+              id: 0,
+            }); // TODO: move inside drawSquares
             drawTexts(zoom.value);
             drawLines();
           }
@@ -359,10 +411,10 @@ export function useImageEditor(
     },
     [EditorMode.TEXT]: {
       menuIndex: 1,
-      cursor: 'text',
+      cursor: "text",
       icon: "i-mdi-format-text",
       onActionPicked: () => {
-        cursor.value = 'crosshair';
+        cursor.value = "crosshair";
         dragging.value = false;
       },
       mouseEvents: {
@@ -373,10 +425,19 @@ export function useImageEditor(
             focusTextArea();
             // pass (TODO)
           } else if (!writing.value && dragging.value) {
-            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
+            const square = applyZoom(
+              mouseRect(
+                ev,
+                canvas.value,
+                beginX.value,
+                beginY.value,
+                zoom.value,
+              ),
+              zoom.value,
+            );
             writing.value = true;
-            textDraft.value = '';
-            cursor.value = 'move';
+            textDraft.value = "";
+            cursor.value = "move";
             if (square[2] < 0) {
               square[0] = beginX.value + square[2];
               square[2] = Math.abs(square[2]);
@@ -397,13 +458,13 @@ export function useImageEditor(
             } else {
               textSize.value = Math.max(
                 defaultTextSize,
-                Math.ceil(10 * square[3] / zoom.value / 2) / 10,
+                Math.ceil((10 * square[3]) / zoom.value / 2) / 10,
               );
             }
 
             draftTextPosition.value = [
               (square[0] - cameraPosition.value[0]) / zoom.value,
-              (square[1] - cameraPosition.value[1]) / zoom.value
+              (square[1] - cameraPosition.value[1]) / zoom.value,
             ];
 
             focusTextArea();
@@ -423,21 +484,38 @@ export function useImageEditor(
           beginY.value = y;
         },
         move: (ev) => {
-          if (dragging.value && canvas.value && writing.value){
+          if (dragging.value && canvas.value && writing.value) {
             const { x, y } = mousePosition(ev, canvas.value);
             // TODO: use some vector math helper func
             draftTextPosition.value = [
               (x - cameraPosition.value[0]) / zoom.value,
-              (y - cameraPosition.value[1]) / zoom.value
+              (y - cameraPosition.value[1]) / zoom.value,
             ];
             draw();
           } else if (dragging.value && canvas.value && !writing.value) {
-            const square = applyZoom(mouseRect(ev, canvas.value, beginX.value, beginY.value, zoom.value), zoom.value);
+            const square = applyZoom(
+              mouseRect(
+                ev,
+                canvas.value,
+                beginX.value,
+                beginY.value,
+                zoom.value,
+              ),
+              zoom.value,
+            );
             const [x, y, w, h] = square;
             clearCanvas();
             drawImage();
             drawBoxes();
-            drawBox({ x, y, w, h, fillColor: backColor.value, z: zoom.value, id: 0 }); // TODO: move inside drawSquares
+            drawBox({
+              x,
+              y,
+              w,
+              h,
+              fillColor: backColor.value,
+              z: zoom.value,
+              id: 0,
+            }); // TODO: move inside drawSquares
             drawTexts(zoom.value);
             drawLines();
           }
@@ -446,24 +524,24 @@ export function useImageEditor(
           if (writing.value) {
             focusTextArea();
           }
-        }
+        },
       },
       keyEvents: {
         down: (key: string) => {
           // save text on ctrl+enter
-          if (key === 'Enter' && controlKeyDown.value) {
+          if (key === "Enter" && controlKeyDown.value) {
             saveTextDraft();
-          } else if (key === 'Escape') {
+          } else if (key === "Escape") {
             resetTextDraft();
           }
         },
-      }
+      },
     },
     [EditorMode.DISABLED]: {
-      cursor: 'progress',
-      icon: '',
+      cursor: "progress",
+      icon: "",
       onActionPicked: () => {
-        cursor.value = 'progress';
+        cursor.value = "progress";
       },
       mouseEvents: {},
     },
@@ -490,10 +568,7 @@ export function useImageEditor(
     ctx.clearRect(0, 0, cvs.width, cvs.height);
   }
 
-
-  function drawBox(
-    box: Box,
-  ) {
+  function drawBox(box: Box) {
     const ctx = context.value;
     if (!ctx) return;
     ctx.fillStyle = backColor.value;
@@ -505,46 +580,40 @@ export function useImageEditor(
     ctx.fillRect(x, y, w, h);
   }
 
-
   function drawBoxes() {
     if (!context.value) {
       throw new Error("Context is not defined");
     }
 
     for (let i = 0; i < boxes.value.length; i++) {
-      const square = applyCamera(applyZoom(
-        { ...boxes.value[i] },
-        zoom.value,
-      ), cameraPosition.value);
+      const box = boxes.value[i]!;
+      const square = applyCamera(
+        applyZoom({ ...box }, zoom.value),
+        cameraPosition.value,
+      );
 
       const [x, y, w, h] = square;
-      const { fillColor, z, id } = boxes.value[i];
+      const { fillColor, z, id } = box;
       drawBox({ x, y, w, h, fillColor, z, id });
     }
   }
 
-  function drawLine(
-    line: Line,
-
-  ) {
+  function drawLine(line: Line) {
     const ctx = context.value;
     if (!ctx) return;
 
     const { color, width } = line;
 
-    const square = applyCamera(applyZoom(
-      { ...line },
-      zoom.value,
-    ), cameraPosition.value);
+    const square = applyCamera(
+      applyZoom({ ...line }, zoom.value),
+      cameraPosition.value,
+    );
 
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
     ctx.moveTo(square[0], square[1]);
-    ctx.lineTo(
-      square[0] + square[2],
-      square[1] + square[3]
-    );
+    ctx.lineTo(square[0] + square[2], square[1] + square[3]);
     ctx.stroke();
     ctx.closePath();
   }
@@ -556,7 +625,8 @@ export function useImageEditor(
 
     // draw all unsaved lines
     for (let i = 0; i < lines.value.length; i++) {
-      drawLine(lines.value[i]);
+      const line = lines.value[i]!;
+      drawLine(line);
     }
 
     // draw draft line if there is any
@@ -565,74 +635,72 @@ export function useImageEditor(
     }
   }
 
-
   // TODO: improve documentation
-  function drawText(
-    text: TextBox,
-  ) {
+  function drawText(text: TextBox) {
     const ctx = context.value;
     if (!ctx) {
-      throw new Error('Context is not defined when trying to draw texts')
-    };
-  
+      throw new Error("Context is not defined when trying to draw texts");
+    }
+
     // TODO: simplify
-    const lines = text.text.split('\n');
+    const lines = text.text.split("\n");
     if (!lines.length) {
       return;
     }
-  
+
     const z = text.zoom;
     const relativeZoom = z;
     const fontSize = Math.round(text.size * relativeZoom);
-    let padding = 0;
+    // let padding = 0;
     let scaledPos = {
-      x: (text.position[0]) * z, // works
-      y: (text.position[1]) * z // works
-    }
+      x: text.position[0] * z, // works
+      y: text.position[1] * z, // works
+    };
 
     const fixedPos = {
-      x: (scaledPos.x + cameraPosition.value[0]), // works
-      y: (scaledPos.y + cameraPosition.value[1]) // works
-    }
+      x: scaledPos.x + cameraPosition.value[0], // works
+      y: scaledPos.y + cameraPosition.value[1], // works
+    };
 
     // set the font family
     // TODO: support multiple font families
     ctx.font = `${fontSize}px Arial`;
 
     // TODO: support different line heights
-    const lineHeight = 1.10 * fontSize;
+    const lineHeight = 1.1 * fontSize;
 
     let fontHeight;
     if (ctx.font) {
       fontHeight = parseInt(ctx.font.match(/\d+/)?.pop() as any);
       if (isNaN(fontHeight)) {
-        const warn = 'Unable to read font size from canvas context.';
-        report('warning', warn);
+        const warn = "Unable to read font size from canvas context.";
+        report("warning", warn);
         return;
       }
     } else {
-      const warn = 'Context font not set - cannot determine height of text background box. Will skip';
-      report('warning', warn)
+      const warn =
+        "Context font not set - cannot determine height of text background box. Will skip";
+      report("warning", warn);
       return;
     }
 
     // draw background square if enabled
     if (text.bgcolor) {
-      padding = 8 * relativeZoom; // give text padding if its inside a box
+      // padding = 8 * relativeZoom; // give text padding if its inside a box
 
       ctx.fillStyle = text.bgcolor;
-      const longestText: TextMetrics = lines.map(
-        line => ctx.measureText(line)
-      ).sort((a: TextMetrics, b: TextMetrics) => {
-        if (a.width === b.width) return 0;
-        return a.width < b.width ? 1 : -1;
-      })[0];
+      const longestText: TextMetrics = lines
+        .map((line) => ctx.measureText(line))
+        .sort((a: TextMetrics, b: TextMetrics) => {
+          if (a.width === b.width) return 0;
+          return a.width < b.width ? 1 : -1;
+        })[0]!;
 
       const x = fixedPos.x;
       const y = fixedPos.y;
       const w = Math.max(text.minWidth * z, longestText.width + fontSize);
       const h = Math.max(text.minHeight * z, (lines.length + 0.6) * lineHeight);
-      const square: Square = [ x, y, w, h ]
+      const square: Square = [x, y, w, h];
 
       // draw the background for the height of all lines
       ctx.fillRect(...square);
@@ -640,12 +708,13 @@ export function useImageEditor(
 
     // draw the text lines on top of optional background
     for (let i = 0; i < lines.length; i++) {
+      const l = lines[i]!;
       ctx.fillStyle = text.color;
       ctx.fillText(
-        lines[i],
+        l,
         fixedPos.x + fontSize / 2,
         fixedPos.y + (i + 1.1) * lineHeight,
-      ); 
+      );
     }
   }
 
@@ -657,7 +726,7 @@ export function useImageEditor(
 
     // draw all existing unsaved texts
     for (let i = 0; i < texts.value.length; i++) {
-      const textbox = texts.value[i];
+      const textbox = texts.value[i]!;
       drawText({
         ...textbox,
         zoom: canvasZoom,
@@ -666,7 +735,7 @@ export function useImageEditor(
 
     // draw draft text if present (on top of the other texts)
     if (draftTextPosition.value) {
-      const text = textDraft.value || 'Enter text';
+      const text = textDraft.value || "Enter text";
       drawText({
         color: frontColor.value,
         position: draftTextPosition.value,
@@ -678,23 +747,23 @@ export function useImageEditor(
         minHeight: draftTextMinRect.value.y,
         minWidth: draftTextMinRect.value.x,
       });
-  } }
-
+    }
+  }
 
   function onMouseDown(ev: MouseEvent) {
-    if (ev.button === 2 || ev.which === 3) {
+    if (ev.button === 2) {
       activateTempGrab(true, ev);
       return action.value.mouseEvents.rightDown?.(ev);
-    } else if (ev.button === 0 || ev.which === 1) {
+    } else if (ev.button === 0) {
       return action.value.mouseEvents.down?.(ev);
     }
   }
 
   function onMouseUp(ev: MouseEvent) {
-    if (ev.button === 2 || ev.which === 3) {
+    if (ev.button === 2) {
       deactivateTempGrab();
       return action.value.mouseEvents.rightUp?.(ev);
-    } else if (ev.button === 0 || ev.which === 1) {
+    } else if (ev.button === 0) {
       return action.value.mouseEvents.up?.(ev);
     }
   }
@@ -703,42 +772,41 @@ export function useImageEditor(
     return action.value.mouseEvents.move?.(ev);
   }
 
-
   function onKeyDown(ev: KeyboardEvent) {
     // check if enter
     const code = ev.key;
 
     // activate control and shift booleans
-    if (code === 'Control' && !controlKeyDown.value) {
+    if (code === "Control" && !controlKeyDown.value) {
       controlKeyDown.value = true;
-    } else if (code === 'Shift' && !shiftKeyDown.value) {
+    } else if (code === "Shift" && !shiftKeyDown.value) {
       shiftKeyDown.value = true;
     }
 
     // if not writing, use all these shortcuts
     if (!writing.value) {
-      if (shiftKeyDown.value && code === 'W') {
+      if (shiftKeyDown.value && code === "W") {
         cameraPosition.value[1] += 10;
         draw();
-      } else if (shiftKeyDown.value && code === 'S') {
+      } else if (shiftKeyDown.value && code === "S") {
         cameraPosition.value[1] -= 10;
         draw();
-      } else if (shiftKeyDown.value && code === 'A') {
+      } else if (shiftKeyDown.value && code === "A") {
         cameraPosition.value[0] += 10;
         draw();
-      } else if (shiftKeyDown.value && code === 'D') {
+      } else if (shiftKeyDown.value && code === "D") {
         cameraPosition.value[0] -= 10;
         draw();
-      } else if (code === 'q') {
+      } else if (code === "q") {
         mode.value = EditorMode.GRAB;
         action.value?.onActionPicked();
-      } else if (code === 'w') {
+      } else if (code === "w") {
         mode.value = EditorMode.TEXT;
         action.value?.onActionPicked();
-      } else if (code === 'e') {
+      } else if (code === "e") {
         mode.value = EditorMode.RECT;
         action.value?.onActionPicked();
-      } else if (code === 'r') {
+      } else if (code === "r") {
         mode.value = EditorMode.LINE;
         action.value?.onActionPicked();
       }
@@ -747,14 +815,13 @@ export function useImageEditor(
     return action.value.keyEvents?.down?.(code);
   }
 
-
   function onKeyUp(ev: KeyboardEvent) {
     // check if enter
     const code = ev.key;
 
-    if (code === 'Shift') {
+    if (code === "Shift") {
       shiftKeyDown.value = false;
-    } else if (code === 'Control') {
+    } else if (code === "Control") {
       controlKeyDown.value = false;
     }
 
@@ -763,18 +830,20 @@ export function useImageEditor(
 
   function onScroll(ev: WheelEvent) {
     // if control key is down and target is canvas: zoom in or out
-    if (shiftKeyDown.value && (ev.target as HTMLCanvasElement).tagName === 'CANVAS') {
+    if (
+      shiftKeyDown.value &&
+      (ev.target as HTMLCanvasElement).tagName === "CANVAS"
+    ) {
       const { deltaY } = ev;
       const up = deltaY < 0;
 
-      const at = mousePosition(ev, canvas.value)
+      const at = mousePosition(ev, canvas.value);
       up ? addToZoom(ZOOM_STEP, at) : addToZoom(-ZOOM_STEP, at);
 
       // also call the actions if they want their own shortcut attached
       action.value.mouseEvents?.scroll?.(ev, up);
     }
   }
-
 
   // Called on every rightClick down (contextmenu event)
   // NOTE: just prevents the context menu to show up
@@ -789,10 +858,11 @@ export function useImageEditor(
     mode.value = EditorMode.GRAB;
     actions[EditorMode.GRAB].onActionPicked();
     if (startGrabbing && ev) {
-        actions[EditorMode.GRAB].mouseEvents.down?.(ev);
-    } else if(startGrabbing && !ev) {
-      const warn = 'Will not activate GRAB mode, due to missing event in function arguments';
-      report('warning', warn)
+      actions[EditorMode.GRAB].mouseEvents.down?.(ev);
+    } else if (startGrabbing && !ev) {
+      const warn =
+        "Will not activate GRAB mode, due to missing event in function arguments";
+      report("warning", warn);
     }
   }
 
@@ -811,10 +881,7 @@ export function useImageEditor(
   }
 
   function reset() {
-    if (
-      canvas.value &&
-      context.value
-    ) {
+    if (canvas.value && context.value) {
       clearCanvas();
       removeEventListeners(); // fix: naming (it removes all eventlisteners)
       addEventListeners();
@@ -825,16 +892,14 @@ export function useImageEditor(
       dragging.value = false;
       grabbing.value = false;
       writing.value = false;
-      textDraft.value = '';
+      textDraft.value = "";
       drawImage();
     } else {
       throw new Error("Canvas or canvas context is not defined!");
     }
   }
 
-  function createImageFile(
-    onDone: (file: File) => void | Promise<void>,
-  ): void {
+  function createImageFile(onDone: (file: File) => void | Promise<void>): void {
     const cvs = canvas.value;
     if (!cvs) {
       throw new Error(
@@ -844,78 +909,88 @@ export function useImageEditor(
 
     // TODO: reset boundaries as well? while full screen overlay?
     // reset zoom so image capture can do its job
-    forceHighQualityCanvas(() => new Promise((resolve, reject) => {
-      const cvs = canvas.value;
-      if (!cvs) {
-        return reject(
-          new Error(
-            "Canvas is not support. Your browser might need to be updated",
-          ),
-        );
-      }
-
-      cvs.toBlob(
-        async (blob) => {
-          if (!projectId || !observationId) {
-            return reject(new Error("Project or observation is not defined"));
-          } else if (blob == null) {
+    forceHighQualityCanvas(
+      () =>
+        new Promise((resolve, reject) => {
+          const cvs = canvas.value;
+          if (!cvs) {
             return reject(
-              new Error("Image data could not be extracted from canvas"),
+              new Error(
+                "Canvas is not support. Your browser might need to be updated",
+              ),
             );
           }
 
-          const file = new File([blob], "image.jpg", {
-            type: "image/jpeg",
-            lastModified: 0,
-          });
-          await onDone(file);
+          cvs.toBlob(
+            async (blob) => {
+              if (!projectId || !observationId) {
+                return reject(
+                  new Error("Project or observation is not defined"),
+                );
+              } else if (blob == null) {
+                return reject(
+                  new Error("Image data could not be extracted from canvas"),
+                );
+              }
 
-          clearCanvas();
-          reloadImage();
-          reset();
-          resolve();
-        },
-        "image/jpeg",
-        1,
-      );
-    }));
+              const file = new File([blob], "image.jpg", {
+                type: "image/jpeg",
+                lastModified: 0,
+              });
+              await onDone(file);
+
+              clearCanvas();
+              reloadImage();
+              reset();
+              resolve();
+            },
+            "image/jpeg",
+            1,
+          );
+        }),
+    );
   }
 
-
   // // NOTE: 'at' is offsetX and offsetY mouse event inside canvas
-  function addToZoom(val: number, at?: { x:number; y:number }): void {
+  function addToZoom(val: number, at?: { x: number; y: number }): void {
     let newZoomVal = zoom.value + val;
     if (!at && canvas.value) {
       // TODO: use some vector helper
       at = {
         x: canvas.value.width / 2,
         y: canvas.value.height / 2,
-      }
+      };
     } else if (!at) {
-      throw new Error('Canvas and/or \'at\' is not defined');
-    };
+      throw new Error("Canvas and/or 'at' is not defined");
+    }
 
     // respect minimum zoom value
     if (newZoomVal < minZoom) {
       newZoomVal = minZoom;
-    // respect maximum zoom value
+      // respect maximum zoom value
     } else if (newZoomVal > maxZoom) {
       newZoomVal = maxZoom;
     }
 
     // redraw and adjust camera if zoom different than last time
     if (newZoomVal !== zoom.value) {
-      cameraPosition.value = adjustCameraToZoom(zoom.value, at, cameraPosition.value, val > 0);
+      cameraPosition.value = adjustCameraToZoom(
+        zoom.value,
+        at,
+        cameraPosition.value,
+        val > 0,
+      );
       zoom.value = newZoomVal;
       draw();
     }
   }
 
   function resetZoom() {
-    if (!canvas.value) throw new Error('Canvas is not defined');
+    if (!canvas.value) throw new Error("Canvas is not defined");
 
     if (image.value.width > canvas.value.width) {
-      zoom.value = Math.floor((canvas.value.width / image.value.width) * 100) / 100;
+      zoom.value =
+        Math.floor((canvas.value.width / image.value.width) * 100) / 100;
     } else {
       zoom.value = 1.0;
     }
@@ -929,7 +1004,7 @@ export function useImageEditor(
   function resetPosition() {
     if (image.value && canvas.value) {
       if (image.value.width < canvas.value.width) {
-        const x = (canvas.value.width / 2) - (image.value.width / 2)
+        const x = canvas.value.width / 2 - image.value.width / 2;
         cameraPosition.value[0] = x;
         cameraPosition.value[1] = 30;
       } else {
@@ -955,7 +1030,9 @@ export function useImageEditor(
 
   function addEventListeners() {
     if (!canvas.value) {
-      throw new Error('Unable to add event listeners to canvas, as it is not defined!');
+      throw new Error(
+        "Unable to add event listeners to canvas, as it is not defined!",
+      );
     }
 
     canvas.value.removeEventListener("contextmenu", onRightClick);
@@ -978,21 +1055,21 @@ export function useImageEditor(
 
   function resetTextDraft() {
     draftTextPosition.value = undefined;
-    textDraft.value = '';
+    textDraft.value = "";
     writing.value = false;
-    cursor.value = 'crosshair';
+    cursor.value = "crosshair";
     draw();
   }
 
   async function saveTextDraft(): Promise<void> {
     if (!draftTextPosition.value) {
-      const warn = 'Cannot save text draft when it has no position';
-      report('warning', warn);
+      const warn = "Cannot save text draft when it has no position";
+      report("warning", warn);
       return;
     }
     if (!textDraft.value) {
       // TODO: handle better
-      console.warn('Cannot save text draft is empty');
+      console.warn("Cannot save text draft is empty");
       return;
     }
     const changeId = imageChangeId();
@@ -1006,9 +1083,9 @@ export function useImageEditor(
       id: changeId,
       minHeight: draftTextMinRect.value.y,
       minWidth: draftTextMinRect.value.x,
-    }
+    };
 
-    registerImageUpdate('text', changeId, newText);
+    registerImageUpdate("text", changeId, newText);
 
     texts.value.push(newText);
     resetTextDraft();
@@ -1023,19 +1100,26 @@ export function useImageEditor(
   }
 
   function getTargetRefByImageChange(change: ImageChange) {
-    return change.type === 'text'
-      ? texts : change.type === 'box'
-      ? boxes : lines;
+    return change.type === "text"
+      ? texts
+      : change.type === "box"
+        ? boxes
+        : lines;
   }
 
   function undo() {
-    const newestApplied = changes.value.filter(c => c.applied).reverse()[0]
+    const newestApplied = changes.value.filter((c) => c.applied).reverse()[0];
+    if (!newestApplied) {
+      console.warn("Nothing to undo");
+      return;
+    }
     newestApplied.applied = false;
 
-    const target: Ref<{ id: number}[]> = getTargetRefByImageChange(newestApplied);
+    const target: Ref<{ id: number }[]> =
+      getTargetRefByImageChange(newestApplied);
     if (!target.value?.length) {
-      const warn = 'Undo target ref was empty or undefined';
-      report('warning', warn);
+      const warn = "Undo target ref was empty or undefined";
+      report("warning", warn);
       return;
     }
 
@@ -1044,13 +1128,18 @@ export function useImageEditor(
   }
 
   function redo() {
-    const newestNonApplied = changes.value.filter(c => !c.applied)[0]
+    const newestNonApplied = changes.value.filter((c) => !c.applied)[0];
+    if (!newestNonApplied) {
+      console.warn("Nothing to redo");
+      return;
+    }
     newestNonApplied.applied = true;
 
-    const target: Ref<{ id: number}[]> = getTargetRefByImageChange(newestNonApplied);
+    const target: Ref<{ id: number }[]> =
+      getTargetRefByImageChange(newestNonApplied);
     if (!target.value) {
-      const warn = 'Redo target ref was undefined';
-      report('warning', warn);
+      const warn = "Redo target ref was undefined";
+      report("warning", warn);
       return;
     }
 
@@ -1058,27 +1147,33 @@ export function useImageEditor(
     draw();
   }
 
-  const undoDisabled = computed(() => changes.value.filter(c => c.applied).length === 0);
-  const redoDisabled = computed(() => changes.value.filter(c => !c.applied).length === 0);
+  const undoDisabled = computed(
+    () => changes.value.filter((c) => c.applied).length === 0,
+  );
+  const redoDisabled = computed(
+    () => changes.value.filter((c) => !c.applied).length === 0,
+  );
 
-  const canvasBackgroundPosition = computed<string>(() =>
-    `${cameraPosition.value[0]}px ${cameraPosition.value[1]}px`,
+  const canvasBackgroundPosition = computed<string>(
+    () => `${cameraPosition.value[0]}px ${cameraPosition.value[1]}px`,
   );
 
   const canvasBackgroundSize = computed<string>(() => {
     const boxSize = 48;
     const px = boxSize * zoom.value;
-    return `${px}px ${px}px`
+    return `${px}px ${px}px`;
   });
 
   const actionButtons = computed(() => {
     return Object.entries(actions)
       .filter(([k]) => k !== EditorMode.DISABLED.toString())
-      .sort(([_k1, a], [_k2, b]) => (a?.menuIndex || 0) > (b?.menuIndex || 0) ? 1 : -1);
+      .sort(([_k1, a], [_k2, b]) =>
+        (a?.menuIndex || 0) > (b?.menuIndex || 0) ? 1 : -1,
+      );
   });
 
-  function setTextSize (n: number) {
-    if (!n || typeof n !== 'string') return;
+  function setTextSize(n: number) {
+    if (!n || typeof n !== "string") return;
     const parsed = parseFloat(n);
     if (isNaN(parsed)) return;
     textSize.value = parsed;

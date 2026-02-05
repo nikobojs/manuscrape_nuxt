@@ -1,7 +1,10 @@
 import * as yup from "yup";
+import {
+  createObservationTag,
+  getObservationTagByTagName,
+} from "~~/server/utils/observationTags";
 
 export default safeResponseHandler(async (event) => {
-  // Auth & access control
   await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
 
@@ -15,13 +18,7 @@ export default safeResponseHandler(async (event) => {
   const body = await readBody(event);
   const newTag = await NewTagSchema.validate(body);
 
-  const existing = await db.tag.findFirst({
-    where: {
-      projectId,
-      name: newTag.name,
-    },
-  });
-
+  const existing = await getObservationTagByTagName(newTag.name, projectId);
   if (existing) {
     throw createError({
       statusCode: 400,
@@ -29,17 +26,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const created = await db.tag.create({
-    data: {
-      name: newTag.name,
-      projectId,
-      createdById: userId,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const created = await createObservationTag(newTag.name, projectId, userId);
 
   setResponseStatus(event, 201);
   return { tag: created };

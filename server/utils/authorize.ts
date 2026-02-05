@@ -1,9 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { H3Event, EventHandlerRequest } from "h3";
 import type { CookieOptions } from "nuxt/app";
-import { type User, ProjectRole } from "@prisma-postgres/client";
 import { getRequestBeginTime, parseIntParam } from "./request";
-import { observationColumns } from "./prisma";
 import { captureException } from "@sentry/node";
 
 const config = useRuntimeConfig();
@@ -61,50 +59,10 @@ export async function requireUser(
     console.warn(
       "refetching user as only id missing in H3Event context (FIXME)",
     );
-    const user = await db.user.findFirst({
-      where: { id: event.context.user.id },
-      select: bigUserQuery,
-    });
+    const user = await getFullUserById(event.context.user.id);
     event.context.user = user;
   }
   return event.context.user as User;
-}
-
-export async function getObservationsByProject(projectId: number): Promise<{
-  observations: FullObservation[];
-  contributors: { userId: number; role: string }[];
-}> {
-  const project = await db.project.findFirst({
-    where: { id: projectId },
-    select: {
-      contributors: {
-        select: {
-          userId: true,
-          role: true,
-          nameInProject: true,
-        },
-      },
-      observations: {
-        select: observationColumns,
-      },
-      tags: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-    },
-  });
-
-  if (!project) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Project does not exist",
-    });
-  }
-
-  const { observations, contributors } = project;
-  return { observations, contributors };
 }
 
 export async function ensureObservationOwnership(
@@ -139,6 +97,7 @@ export async function ensureURLResourceAccess(
   let contributorsCanReadAllObservations = false;
 
   // validate params.projectId if it exists
+  let role: ProjectRole = "INVITED"; // TODO: fix this weird default
   if (typeof params?.projectId === "string") {
     // ensure projectId is parsed to integer
     projectIdInt = parseIntParam(params.projectId);
@@ -158,6 +117,8 @@ export async function ensureURLResourceAccess(
       throw err;
     }
 
+    role = projectAccess.role; // not sure if works - 2026-01-31
+
     contributorsCanReadAllObservations =
       projectAccess.project.contributorsCanReadAllObservations;
   }
@@ -168,12 +129,13 @@ export async function ensureURLResourceAccess(
     const observationIdInt = parseIntParam(params.observationId);
 
     // get observations belonging to project
-    const { observations, contributors } =
-      await getObservationsByProject(projectIdInt);
-    const access = contributors.find((c) => c.userId === user.id);
-    const observation = observations.find((o) => o.id === observationIdInt);
+    const obs = await getObservationsByProjectId(projectIdInt, {
+      id: true,
+      userId: true,
+    });
+    const observation = obs.find((o) => o.id === observationIdInt);
 
-    if (!access || !observation) {
+    if (!observation) {
       throw createError({
         statusCode: 403,
         statusMessage:
@@ -181,10 +143,10 @@ export async function ensureURLResourceAccess(
       });
     }
 
-    const isOwner = access.role === "OWNER";
+    const isOwner = role === "OWNER";
     if (
       !isOwner &&
-      access.userId !== observation.user?.id &&
+      user.id !== observation.userId &&
       !contributorsCanReadAllObservations
     ) {
       throw createError({

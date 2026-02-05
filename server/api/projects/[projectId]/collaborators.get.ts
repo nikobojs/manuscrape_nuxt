@@ -1,3 +1,5 @@
+import { getCollaboratorsInProjects } from "~~/server/utils/collaborators";
+
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
   const user = await requireUser(event);
@@ -5,23 +7,7 @@ export default safeResponseHandler(async (event) => {
   const allowedRoles: ProjectRole[] = ["OWNER"];
 
   // TODO: write test and try deprecase following projectaccess test
-  const access = await db.projectAccess.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: user.id,
-      },
-    },
-    select: {
-      role: true,
-    },
-  });
-
-  if (!access)
-    throw createError({
-      statusCode: 403,
-      statusMessage: "You do not have access to this project",
-    });
+  const access = await ensureProjectAccess(user.id, projectId);
 
   if (!allowedRoles.includes(access.role)) {
     throw createError({
@@ -31,20 +17,9 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const collaborators: Collaborator[] = await db.projectAccess.findMany({
-    where: { projectId },
-    select: {
-      role: true,
-      createdAt: true,
-      nameInProject: true,
-      user: {
-        select: {
-          id: true,
-          email: true,
-        },
-      },
-    },
-  });
+  const collaborators: Collaborator[] = await getCollaboratorsInProjects([
+    projectId,
+  ]);
 
   if (!collaborators) {
     throw createError({

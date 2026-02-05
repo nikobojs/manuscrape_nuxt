@@ -1,4 +1,8 @@
 import * as yup from "yup";
+import {
+  getProjectAccess,
+  patchProjectAccess,
+} from "~~/server/utils/projectAccess";
 
 const PatchCollaboratorBody = yup
   .object({
@@ -40,36 +44,16 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // get collaborator access
-  const collaboratorAccess = await db.projectAccess.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: collaboratorId,
-      },
-    },
-    select: {
-      role: true,
-    },
-  });
-
   // ensure collaborator marked for patching is actually connected to project
+  const collaboratorAccess = await getProjectAccess(collaboratorId, projectId);
   if (!collaboratorAccess) {
     throw createError({
       statusCode: 400,
       statusMessage: "Collaborator is not connected to project",
     });
   }
-  // patch actual projectAccess row
-  await db.projectAccess.update({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: collaboratorId,
-      },
-    },
-    data: { ...patch },
-  });
+
+  await patchProjectAccess(collaboratorId, projectId, patch);
 
   return { success: true };
 });

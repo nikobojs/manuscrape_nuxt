@@ -1,3 +1,8 @@
+import {
+  deleteProjectAccess,
+  getProjectAccess,
+} from "~~/server/utils/projectAccess";
+
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, [
     "OWNER",
@@ -7,20 +12,8 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
 
-  // TODO: abstract this to server util
-  const access = await db.projectAccess.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: user.id,
-      },
-    },
-    select: {
-      role: true,
-    },
-  });
-
   // ensure user has access
+  const access = await getProjectAccess(user.id, projectId);
   if (!access)
     throw createError({
       statusCode: 403,
@@ -37,20 +30,8 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // get collaborator access
-  const collaboratorAccess = await db.projectAccess.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: collaboratorId,
-      },
-    },
-    select: {
-      role: true,
-    },
-  });
-
   // ensure collaborator marked for deletion is actually connected to project
+  const collaboratorAccess = await getProjectAccess(collaboratorId, projectId);
   if (!collaboratorAccess) {
     throw createError({
       statusCode: 400,
@@ -59,9 +40,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // remove collaborator access to project
-  await db.projectAccess.deleteMany({
-    where: { userId: collaboratorId, projectId: projectId },
-  });
+  await deleteProjectAccess(collaboratorId, projectId);
 
   return { success: true };
 });

@@ -1,5 +1,13 @@
-import type { JsonObject } from "@prisma/client/runtime/library";
 import { captureException } from "@sentry/node";
+import {
+  getObservationsByProjectId,
+  updateObservationData,
+} from "~~/server/utils/observations";
+import {
+  deleteProjectField,
+  getProjectFieldById,
+  getProjectFieldCountByProjectId,
+} from "~~/server/utils/projectFields";
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
@@ -10,31 +18,17 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
+  const fieldCount = await getProjectFieldCountByProjectId(projectId);
+
   // find project and field based on params
-  const field = await db.projectField.findFirst({
-    where: { projectId, id: fieldId },
-    select: {
-      id: true,
-      choices: true,
-      label: true,
-      type: true,
-    },
+  const field = await getProjectFieldById(fieldId, {
+    id: true,
+    choices: true,
+    label: true,
+    type: true,
   });
 
-  // find project and field count
-  const project = await db.project.findFirst({
-    select: {
-      id: true,
-      _count: {
-        select: {
-          fields: true,
-        },
-      },
-    },
-    where: { id: projectId },
-  });
-
-  if (!field || !project) {
+  if (!field || fieldCount === 0) {
     const err = createError({
       statusCode: 400,
       statusMessage: "Field is not in project or project does not exist",
@@ -44,7 +38,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // ensure the field is not the last one
-  if (project._count.fields === 1) {
+  if (fieldCount === 1) {
     throw createError({
       statusCode: 400,
       statusMessage:
@@ -53,9 +47,9 @@ export default safeResponseHandler(async (event) => {
   }
 
   // get all the affected observations and update with their original 'data' value
-  const affectedObservations = await db.observation.findMany({
-    where: { projectId },
-    select: { data: true, id: true },
+  const affectedObservations = await getObservationsByProjectId(projectId, {
+    data: true,
+    id: true,
   });
 
   // define array of affected observation id and its new 'data' value
@@ -76,7 +70,7 @@ export default safeResponseHandler(async (event) => {
       // if deleted field is not in data, skip
       if (field.label in data) {
         // delete field data from observation data
-        delete (data as JsonObject)[field.label];
+        delete (data as any)[field.label];
         o.data = JSON.stringify(data);
       }
     } catch (e) {
@@ -91,23 +85,20 @@ export default safeResponseHandler(async (event) => {
     return o;
   });
 
-  // update related observations and delete projec
-  await db.$transaction([
-    ...dataUpdates.map((o) =>
-      db.observation.update({
-        data: { data: o.data || {} },
-        where: { id: o.id },
-      }),
-    ),
-    db.projectField.delete({
-      where: { id: fieldId },
-    }),
-  ]);
+  // update related observations and delete project
+  await db.transaction(async (tx) => {
+    for (const o of dataUpdates) {
+      const newData = o.data || {};
+      await updateObservationData(o.id, newData);
+    }
+
+    await deleteProjectField(fieldId);
+  });
 
   // get the updated fields to ensure indexes are ok
-  const updatedFields = await db.projectField.findMany({
-    where: { projectId },
-    select: { id: true, index: true },
+  const updatedFields = await getProjectFieldsByProjectIds([projectId], {
+    id: true,
+    index: true,
   });
 
   // verify and update indexes if needed

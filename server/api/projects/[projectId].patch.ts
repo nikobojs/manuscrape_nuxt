@@ -1,5 +1,5 @@
-import { FieldType, ProjectRole } from "@prisma-postgres/client";
 import * as yup from "yup";
+import { updateProject } from "~~/server/utils/project";
 
 export const PatchProjectFieldSchema = yup
   .object({
@@ -16,15 +16,8 @@ export default safeResponseHandler(async (event) => {
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
-
   const body = await readBody(event);
   const patch = await PatchProjectFieldSchema.validate(body);
-
-  const patchedProject = await db.project.update({
-    data: patch,
-    where: { id: projectId },
-  });
-
-  setResponseStatus(event, 200);
-  return patchedProject;
+  await updateProject(projectId, patch);
+  setResponseStatus(event, 204);
 });

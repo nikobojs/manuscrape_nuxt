@@ -1,22 +1,17 @@
 import { numberBetween } from "#shared/utils/validate";
 import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObservation";
+import { and, asc, desc, eq, SQL } from "drizzle-orm";
+import { observations, users } from "~~/server/drizzle/schema";
+import { getFullObservationsByProjectId } from "~~/server/utils/observations";
 
 export default safeResponseHandler(async (event) => {
   // require login
-  await requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
 
   // fetch project access object from db
   const projectId = parseIntParam(event.context.params?.projectId);
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await ensureProjectAccess(user.id, projectId);
 
   // require access to project
   if (!projectAccess) {
@@ -27,11 +22,8 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-    select: {
-      contributorsCanReadAllObservations: true,
-    },
+  const project = await getProjectById(projectId, {
+    contributorsCanReadAllObservations: true,
   });
 
   // define helper variables
@@ -46,7 +38,7 @@ export default safeResponseHandler(async (event) => {
     parse: (v: string) => parseInt(v),
     validate: numberBetween(1, 21),
     required: true,
-  });
+  }) as number;
   const skip = queryParam<number>({
     name: "skip",
     event: event,
@@ -54,7 +46,7 @@ export default safeResponseHandler(async (event) => {
     parse: (v: string) => parseInt(v),
     validate: numberBetween(0, 1999999999),
     required: true,
-  });
+  }) as number;
   const orderDirection = queryParam<"asc" | "desc">({
     name: "orderDirection",
     event: event,
@@ -89,9 +81,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // create initial observation where statement
-  const whereStatement: Prisma.ObservationWhereInput = {
-    projectId,
-  };
+  const whereAnd: SQL<unknown>[] = [];
 
   // set observation ownership filter in where statement
   // NOTE: only allow project OWNER to see everyone's observations
@@ -99,44 +89,58 @@ export default safeResponseHandler(async (event) => {
     ownership === "me" ||
     (!isOwner && !project?.contributorsCanReadAllObservations)
   ) {
-    whereStatement.userId = event.context.user.id;
+    // whereStatement.userId = event.context.user.id;
+    whereAnd.push(eq(observations.id, event.context.user.id));
   }
 
   // set published/drafts/all filter in where statement
   if (filter === "drafts") {
-    whereStatement.isDraft = true;
+    // whereStatement.isDraft = true;
+    whereAnd.push(eq(observations.isDraft, true));
   } else if (filter === "published") {
-    whereStatement.isDraft = false;
+    // whereStatement.isDraft = false;
+    whereAnd.push(eq(observations.isDraft, false));
   }
 
   // create order by / sorting statement
+  const orderFn = orderDirection === "asc" ? asc : desc;
   const orderByStatement =
     orderBy === "createdAt"
-      ? { createdAt: orderDirection }
+      ? orderFn(observations.createdAt)
       : orderBy === "user"
-        ? { user: { email: orderDirection } }
-        : { id: orderDirection };
+        ? orderFn(users.email)
+        : orderFn(observations.id);
 
-  // count how many observations where are in total (with filters applied)
-  const total = await db.observation.count({
-    where: whereStatement,
-  });
-  // count the number of observations which is in draft
-  const totalDraft = await db.observation.count({
-    where: {
-      ...whereStatement,
-      isDraft: true,
-    },
-  });
+  const total = (
+    await db
+      .select({ count: observations.id })
+      .from(observations)
+      .where(and(...whereAnd))
+  )[0]!.count;
+  const totalDraft = (
+    await db
+      .select({ count: observations.id })
+      .from(observations)
+      .where(and(...whereAnd, eq(observations.isDraft, true)))
+  )[0]!.count;
 
+  const whereStatement = and(...whereAnd)!;
   // make the call
-  const result = await db.observation.findMany({
-    take,
+  const result = await getFullObservationsByProjectId(
+    whereStatement,
+    orderByStatement,
     skip,
-    where: whereStatement,
-    select: observationColumns,
-    orderBy: orderByStatement,
-  });
+    take,
+  );
+
+  // deprecated but working prisma query
+  // const result = await db.observation.findMany({
+  //   take,
+  //   skip,
+  //   where: whereStatement,
+  //   select: observationColumns,
+  //   orderBy: orderByStatement,
+  // });
 
   // return the data!
   return {

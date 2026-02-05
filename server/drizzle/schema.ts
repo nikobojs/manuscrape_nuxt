@@ -255,9 +255,11 @@ export const projectExports = pgTable("ProjectExport", {
   status: exportStatusEnum("status").notNull(),
   mimetype: varchar("mimetype", { length: 255 }).notNull(),
   error: text("error"), // nullable
-  userId: integer("user_id").references(() => users.id, {
-    onDelete: "no action",
-  }),
+  userId: integer("user_id")
+    .references(() => users.id, {
+      onDelete: "no action",
+    })
+    .notNull(),
   size: integer("size").notNull(),
   projectId: integer("project_id")
     .notNull()

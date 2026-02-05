@@ -1,8 +1,12 @@
-import { deserializeChoices } from '../../shared/observationFields';
+import { deserializeChoices } from "#shared/utils/observationFields";
 
 function extractField(
   field: ProjectFieldResponse,
-  inputArgs: CMSMultipleChoiceProps | CMSInputProps | CMSTextAreaProps | CMSCheckboxProps,
+  inputArgs:
+    | CMSMultipleChoiceProps
+    | CMSInputProps
+    | CMSTextAreaProps
+    | CMSCheckboxProps,
 ): CMSInput {
   const newField: CMSInput = {
     field: {
@@ -17,67 +21,77 @@ function extractField(
   return newField;
 }
 
-export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, inputs: CMSInput[] } {
+export function buildForm(fields: ProjectFieldResponse[]): {
+  initialState: any;
+  inputs: CMSInput[];
+} {
   const inputs: CMSInput[] = [];
-  const initialState: any = {}
+  const initialState: any = {};
 
   for (const field of fields) {
-
     const useSimpleInput = Object.keys(inputTypes).includes(field.type);
     const typ = field.type;
 
     // if field is a basic type without need for initial state
     if (useSimpleInput) {
       const inputArgs: CMSInputProps = {
-        placeholder: 'Enter ' + field.label,
+        placeholder: "Enter " + field.label,
         name: field.label,
-        type: inputTypes[FieldType.STRING],
+        type: inputTypes["STRING"],
       };
 
-      if (typ == FieldType.FLOAT) {
-        inputArgs.type = inputTypes[FieldType.FLOAT];
+      if (typ == "FLOAT") {
+        inputArgs.type = inputTypes["FLOAT"];
         inputArgs.step = 0.1;
-      } else if (typ == FieldType.INT) {
-        inputArgs.type = inputTypes[FieldType.INT];
-      } else if (typ == FieldType.DATETIME) {
-        inputArgs.type = inputTypes[FieldType.DATETIME];
-      } else if (typ == FieldType.DATE) {
-        inputArgs.type = inputTypes[FieldType.DATE];
-      } else if (typ != FieldType.STRING) {
-        throw new Error(`Field with type '${field.type}' is not support :( Try again in an hour`);
+      } else if (typ == "INT") {
+        inputArgs.type = inputTypes["INT"];
+      } else if (typ == "DATETIME") {
+        inputArgs.type = inputTypes["DATETIME"];
+      } else if (typ == "DATE") {
+        inputArgs.type = inputTypes["DATE"];
+      } else if (typ != "STRING") {
+        throw new Error(
+          `Field with type '${field.type}' is not support :( Try again in an hour`,
+        );
       }
 
       const newField = extractField(field, inputArgs);
       inputs.push(newField);
-    // else if field is a special kind
+      // else if field is a special kind
     } else {
-      if (typ == FieldType.BOOLEAN) {
-        inputs.push(extractField(field, {
-          label: field.label,
-          name: field.label,
-          type: 'checkbox',
-          checked: false,
-        } as CMSCheckboxProps));
-      } else if(typ == FieldType.TEXTAREA) {
-        inputs.push(extractField(field, {
-          name: field.label,
-        } as CMSTextAreaProps));
-      // multiple choice includes a few different file types
+      if (typ == "BOOLEAN") {
+        inputs.push(
+          extractField(field, {
+            label: field.label,
+            name: field.label,
+            type: "checkbox",
+            checked: false,
+          } as CMSCheckboxProps),
+        );
+      } else if (typ == "TEXTAREA") {
+        inputs.push(
+          extractField(field, {
+            name: field.label,
+          } as CMSTextAreaProps),
+        );
+        // multiple choice includes a few different file types
       } else if (isMultipleChoice(typ)) {
         if (!field.choices?.length) {
-          throw new Error('Multiple choice type has no values to pick from');
+          throw new Error("Multiple choice type has no values to pick from");
         }
 
         // add arrays for multiple choices types
-        if (typ === 'MULTIPLE_CHOICE_ADD') {
+        if (typ === "MULTIPLE_CHOICE_ADD") {
           if (!initialState[field.label]) {
             initialState[field.label] = [];
           }
-        } 
+        }
 
-        inputs.push(extractField(field, {
-          name: field.label,
-        } as CMSMultipleChoiceProps));
+        inputs.push(
+          extractField(field, {
+            name: field.label,
+          } as CMSMultipleChoiceProps),
+        );
       } else {
         throw new Error(`Field with type '${field.type}' is not supported :(`);
       }
@@ -93,22 +107,21 @@ export function buildForm(fields: ProjectFieldResponse[]): { initialState: any, 
 // find custom user-added choices for multiple choice fields.
 // this enables adding custom choices to choices-array, which will make them render on page load
 export function getCustomFieldChoices(
-  field: { label: string, choices: string[] | undefined },
-  state: Ref<any>
+  field: { label: string; choices: string[] | undefined },
+  state: Ref<any>,
 ): string[] {
-  if (!field.label) throw new Error('Field does not have a label');
+  if (!field.label) throw new Error("Field does not have a label");
   if (!Object.keys(state.value).includes(field.label)) return [];
 
   // if custom choices are picked, add them to field.choices
   if (!Array.isArray(field.choices) || field.choices.length == 0) {
     return [];
   } else {
-
     // TODO: fix ! when typescript fixed itself...
     const customChoices = state.value[field.label]
       .map((v: { label: string }) => v.label)
       .filter((v: string) => !field.choices!.includes(v));
-    
+
     // const stateForField = state.value[field.label] - TODO: what is this?
     return customChoices;
   }

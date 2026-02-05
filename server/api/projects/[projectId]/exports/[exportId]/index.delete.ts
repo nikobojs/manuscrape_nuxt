@@ -1,3 +1,5 @@
+import { deleteProjectExport } from "~~/server/utils/projectExports";
+
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
   const user = await requireUser(event);
@@ -11,27 +13,16 @@ export default safeResponseHandler(async (event) => {
   const exportId = parseIntParam(event.context.params?.exportId);
 
   // fetch role to ensure either owner or project.contributorsCanExport
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await getProjectAccess(user.id, projectId);
 
   // fetch project export
-  const projectExport = await db.projectExport.findUnique({
-    where: { id: exportId, projectId },
-    select: {
-      filePath: true,
-      isS3: true,
-      status: true,
-      mimetype: true,
-      type: true,
-      userId: true,
-    },
+  const projectExport = await getProjectExportById(exportId, {
+    filePath: true,
+    isS3: true,
+    status: true,
+    mimetype: true,
+    type: true,
+    userId: true,
   });
   const isOwner = projectAccess?.role === "OWNER";
   const isAuthor = projectExport?.userId === user.id;
@@ -59,9 +50,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // delete the db entry
-  await db.projectExport.delete({
-    where: { id: exportId },
-  });
+  await deleteProjectExport(exportId);
 
   // return success
   setResponseStatus(event, 204);

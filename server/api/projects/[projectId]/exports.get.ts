@@ -1,7 +1,12 @@
 import { numberBetween } from "#shared/utils/validate";
+import {
+  getProjectExportsByProjectId,
+  getProjectExportsGenerating,
+  getProjectExportsPaginated,
+} from "~~/server/utils/projectExports";
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [
     "OWNER",
     "INVITED",
@@ -11,19 +16,11 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
 
   // fetch role to ensure either owner or project.contributorsCanExport
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await ensureProjectAccess(user.id, projectId);
 
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-    select: { storageLimit: true, contributorsCanExport: true },
+  const project = await getProjectById(projectId, {
+    storageLimit: true,
+    contributorsCanExport: true,
   });
 
   // ensure project exists
@@ -49,7 +46,8 @@ export default safeResponseHandler(async (event) => {
     parse: (v: string) => parseInt(v),
     validate: numberBetween(1, 21),
     required: true,
-  });
+  }) as number;
+
   const skip = queryParam<number>({
     name: "skip",
     event: event,
@@ -57,19 +55,11 @@ export default safeResponseHandler(async (event) => {
     parse: (v: string) => parseInt(v),
     validate: numberBetween(0, 1999999999),
     required: true,
-  });
+  }) as number;
 
   // fetch existing exports for calculating storage usage
-  const existingExports = await db.projectExport.findMany({
-    where: {
-      projectId,
-      NOT: {
-        status: ExportStatus.ERRORED,
-      },
-    },
-    select: {
-      size: true,
-    },
+  const existingExports = await getProjectExportsByProjectId(projectId, {
+    size: true,
   });
 
   const storageUsage = existingExports.reduce(
@@ -77,35 +67,13 @@ export default safeResponseHandler(async (event) => {
     0,
   );
 
-  const projectExportsGenerating = await db.projectExport.findMany({
-    where: {
-      projectId,
-      status: ExportStatus.GENERATING,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: projectExportQuery,
-  });
-
-  const projectExports: FullProjectExport[] = await db.projectExport.findMany({
-    where: {
-      projectId,
-      NOT: {
-        status: ExportStatus.ERRORED,
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take,
-    skip,
-    select: projectExportQuery,
-  });
+  const projectExportsGenerating = await getProjectExportsGenerating(projectId);
+  const projectExportsPage: FullProjectExport[] =
+    await getProjectExportsPaginated(projectId, take, skip);
 
   const result: ProjectExportsResponse = {
     projectExports: {
-      page: projectExports,
+      page: projectExportsPage,
       generating: projectExportsGenerating,
       total: existingExports.length,
     },

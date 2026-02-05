@@ -1,8 +1,9 @@
 import type { H3Event } from "h3";
-import { Prisma } from "@prisma-postgres/client";
 import { generateProjectMediaExport } from "./media";
 import { generateNvivoExport } from "./nvivo";
 import { generateProjectUploadsExport } from "./uploads";
+import { observations, projectExports } from "~~/server/drizzle/schema";
+import { and, eq, gte, lte, SQL } from "drizzle-orm";
 
 export async function generateProjectExport(
   event: H3Event,
@@ -14,29 +15,32 @@ export async function generateProjectExport(
   const { type, startDate, endDate, includeTags } = config;
 
   // create basic observation filter for export (published & related to project)
-  const observationFilter: Prisma.ObservationWhereInput = {
-    projectId,
-    isDraft: false,
-  };
+  const obsFilters: SQL<unknown>[] = [
+    eq(observations.projectId, projectId),
+    eq(observations.isDraft, false),
+  ];
 
   // add startDate and endDate if defined
-  if (startDate || endDate) {
-    observationFilter.createdAt = {
-      ...(startDate ? { gte: new Date(startDate) } : {}),
-      ...(endDate ? { lte: new Date(endDate) } : {}),
-    };
+  if (startDate) {
+    obsFilters.push(gte(observations.createdAt, new Date(startDate)));
+  }
+  if (endDate) {
+    obsFilters.push(lte(observations.createdAt, new Date(endDate)));
   }
 
-  if (type === ExportType.NVIVO) {
+  // make into one big WHERE .. AND .. statement
+  const observationFilter: SQL<unknown> = and(...obsFilters)!; // we know obsFilters.length > 0
+
+  if (type === "NVIVO") {
     return generateNvivoExport(
       event,
       projectId,
       observationFilter,
       includeTags,
     );
-  } else if (type === ExportType.MEDIA) {
+  } else if (type === "MEDIA") {
     return generateProjectMediaExport(event, projectId, observationFilter);
-  } else if (type === ExportType.UPLOADS) {
+  } else if (type === "UPLOADS") {
     return generateProjectUploadsExport(event, projectId, observationFilter);
   } else {
     throw createError({
@@ -54,40 +58,30 @@ export async function createEmptyProjectExport(
   observationsCount: number,
   isS3: boolean,
 ): Promise<{ id: number }> {
-  const res = await db.projectExport.create({
-    data: {
+  return db
+    .insert(projectExports)
+    .values({
+      endDate: new Date(settings.endDate),
+      startDate: new Date(settings.startDate),
       userId,
       projectId,
       type: settings.type,
-      startDate: new Date(settings.startDate).toISOString(),
-      endDate: new Date(settings.endDate).toISOString(),
-      status: ExportStatus.GENERATING,
       mimetype: "",
       filePath,
       isS3,
       observationsCount,
       size: 0,
-    },
-    select: {
-      id: true,
-    },
-  });
-  return res;
+      status: "GENERATING",
+    })
+    .returning({ id: projectExports.id })
+    .then((x) => x[0]!);
 }
 
-export async function finishedProjectExport(
-  exportId: number,
-  meta: ExportMeta,
-): Promise<void> {
-  await db.projectExport.update({
-    data: {
-      ...meta,
-      status: ExportStatus.DONE,
-    },
-    where: {
-      id: exportId,
-    },
-  });
+export function finishedProjectExport(exportId: number, meta: ExportMeta) {
+  return db
+    .update(projectExports)
+    .set({ ...meta, status: "DONE" })
+    .where(eq(projectExports.id, exportId));
 }
 
 export async function exportErrored(
@@ -96,13 +90,11 @@ export async function exportErrored(
 ): Promise<void> {
   const errMsg = err instanceof Error ? err.message : err;
   console.error("Project export failed with err:", errMsg);
-  await db.projectExport.update({
-    data: {
+  await db
+    .update(projectExports)
+    .set({
       error: errMsg || "Unknown error",
-      status: ExportStatus.ERRORED,
-    },
-    where: {
-      id: exportId,
-    },
-  });
+      status: "ERRORED",
+    })
+    .where(eq(projectExports.id, exportId));
 }

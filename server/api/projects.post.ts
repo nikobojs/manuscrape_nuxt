@@ -1,17 +1,16 @@
-import { type Prisma, FieldType, ProjectRole } from "@prisma-postgres/client";
 import * as yup from "yup";
-import { serializeChoices } from "#shared/utils/observationFields";
-
-const fieldTypeValues = Object.values(FieldType);
+import {
+  FieldTypeValues,
+  serializeChoices,
+} from "#shared/utils/observationFields";
+import { createProjectAccess } from "../utils/projectAccess";
+import { createProject } from "../utils/project";
+import { createProjectFields } from "../utils/projectFields";
 
 export const NewProjectFieldSchema = yup
   .object({
     label: yup.string().required(),
-    type: yup
-      .mixed<(typeof fieldTypeValues)[number]>()
-      .required()
-      .oneOf(Object.values(FieldType))
-      .required(),
+    type: yup.mixed<FieldType>().required().oneOf(FieldTypeValues).required(),
     required: yup.boolean().required(),
     choices: yup.array().of(yup.string().required()).optional(),
     index: yup.number().required(),
@@ -56,43 +55,17 @@ export default safeResponseHandler(async (event) => {
       statusCode: 400,
     });
   }
-
-  const createdProject = await db.project.create({
-    data: {
-      name: newProject.name,
-      authorId: user.id,
-      authorCanDelockObservations: false,
-      ownerCanDelockObservations: false,
-    },
+  const createdProject = await createProject({
+    name: newProject.name,
+    authorId: user.id,
   });
-
-  await db.projectAccess.create({
-    data: {
-      userId: user.id,
-      projectId: createdProject.id,
-      nameInProject: user.email,
-      role: "OWNER",
-    },
-  });
-
-  const newProjectFields = newProject.fields.map((f) => ({
-    label: f.label!,
-    type: f.type!,
-    required: f.required,
-    projectId: createdProject.id,
-    choices: serializeChoices(f.choices || null),
-    index: f.index,
-  })) satisfies Prisma.ProjectFieldCreateManyInput[];
-
-  await db.projectField.createMany({
-    data: newProjectFields,
-  });
+  await createProjectAccess(user.id, createdProject.id, user.email, "OWNER");
 
   // get the updated fields to ensure indexes are ok
-  const updatedFields = await db.projectField.findMany({
-    where: { projectId: createdProject.id },
-    select: { id: true, index: true },
-  });
+  const updatedFields = await createProjectFields(
+    createdProject.id,
+    newProject.fields,
+  );
 
   // verify and update indexes if needed
   await enforceCorrectIndexes(updatedFields);

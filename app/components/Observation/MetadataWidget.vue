@@ -169,7 +169,6 @@
 
 <script lang="ts" setup>
 import type { FormError } from "#ui/types";
-import { FieldType } from "#imports";
 
 const props = defineProps({
   observationId: {
@@ -220,7 +219,7 @@ onMounted(() => {
   // look for all booleans to set their default value (avoid `undefined`)
   if (sortedFields.value?.length && isNewObservation) {
     for (const field of sortedFields.value) {
-      const isBool = field.type === FieldType.BOOLEAN;
+      const isBool = field.type === "BOOLEAN";
       const isUndefined = typeof state.value[field.label] !== "boolean";
       if (isBool && isUndefined) {
         state.value[field.label] = false;
@@ -239,7 +238,7 @@ function validate(state: any): FormError[] {
     return (
       f.required &&
       !Object.keys(state).includes(f.label) &&
-      f.type !== FieldType.BOOLEAN
+      f.type !== "BOOLEAN"
     );
   });
 
@@ -267,7 +266,7 @@ function validate(state: any): FormError[] {
 
     // validate numbers
     const typ = field.type;
-    if (typ == FieldType.FLOAT || typ == FieldType.INT) {
+    if (typ == "FLOAT" || typ == "INT") {
       const valueFloat = parseFloat("" + value);
       if (isNaN(valueFloat)) {
         errors.push({ path: key, message: "Invalid number" });
@@ -275,7 +274,7 @@ function validate(state: any): FormError[] {
     }
 
     // validate strings
-    if (typ == FieldType.STRING) {
+    if (typ == "STRING") {
       // TODO: explain why
       if (("" + value).length === 0) {
         errors.push({ path: key, message: "Text field is required" });
@@ -285,7 +284,7 @@ function validate(state: any): FormError[] {
     // validate dates
     // NOTE: only acceps dates in ISO string
     // TODO: check if field is required or optional
-    else if (typ == FieldType.DATE || typ == FieldType.DATETIME) {
+    else if (typ == "DATE" || typ == "DATETIME") {
       const valueDate = new Date("" + value);
       if (isNaN(valueDate.getTime())) {
         errors.push({ path: key, message: "Date field is invalid" });

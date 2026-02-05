@@ -1,21 +1,15 @@
 import type { H3Event } from "h3";
 import archiver from "archiver";
 import { generateFilename } from "./helpers";
-import { Prisma } from "@prisma-postgres/client";
 import { canUseS3 } from "../fileUpload";
+import { SQL } from "drizzle-orm";
 
 export const generateProjectUploadsExport = async (
   event: H3Event,
   projectId: number,
-  observationFilter: Prisma.ObservationWhereInput,
+  observationFilter: SQL<unknown>,
 ) => {
-  // get project by projectId
-  const project: ExportedProject | null = await db.project.findUnique({
-    where: {
-      id: projectId,
-    },
-    select: exportProjectQuery,
-  });
+  const [project] = await getSmallProjects([projectId]);
 
   // ensure project exists
   if (!project) {
@@ -25,35 +19,27 @@ export const generateProjectUploadsExport = async (
     });
   }
 
-  // fetch related observations
-  const observations: { id: number }[] = await db.observation.findMany({
-    where: observationFilter,
-    select: { id: true },
-  });
-
-  // array of observation ids
-  const observationIds = observations.map((o) => o.id);
-
   // get observation images for download by observationIds
-  const fileUploads = await db.fileUpload.findMany({
-    where: { observationId: { in: observationIds } },
-    select: {
-      id: true,
-      filePath: true,
-      isS3: true,
-      mimetype: true,
-      originalName: true,
-      observationId: true,
-    },
-  });
+  const obs = await getObservations({ id: true }, observationFilter);
+  const obsIds = obs.map((o) => o.id);
 
   // ensure there is something to export
-  if (fileUploads.length === 0) {
+  if (obsIds.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: "There are no files to export",
     });
   }
+
+  // get observation images for download by observationIds
+  const obsFiles = await getFileUploadsByObservationIds(obsIds, {
+    id: true,
+    filePath: true,
+    isS3: true,
+    mimetype: true,
+    originalName: true,
+    observationId: true,
+  });
 
   const archive = archiver("zip", {
     zlib: {
@@ -72,14 +58,14 @@ export const generateProjectUploadsExport = async (
   });
 
   // pipe to s3
-  const newS3Path = generateFilename(projectId, ExportType.UPLOADS);
+  const newS3Path = generateFilename(projectId, "UPLOADS");
   const { upload, passThrough } = archiverUploadPipe(newS3Path, canUseS3());
   archive.pipe(passThrough);
 
   const obsFileCounts: Record<number, number> = {};
 
   // ensure export is meaningful
-  if (fileUploads.length === 0) {
+  if (obsFiles.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: "There are no files uploaded to any observations",
@@ -87,7 +73,7 @@ export const generateProjectUploadsExport = async (
   }
 
   const downloads: Promise<any>[] = [];
-  for (const upload of fileUploads) {
+  for (const upload of obsFiles) {
     if (!upload?.filePath) continue;
 
     // add filedownload as promise to downloads[]
@@ -102,7 +88,7 @@ export const generateProjectUploadsExport = async (
         if (!(upload.observationId in obsFileCounts)) {
           obsFileCounts[upload.observationId] = 0;
         } else {
-          obsFileCounts[upload.observationId]++;
+          obsFileCounts[upload.observationId]!++;
         }
         // add upload counter (there might be more for each observation)
         const count = `.${obsFileCounts[upload.observationId]}`;
@@ -128,7 +114,7 @@ export const generateProjectUploadsExport = async (
   // await all parallel downloads and finalize archive
   await Promise.allSettled(downloads);
   await archive.finalize();
-  await upload.done();
+  upload.done();
 
   const size = archive.pointer();
 
@@ -136,7 +122,7 @@ export const generateProjectUploadsExport = async (
     filePath: newS3Path,
     isS3: canUseS3(),
     mimetype: "application/zip",
-    observationsCount: observationIds.length,
+    observationsCount: obsIds.length,
     size,
   };
 };

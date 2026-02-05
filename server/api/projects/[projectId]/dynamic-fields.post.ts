@@ -1,4 +1,9 @@
 import { captureException } from "@sentry/node";
+import {
+  createDynamicFields,
+  findDuplicateDynamicField,
+  getProjectFieldsInDynamicField,
+} from "~~/server/utils/dynamicFields";
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
@@ -13,14 +18,8 @@ export default safeResponseHandler(async (event) => {
 
   // ensure same setup (fields and operation) is not present in project
   // NOTE: the reason it is project specific, is because projecFieldsIds are not shared
-  const existing = await db.dynamicProjectField.findFirst({
-    where: {
-      field0Id: field.field0Id,
-      field1Id: field.field1Id,
-      operator: field.operator,
-    },
-  });
-  if (existing) {
+  const duplicate = await findDuplicateDynamicField(field);
+  if (duplicate) {
     const err = createError({
       statusCode: 400,
       statusMessage: "An identical dynamic field already exists",
@@ -40,30 +39,7 @@ export default safeResponseHandler(async (event) => {
     throw err;
   }
 
-  // get field types
-  const fields: {
-    id: number;
-    label: string;
-    type: string;
-  }[] = await db.projectField.findMany({
-    select: {
-      id: true,
-      label: true,
-      type: true,
-    },
-    where: {
-      AND: [
-        {
-          id: {
-            in: [field.field0Id, field.field1Id],
-          },
-        },
-        {
-          projectId: projectId,
-        },
-      ],
-    },
-  });
+  const fields = await getProjectFieldsInDynamicField(field, projectId);
 
   // ensure both fields exists and is in project
   if (fields.length !== 2) {
@@ -76,20 +52,19 @@ export default safeResponseHandler(async (event) => {
   }
 
   // ensure dynamic field operation is allowed on these fields
-  requireAllowedMatch(fields[0], fields[1], field.operator);
+  requireAllowedMatch(fields[0]!, fields[1]!, field.operator);
 
   // create dynamic field
-  const createdField = await db.dynamicProjectField.create({
-    data: {
+  await createDynamicFields(projectId, [
+    {
       field0Id: field.field0Id,
       field1Id: field.field1Id,
       label: field.label,
       operator: field.operator,
       projectId: projectId,
     },
-  });
+  ]);
 
   // return 201 Created
   setResponseStatus(event, 201);
-  return createdField;
 });

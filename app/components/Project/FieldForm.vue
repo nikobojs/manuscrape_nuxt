@@ -72,11 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ObservationFieldTypes,
-  type FieldType,
-  isMultipleChoice,
-} from "#imports";
+import { ObservationFieldTypes, isMultipleChoice } from "#imports";
 
 const _defaultChoices = ref<string[]>([]);
 const props = defineProps({

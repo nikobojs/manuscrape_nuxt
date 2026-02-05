@@ -1,4 +1,7 @@
-import * as yup from "yup";
+import {
+  ensureExportHasData,
+  type ExportSettings,
+} from "~~/server/utils/projectExports";
 import {
   createEmptyProjectExport,
   generateProjectExport,
@@ -6,24 +9,8 @@ import {
   exportErrored,
 } from "~~/server/utils/export";
 import { generateFilename } from "~~/server/utils/export/helpers";
-
-export const ExportProjectSchema = yup
-  .object({
-    type: yup
-      .mixed<ExportType>()
-      .oneOf(["MEDIA", "NVIVO", "UPLOADS"])
-      .required(),
-    startDate: yup
-      .string()
-      .required()
-      .test((s) => !isNaN(new Date(s).getDate())),
-    endDate: yup
-      .string()
-      .required()
-      .test((s) => !isNaN(new Date(s).getDate())),
-    includeTags: yup.boolean().required(),
-  })
-  .required();
+import { searchObservationIds } from "~~/server/utils/observations";
+import { ExportProjectSchema } from "#shared/schemas/ExportProject";
 
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
@@ -33,15 +20,10 @@ export default safeResponseHandler(async (event) => {
   ]);
   // get project id from url parameters
   const projectId = parseIntParam(event.context.params?.projectId);
-  const project = await db.project.findUnique({
-    select: {
-      id: true,
-      storageLimit: true,
-      contributorsCanExport: true,
-    },
-    where: {
-      id: projectId,
-    },
+  const project = await getProjectById(projectId, {
+    storageLimit: true,
+    contributorsCanExport: true,
+    id: true,
   });
 
   if (!project) {
@@ -52,15 +34,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch role to ensure either owner or project.contributorsCanExport
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await getProjectAccess(user.id, projectId);
 
   const isOwner = projectAccess?.role === "OWNER";
   if (!isOwner && !project.contributorsCanExport) {
@@ -71,17 +45,10 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch existing exports for calculating storage usage
-  const existingExports = await db.projectExport.findMany({
-    where: {
-      projectId,
-      NOT: {
-        status: "ERRORED",
-      },
-    },
-    select: {
-      size: true,
-    },
+  const existingExports = await getProjectExportsByProjectId(projectId, {
+    size: true,
   });
+
   const storageUsage = existingExports.reduce(
     (sum: number, current: { size: number }) => current.size + sum,
     0,
@@ -95,63 +62,17 @@ export default safeResponseHandler(async (event) => {
 
   // get query values with valid defaults
   const queryParams = getQuery(event);
-  const exportSettings = await ExportProjectSchema.validate(queryParams);
+  const exportSettings: ExportSettings =
+    await ExportProjectSchema.validate(queryParams);
 
   // verify there are any observations in this export
   const start = new Date(exportSettings.startDate);
   const end = new Date(exportSettings.endDate);
-  const observations = await db.observation.findMany({
-    select: {
-      fileUploads: {
-        select: {
-          id: true,
-        },
-      },
-      image: {
-        select: {
-          id: true,
-        },
-      },
-    },
-    where: {
-      AND: [
-        { isDraft: { equals: false } },
-        { projectId: { equals: projectId } },
-        { createdAt: { gte: start } },
-        { createdAt: { lte: end } },
-      ],
-    },
-  });
+
+  const observationIds = await searchObservationIds(projectId, start, end);
 
   // ensure there will be any observations in this export
-  if (observations.length === 0) {
-    throw createError({
-      statusCode: 400,
-      statusMessage:
-        "There are no observations in this project within the given time interval",
-    });
-  }
-
-  if (exportSettings.type === "UPLOADS") {
-    const files = observations.map((o) => o.fileUploads).flat();
-    if (files.length === 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "There are no uploaded files to export",
-      });
-    }
-  }
-
-  // validate there are images to export
-  if (exportSettings.type === "MEDIA") {
-    const observationImages = observations.map((o) => o.image).flat();
-    if (observationImages.length === 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "There are no observation images to export",
-      });
-    }
-  }
+  await ensureExportHasData(observationIds, exportSettings);
 
   // create empty export file record
   const filename = generateFilename(projectId, exportSettings.type);
@@ -160,7 +81,7 @@ export default safeResponseHandler(async (event) => {
     user.id,
     filename,
     exportSettings,
-    observations.length,
+    observationIds.length,
     canUseS3(),
   );
 

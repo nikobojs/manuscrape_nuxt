@@ -1,4 +1,6 @@
 import { captureException } from "@sentry/node";
+import { getFileUploadsByObservationId } from "~~/server/utils/fileUploads";
+import { deleteObservation } from "~~/server/utils/observations";
 
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
@@ -8,48 +10,14 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(params?.projectId);
 
   // retrieve the user access role for the project
-  const projectAccess = await db.projectAccess.findFirst({
-    where: {
-      userId: user.id,
-      projectId: projectId,
-    },
-    select: {
-      role: true,
-    },
-  });
-
-  // ensure user has access
-  // TODO: ensureURLResourceAccess does this as well. Find a better way
-  if (!projectAccess) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: `You don't have access to this project`,
-    });
-  }
+  const projectAccess = await ensureProjectAccess(user.id, projectId);
 
   // fetch existing observation
-  const observation = await db.observation.findUnique({
-    select: {
-      id: true,
-      isDraft: true,
-      projectId: true,
-      userId: true,
-      fileUploads: {
-        select: {
-          filePath: true,
-          isS3: true,
-        },
-      },
-      image: {
-        select: {
-          filePath: true,
-          isS3: true,
-        },
-      },
-    },
-    where: {
-      id: observationId,
-    },
+  const observation = await getObservationById(observationId, {
+    id: true,
+    isDraft: true,
+    projectId: true,
+    userId: true,
   });
 
   // if it does not exist, then throw up
@@ -81,8 +49,18 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const filesToDelete = [...observation.fileUploads];
-  if (observation.image?.filePath) filesToDelete.push(observation.image);
+  const fileUploads = await getFileUploadsByObservationId(observationId, {
+    filePath: true,
+    isS3: true,
+  });
+
+  const imageUpload = await getImageUploadByObservationId(observationId, {
+    filePath: true,
+    isS3: true,
+  });
+
+  const filesToDelete = [...fileUploads];
+  if (imageUpload) filesToDelete.push(imageUpload);
 
   // delete all the files from s3 in the array (skips if empty)
   for (const fileToDelete of filesToDelete) {
@@ -98,14 +76,10 @@ export default safeResponseHandler(async (event) => {
     }
   }
 
-  // delete the observation (cascades to its files as well)
-  await db.observation.delete({
-    where: { id: observationId },
-  });
+  // delete the observation (cascades)
+  await deleteObservation(observationId);
 
-  // return response
-  // TODO: set better response status code (don't forget response handling in frontend)
   return {
-    msg: "observation has been deleted!",
+    succes: true,
   };
 });

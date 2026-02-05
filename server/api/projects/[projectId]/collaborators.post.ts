@@ -1,5 +1,10 @@
 import * as yup from "yup";
 import { daysInFuture } from "#shared/utils/datetime";
+import { getUserByEmail } from "~~/server/utils/users";
+import {
+  createProjectInvitation,
+  getProjectInvitationByEmail,
+} from "~~/server/utils/projectInvitations";
 
 const AddCollaboratorSchema = yup
   .object({
@@ -10,10 +15,11 @@ const AddCollaboratorSchema = yup
 export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
   const body = await readBody(event);
+  const config = useRuntimeConfig();
   const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const allowedRoles: ProjectRole[] = ["OWNER"];
-  let parsed: { email: string } | undefined;
+  let parsed: { email: string };
 
   // validate with yup
   try {
@@ -25,25 +31,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  // todo: abstract this to util
-  const access = await db.projectAccess.findUnique({
-    where: {
-      projectId_userId: {
-        projectId: projectId,
-        userId: user.id,
-      },
-    },
-    select: {
-      role: true,
-    },
-  });
-
-  if (!access)
-    throw createError({
-      statusCode: 403,
-      statusMessage: "You do not have access to this project",
-    });
-
+  const access = await ensureProjectAccess(user.id, projectId);
   if (!allowedRoles.includes(access.role)) {
     throw createError({
       statusCode: 403,
@@ -52,24 +40,15 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const collaborator = await db.user.findFirst({
-    where: {
-      email: parsed.email,
-    },
-    select: { id: true, email: true },
+  const collaborator = await getUserByEmail(parsed.email, {
+    id: true,
+    email: true,
   });
 
   // if collaborator is already an existing user,
   // just let them join the project immediatly
   if (collaborator) {
-    const existing = await db.projectAccess.findFirst({
-      where: {
-        user: { email: parsed.email },
-        projectId,
-      },
-      select: { projectId: true },
-    });
-
+    const existing = await getProjectAccess(collaborator.id, projectId);
     if (existing) {
       throw createError({
         statusCode: 409,
@@ -77,32 +56,24 @@ export default safeResponseHandler(async (event) => {
       });
     }
 
-    await db.projectAccess.create({
-      data: {
-        projectId,
-        userId: collaborator.id,
-        role: "INVITED",
-        nameInProject: collaborator.email,
-      },
-    });
+    await createProjectAccess(
+      collaborator.id,
+      projectId,
+      collaborator.email,
+      "INVITED",
+    );
 
     setResponseStatus(event, 202);
     return { success: true };
 
     // if user does not exist in db, create projectInvitation and return the link
   } else {
-    const hash = generateInvitationHash(body.email);
-
     // check if invitation is already sent to user
-    const existing = await db.projectInvitation.findFirst({
-      where: {
-        emailHash: hash,
-        projectId: projectId,
-        expiresAt: {
-          gte: new Date(),
-        },
-      },
-    });
+    const existing = await getProjectInvitationByEmail(
+      parsed.email,
+      projectId,
+      config.invitationSalt,
+    );
 
     // if invitation already exists, throw up
     if (existing) {
@@ -114,14 +85,13 @@ export default safeResponseHandler(async (event) => {
     }
 
     // create invitation
-    await db.projectInvitation.create({
-      data: {
-        projectId,
-        inviterId: user.id,
-        expiresAt: daysInFuture(7),
-        emailHash: hash,
-      },
-    });
+    await createProjectInvitation(
+      parsed.email,
+      daysInFuture(7),
+      user.id,
+      projectId,
+      config.invitationSalt,
+    );
 
     setResponseStatus(event, 201);
 

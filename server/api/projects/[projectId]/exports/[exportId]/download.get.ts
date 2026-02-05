@@ -2,7 +2,7 @@ import { exportIsDownloadable } from "~~/server/utils/export/helpers";
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
-  await requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [
     "OWNER",
     "INVITED",
@@ -12,19 +12,13 @@ export default safeResponseHandler(async (event) => {
   const projectId = parseIntParam(event.context.params?.projectId);
   const exportId = parseIntParam(event.context.params?.exportId);
 
-  const projectExport = await db.projectExport.findUnique({
-    where: {
-      id: exportId,
-      projectId,
-    },
-    select: {
-      filePath: true,
-      isS3: true,
-      status: true,
-      mimetype: true,
-      type: true,
-      error: true,
-    },
+  const projectExport = await getProjectExportById(exportId, {
+    filePath: true,
+    isS3: true,
+    status: true,
+    mimetype: true,
+    type: true,
+    error: true,
   });
   if (!projectExport) {
     throw createError({
@@ -34,19 +28,10 @@ export default safeResponseHandler(async (event) => {
   }
 
   // fetch role to ensure either owner or project.contributorsCanExport
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await ensureProjectAccess(user.id, projectId);
 
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-    select: { contributorsCanExport: true },
+  const project = await getProjectById(projectId, {
+    contributorsCanExport: true,
   });
 
   // ensure project exists

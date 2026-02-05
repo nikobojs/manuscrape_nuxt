@@ -1,65 +1,57 @@
+import {
+  deleteFileUpload,
+  getFileUploadById,
+} from "~~/server/utils/fileUploads";
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   const params = event.context.params;
   await ensureURLResourceAccess(event, event.context.user);
   const observationId = parseIntParam(params?.observationId);
   const fileId = parseIntParam(params?.fileId);
 
-  const file = await db.fileUpload.findUnique({
-    select: {
-      id: true,
-      originalName: true,
-      observationId: true,
-      filePath: true,
-      isS3: true,
-    },
-    where: {
-      id: fileId,
-    }
+  const file = await getFileUploadById(fileId, {
+    id: true,
+    originalName: true,
+    observationId: true,
+    filePath: true,
+    isS3: true,
   });
 
   if (!file || file.observationId !== observationId) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'File was not found',
-    })
-  }
-
-  if (typeof file?.filePath !== 'string') {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'File wasn\'t uploaded correctly',
-    })
-  }
-
-  const observation = await db.observation.findUnique({
-    where: { id: observationId },
-  });
-
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId: observation?.projectId,
-      userId: event.context.user.id,
-    }
-  });
-
-  if (!projectAccess) {
-    // NOTE: unexpected because of middleware validation
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'You don\'t have access to the observation',
+      statusMessage: "File was not found",
     });
   }
 
-  // if observation is published and projectAccess != OWNER, don't allow file deletion
-  if (!observation?.isDraft && projectAccess.role !== 'OWNER') {
+  if (typeof file?.filePath !== "string") {
     throw createError({
       statusCode: 400,
-      statusMessage: 'You don\'t have permissions to remove file from a published observation',
+      statusMessage: "File wasn't uploaded correctly",
+    });
+  }
+
+  const observation = await getObservationById(observationId, {
+    isDraft: true,
+    projectId: true,
+  });
+
+  if (!observation) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Observation does not exist",
+    });
+  }
+
+  const { role } = await ensureProjectAccess(user.id, observation?.projectId);
+
+  // if observation is published and projectAccess != OWNER, don't allow file deletion
+  if (!observation?.isDraft && role !== "OWNER") {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        "You don't have permissions to remove file from a published observation",
     });
   }
 
@@ -67,17 +59,15 @@ export default safeResponseHandler(async (event) => {
   let res;
   try {
     res = await deleteFiles(file.filePath, file.isS3);
-  } catch(e: any) {
+  } catch (e: any) {
     throw createError({
       statusCode: 500,
       statusMessage: e.message,
-    })
+    });
   }
 
   // if s3 deletion went well, delete from file metadata from database
-  await db.fileUpload.delete({
-    where: { id: fileId },
-  });
-  
-  setResponseStatus(event, 204)
+  await deleteFileUpload(fileId);
+
+  setResponseStatus(event, 204);
 });

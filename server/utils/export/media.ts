@@ -1,8 +1,9 @@
 import type { H3Event } from "h3";
 import archiver from "archiver";
 import { generateFilename } from "./helpers";
-import { Prisma } from "@prisma-postgres/client";
 import { canUseS3 } from "../fileUpload";
+import { getObservations } from "../observations";
+import { SQL } from "drizzle-orm";
 
 const archiverOptions: archiver.ArchiverOptions = {
   zlib: {
@@ -14,17 +15,12 @@ const archiverOptions: archiver.ArchiverOptions = {
 };
 
 export const generateProjectMediaExport = async (
-  event: H3Event,
+  _event: H3Event,
   projectId: number,
-  observationFilter: Prisma.ObservationWhereInput,
+  observationFilter: SQL<unknown>,
 ) => {
   // get project by projectId
-  const project: ExportedProject | null = await db.project.findUnique({
-    where: {
-      id: projectId,
-    },
-    select: exportProjectQuery,
-  });
+  const [project] = await getSmallProjects([projectId])!;
 
   // ensure project exists
   if (!project) {
@@ -35,22 +31,17 @@ export const generateProjectMediaExport = async (
   }
 
   // get observation images for download by observationIds
-  const observationImages = await db.observation.findMany({
-    where: observationFilter,
-    select: {
-      id: true,
-      image: {
-        select: {
-          isS3: true,
-          filePath: true,
-          originalName: true,
-        },
-      },
-    },
+  const obs = await getObservations({ id: true }, observationFilter);
+  const obsIds = obs.map((o) => o.id);
+  const obsImgs = await getImageUploadsByObservationIds(obsIds, {
+    observationId: true,
+    filePath: true,
+    isS3: true,
+    originalName: true,
   });
 
   // ensure export is meaningful
-  if (observationImages.length === 0) {
+  if (obsImgs.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: "There are currenctly no images to download",
@@ -62,15 +53,15 @@ export const generateProjectMediaExport = async (
   const archive = archiver("zip", archiverOptions);
 
   // pipe to file uploads destination
-  const newFilePath = generateFilename(projectId, ExportType.MEDIA);
+  const newFilePath = generateFilename(projectId, "MEDIA");
   const isTargetS3: boolean = canUseS3();
   const { upload, passThrough } = archiverUploadPipe(newFilePath, isTargetS3);
   archive.pipe(passThrough);
 
   // loop through all observation image and download each one of them
-  for (let i = 0; i < observationImages.length; i++) {
-    const id = observationImages[i].id;
-    const image = observationImages[i].image;
+  for (let i = 0; i < obsImgs.length; i++) {
+    const image = obsImgs[i]!;
+    const id = image.observationId;
     if (!image?.filePath) continue;
 
     // create single file download promise
@@ -103,7 +94,7 @@ export const generateProjectMediaExport = async (
 
   // start finalizing
   await archive.finalize();
-  await upload.done();
+  upload.done();
 
   const size = archive.pointer();
 
@@ -111,7 +102,7 @@ export const generateProjectMediaExport = async (
     filePath: newFilePath,
     isS3: isTargetS3,
     mimetype: "application/zip",
-    observationsCount: observationImages.length,
+    observationsCount: obsImgs.length,
     size,
   };
 };

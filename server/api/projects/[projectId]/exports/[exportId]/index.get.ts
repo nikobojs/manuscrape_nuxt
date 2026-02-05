@@ -1,5 +1,7 @@
+import { ProjectExportSelectColumns } from "~~/server/utils/projectExports";
+
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const user = await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [
     "OWNER",
     "INVITED",
@@ -10,29 +12,16 @@ export default safeResponseHandler(async (event) => {
   const exportId = parseIntParam(event.context.params?.exportId);
 
   // get project export
-  const projectExport: FullProjectExport | null =
-    await db.projectExport.findUnique({
-      where: {
-        id: exportId,
-        projectId,
-      },
-      select: projectExportQuery,
-    });
+  const projectExport = await getProjectExportById(
+    exportId,
+    ProjectExportSelectColumns,
+  );
 
   // fetch role to ensure either owner or project.contributorsCanExport
-  const projectAccess = await db.projectAccess.findFirst({
-    select: {
-      role: true,
-    },
-    where: {
-      projectId,
-      userId: event.context.user.id,
-    },
-  });
+  const projectAccess = await ensureProjectAccess(user.id, projectId);
 
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-    select: { contributorsCanExport: true },
+  const project = await getProjectById(projectId, {
+    contributorsCanExport: true,
   });
 
   // ensure project exists

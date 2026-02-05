@@ -1,5 +1,10 @@
-import { hash } from "bcrypt";
 import * as yup from "yup";
+import {
+  deleteProjectInvitations,
+  getAllProjectInvitationsByEmail,
+} from "../utils/projectInvitations";
+import { createMultipleProjectAccess } from "../utils/projectAccess";
+import { createUser } from "../utils/users";
 
 const config = useRuntimeConfig();
 
@@ -30,10 +35,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // ensure user isn't already created
-  const existingUser = await db.user.findFirst({
-    where: { email: parsed.email },
-    select: { id: true },
-  });
+  const existingUser = await getUserByEmail(parsed.email, { id: true });
   if (existingUser) {
     return await delayedError(event, 409, "User already exists");
   }
@@ -49,59 +51,34 @@ export default safeResponseHandler(async (event) => {
     return await delayedError(event, 400, reason);
   }
 
-  // salt and hash password
-  const saltRounds = config.saltRounds ?? 10;
-  const hashedPassword = await hash(parsed.password, saltRounds);
-
   // create user
-  const user = await db.user.create({
-    data: {
-      email: parsed.email,
-      password: hashedPassword,
-    },
-    select: {
-      id: true,
-      email: true,
-      password: true,
-      createdAt: true,
-    },
-  });
+  const user = await createUser(
+    parsed.email,
+    parsed.password,
+    config.saltRounds,
+  );
 
-  // get all pending invitations
-  const emailHash = generateInvitationHash(parsed.email);
-  const invitations = await db.projectInvitation.findMany({
-    select: {
-      id: true,
-      projectId: true,
-    },
-    where: {
-      emailHash,
-      expiresAt: {
-        gte: new Date(),
-      },
-    },
-  });
+  // get all pending invitations based on hashed email
+  // TODO: refactor crypto stuff
+  const invitations = await getAllProjectInvitationsByEmail(
+    parsed.email,
+    config.invitationSalt,
+  );
+  const invitationIds = invitations.map((i) => i.id);
+  const invitationProjectIds = Array.from(
+    new Set(invitations.map((i) => i.projectId)),
+  );
 
   // accept invitations if any
   if (invitations.length > 0) {
-    await db.projectAccess.createMany({
-      data: invitations.map((inv) => ({
-        projectId: inv.projectId,
-        userId: user.id,
-        role: "INVITED",
-        nameInProject: user.email,
-      })),
-    });
-  }
-
-  // delete accepted invitations
-  if (invitations.length > 0) {
-    const projectInvitationIds = invitations.map((i) => i.id);
-    await db.projectInvitation.deleteMany({
-      where: {
-        id: { in: projectInvitationIds },
-      },
-    });
+    await createMultipleProjectAccess(
+      user.id,
+      user.email,
+      invitationProjectIds,
+      "INVITED",
+    );
+    // delete accepted invitations
+    await deleteProjectInvitations(invitationIds);
   }
 
   // authorize user

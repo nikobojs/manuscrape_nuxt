@@ -45,7 +45,7 @@ export const useObservations = async (
       }
     }
 
-    return ObservationFilter[ObservationFilterTypes.ALL];
+    return ObservationFilter[ObservationFilterTypes.ALL]!;
   });
 
   watch([filterOption], (value) => {
@@ -60,11 +60,10 @@ export const useObservations = async (
     );
   }
 
-  const { pending: loading, refresh: refreshObservations } = await useFetch<
-    FullObservation[]
-  >(
-    () => {
-      const url = `
+  const { pending: loading, refresh: refreshObservations } =
+    await useFetch<GetObservationsResponse>(
+      () => {
+        const url = `
         /api/projects/${projectId}/observations?
           take=${pageSize}&
           skip=${skip.value}&
@@ -73,34 +72,36 @@ export const useObservations = async (
           filter=${filter.value}&
           ownership=${ownership.value}
       `
-        .trim()
-        .replaceAll(/\s/g, "");
-      return url;
-    },
-    {
-      method: "GET",
-      immediate: true,
-      server: true,
-      credentials: "include",
+          .trim()
+          .replaceAll(/\s/g, "");
+        return url;
+      },
+      {
+        method: "GET",
+        immediate: true,
+        server: true,
+        credentials: "include",
 
-      onResponse: async (context) => {
-        if (context.response.status === 200) {
-          observations.value = context.response._data?.observations.reverse?.();
-          totalObservations.value = context.response._data?.total;
-          totalDraftObservations.value = context.response._data?.totalDraft;
-        } else if (context.response.status === 401) {
-          observations.value = [];
-          await navigateTo("/login", { replace: true });
-        }
+        onResponse: async (context) => {
+          if (context.response.status === 200) {
+            observations.value =
+              context.response._data?.observations.reverse?.() || [];
+            totalObservations.value = context.response._data?.total || 0;
+            totalDraftObservations.value =
+              context.response._data?.totalDraft || 0;
+          } else if (context.response.status === 401) {
+            observations.value = [];
+            await navigateTo("/login", { replace: true });
+          }
+        },
+        onResponseError: async (context) => {
+          if (context.response.status === 401) {
+            observations.value = [];
+            await navigateTo("/login", { replace: true });
+          }
+        },
       },
-      onResponseError: async (context) => {
-        if (context.response.status === 401) {
-          observations.value = [];
-          await navigateTo("/login", { replace: true });
-        }
-      },
-    },
-  );
+    );
 
   const findObservationById = (observationId: number) => {
     return computed(() =>
@@ -115,7 +116,7 @@ export const useObservations = async (
     refreshObservation: (
       opts?: AsyncDataExecuteOptions | undefined,
     ) => Promise<void>;
-    observation: globalThis.Ref<FullObservation | null>;
+    observation: globalThis.Ref<FullObservation | undefined>;
   }> => {
     obsId = requireNumber(obsId, "observationId");
     const { pending, refresh, data } = await useFetch<FullObservation>(

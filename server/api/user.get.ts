@@ -1,10 +1,6 @@
-export default safeResponseHandler(async (event) => {
-    const { id } = await requireUser(event);
-    
-    const user = await db.user.findFirst({
-        where: { id: id },
-        select: bigUserQuery,
-    });
+import { getFullUserById } from "../utils/users";
 
-    return user;
+export default safeResponseHandler(async (event) => {
+  const { id } = await requireUser(event);
+  return getFullUserById(id);
 });

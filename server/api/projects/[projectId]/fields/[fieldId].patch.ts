@@ -4,6 +4,11 @@ import {
   isMultipleChoice,
   serializeChoices,
 } from "#shared/utils/observationFields";
+import {
+  getProjectFieldById,
+  getProjectFieldsByProjectIds,
+  updateProjectField,
+} from "~~/server/utils/projectFields";
 
 export const PatchProjectFieldSchema = yup
   .object({
@@ -25,14 +30,11 @@ export default safeResponseHandler(async (event) => {
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
   // find project and field based on params
-  const field = await db.projectField.findFirst({
-    where: { projectId, id: fieldId },
-    select: {
-      id: true,
-      choices: true,
-      label: true,
-      type: true,
-    },
+  const field = await getProjectFieldById(fieldId, {
+    id: true,
+    choices: true,
+    label: true,
+    type: true,
   });
 
   // ensure project and field exists
@@ -91,17 +93,12 @@ export default safeResponseHandler(async (event) => {
   }
 
   // execute the update statement
-  await db.projectField.update({
-    data: cleanedPatch,
-    where: {
-      id: field.id,
-    },
-  });
+  await updateProjectField(field.id, cleanedPatch);
 
   // fetch updated fields
-  const fields = await db.projectField.findMany({
-    where: { projectId },
-    select: { id: true, index: true },
+  const fields = await getProjectFieldsByProjectIds([projectId], {
+    id: true,
+    index: true,
   });
 
   // ensure indexes are valid, and if not, then correct them

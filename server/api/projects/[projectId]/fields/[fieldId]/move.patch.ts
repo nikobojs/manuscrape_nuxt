@@ -1,5 +1,9 @@
 import { captureException } from "@sentry/node";
 import * as yup from "yup";
+import {
+  getProjectFieldById,
+  getProjectFieldsByProjectIds,
+} from "~~/server/utils/projectFields";
 
 export const MoveProjectFieldSchema = yup
   .object({
@@ -17,14 +21,11 @@ export default safeResponseHandler(async (event) => {
   const fieldId = parseIntParam(event.context.params?.fieldId);
 
   // find project and field based on params
-  const field = await db.projectField.findFirst({
-    where: { projectId, id: fieldId },
-    select: {
-      id: true,
-      choices: true,
-      label: true,
-      type: true,
-    },
+  const field = await getProjectFieldById(fieldId, {
+    id: true,
+    choices: true,
+    label: true,
+    type: true,
   });
 
   // ensure project and field exists
@@ -42,12 +43,9 @@ export default safeResponseHandler(async (event) => {
   const patch = await MoveProjectFieldSchema.validate(body);
 
   // find all fields in project
-  const fields = await db.projectField.findMany({
-    where: { projectId },
-    select: {
-      id: true,
-      index: true,
-    },
+  const fields = await getProjectFieldsByProjectIds([projectId], {
+    id: true,
+    index: true,
   });
 
   // move project field up or down depending on json body

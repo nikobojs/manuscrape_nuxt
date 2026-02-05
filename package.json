@@ -57,6 +57,7 @@
     "formidable": "^3.5.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.17.2",
+    "postgres": "^3.4.8",
     "semver": "^7.6.3",
     "stream-buffers": "^3.0.3",
     "v-calendar": "^3.1.2",

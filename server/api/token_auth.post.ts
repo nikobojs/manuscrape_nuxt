@@ -1,40 +1,43 @@
-import * as yup from 'yup';
-import jwt from 'jsonwebtoken';
+import * as yup from "yup";
+import jwt from "jsonwebtoken";
+import { getFullUserById } from "../utils/users";
 
 const config = useRuntimeConfig();
-const TokenAuthBody = yup.object({
-  token: yup.string().required(),
-}).required()
+const TokenAuthBody = yup
+  .object({
+    token: yup.string().required(),
+  })
+  .required();
 
 // TODO: decide on token or cookie based auth
 export default safeResponseHandler(async (event) => {
-    const body = await readBody(event);
-    const { token } = await TokenAuthBody.validate(body)
+  const body = await readBody(event);
+  const { token } = await TokenAuthBody.validate(body);
 
-    const decoded = jwt.verify(token, config.tokenSecret);
-    if (typeof decoded !== 'string' && decoded?.id) {
+  const decoded = jwt.verify(token, config.tokenSecret);
+  if (typeof decoded !== "string" && decoded?.id) {
+    const user = await getFullUserById(decoded.id);
+    // const user = await db.user.findFirst({
+    //   where: { id: decoded.id },
+    //   select: {
+    //     ...bigUserQuery,
+    //     id: true,
+    //     email: true,
+    //     password: true,
+    //     createdAt: true,
+    //   },
+    // });
 
-      const user = await db.user.findFirst({
-        where: { id: decoded.id },
-        select: {
-          ...bigUserQuery,
-          id: true,
-          email: true,
-          password: true,
-          createdAt: true,
-        },
+    if (user) {
+      const expires = new Date(new Date().setDate(new Date().getDate() + 365));
+      event.context.user = user;
+      updateAuthCookie(event, token, expires);
+      return { success: true };
+    } else {
+      return createError({
+        statusCode: 401,
+        statusMessage: "Session is valid but user does not exist",
       });
-
-      if (user) {
-        const expires = new Date(new Date().setDate(new Date().getDate() + 365))
-        event.context.user = user;
-        updateAuthCookie(event, token, expires);
-        return { 'success': true }
-      } else {
-        return createError({
-          statusCode: 401,
-          statusMessage: 'Session is valid but user does not exist'
-        })
-      }
     }
+  }
 });

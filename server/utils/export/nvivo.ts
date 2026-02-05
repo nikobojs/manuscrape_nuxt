@@ -2,15 +2,17 @@ import excel from "exceljs";
 import { calculateDynamicFieldValue } from "../dynamicFields";
 import { captureException } from "@sentry/node";
 import type { H3Event } from "h3";
-import { Prisma } from "@prisma-postgres/client";
 import { canUseS3 } from "../fileUpload";
 import { generateFilename } from "./helpers";
+import { desc, SQL } from "drizzle-orm";
+import { observations } from "~~/server/drizzle/schema";
+import { getCollaboratorsInProjects } from "../collaborators";
 
 function generateObservationRow(
   obs: FullObservationPayload,
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
-  access: { nameInProject: string; userId: number }[],
+  contributors: { nameInProject: string; user_id: number }[],
   allTags: string[],
   includeTags: boolean,
 ) {
@@ -24,9 +26,9 @@ function generateObservationRow(
   const fieldValues = new Array(fields.length + dynamicFields.length);
 
   // for each data entry
-  const entries = Object.entries(data as any);
+  const entries = Object.entries(data as Record<string, string>);
   for (let i = 0; i < entries.length; i++) {
-    const [key, rawVal] = entries[i];
+    const [key, rawVal] = entries[i]!;
 
     // get column index with that label
     const columnIndex = fieldLabels.indexOf(key);
@@ -59,7 +61,9 @@ function generateObservationRow(
   }
 
   // get name / initials / alias for author of observation
-  const { nameInProject } = access.find((a) => a.userId === obs.user?.id) || {
+  const { nameInProject } = contributors.find(
+    (a) => a.user_id === obs.user?.id,
+  ) || {
     nameInProject: "<deleted user>",
   };
 
@@ -167,18 +171,13 @@ function calculateTextWidth(label: string): number {
 }
 
 export const generateNvivoExport = async (
-  event: H3Event,
+  _event: H3Event,
   projectId: number,
-  observationFilter: Prisma.ObservationWhereInput,
+  observationFilter: SQL<unknown>,
   includeTags: boolean,
 ) => {
   // get project by projectId
-  const project: ExportedProject | null = await db.project.findUnique({
-    where: {
-      id: projectId,
-    },
-    select: exportProjectQuery,
-  });
+  const [project] = await getSmallProjects([projectId]);
 
   // ensure project exists
   if (!project) {
@@ -189,17 +188,19 @@ export const generateNvivoExport = async (
   }
 
   // fetch related observations
-  const observations: FullObservationPayload[] = await db.observation.findMany({
-    where: observationFilter,
-    select: observationColumns,
-  });
+  const obs = await getFullObservationsByProjectId(
+    observationFilter,
+    desc(observations.id),
+    0,
+    100000,
+  ); // max a hundred thousand rows
 
   // initialize a few shortcut variables
   const fields: AllFieldColumns[] = project.fields;
   const dynamicFields: AllDynamicFieldColumns[] = project.dynamicFields;
 
   // ensure export is meaningful
-  if (observations.length === 0) {
+  if (obs.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: "There are no published observations on this project",
@@ -211,8 +212,8 @@ export const generateNvivoExport = async (
   if (includeTags) {
     allTags = Array.from(
       new Set(
-        observations.flatMap((obs) =>
-          obs.observationTags.map((t: { tag: { name: string } }) => t.tag.name),
+        obs.flatMap((o) =>
+          o.observationTags.map((t: { tag: { name: string } }) => t.tag.name),
         ),
       ),
     );
@@ -231,13 +232,14 @@ export const generateNvivoExport = async (
 
   // create all our observation rows for this project
   const observationRows = [];
-  for (const obs of observations) {
+  const contributors = await getCollaboratorsInProjects([project.id]);
+  for (const o of obs) {
     try {
       const row = generateObservationRow(
-        obs,
+        o,
         fields,
         dynamicFields,
-        project.contributors,
+        contributors,
         allTags,
         includeTags,
       );
@@ -260,7 +262,7 @@ export const generateNvivoExport = async (
   const buffer = await wb.xlsx.writeBuffer();
 
   // upload excel file to s3
-  const newPath = generateFilename(projectId, ExportType.NVIVO);
+  const newPath = generateFilename(projectId, "NVIVO");
   await uploadFile(newPath, Buffer.from(buffer), canUseS3());
 
   // const mimetype = 'application/vnd.ms-excel';
@@ -270,7 +272,7 @@ export const generateNvivoExport = async (
     filePath: newPath,
     isS3: canUseS3(),
     mimetype,
-    observationsCount: observations.length,
+    observationsCount: obs.length,
     size: buffer.byteLength,
   };
 };

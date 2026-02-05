@@ -4,7 +4,7 @@ import {
   fieldOperatorEnum,
   fieldTypeEnum,
   projectRoleEnum,
-} from "../../server/drizzle/schema";
+} from "~~/server/drizzle/schema";
 import type { H3Event } from "h3";
 import {
   NewProjectFieldSchema,
@@ -13,7 +13,7 @@ import {
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~~/server/api/auth.post";
 import { SignUpRequestSchema } from "~~/server/api/user.post";
-import { ExportProjectSchema } from "~~/server/api/projects/[projectId]/exports/exports.post";
+// import { ExportProjectSchema } from "~~/server/api/projects/[projectId]/exports/exports.post";
 import type {
   exportProjectQuery,
   bigUserQuery,
@@ -21,6 +21,8 @@ import type {
   allFieldColumns,
   allDynamicFieldColumns,
 } from "~~/server/utils/prisma";
+import { ExportProjectSchema } from "~~/shared/schemas/ExportProject";
+import { projectFields } from "~~/server/drizzle/schema";
 
 declare global {
   interface CurrentUser extends Omit<User, "tags"> {
@@ -45,6 +47,12 @@ declare global {
     observationTags: { tag: { name: string; id: number } }[];
   }
 
+  type User = {
+    id: number;
+    email: string;
+    createdAt: Date | string;
+  };
+
   type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
 
   type FullProjectExport = {
@@ -57,6 +65,7 @@ declare global {
     startDate: Date | null;
     endDate: Date | null;
     status: ExportStatus;
+    userId: number;
     user: {
       id: number;
       email: string;
@@ -85,19 +94,21 @@ declare global {
     size: number;
   };
 
-  interface ProjectFieldResponse extends Omit<ProjectField, "projectId"> {}
+  interface ProjectFieldResponse extends Omit<SmallProjectField, "projectId"> {}
 
   interface FullProject extends Project {
+    id: number;
+    name: string;
+    createdAt: string | Date;
     authorCanDelockObservations: boolean;
     ownerCanDelockObservations: boolean;
     contributorsCanReadAllObservations: boolean;
-    fields: ProjectFieldResponse[];
+    contributorsCanExport: boolean;
+    fields: SmallProjectField[];
     dynamicFields: Omit<DynamicProjectField, "projectId">[];
     observations: Observation[];
     tags: Tag[];
-    _count: {
-      observations: number;
-    };
+    observationCount: number;
   }
 
   interface FullImage
@@ -218,12 +229,12 @@ declare global {
     required?: boolean;
   }
 
-  interface IProjectAccess {
-    role: string;
-    project: {
-      id: number;
-    };
-  }
+  // interface IProjectAccess {
+  //   role: string;
+  //   project: {
+  //     id: number;
+  //   };
+  // }
 
   type NewProjectFieldDraft = Omit<Omit<NewProjectField, "type">, "index"> & {
     type: FieldType | undefined;
@@ -244,13 +255,12 @@ declare global {
   };
 
   type Collaborator = {
-    createdAt: Date;
+    createdAt: Date | string;
     role: string;
     nameInProject: string;
-    user: {
-      id: number;
-      email: string;
-    };
+    user_id: number;
+    project_id: number;
+    user_email: string | null;
   };
 
   type Tag = {
@@ -285,9 +295,6 @@ declare global {
     includeTags: Boolean;
   };
 
-  type ExportedProject = Prisma.ProjectGetPayload<{
-    select: typeof exportProjectQuery;
-  }>;
   type AllFieldColumns = Prisma.ProjectFieldGetPayload<{
     select: typeof allFieldColumns;
   }>;
@@ -298,4 +305,32 @@ declare global {
     select: typeof observationColumns;
   }>;
   type ExportProjectPayload = InferType<typeof ExportProjectSchema>;
+
+  type Transaction = PgTransaction<
+    PostgresJsQueryResultHKT,
+    typeof schema,
+    ExtractTablesWithRelations<typeof schema>
+  >;
+
+  type SmallProjectField = Pick<
+    typeof projectFields.$inferSelect,
+    | "choices"
+    | "createdAt"
+    | "id"
+    | "index"
+    | "label"
+    | "projectId"
+    | "required"
+    | "type"
+  >;
+
+  type SmallProject = Omit<FullProject, "observations" | "tags"> & {
+    tags: { id: number; name: string }[];
+  };
+
+  type GetObservationsResponse = {
+    observations: FullObservation[];
+    total: number;
+    totalDraft: number;
+  };
 }

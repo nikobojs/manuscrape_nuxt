@@ -1,5 +1,9 @@
 import { NewProjectFieldSchema } from "../../projects.post";
 import { serializeChoices } from "#shared/utils/observationFields";
+import {
+  getProjectFieldById,
+  getProjectFieldsByProjectIds,
+} from "~~/server/utils/projectFields";
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
@@ -15,13 +19,10 @@ export default safeResponseHandler(async (event) => {
   const newField = await NewProjectFieldSchema.validate(body);
 
   // grab existing project fields to validate conflicts with new one
-  const existing = await db.projectField.findMany({
-    where: { projectId },
-    select: {
-      id: true,
-      index: true,
-      label: true,
-    },
+  const existing = await getProjectFieldsByProjectIds([projectId], {
+    id: true,
+    index: true,
+    label: true,
   });
 
   // check for label duplicates
@@ -37,17 +38,15 @@ export default safeResponseHandler(async (event) => {
   await enforceCorrectIndexes(existing);
 
   // create new field
-  await db.projectField.create({
-    data: {
-      projectId,
+  await createProjectFields(projectId, [
+    {
       index: existing.length, // next index is same as length because 0-index
-      createdAt: new Date(),
       label: newField.label,
       type: newField.type,
       required: newField.required,
-      choices: serializeChoices(newField.choices || null),
+      choices: newField.choices,
     },
-  });
+  ]);
 
   setResponseStatus(event, 201);
   return { success: true };

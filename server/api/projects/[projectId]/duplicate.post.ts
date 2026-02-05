@@ -1,5 +1,7 @@
 import * as yup from "yup";
 import type { NuxtError } from "nuxt/app";
+import { getSmallProjects } from "~~/server/utils/project";
+import { createDynamicFields } from "~~/server/utils/dynamicFields";
 
 export const DuplicateProjectSchema = yup
   .object({
@@ -23,12 +25,7 @@ export default safeResponseHandler(async (event) => {
   newName = newName.trim();
 
   // get source project we want to duplicate from
-  const sourceProject = await db.project.findFirst({
-    select: smallProjectQuery,
-    where: {
-      id: projectId,
-    },
-  });
+  const [sourceProject] = await getSmallProjects([projectId]);
 
   // ensure source project exists
   if (!sourceProject) {
@@ -71,16 +68,10 @@ export default safeResponseHandler(async (event) => {
   };
 
   // execute projects table insert query
-  const { id: createdProjectId } = await db.project.create({
-    data: newProject,
-    select: { id: true },
-  });
+  const { id: createdProjectId } = await createProject(newProject);
 
   // fetch the project we just created
-  const createdProject = await db.project.findFirst({
-    where: { id: createdProjectId },
-    select: smallProjectQuery,
-  });
+  const [createdProject] = await getSmallProjects([createdProjectId]);
 
   // ensure prisma project query returned something
   if (!createdProject || typeof createdProject.id !== "number") {
@@ -91,22 +82,23 @@ export default safeResponseHandler(async (event) => {
   }
 
   // add ownership of duplicated project
-  await db.projectAccess.create({
-    data: {
-      projectId: createdProject.id,
-      userId: user.id,
-      role: "OWNER",
-      nameInProject: user.email,
-    },
-  });
+  await createProjectAccess(user.id, createdProject.id, user.email, "OWNER");
 
   // try copying dynamic fields if there are any
   if (sourceProject.dynamicFields.length > 0) {
     // prepare the new dynamic fields
     const newDynamicFields = sourceProject.dynamicFields.map((f) => {
       return {
-        field0Id: getNewFieldId(f.field0Id, sourceProject, createdProject).id,
-        field1Id: getNewFieldId(f.field1Id, sourceProject, createdProject).id,
+        field0Id: getNewFieldId(
+          f.field0Id,
+          sourceProject.fields as { id: number; label: string }[],
+          createdProject.fields as { id: number; label: string }[],
+        ).id,
+        field1Id: getNewFieldId(
+          f.field1Id,
+          sourceProject.fields as { id: number; label: string }[],
+          createdProject.fields as { id: number; label: string }[],
+        ).id,
         label: f.label,
         operator: f.operator,
         createdAt: new Date(),
@@ -114,9 +106,7 @@ export default safeResponseHandler(async (event) => {
       };
     });
 
-    await db.dynamicProjectField.createMany({
-      data: newDynamicFields,
-    });
+    await createDynamicFields(projectId, newDynamicFields);
   }
 
   // return 201 with created project in body
