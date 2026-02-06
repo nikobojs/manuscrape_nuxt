@@ -178,13 +178,10 @@ const props = defineProps({
   project: requireProjectProp,
   onSubmit: Function as PropType<Function>,
   disabled: Boolean as PropType<Boolean>,
-  metadataDone: Boolean as PropType<Boolean>,
   initialState: Object as PropType<any>,
   inputs: requireProp<CMSInput[]>(),
 });
 
-const { params } = useRoute();
-const { sortFields } = await useProjects(params);
 const { patchObservation, observations } = await useObservations(
   props.project.id,
 );
@@ -203,19 +200,20 @@ function getMultipleChoiceAddOptions(field: {
 }
 
 const form = ref();
-const sortedFields = computed(() => sortFields(props.project));
+const sortedFields = computed(() => sortFieldsByIndex(props.project.fields));
 const observation = computed(() =>
   observations.value.find((o) => o.id === props.observationId),
 );
-const state = ref(
-  Object.assign(
-    { ...props.initialState },
-    JSON.parse((observation.value?.data as any) || {}),
-  ),
-);
+
+const state = ref({
+  ...(props.initialState || {}),
+  ...((observation.value?.data as FullObservation | null) || {}),
+});
 
 onMounted(() => {
-  const isNewObservation = observation.value?.data === "{}";
+  const isNewObservation =
+    !observation.value?.data ||
+    Object.keys(observation.value.data).length === 0;
   // look for all booleans to set their default value (avoid `undefined`)
   if (sortedFields.value?.length && isNewObservation) {
     for (const field of sortedFields.value) {
@@ -228,72 +226,11 @@ onMounted(() => {
   }
 });
 
-// TODO: validation function doesn't seem completely functional
-//       - manuel edge-case testing required
-function validate(state: any): FormError[] {
-  const errors = [] as FormError[];
-
-  // scan for missing fields
-  const missingFields = sortedFields.value.filter((f) => {
-    return (
-      f.required &&
-      !Object.keys(state).includes(f.label) &&
-      f.type !== "BOOLEAN"
-    );
-  });
-
-  if (missingFields.length > 0) {
-    for (const field of missingFields) {
-      errors.push({ path: field.label, message: "Field is required" });
-    }
-  }
-
-  // validate each state value
-  for (const [key, value] of Object.entries(state)) {
-    // validate field (field)
-    const field = sortedFields.value.find((field) => field.label == key);
-    if (!field) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Field '${key}' does not exist :(`,
-      });
-    }
-
-    // check if field is required or optional
-    if (field.required && (value === null || value === undefined)) {
-      errors.push({ path: key, message: "Required" });
-    }
-
-    // validate numbers
-    const typ = field.type;
-    if (typ == "FLOAT" || typ == "INT") {
-      const valueFloat = parseFloat("" + value);
-      if (isNaN(valueFloat)) {
-        errors.push({ path: key, message: "Invalid number" });
-      }
-    }
-
-    // validate strings
-    if (typ == "STRING") {
-      // TODO: explain why
-      if (("" + value).length === 0) {
-        errors.push({ path: key, message: "Text field is required" });
-      }
-    }
-
-    // validate dates
-    // NOTE: only acceps dates in ISO string
-    // TODO: check if field is required or optional
-    else if (typ == "DATE" || typ == "DATETIME") {
-      const valueDate = new Date("" + value);
-      if (isNaN(valueDate.getTime())) {
-        errors.push({ path: key, message: "Date field is invalid" });
-      }
-    }
-  }
-
-  return errors;
+function validate(state: Record<string, any>): FormError[] {
+  return validateObservationForm(state, sortedFields.value);
 }
+
+const metadataDone = computed(() => validate(state.value).length === 0);
 
 async function submit() {
   try {

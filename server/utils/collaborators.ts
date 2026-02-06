@@ -14,7 +14,7 @@ export async function getCollaboratorsInProjects(projectIds: number[]) {
     .from(projectAccesses)
     .leftJoin(users, eq(projectAccesses.userId, users.id))
     .where(inArray(projectAccesses.projectId, projectIds))
-    .groupBy((t) => [t.user_id, t.project_id]);
+    .groupBy((t) => [t.user_id, t.user_email, t.project_id]);
 
   return collaborators satisfies Collaborator[];
 }

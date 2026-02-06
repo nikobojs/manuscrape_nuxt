@@ -1,6 +1,6 @@
 import { numberBetween } from "#shared/utils/validate";
 import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObservation";
-import { and, asc, desc, eq, SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { observations, users } from "~~/server/drizzle/schema";
 import { getFullObservationsByProjectId } from "~~/server/utils/observations";
 
@@ -113,13 +113,13 @@ export default safeResponseHandler(async (event) => {
 
   const total = (
     await db
-      .select({ count: observations.id })
+      .select({ count: count(observations.id) })
       .from(observations)
       .where(and(...whereAnd))
   )[0]!.count;
   const totalDraft = (
     await db
-      .select({ count: observations.id })
+      .select({ count: count(observations.id) })
       .from(observations)
       .where(and(...whereAnd, eq(observations.isDraft, true)))
   )[0]!.count;

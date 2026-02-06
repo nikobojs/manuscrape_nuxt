@@ -146,7 +146,6 @@ const toast = useToast();
 const { params } = useRoute();
 const {
   deleteParameter,
-  sortFields,
   createParameter,
   isOwner,
   updateParameter,
@@ -165,7 +164,7 @@ const props = defineProps({
   onProjectUpdated: requireFunctionProp<() => void | Promise<void>>(),
 });
 
-const sortedFields = computed(() => sortFields(props.project));
+const sortedFields = computed(() => sortFieldsByIndex(props.project.fields));
 
 async function handleUpdateField(field: Partial<NewProjectField>) {
   try {

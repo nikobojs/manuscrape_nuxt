@@ -96,7 +96,7 @@ const header = computed(() =>
 );
 const toast = useToast();
 
-const metadataDone = ref(false);
+const metadataDone = ref(metadataIsDone(observation.value?.data));
 watch(
   [observation],
   ([obs]) => {
@@ -106,32 +106,25 @@ watch(
   { deep: true },
 );
 
-const imageUploaded = computed(() => {
-  const imageFound = typeof observation.value?.image?.id === "number";
-  const intervalIsRunning = typeof imageInterval.value === "number";
-  if (imageFound && intervalIsRunning) {
-    window.clearInterval(imageInterval.value!);
-    imageInterval.value = null;
-  }
-  return imageFound;
-});
-
-// TODO: validate using actual project field definition
-function metadataIsDone(data: any): boolean {
-  if (!data) return false;
-  let json: Record<string, any>;
-  try {
-    if (typeof data === "string") {
-      json = JSON.parse(data);
-    } else {
-      throw new Error("Observation data is not a string");
+const imageUploaded = ref(false);
+watch(
+  [observation, imageInterval],
+  ([o, int]) => {
+    const imageFound = typeof o?.image?.id === "number";
+    const intervalIsRunning = typeof int === "number";
+    if (imageFound && intervalIsRunning) {
+      window.clearInterval(imageInterval.value!);
+      imageInterval.value = null;
     }
-  } catch (e) {
-    return false;
-  }
-  if (!json) return false;
-  if (Object.keys(json).length === 0) return false;
-  return true;
+    imageUploaded.value = imageFound;
+  },
+  { deep: true, immediate: true },
+);
+
+function metadataIsDone(data: any): boolean {
+  if (!project.value?.fields) return false;
+  const formErrors = validateObservationForm(data, project.value.fields);
+  return formErrors.length === 0;
 }
 
 async function onObservationPublished() {

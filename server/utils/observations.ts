@@ -118,7 +118,7 @@ export async function getFullObservationsByProjectId(
   for (const o of fullObservations) {
     const result: FullObservation = {
       ...o,
-      data: o.data + "",
+      data: o.data as Record<string, any>,
       fileUploads: fileUploadMap[o.id] || [],
       image: observationImageMap[o.id]?.[0] || null,
       user: relatedUsersRes?.find((u) => u.id === o.userId) || null,

@@ -1,4 +1,5 @@
 import { deserializeChoices } from "#shared/utils/observationFields";
+import type { FormError } from "#ui/types";
 
 function extractField(
   field: ProjectFieldResponse,
@@ -125,4 +126,78 @@ export function getCustomFieldChoices(
     // const stateForField = state.value[field.label] - TODO: what is this?
     return customChoices;
   }
+}
+
+export function sortFieldsByIndex(fields: SmallProjectField[]) {
+  return [...fields].sort((a, b) => (a.index > b.index ? 1 : -1));
+}
+
+// TODO: validation function doesn't seem completely functional
+//       - manuel edge-case testing required
+export function validateObservationForm(
+  state: Record<string, any>,
+  fields: SmallProjectField[],
+): FormError[] {
+  const errors = [] as FormError[];
+
+  // scan for missing fields
+  const missingFields = fields.filter((f) => {
+    return (
+      f.required &&
+      !Object.keys(state).includes(f.label) &&
+      f.type !== "BOOLEAN"
+    );
+  });
+
+  if (missingFields.length > 0) {
+    for (const field of missingFields) {
+      errors.push({ path: field.label, message: "Field is required" });
+    }
+  }
+
+  // validate each state value
+  for (const [key, value] of Object.entries(state)) {
+    // validate field (field)
+    const field = fields.find((field) => field.label == key);
+    if (!field) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Field '${key}' does not exist :(`,
+      });
+    }
+
+    // check if field is required or optional
+    if (field.required && (value === null || value === undefined)) {
+      errors.push({ path: key, message: "Required" });
+    }
+
+    // validate numbers
+    const typ = field.type;
+    if (typ == "FLOAT" || typ == "INT") {
+      const valueFloat = parseFloat("" + value);
+      if (isNaN(valueFloat)) {
+        errors.push({ path: key, message: "Invalid number" });
+      }
+    }
+
+    // validate strings
+    if (typ == "STRING") {
+      // TODO: explain why
+      if (("" + value).length === 0) {
+        errors.push({ path: key, message: "Text field is required" });
+      }
+    }
+
+    // validate dates
+    // NOTE: only acceps dates in ISO string
+    // TODO: check if field is required or optional
+    else if (typ == "DATE" || typ == "DATETIME") {
+      const valueDate = new Date("" + value);
+      if (isNaN(valueDate.getTime())) {
+        errors.push({ path: key, message: "Date field is invalid" });
+      }
+    }
+  }
+
+  return errors;
 }

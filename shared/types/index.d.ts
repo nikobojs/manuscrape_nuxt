@@ -43,7 +43,7 @@ declare global {
     > | null;
     fileUploads: Omit<FileUploadResponse, "observationId">[];
     user: { email: string; id?: number } | null;
-    data: string | null;
+    data: Record<string, any> | null;
     observationTags: { tag: { name: string; id: number } }[];
   }
 

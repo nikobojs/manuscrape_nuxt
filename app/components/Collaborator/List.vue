@@ -1,7 +1,7 @@
 <template>
   <UTable :rows="collaborators" :loading="loading" :columns="columns">
     <template #email-data="{ row }">
-      {{ row.user.email }}
+      {{ row.user_email }}
     </template>
     <template #role-data="{ row }">
       {{ row.role }}
