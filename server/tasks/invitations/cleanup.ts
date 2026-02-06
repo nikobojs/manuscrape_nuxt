@@ -1,4 +1,5 @@
 import { captureException } from "@sentry/node";
+import { removeExpiredProjectInvitations } from "~~/server/utils/projectInvitations";
 
 export default defineTask({
   meta: {
@@ -6,15 +7,11 @@ export default defineTask({
     description: "Remove expired collaborator invitations",
   },
   run: async ({ payload, context }) => {
-    console.log("Removing expired collaborator invitations..");
-
     try {
-      const deleted = await db.projectInvitation.deleteMany({
-        where: { expiresAt: { lte: new Date() } },
-      });
+      const deleted = await removeExpiredProjectInvitations();
 
-      if (deleted.count > 0) {
-        console.debug("deleted", deleted.count, "expired invitations");
+      if (deleted.length > 0) {
+        console.debug("deleted", deleted.length, "expired invitations");
       }
     } catch (e: any) {
       console.error(e);
