@@ -5,7 +5,13 @@ export const FieldTypeValues: Array<FieldType> = [
   "CHOICE",
   "DATE",
   "DATETIME",
+  "FLOAT",
+  "INT",
+  "MULTIPLE_CHOICE_ADD",
+  "STRING",
+  "TEXTAREA",
 ];
+
 export type SimpleInputTypes = "DATETIME" | "DATE" | "FLOAT" | "INT" | "STRING";
 export const inputTypes: Record<SimpleInputTypes, string> = Object.freeze({
   DATETIME: "datetime-local",

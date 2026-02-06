@@ -1,5 +1,4 @@
-import { and, eq, gte, inArray } from "drizzle-orm";
-import { projectInvitation } from "../drizzle/migrations/pulled_schema";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { projectInvitations } from "../drizzle/schema";
 
 export async function getProjectInvitationByEmail(
@@ -11,8 +10,8 @@ export async function getProjectInvitationByEmail(
 
   const existing = await db.query.projectInvitations.findFirst({
     where: and(
-      eq(projectInvitation.emailHash, hash),
-      eq(projectInvitation.projectId, projectId),
+      eq(projectInvitations.emailHash, hash),
+      eq(projectInvitations.projectId, projectId),
       gte(projectInvitations.expiresAt, new Date()),
     ),
     columns: {
@@ -36,7 +35,7 @@ export async function getAllProjectInvitationsByEmail(
 
   const invis = await db.query.projectInvitations.findMany({
     where: and(
-      eq(projectInvitation.emailHash, hash),
+      eq(projectInvitations.emailHash, hash),
       gte(projectInvitations.expiresAt, new Date()),
     ),
     columns: {
@@ -77,4 +76,11 @@ export function deleteProjectInvitations(invitationIds: number[]) {
   return db
     .delete(projectInvitations)
     .where(inArray(projectInvitations.id, invitationIds));
+}
+
+export function removeExpiredProjectInvitations() {
+  return db
+    .delete(projectInvitations)
+    .where(lte(projectInvitations.expiresAt, new Date()))
+    .returning({ id: projectInvitations.id });
 }

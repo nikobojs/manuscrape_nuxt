@@ -54,7 +54,9 @@ export function removeProjectOwnershipByUserId(userId: number) {
     .where(eq(projects.authorId, userId));
 }
 
-export async function getSmallProjects(projectIds: number[]) {
+export async function getSmallProjects(
+  projectIds: number[],
+): Promise<SmallProject[]> {
   const projectRes = await db
     .select({
       id: projects.id,

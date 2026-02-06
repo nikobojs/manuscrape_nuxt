@@ -92,10 +92,13 @@ export async function getFullUserById(userId: number) {
   const projectsRes = await getSmallProjects(projectIds);
   const projectIdMap = Object.groupBy(projectsRes, (x) => x.id);
 
-  const enrichedAccesses = accesses.map((a) => ({
-    ...a,
-    project: projectIdMap[a.projectId],
-  }));
+  const enrichedAccesses = accesses.map(
+    (a) =>
+      ({
+        ...a,
+        project: projectIdMap[a.projectId]![0]!,
+      }) satisfies ExtendedProjectAccess,
+  );
 
   const enrichedUser = {
     ...user,

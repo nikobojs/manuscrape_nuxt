@@ -30,7 +30,7 @@ declare global {
   }
 
   interface ExtendedProjectAccess extends Omit<ProjectAccess, "userId"> {
-    project: Omit<Omit<Omit<FullProject, "observations">, "authorId">, "tags">;
+    project: SmallProject;
   }
 
   type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;

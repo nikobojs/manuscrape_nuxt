@@ -1,9 +1,5 @@
 import { NewProjectFieldSchema } from "../../projects.post";
-import { serializeChoices } from "#shared/utils/observationFields";
-import {
-  getProjectFieldById,
-  getProjectFieldsByProjectIds,
-} from "~~/server/utils/projectFields";
+import { getProjectFieldsByProjectIds } from "~~/server/utils/projectFields";
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
