@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
   const cookieValue = getCookie(event, "authcookie");
   const headers = getHeaders(event);
   const authToken = headers.authentication || cookieValue;
-  console.log("got authTOken:L", authToken);
   let loginSuccesfull = false;
 
   if (!authToken && !isOpenUrl(event)) {
@@ -32,7 +31,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  console.log("NOT LOGGED IN 3");
   if (
     loginSuccesfull &&
     ["/user/new", "/login"].includes(event.path) &&
