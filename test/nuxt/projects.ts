@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect } from "vitest";
 import {
   testProject,
   duplicateProject,
@@ -11,24 +11,24 @@ import {
   getObservations,
   patchProject,
   inviteToProject,
-  patchField
-} from './helpers';
+  patchField,
+} from "./helpers";
 
-const wrongIndexes: any[][] = [
-  [2,2],
-  ['abc'],
-  [0,0,0,0,0],
+const wrongIndexes: Array<Array<number | string>> = [
+  [2, 2],
+  ["abc"],
+  [0, 0, 0, 0, 0],
 ];
 
 const correctedIndexes: number[][] = [
-  [1,5,6,2,8],
-  [3,5,6,2,8],
-  [0,5,6,2,8],
-  [1,2,3,4,5],
+  [1, 5, 6, 2, 8],
+  [3, 5, 6, 2, 8],
+  [0, 5, 6, 2, 8],
+  [1, 2, 3, 4, 5],
 ];
 
-describe('Project management', () => {
-  test('user can create project', async () =>  {
+describe("Project management", () => {
+  test("user can create project", async () => {
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, testProject);
       const json = await res.json();
@@ -36,29 +36,31 @@ describe('Project management', () => {
     });
   });
 
-  test('user cannot create project with 2 fields with same label', async () =>  {
+  test("user cannot create project with 2 fields with same label", async () => {
     await withTempUser(async (_user, token) => {
       const res = await createProject(token, {
         ...testProject,
-        name: 'unused name 0',
+        name: "unused name 0",
         fields: [
-          { label: 'asdasd', type: 'INT', required: false, index: 0, },
-          { label: 'asdasd', type: 'STRING', required: true, index: 1 },
-        ]
+          { label: "asdasd", type: "INT", required: false, index: 0 },
+          { label: "asdasd", type: "STRING", required: true, index: 1 },
+        ],
       });
       const json = await res.json();
       expect(res.status, json?.statusMessage).toBe(400);
     });
   });
 
-  test('user can edit the name of a project', async () =>  {
+  test("user can edit the name of a project", async () => {
     await withTempProject(async (user, project, _obs, token) => {
       // ensure projectId is a number
-      expect(project.id).toBeTypeOf('number');
+      expect(project.id).toBeTypeOf("number");
 
       // patch project with a new name
-      const newName = 'edited name 0';
-      const updateRes = await patchProject(token, project.id, { name: newName})
+      const newName = "edited name 0";
+      const updateRes = await patchProject(token, project.id, {
+        name: newName,
+      });
       expect(updateRes.status).toBe(200);
 
       // fetch updated project to verify new name is returned
@@ -66,7 +68,7 @@ describe('Project management', () => {
       expect(userRes.status).toBe(200);
       const userJson = await userRes.json();
       expect(typeof userJson.id).toBe("number");
-      expect(Array.isArray(userJson?.projectAccess)).toBe(true)
+      expect(Array.isArray(userJson?.projectAccess)).toBe(true);
       expect(userJson?.projectAccess?.length).toBe(1);
       const updatedProject = userJson.projectAccess[0].project;
 
@@ -75,40 +77,38 @@ describe('Project management', () => {
     });
   });
 
-  test('user can not edit other user\'s project', async () =>  {
+  test("user can not edit other user's project", async () => {
     await withTempProject(async (user, project, _obs, token) => {
       // ensure projectId is a number
-      expect(project.id).toBeTypeOf('number');
+      expect(project.id).toBeTypeOf("number");
 
       await withTempUser(async (_user, tokenA) => {
         // patch project with a new name
-        const newName = 'edited name 0';
-        const updateRes = await patchProject(tokenA, project.id, { name: newName})
+        const newName = "edited name 0";
+        const updateRes = await patchProject(tokenA, project.id, {
+          name: newName,
+        });
         expect(updateRes.status).toBe(403);
       });
     });
   });
 
-  test('user can edit delocking settings', async () =>  {
+  test("user can edit delocking settings", async () => {
     await withTempProject(async (user, project, _obs, token) => {
       // ensure projectId is a number
-      expect(project.id).toBeTypeOf('number');
+      expect(project.id).toBeTypeOf("number");
 
       // patch project with a new name
-      const updateRes = await patchProject(
-        token,
-        project.id,
-        {
-          ownerCanDelockObservations: true,
-          authorCanDelockObservations: true,
-        },
-      );
+      const updateRes = await patchProject(token, project.id, {
+        ownerCanDelockObservations: true,
+        authorCanDelockObservations: true,
+      });
 
       expect(updateRes.status).toBe(200);
       const userRes = await getMe(token);
       const userJson = await userRes.json();
       expect(typeof userJson.id).toBe("number");
-      expect(Array.isArray(userJson?.projectAccess)).toBe(true)
+      expect(Array.isArray(userJson?.projectAccess)).toBe(true);
       expect(userJson?.projectAccess?.length).toBe(1);
       const updatedProject = userJson.projectAccess[0].project;
 
@@ -118,15 +118,14 @@ describe('Project management', () => {
     });
   });
 
-  test('collaborator can not edit other user\'s project', async () =>  {
-    const collaboratorEmail = 'update-settings-collaborator-0@codecollective.dk';
+  test("collaborator can not edit other user's project", async () => {
+    const collaboratorEmail =
+      "update-settings-collaborator-0@codecollective.dk";
     await withTempProject(async (user, project, _obs, token) => {
       // invite collaborator
-      const inviteRes = await inviteToProject(
-        token,
-        project.id,
-        { email: collaboratorEmail },
-      );
+      const inviteRes = await inviteToProject(token, project.id, {
+        email: collaboratorEmail,
+      });
       expect(inviteRes.status).toBe(201);
 
       // sign up as collaborator
@@ -134,8 +133,10 @@ describe('Project management', () => {
         expect(user2.projectAccess.length).toBe(1);
 
         // try patch project as collaborator
-        const newName = 'edited name 0';
-        const updateRes = await patchProject(tokenA, project.id, { name: newName})
+        const newName = "edited name 0";
+        const updateRes = await patchProject(tokenA, project.id, {
+          name: newName,
+        });
 
         // expect it to fail
         expect(updateRes.status).toBe(403);
@@ -143,21 +144,21 @@ describe('Project management', () => {
     });
   });
 
-  test('a project with unparsable indexes will return 400', async () =>  {
+  test("a project with unparsable indexes will return 400", async () => {
     await withTempUser(async (_user, token) => {
       for (let i = 0; i < wrongIndexes.length; i++) {
-        const index = wrongIndexes[i];
+        const index = wrongIndexes[i]!;
 
-        const newFields = index.map((j) => ({
-          label: 'testlabel ' + j * Math.floor(Math.random() *  132), // unique name :S
-          type: 'STRING',
+        const newFields = index.map((j: number | string, ji: number) => ({
+          label: "testlabel " + j + (ji + 1) * Math.floor(Math.random() * 132), // unique name :S
+          type: "STRING",
           index: j,
           required: false,
         }));
 
         const newProject = {
           ...testProject,
-          name: 'unused name ' + i,
+          name: "unused name " + i,
           fields: newFields,
         };
 
@@ -169,11 +170,11 @@ describe('Project management', () => {
     });
   });
 
-  test('a project with wrong indexes, will get the indexes corrected', async () =>  {
+  test("a project with wrong indexes, will get the indexes corrected", async () => {
     await withTempUser(async (_user, token) => {
       // for each field index list in correctedIndexes
       for (let i = 0; i < correctedIndexes.length; i++) {
-        const index = correctedIndexes[i]; // example: [1,5,2,3,4]
+        const index = correctedIndexes[i]!; // example: [1,5,2,3,4]
 
         // ensure indexes in test data are valid for this test to have meaning.
         // they need to be unique numbers, because these are correctable by api
@@ -183,8 +184,8 @@ describe('Project management', () => {
         // - labels should be unique due to correctIndexes having unique values
         // - create valid fields with index correctedIndex[i][j]
         const newFields = index.map((j) => ({
-          label: 'testlabel ' + j,
-          type: 'STRING',
+          label: "testlabel " + j,
+          type: "STRING",
           index: j,
           required: false,
         }));
@@ -192,7 +193,7 @@ describe('Project management', () => {
         // create valid project with valid fields (but weird indexes)
         const newProject = {
           ...testProject,
-          name: 'unused name ' + i,
+          name: "unused name " + i,
           fields: newFields,
         };
 
@@ -202,21 +203,23 @@ describe('Project management', () => {
         expect(res.status, json?.statusMessage).toBe(201);
 
         // retrieve projectId
-        expect('id' in json).toBe(true)
-        const projectId = json['id'];
-        expect(typeof projectId).toBe('number');
+        expect("id" in json).toBe(true);
+        const projectId = json["id"];
+        expect(typeof projectId).toBe("number");
 
         // retrieve project and ensure access
         const meRes = await getMe(token);
         const user = await meRes.json();
         expect(user?.projectAccess?.length).toBeGreaterThan(0);
-        const access = user.projectAccess?.find((a: any) => a.project?.id === projectId);
+        const access = user.projectAccess?.find(
+          (a: any) => a.project?.id === projectId,
+        );
         expect(access).toBeTruthy();
         const project = access.project;
         expect(project).toBeTruthy();
 
         // retrieve fields
-        expect(project?.fields?.length).toBeTypeOf('number');
+        expect(project?.fields?.length).toBeTypeOf("number");
         expect(project?.fields?.length).toBe(newFields.length);
 
         // validate field indexes to be sorted and equal to j: [0, 1, 2, 3, ...]
@@ -227,7 +230,7 @@ describe('Project management', () => {
     });
   });
 
-  test('user cannot access other users project page', async () =>  {
+  test("user cannot access other users project page", async () => {
     await withTempUser(async (_userA, tokenA) => {
       // create project
       const projectRes = await createProject(tokenA, testProject);
@@ -241,7 +244,7 @@ describe('Project management', () => {
 
       // retrieve project details
       const projectId = meJson.projectAccess[0].project?.id;
-      expect(typeof projectId).toBe('number');
+      expect(typeof projectId).toBe("number");
 
       // ensure user can now access project page
       const res = await openProjectPage(tokenA, projectId);
@@ -253,12 +256,12 @@ describe('Project management', () => {
         const { status, headers } = res;
         const text = await res.text();
         expect(status, text).toBe(302);
-        expect(headers.get('location')).toBe('/');
+        expect(headers.get("location")).toBe("/");
       });
     });
   });
 
-  test('user cannot access other users project endpoint', async () =>  {
+  test("user cannot access other users project endpoint", async () => {
     await withTempUser(async (_userA, tokenA) => {
       // expect user has no projects yet
       let meRes = await getMe(tokenA);
@@ -276,8 +279,8 @@ describe('Project management', () => {
       expect(meJson.projectAccess.length).toBe(1);
 
       // retrieve project details
-      const projectId = meJson.projectAccess[0].project?.id;
-      expect(typeof projectId).toBe('number');
+      const projectId = meJson.projectAccess[0]!.project?.id;
+      expect(typeof projectId).toBe("number");
 
       // ensure observations can be fetched
       const observationRes = await getObservations(tokenA, projectId);
@@ -287,50 +290,58 @@ describe('Project management', () => {
       await withTempUser(async (_userB, tokenB) => {
         const observationRes = await getObservations(tokenB, projectId);
         const observationJson = await observationRes.json();
-        expect(Object.keys(observationJson)).not.includes('observations')
+        expect(Object.keys(observationJson)).not.includes("observations");
         expect(observationRes.status).toBe(403);
       });
     });
   });
 
-  test('project owner can duplicate project with a unique name', async () => {
-    await withTempProject(async (user, project, _obs, token) => {
-      // ensure projectId is a number
-      const projectId = project.id;
-      expect(projectId).toBeTypeOf('number');
+  test("project owner can duplicate project with a unique name", async () => {
+    await withTempProject(
+      async (user, project, _obs, token) => {
+        // ensure projectId is a number
+        const projectId = project.id;
+        expect(projectId).toBeTypeOf("number");
 
-      // try duplicate project
-      const dupRes = await duplicateProject(
-        token,
-        projectId,
-        { name: 'project-2' },
-      );
-      const json = await dupRes.json();
-      expect(dupRes.status).toBe(201);
+        // try duplicate project
+        const dupRes = await duplicateProject(token, projectId, {
+          name: "project-2",
+        });
+        const json = await dupRes.json();
+        expect(dupRes.status).toBe(201);
 
-      // ensure new project is in response
-      // const json = await dupRes.json();
-      expect(Object.keys(json)).includes('id', 'Response should have id');
-      expect(Object.keys(json)).includes('fields', 'Response should have fields');
-      expect(Object.keys(json)).includes('name', 'Response should have name');
-      const newProjectId = json.id;
-      expect(newProjectId).toBeTypeOf('number');
-      expect(json.fields?.length).toBeTypeOf('number')
-      expect(json.fields?.length).toBe(project.fields.length);
+        // ensure new project is in response
+        // const json = await dupRes.json();
+        expect(Object.keys(json)).includes("id", "Response should have id");
+        expect(Object.keys(json)).includes(
+          "fields",
+          "Response should have fields",
+        );
+        expect(Object.keys(json)).includes("name", "Response should have name");
+        const newProjectId = json.id;
+        expect(newProjectId).toBeTypeOf("number");
+        expect(json.fields?.length).toBeTypeOf("number");
+        expect(json.fields?.length).toBe(project.fields.length);
 
-      // expect project was created
-      const meRes = await getMe(token);
-      const meJson = await meRes.json();
-      expect(meJson.projectAccess.length).toBe(2);
+        // expect project was created
+        const meRes = await getMe(token);
+        const meJson = await meRes.json();
+        expect(meJson.projectAccess.length).toBe(2);
 
-      // expect new project to be in response
-      const projectIds = meJson.projectAccess.map((p: any) => p?.project.id)
-      const projectNames = meJson.projectAccess.map((p: any) => p?.project.name)
-      expect(projectIds).toContain(newProjectId);
-      expect(projectNames).toContain('project-1');
-      expect(projectNames).toContain('project-2');
-    }, undefined, defaultPassword, {
-      name: 'project-1'
-    });
+        // expect new project to be in response
+        const projectIds = meJson.projectAccess.map((p: any) => p?.project.id);
+        const projectNames = meJson.projectAccess.map(
+          (p: any) => p?.project.name,
+        );
+        expect(projectIds).toContain(newProjectId);
+        expect(projectNames).toContain("project-1");
+        expect(projectNames).toContain("project-2");
+      },
+      undefined,
+      defaultPassword,
+      {
+        name: "project-1",
+      },
+    );
   });
 });

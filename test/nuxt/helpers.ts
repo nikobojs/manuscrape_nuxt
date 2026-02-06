@@ -1,18 +1,29 @@
 import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
-import { FieldType } from "@prisma-postgres/client";
-import { daysInFuture } from "#shared/utils/datetime";
-import { db as _db } from "../../server/utils/prismaClient";
-import { PrismaClient as PostgresClient } from "@prisma-postgres/client";
-import { PrismaClient as MSSqlClient } from "@prisma-mssql/client";
+import { daysInFuture } from "../../shared/utils/datetime";
+import { db as _db } from "../../server/utils/drizzle";
+import {
+  projectInvitations,
+  projects,
+  dynamicProjectFields,
+  fileUploads,
+  imageUploads,
+  users,
+  tags,
+  observationTags,
+  observations,
+  projectAccesses,
+  projectExports,
+  projectFields,
+} from "../../server/drizzle/schema";
 
-export const db: PostgresClient & MSSqlClient = _db;
+export const db = _db;
 
 const contentTypeJson = {
   "Content-Type": "application/json",
 };
 
-const authHeader = (token: string) => ({
+const authHeader = (token: string): HeadersInit => ({
   Authentication: token,
 });
 
@@ -374,51 +385,51 @@ export const testProject: NewProjectBody = {
   fields: [
     {
       label: "Begin timestamp",
-      type: FieldType.DATETIME,
+      type: "DATETIME",
       required: false,
       index: 1,
     },
     {
       label: "End timestamp",
-      type: FieldType.DATE,
+      type: "DATE",
       required: false,
       index: 2,
     },
     {
       label: "Text field",
-      type: FieldType.STRING,
+      type: "STRING",
       required: true,
       index: 3,
     },
     {
       label: "Integer field",
-      type: FieldType.INT,
+      type: "INT",
       required: false,
       index: 4,
     },
     {
       label: "Float field",
-      type: FieldType.FLOAT,
+      type: "FLOAT",
       required: false,
       index: 5,
     },
     {
       label: "Free text and autocomplete",
-      type: FieldType.AUTOCOMPLETE_ADD,
+      type: "AUTOCOMPLETE_ADD",
       required: false,
       index: 6,
       choices: ["a", "b", "c"],
     },
     {
       label: "Multiple choice with free text",
-      type: FieldType.MULTIPLE_CHOICE_ADD,
+      type: "MULTIPLE_CHOICE_ADD",
       required: false,
       index: 7,
       choices: ["a", "b", "c"],
     },
     {
       label: "Check me",
-      type: FieldType.BOOLEAN,
+      type: "BOOLEAN",
       required: true,
       index: 8,
     },
@@ -567,19 +578,21 @@ export const delay = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 
 export async function removeStuff() {
   try {
-    // TODO: delete all dynamic tables
-    console.log("begin delete all");
-    await db.projectAccess.deleteMany();
-    await db.projectExport.deleteMany();
-    await db.projectInvitation.deleteMany();
-    await db.dynamicProjectField.deleteMany();
-    await db.projectField.deleteMany();
-    await db.fileUpload.deleteMany();
-    await db.imageUpload.deleteMany();
-    await db.observationTag.deleteMany();
-    await db.observation.deleteMany();
-    await db.project.deleteMany();
-    await db.user.deleteMany();
+    console.log("begin delete all data from db..");
+    await db.transaction(async (tx) => {
+      await tx.delete(tags);
+      await tx.delete(projectAccesses);
+      await tx.delete(projectExports);
+      await tx.delete(projectInvitations);
+      await tx.delete(dynamicProjectFields);
+      await tx.delete(projectFields);
+      await tx.delete(fileUploads);
+      await tx.delete(imageUploads);
+      await tx.delete(observationTags);
+      await tx.delete(observations);
+      await tx.delete(projects);
+      await tx.delete(users);
+    });
     console.log("done delete all");
   } catch (e) {
     console.error(e);

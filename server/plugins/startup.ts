@@ -59,6 +59,7 @@ async function ensureDbConnected(nitro: NitroApp) {
     console.info("> connected to db");
   } catch {
     // Log detailed error information
+    console.error(process.env);
     console.error(
       "Unable to connect to database... Please verify your db server and env variables",
     );

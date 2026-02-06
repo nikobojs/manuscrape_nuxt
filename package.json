@@ -1,6 +1,7 @@
 {
   "name": "nuxt-app",
   "private": true,
+  "type": "module",
   "version": "1.1.5",
   "license": "MIT",
   "scripts": {
@@ -16,9 +17,7 @@
     "typecheck": "nuxt typecheck",
     "test-dev": "vitest dev",
     "test": "vitest run",
-    "full-test-mssql": "./tests/run_all_mssql.sh",
-    "full-test-postgres": "./tests/run_all_postgres.sh",
-    "full-test": "yarn full-test-mssql; yarn full-test-postgres",
+    "full-test": "./test/run_all.sh",
     "test-ui": "vitest --ui"
   },
   "devDependencies": {

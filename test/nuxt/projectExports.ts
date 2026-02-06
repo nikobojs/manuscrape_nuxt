@@ -43,16 +43,14 @@ describe("Project exporting", () => {
       expect(newExport.observationsCount, JSON.stringify(newExport)).toBe(
         _observations.length,
       );
-      expect([ExportStatus.GENERATING, ExportStatus.DONE]).toContain(
-        newExport.status,
-      );
+      expect(["GENERATING", "DONE"]).toContain(newExport.status);
 
       // ensure export finishes
       for (let i = 0; i < 10; i++) {
         const exportsRes = await getExports(token, project.id);
         const exportsJson = await exportsRes.json();
         const newExport = exportsJson.projectExports.page[0];
-        if (newExport.status === ExportStatus.DONE) {
+        if (newExport.status === "DONE") {
           expect(newExport.error).toBe(null);
           expect(newExport.size).toBeGreaterThan(0);
           break;
@@ -60,7 +58,7 @@ describe("Project exporting", () => {
           expect(
             newExport.status,
             "After 10 delayed retries, export was not generated",
-          ).toBe(ExportStatus.DONE);
+          ).toBe("DONE");
         }
         await new Promise((ok) => setTimeout(ok, 400));
       }
