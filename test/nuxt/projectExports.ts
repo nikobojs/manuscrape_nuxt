@@ -22,21 +22,28 @@ describe("Project exporting", () => {
 
   test("project owner can export a project with observations", async () => {
     await withTempProject(async (_user, project, _observations, token) => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       const exportRes = await exportProject(token, project.id, {
         type: "NVIVO",
         startDate: "2000-09-13T00:00:00.000Z",
-        endDate: new Date().toISOString(),
+        endDate: tomorrow.toISOString(),
         includeTags: true,
       });
+
+      expect(_observations.length).toBeGreaterThan(0);
+      // const json = await exportRes.json();
+      // expect(JSON.stringify(json, null, 2)).toBe("hello");
 
       expect(exportRes.status).toBe(201);
 
       // get all exports
       const exportsRes = await getExports(token, project.id);
+      expect(exportsRes.status).toBe(200);
       const exportsJson = await exportsRes.json();
 
       // ensure new export is generating
-      expect(Array.isArray(exportsJson?.projectExports.page)).toBe(true);
+      expect(Array.isArray(exportsJson?.projectExports?.page)).toBe(true);
       expect(exportsJson?.projectExports?.total).toBe(1);
       expect(exportsJson?.projectExports?.page?.length).toBe(1);
       const newExport = exportsJson.projectExports.page[0];

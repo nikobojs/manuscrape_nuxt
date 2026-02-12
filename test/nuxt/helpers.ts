@@ -370,8 +370,15 @@ export async function exportProject(
 export async function getExports(
   token: string,
   projectId: number | string,
+  take = 20,
+  skip = 0,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/exports`, {
+  const q = new URLSearchParams({
+    take: take.toString(),
+    skip: skip.toString(),
+  });
+  const url = `/api/projects/${projectId}/exports?${q}`;
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       ...authHeader(token),
@@ -495,6 +502,7 @@ export async function withTempUser(
 }
 
 export const defaultPassword = "Password123";
+
 export async function withTempProject(
   callback: (
     user: CurrentUser,

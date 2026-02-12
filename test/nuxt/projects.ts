@@ -61,7 +61,7 @@ describe("Project management", () => {
       const updateRes = await patchProject(token, project.id, {
         name: newName,
       });
-      expect(updateRes.status).toBe(200);
+      expect(updateRes.status).toBe(204);
 
       // fetch updated project to verify new name is returned
       const userRes = await getMe(token);
@@ -104,7 +104,7 @@ describe("Project management", () => {
         authorCanDelockObservations: true,
       });
 
-      expect(updateRes.status).toBe(200);
+      expect(updateRes.status).toBe(204);
       const userRes = await getMe(token);
       const userJson = await userRes.json();
       expect(typeof userJson.id).toBe("number");

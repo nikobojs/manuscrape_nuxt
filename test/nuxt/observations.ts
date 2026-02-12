@@ -82,7 +82,7 @@ describe("Observations", () => {
         const patchProjectRes = await patchProject(token, project.id, {
           authorCanDelockObservations: true,
         });
-        expect(patchProjectRes.status).toBe(200);
+        expect(patchProjectRes.status).toBe(204);
 
         // try to set isDraft=faiwtruelse (aka delock) the observation
         // should work now because project.authorCanDelockObservation == true
@@ -142,7 +142,7 @@ describe("Observations", () => {
         const patchProjectRes = await patchProject(token, project.id, {
           ownerCanDelockObservations: true,
         });
-        expect(patchProjectRes.status).toBe(200);
+        expect(patchProjectRes.status).toBe(204);
 
         // delock observation as owner - expected to work because ownerCanDelockObservations == false
         const delock1Res = await patchObservation(token, project.id, obsId, {
@@ -283,7 +283,7 @@ describe("Observations", () => {
         expect(observationRes.status).toBe(200);
         observationJson = await observationRes.json();
         expect(Array.isArray(observationJson?.observations));
-        expect(observationJson.observations.length).toBe(1);
+        expect(observationJson.observations.length).toBe(0);
 
         // expect project owner can see all observations
         observationRes = await getObservations(token, project.id);

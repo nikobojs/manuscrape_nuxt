@@ -48,7 +48,7 @@ export default safeResponseHandler(async (event) => {
   // create new fields lists (whitelists what to copy)
   const newFields = sourceProject.fields.map((f) => {
     return {
-      choices: f.choices,
+      choices: deserializeChoices(f.choices),
       index: f.index,
       createdAt: new Date(),
       label: f.label,
@@ -57,11 +57,8 @@ export default safeResponseHandler(async (event) => {
     };
   });
 
-  // prepare project create query prisma statement
+  // prepare new project
   const newProject = {
-    fields: {
-      create: newFields,
-    },
     name: newName,
     createdAt: new Date(),
     authorId: user.id,
@@ -69,6 +66,9 @@ export default safeResponseHandler(async (event) => {
 
   // execute projects table insert query
   const { id: createdProjectId } = await createProject(newProject);
+
+  // create project fields
+  await createProjectFields(createdProjectId, newFields);
 
   // fetch the project we just created
   const [createdProject] = await getSmallProjects([createdProjectId]);
@@ -108,8 +108,10 @@ export default safeResponseHandler(async (event) => {
 
     await createDynamicFields(projectId, newDynamicFields);
   }
+  // fetch the project again in super updated version
+  const [_createdProject] = await getSmallProjects([createdProjectId]);
 
   // return 201 with created project in body
   setResponseStatus(event, 201);
-  return createdProject;
+  return _createdProject;
 });

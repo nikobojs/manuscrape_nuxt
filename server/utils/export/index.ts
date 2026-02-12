@@ -89,7 +89,7 @@ export async function exportErrored(
   err?: string | Error,
 ): Promise<void> {
   const errMsg = err instanceof Error ? err.message : err;
-  console.error("Project export failed with err:", errMsg);
+  console.trace(`"Project export ${exportId} failed with err:`, errMsg);
   await db
     .update(projectExports)
     .set({

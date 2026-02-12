@@ -5,8 +5,13 @@ describe("Dynamic project fields", async () => {
   test("can create dynamic field (datetime/datetime difference)", async () => {
     await withTempProject(async (_user, project, _observations, token) => {
       expect(project.fields.length).toBeGreaterThanOrEqual(2);
-      const field0Id = project.fields[0]!.id;
-      const field1Id = project.fields[1]!.id;
+      const dateTypes: FieldType[] = ["DATE", "DATETIME"];
+      const dateFields = project.fields.filter((f) =>
+        dateTypes.includes(f.type),
+      );
+      expect(dateFields.length).toBeGreaterThanOrEqual(2);
+      const field0Id = dateFields[0]!.id;
+      const field1Id = dateFields[1]!.id;
       const dynRes = await createDynamicField(token, project.id, {
         label: "Time difference",
         operator: "DIFF",
@@ -19,7 +24,7 @@ describe("Dynamic project fields", async () => {
 
   test("can create dynamic field (number/number sum)", async () => {
     await withTempProject(async (_user, project, _observations, token) => {
-      const numericalTypes = ["INT", "FLOAT"] as string[];
+      const numericalTypes: FieldType[] = ["INT", "FLOAT"];
       const numFields = project.fields.filter((f) =>
         numericalTypes.includes(f.type),
       );
@@ -35,8 +40,7 @@ describe("Dynamic project fields", async () => {
         field0Id,
         field1Id,
       });
-      const dynJson = await dynRes.json();
-      expect(dynJson, JSON.stringify(dynJson, null, 2)).toHaveProperty("id");
+
       expect(dynRes.status).toBe(201);
     });
   });

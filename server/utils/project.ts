@@ -119,8 +119,8 @@ export async function getSmallProjects(
     const _result = {
       ...p,
       fields: _fields,
-      dynamicFields: projectDynamicFieldMap[p.id]!,
-      tags: projectTagMap[p.id]!,
+      dynamicFields: projectDynamicFieldMap[p.id] || [],
+      tags: projectTagMap[p.id] || [],
     } satisfies SmallProject;
 
     return _result;
@@ -131,15 +131,16 @@ export async function getSmallProjects(
  * Returns the projects that no one has access to
  */
 export async function getDanglingProjects(): Promise<number[]> {
-  const projectRes = await db
+  let projectRes = await db
     .select({
       projectId: projects.id,
       accessCount: count(projectAccesses.userId),
     })
     .from(projects)
     .leftJoin(projectAccesses, eq(projectAccesses.projectId, projects.id))
-    .groupBy(projects.id)
-    .where(eq(count(projectAccesses.userId), 0));
+    .groupBy(projects.id);
+
+  projectRes = projectRes.filter((p) => p.accessCount === 0);
   console.log("Got these dangling projects:", projectRes);
   return projectRes.map((x) => x.projectId);
 }

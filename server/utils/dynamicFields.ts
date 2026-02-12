@@ -77,8 +77,8 @@ export function calculateDynamicFieldValue(
   obs: FullObservationPayload,
 ) {
   // get dynamic field match from config
-  const field0 = dynamicField.field0;
-  const field1 = dynamicField.field1;
+  const field0 = fields.find((f) => f.id === dynamicField.field0Id);
+  const field1 = fields.find((f) => f.id === dynamicField.field1Id);
   requireAllowedMatch(field0, field1, dynamicField.operator);
 
   // TODO: improve maintainability and readability

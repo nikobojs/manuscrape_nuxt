@@ -1,8 +1,5 @@
 <template>
-  <UModal
-    v-bind:model-value="open"
-    v-on:close="onClose"
-  >
+  <UModal v-bind:model-value="open" v-on:close="onClose">
     <UCard>
       <template #header>
         <CardHeader>Create new project export</CardHeader>
@@ -15,8 +12,10 @@
             <div
               v-for="option in exportTypeOptions"
               class="border border-gray-500 px-3 py-3 [&:not(:last-child)]:mb-3 cursor-pointer transition-colors rounded-sm"
-              :class="{'border-green-600 color-green-600': exportType === option.value}"
-              @click="() => exportType = option.value"
+              :class="{
+                'border-green-600 color-green-600': exportType === option.value,
+              }"
+              @click="() => (exportType = option.value)"
             >
               <div class="flex gap-x-3">
                 <div class="relative">
@@ -38,9 +37,7 @@
             v-model="filterType"
           />
         </div>
-        <div class="flex flex-col gap-y-3"
-          v-if="exportType=='NVIVO'"
-          >
+        <div class="flex flex-col gap-y-3" v-if="exportType == 'NVIVO'">
           <label class="">Should tags be included:</label>
           <URadio
             v-for="option in includeTagsOptions"
@@ -52,9 +49,15 @@
       <div class="mt-3" v-if="filterType === 'RANGE'">
         <UPopover :popper="{ placement: 'bottom-start' }">
           <div class="flex items-center justify-between gap-x-3">
-            <UButton icon="i-heroicons-calendar-days-20-solid" variant="soft" color="blue">
-              {{`${format(selectedDateRange.start, 'd MMM, yyyy')} -
-              ${format(selectedDateRange.end, 'd MMM, yyyy')}`}}
+            <UButton
+              icon="i-heroicons-calendar-days-20-solid"
+              variant="soft"
+              color="blue"
+            >
+              {{
+                `${format(selectedDateRange.start, "d MMM, yyyy")} -
+              ${format(selectedDateRange.end, "d MMM, yyyy")}`
+              }}
             </UButton>
           </div>
 
@@ -69,11 +72,15 @@
                   variant="link"
                   color="blue"
                   :class="{
-                    'bg-gray-100 dark:bg-gray-800': isDurationPresetSelected(range.duration),
-                    'hover:bg-gray-50 dark:hover:bg-gray-800/50': isDurationPresetSelected(range.duration),
+                    'bg-gray-100 dark:bg-gray-800': isDurationPresetSelected(
+                      range.duration,
+                    ),
+                    'hover:bg-gray-50 dark:hover:bg-gray-800/50':
+                      isDurationPresetSelected(range.duration),
                   }"
                   truncate
-                  @click="selectDurationPreset(range.duration)" />
+                  @click="selectDurationPreset(range.duration)"
+                />
               </div>
               <DateRangePicker v-model="selectedDateRange" @close="close" />
             </div>
@@ -93,7 +100,11 @@
             </UButton>
           </NuxtLink>
           <div class="text-gray-400 text-sm">
-              {{ observationsCount === null ? '' : `${observationsCount} observations` }}
+            {{
+              observationsCount === null
+                ? ""
+                : `${observationsCount} observations`
+            }}
           </div>
         </div>
       </div>
@@ -102,18 +113,19 @@
 </template>
 
 <script setup lang="ts">
-  const props = defineProps({
-    ...requireModalProps,
-    project: requireProjectProp,
-  });
-import { sub, format, isSameDay, type Duration } from 'date-fns';
+const props = defineProps({
+  ...requireModalProps,
+  project: requireProjectProp,
+});
+import { captureException } from "@sentry/vue";
+import { sub, format, isSameDay, type Duration } from "date-fns";
 
 const {
   generateExport,
   getObservationsCount,
   getExportParams,
   getDayBegin,
-  exportTypeOptions
+  exportTypeOptions,
 } = await useProjectExports(props.project.id);
 
 const observationsCount = ref<number | null>(null);
@@ -133,14 +145,16 @@ const endDate = computed(() => {
 });
 const open = computed(() => props.open);
 
-const exportType = ref<ExportType>('NVIVO');
-const filterType = ref('ALL');
+const exportType = ref<ExportType>("NVIVO");
+const filterType = ref("ALL");
 const tagOption = ref(true);
 
 // set selectedDateRange to project.createdAt -> now when exporting ALL observations
 watch([filterType], async ([newFilterType]) => {
-  if (newFilterType === 'ALL') {
-    selectedDateRange.value.start = getDayBegin(new Date(props.project.createdAt));
+  if (newFilterType === "ALL") {
+    selectedDateRange.value.start = getDayBegin(
+      new Date(props.project.createdAt),
+    );
     selectedDateRange.value.end = new Date();
   }
 });
@@ -154,16 +168,25 @@ async function calculateNewCount() {
     includeTags: tagOption.value,
   });
   const newCount = await getObservationsCount(params);
-  if (typeof newCount === 'number') {
+  if (typeof newCount === "number") {
+    console.log("new count is", newCount);
     observationsCount.value = newCount;
+  } else {
+    const err = new Error("Observation count is not a number");
+    console.log({ newCount });
+    console.error(err);
+    captureException(err);
   }
 }
 
 // calculate new count when startDate, endDate or exportType changes
-watch([startDate, endDate, exportType], async () => {
-  calculateNewCount();
-}, { deep: true, immediate: false });
-
+watch(
+  [startDate, endDate, exportType],
+  async () => {
+    calculateNewCount();
+  },
+  { deep: true, immediate: false },
+);
 
 // calculate observation count on modal open
 watch([open], ([isOpen]) => {
@@ -171,29 +194,35 @@ watch([open], ([isOpen]) => {
 });
 
 const ranges = [
-  { label: 'Last 7 days', duration: { days: 7 } },
-  { label: 'Last 14 days', duration: { days: 14 } },
-  { label: 'Last 30 days', duration: { days: 30 } },
-  { label: 'Last 3 months', duration: { months: 3 } },
-  { label: 'Last 6 months', duration: { months: 6 } },
-  { label: 'Last year', duration: { years: 1 } },
+  { label: "Last 7 days", duration: { days: 7 } },
+  { label: "Last 14 days", duration: { days: 14 } },
+  { label: "Last 30 days", duration: { days: 30 } },
+  { label: "Last 3 months", duration: { months: 3 } },
+  { label: "Last 6 months", duration: { months: 6 } },
+  { label: "Last year", duration: { years: 1 } },
 ];
 
-const filterTypeOptions = [{
-  value: 'ALL',
-  label: 'All observations'
-}, {
-  value: 'RANGE',
-  label: 'Observations in date range'
-}];
+const filterTypeOptions = [
+  {
+    value: "ALL",
+    label: "All observations",
+  },
+  {
+    value: "RANGE",
+    label: "Observations in date range",
+  },
+];
 
-const includeTagsOptions = [{
-  value: true,
-  label: 'Include tags'
-}, {
-  value: false,
-  label: 'Do not include tags'
-}];
+const includeTagsOptions = [
+  {
+    value: true,
+    label: "Include tags",
+  },
+  {
+    value: false,
+    label: "Do not include tags",
+  },
+];
 
 // function to figure out of duration preset is selected
 function isDurationPresetSelected(duration: Duration): boolean {
@@ -214,7 +243,7 @@ function isDurationPresetSelected(duration: Duration): boolean {
 async function selectDurationPreset(duration: Duration): Promise<void> {
   selectedDateRange.value = {
     start: sub(new Date(), duration),
-    end: new Date()
+    end: new Date(),
   };
   const params = getExportParams({
     startDate: startDate.value,
@@ -223,7 +252,7 @@ async function selectDurationPreset(duration: Duration): Promise<void> {
     includeTags: tagOption.value,
   });
   const newCount = await getObservationsCount(params);
-  if (typeof newCount === 'number') {
+  if (typeof newCount === "number") {
     observationsCount.value = newCount;
   }
 }
@@ -233,12 +262,10 @@ async function submitExport(): Promise<void> {
     exportType: exportType.value,
     startDate: startDate.value,
     endDate: endDate.value,
-    includeTags: tagOption.value
+    includeTags: tagOption.value,
   };
 
   await generateExport(config);
   props.onClose();
 }
-
-
 </script>

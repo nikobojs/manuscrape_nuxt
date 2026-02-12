@@ -101,20 +101,17 @@ export const useProjectExports = async (projectId: number) => {
     });
   }
 
-  async function getObservationsCount(
-    paramStr: string,
-  ): Promise<number | null> {
+  async function getObservationsCount(paramStr: string): Promise<number> {
     const url = `/api/projects/${projectId}/observations/count?${paramStr}`;
-    const res = await $fetch(url, {});
-    const json = res;
-    if (typeof json !== "number") {
-      // TODO: capture error!
-      // TODO: improve endpoint to return actual json
-      console.error("Response is not a number!");
-      console.error(json);
-      return null;
+    const res = await $fetch<{ count: number }>(url, {});
+    const count = res?.count;
+    if (typeof count !== "number") {
+      const err = new Error("Observation count is not a number!");
+      console.error(err.message);
+      captureException(err);
+      return 0;
     }
-    return json;
+    return count;
   }
 
   async function notifyOnDone(

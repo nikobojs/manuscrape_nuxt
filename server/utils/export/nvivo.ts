@@ -16,9 +16,6 @@ function generateObservationRow(
   allTags: string[],
   includeTags: boolean,
 ) {
-  // try json parse observation data (let it throw)
-  const data = JSON.parse(obs.data);
-
   // get list of field labels (which are also data-keys)
   const fieldLabels = fields.map((f) => f.label);
 
@@ -26,7 +23,7 @@ function generateObservationRow(
   const fieldValues = new Array(fields.length + dynamicFields.length);
 
   // for each data entry
-  const entries = Object.entries(data as Record<string, string>);
+  const entries = Object.entries(obs.data);
   for (let i = 0; i < entries.length; i++) {
     const [key, rawVal] = entries[i]!;
 
@@ -92,7 +89,7 @@ function generateObservationRow(
 function getWorksheetColumns(
   fields: AllFieldColumns[],
   dynamicFields: AllDynamicFieldColumns[],
-  allTags: string[],
+  allTags: string[] = [],
 ): Partial<excel.Column>[] {
   const predefinedColumns = [
     {
@@ -117,6 +114,7 @@ function getWorksheetColumns(
     },
   ];
 
+  console.log("map 0");
   const dataColumns: Partial<excel.Column>[] = fields.map((field, index) => {
     return {
       header: field.label,
@@ -125,6 +123,7 @@ function getWorksheetColumns(
     };
   });
 
+  console.log("map 1");
   const dynamicColumns: Partial<excel.Column>[] = dynamicFields.map(
     (field, index) => {
       return {
@@ -135,6 +134,7 @@ function getWorksheetColumns(
     },
   );
 
+  console.log("map 2");
   const tagColumns: Partial<excel.Column>[] = allTags.map((tag, i) => ({
     header: tag,
     width: Math.max(10, tag.length + 2),
@@ -196,6 +196,7 @@ export const generateNvivoExport = async (
   ); // max a hundred thousand rows
 
   // initialize a few shortcut variables
+  console.log("got project:", project);
   const fields: AllFieldColumns[] = project.fields;
   const dynamicFields: AllDynamicFieldColumns[] = project.dynamicFields;
 
@@ -211,11 +212,7 @@ export const generateNvivoExport = async (
   let allTags: string[] = [];
   if (includeTags) {
     allTags = Array.from(
-      new Set(
-        obs.flatMap((o) =>
-          o.observationTags.map((t: { tag: { name: string } }) => t.tag.name),
-        ),
-      ),
+      new Set(obs.flatMap((o) => o.observationTags.map((t) => t.tag.name))),
     );
   }
 

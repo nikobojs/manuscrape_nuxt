@@ -16,7 +16,7 @@
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
     "test-dev": "vitest dev",
-    "test": "vitest run",
+    "test": "vitest run --disableConsoleIntercept --silent=false",
     "full-test": "./test/run_all.sh",
     "test-ui": "vitest --ui"
   },

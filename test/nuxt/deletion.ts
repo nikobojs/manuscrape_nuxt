@@ -48,7 +48,7 @@ describe("User deletion", async () => {
       .select({ id: users.id })
       .from(users)
       .where(eq(users.id, userId!));
-    expect(noUser).toBe(null);
+    expect(noUser.length).toBe(0);
   });
 
   test("removes projects with no users attached", async () => {
@@ -79,7 +79,7 @@ describe("User deletion", async () => {
       .select({ id: projects.id })
       .from(projects)
       .where(eq(projects.id, projectId!));
-    expect(project).toBe(null);
+    expect(project.length).toBe(0);
   });
 
   test("does not remove projects with users attached", async () => {
@@ -127,7 +127,7 @@ describe("User deletion", async () => {
       .select({ authorId: projects.authorId })
       .from(projects)
       .where(eq(projects.id, projectId!));
-    expect(project.length).not.toBe(1);
+    expect(project.length).toBe(1);
     expect(project[0]?.authorId).toBe(null);
   });
 });
