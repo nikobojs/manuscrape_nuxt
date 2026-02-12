@@ -122,8 +122,9 @@ export async function getFullObservationsByProjectId(
       fileUploads: fileUploadMap[o.id] || [],
       image: observationImageMap[o.id]?.[0] || null,
       user: relatedUsersRes?.find((u) => u.id === o.userId) || null,
-      observationTags: (projectTagsMap[o.projectId] || []).map((t) => ({
-        tag: { id: t.id, name: t.name },
+      tags: (projectTagsMap[o.projectId] || []).map((t) => ({
+        id: t.id,
+        name: t.name,
       })),
     };
     results.push(result);

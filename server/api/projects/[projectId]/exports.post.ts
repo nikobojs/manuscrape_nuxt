@@ -71,8 +71,6 @@ export default safeResponseHandler(async (event) => {
 
   const observationIds = await searchObservationIds(projectId, start, end);
 
-  console.log("got observation ids for export", observationIds);
-
   // ensure there will be any observations in this export
   await ensureExportHasData(observationIds, exportSettings);
 

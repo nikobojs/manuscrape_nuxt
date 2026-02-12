@@ -114,7 +114,6 @@ function getWorksheetColumns(
     },
   ];
 
-  console.log("map 0");
   const dataColumns: Partial<excel.Column>[] = fields.map((field, index) => {
     return {
       header: field.label,
@@ -123,7 +122,6 @@ function getWorksheetColumns(
     };
   });
 
-  console.log("map 1");
   const dynamicColumns: Partial<excel.Column>[] = dynamicFields.map(
     (field, index) => {
       return {
@@ -134,7 +132,6 @@ function getWorksheetColumns(
     },
   );
 
-  console.log("map 2");
   const tagColumns: Partial<excel.Column>[] = allTags.map((tag, i) => ({
     header: tag,
     width: Math.max(10, tag.length + 2),
@@ -196,7 +193,6 @@ export const generateNvivoExport = async (
   ); // max a hundred thousand rows
 
   // initialize a few shortcut variables
-  console.log("got project:", project);
   const fields: AllFieldColumns[] = project.fields;
   const dynamicFields: AllDynamicFieldColumns[] = project.dynamicFields;
 
@@ -212,7 +208,7 @@ export const generateNvivoExport = async (
   let allTags: string[] = [];
   if (includeTags) {
     allTags = Array.from(
-      new Set(obs.flatMap((o) => o.observationTags.map((t) => t.tag.name))),
+      new Set(obs.flatMap((o) => o.tags.map((t) => t.name))),
     );
   }
 

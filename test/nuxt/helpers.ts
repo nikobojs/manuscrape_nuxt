@@ -332,6 +332,44 @@ export async function expectRedirect(res: Response, to: string): Promise<void> {
   expect(res?.headers.get("location")).toEqual(to);
 }
 
+export async function createTag(token: string, projectId: number, body: any) {
+  const res = await fetch(`/api/projects/${projectId}/tags/`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      ...contentTypeJson,
+      ...authHeader(token),
+    },
+  });
+  return res;
+}
+
+export async function getTagsInProject(token: string, projectId: number) {
+  const res = await fetch(`/api/projects/${projectId}/tags/`, {
+    method: "GET",
+    headers: {
+      ...contentTypeJson,
+      ...authHeader(token),
+    },
+  });
+  return res;
+}
+
+export async function deleteTag(
+  token: string,
+  tagId: number,
+  projectId: number,
+) {
+  const res = await fetch(`/api/projects/${projectId}/tags/${tagId}`, {
+    method: "DELETE",
+    headers: {
+      ...contentTypeJson,
+      ...authHeader(token),
+    },
+  });
+  return res;
+}
+
 export async function inviteToProject(
   token: string,
   projectId: number,

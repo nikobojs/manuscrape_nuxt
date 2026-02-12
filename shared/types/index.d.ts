@@ -35,8 +35,8 @@ declare global {
 
   type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
 
-  interface FullObservation
-    extends Omit<Omit<Observation, "userId">, "projectId"> {
+  interface FullObservation {
+    id: number;
     image: Omit<
       Omit<Omit<ImageUpload, "filePath">, "isS3">,
       "observationId"
@@ -44,7 +44,13 @@ declare global {
     fileUploads: Omit<FileUploadResponse, "observationId">[];
     user: { email: string; id?: number } | null;
     data: Record<string, any> | null;
-    observationTags: { tag: { name: string; id: number } }[];
+    tags: { name: string; id: number }[];
+    uploadInProgress: boolean;
+    isDraft: boolean;
+    userId: number | null;
+    projectId: number;
+    updatedAt: Date | string;
+    createdAt: Date | string;
   }
 
   type User = {

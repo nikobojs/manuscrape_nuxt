@@ -113,5 +113,6 @@ export async function createObservationTag(
     .returning({
       id: tags.id,
       name: tags.name,
-    });
+    })
+    .then((v) => v[0]);
 }

@@ -12,7 +12,6 @@ if (!dbUrl) {
   throw new Error("Test database URL could not be determined from .env file");
 }
 
-console.log("SETTING UP with db url", dbUrl);
 await setup({
   env: {
     DATABASE_URL: dbUrl,
@@ -29,3 +28,4 @@ export * from "./collaborators";
 export * from "./observations";
 export * from "./dynamicFields";
 export * from "./projectExports";
+export * from "./tags";

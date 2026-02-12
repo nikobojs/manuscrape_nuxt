@@ -141,7 +141,6 @@ export async function getDanglingProjects(): Promise<number[]> {
     .groupBy(projects.id);
 
   projectRes = projectRes.filter((p) => p.accessCount === 0);
-  console.log("Got these dangling projects:", projectRes);
   return projectRes.map((x) => x.projectId);
 }
 
