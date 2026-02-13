@@ -56,7 +56,10 @@
                   <label :for="`radio-${choice}`">{{ choice }}</label>
                 </div>
               </div>
-              <div v-else-if="field.type === 'AUTOCOMPLETE'">
+              <div
+                v-else-if="field.type === 'AUTOCOMPLETE'"
+                class="flex flex-col items-end gap-x-2"
+              >
                 <USelectMenu
                   class="min-w-[200px]"
                   :options="field.choices"
@@ -71,9 +74,18 @@
                     placement: 'bottom-start',
                   }"
                 />
+                <div
+                  @click="() => (state[field.label] = undefined)"
+                  class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                >
+                  reset
+                </div>
               </div>
               <!-- TODO: not working -->
-              <div v-else-if="field.type === 'AUTOCOMPLETE_ADD'">
+              <div
+                v-else-if="field.type === 'AUTOCOMPLETE_ADD'"
+                class="items-end flex-col flex"
+              >
                 <USelectMenu
                   class="min-w-[200px]"
                   :options="field.choices"
@@ -99,6 +111,12 @@
                     </span>
                   </template>
                 </USelectMenu>
+                <div
+                  @click="() => (state[field.label] = undefined)"
+                  class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                >
+                  reset
+                </div>
               </div>
               <!-- TODO: not working -->
               <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
