@@ -188,8 +188,7 @@ async function getObservationTagsByObservationId(observationId: number) {
     })
     .from(observationTags)
     .innerJoin(tags, eq(observationTags.tagId, tags.id))
-    .where(eq(observationTags.observationId, observationId))
-    .then((res) => res.map((x) => x.name));
+    .where(eq(observationTags.observationId, observationId));
   return res;
 }
 
@@ -223,10 +222,11 @@ export async function getFullObservation(observationId: number) {
   return {
     ...o,
     fileUploads: fileUploadsRes,
-    image: observationImage[0],
+    image: observationImage[0]!,
     user: relatedUser ? relatedUser : null,
     tags: tags,
-  };
+    data: o.data as Record<string, any>,
+  } satisfies FullObservation;
 }
 
 export async function findObservationTagsInArray(
