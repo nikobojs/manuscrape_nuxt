@@ -620,8 +620,6 @@ export async function withTempProject(
   await callback(user, project, observations, json.token);
 }
 
-export const delay = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
-
 export async function removeStuff() {
   try {
     console.log("begin delete all data from db..");
