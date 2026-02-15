@@ -145,7 +145,7 @@ export default safeResponseHandler(async (event) => {
     }
   }
 
-  db.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     // delete tags
     if (tagsToDisconnect.length > 0) {
       await tx
@@ -159,6 +159,7 @@ export default safeResponseHandler(async (event) => {
     }
 
     // add new tags
+    // TODO: check if tagsToConnect is already connected to prevent error 500 and give pretty err msg
     if (tagsToConnect.length > 0) {
       const newTags = tagsToConnect.map((id) => {
         return {

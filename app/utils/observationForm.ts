@@ -23,11 +23,9 @@ function extractField(
 }
 
 export function buildForm(fields: ProjectFieldResponse[]): {
-  initialState: any;
   inputs: CMSInput[];
 } {
   const inputs: CMSInput[] = [];
-  const initialState: any = {};
 
   for (const field of fields) {
     const useSimpleInput = Object.keys(inputTypes).includes(field.type);
@@ -81,13 +79,6 @@ export function buildForm(fields: ProjectFieldResponse[]): {
           throw new Error("Multiple choice type has no values to pick from");
         }
 
-        // add arrays for multiple choices types
-        if (typ === "MULTIPLE_CHOICE_ADD") {
-          if (!initialState[field.label]) {
-            initialState[field.label] = [];
-          }
-        }
-
         inputs.push(
           extractField(field, {
             name: field.label,
@@ -101,8 +92,25 @@ export function buildForm(fields: ProjectFieldResponse[]): {
 
   return {
     inputs,
-    initialState,
   };
+}
+
+export function getEmptyObservationData(project: FullProject) {
+  const _defaultEmptyArrays: Record<string, Array<any>> = {};
+  const _defaultBooleans: Record<string, boolean> = {};
+  for (const field of project.fields) {
+    if (isMultipleChoice(field.type)) {
+      _defaultEmptyArrays[field.label] = [];
+    } else if (field.type === "BOOLEAN") {
+      _defaultBooleans[field.label] = false;
+    }
+  }
+
+  let result = {
+    ..._defaultEmptyArrays,
+    ..._defaultBooleans,
+  };
+  return result;
 }
 
 // find custom user-added choices for multiple choice fields.
@@ -143,7 +151,8 @@ export function validateObservationForm(
   // scan for missing fields
   const missingFields = fields.filter((f) => {
     return (
-      f.required &&
+      f?.required &&
+      state &&
       !Object.keys(state).includes(f.label) &&
       f.type !== "BOOLEAN"
     );
@@ -154,6 +163,8 @@ export function validateObservationForm(
       errors.push({ path: field.label, message: "Field is required" });
     }
   }
+
+  if (!state) return errors;
 
   // validate each state value
   for (const [key, value] of Object.entries(state)) {

@@ -35,7 +35,7 @@
       <ObservationFormContainer
         v-if="observation && project"
         :project="project"
-        :observationId="observation.id"
+        :observation="observation"
         :onObservationPublished="onObservationPublished"
         :awaitImageUpload="awaitImageUpload"
         :onImageUploaded="onImageUploaded"
@@ -70,24 +70,6 @@ const awaitImageUpload = computed(() => query?.uploading === "1");
 const imageInterval = ref<number | null>(null);
 const { isElectron } = useDevice();
 
-async function refreshObservation() {
-  if (observation.value !== null) {
-    await refreshObservations();
-    const obs = observations.value.find((o) => o.id === observation.value?.id);
-    if (obs) {
-      observation.value = { ...obs };
-    } else {
-      const _observation = await requireObservationFromParams(params);
-      observation.value = _observation;
-    }
-  } else {
-    const _observation = await requireObservationFromParams(params);
-    observation.value = _observation;
-  }
-}
-
-await refreshObservation();
-
 const isLocked = computed(
   () => observation.value != null && !observation.value.isDraft,
 );
@@ -121,6 +103,11 @@ watch(
   { deep: true, immediate: true },
 );
 
+async function refreshObservation() {
+  const obs = await requireObservationFromParams(params);
+  observation.value = obs;
+}
+
 function metadataIsDone(data: any): boolean {
   if (!project.value?.fields) return false;
   const formErrors = validateObservationForm(data, project.value.fields);
@@ -143,8 +130,8 @@ async function onObservationPublished() {
   }
 }
 
-async function onFormSubmit() {
-  if (!isElectron.value) {
+async function onFormSubmit(showToast = true) {
+  if (!isElectron.value && showToast) {
     toast.add({
       title: "Observation data was saved.",
     });

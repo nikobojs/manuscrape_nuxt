@@ -109,20 +109,13 @@ export const useObservations = async (
     );
   };
 
-  const getObservationById = async (
+  const fetchObservationById = async (
     obsId: number | string | string[] | null,
-  ): Promise<{
-    observationLoading: globalThis.Ref<boolean>;
-    refreshObservation: (
-      opts?: AsyncDataExecuteOptions | undefined,
-    ) => Promise<void>;
-    observation: globalThis.Ref<FullObservation | undefined>;
-  }> => {
+  ): Promise<FullObservation | undefined> => {
     obsId = requireNumber(obsId, "observationId");
-    const { pending, refresh, data } = await useFetch<FullObservation>(
+    const obs = await $fetch<FullObservation>(
       `/api/projects/${projectId}/observations/${obsId}`,
       {
-        immediate: true,
         credentials: "include",
         method: "GET",
         headers: {
@@ -130,11 +123,7 @@ export const useObservations = async (
         },
       },
     );
-    return {
-      observationLoading: pending,
-      refreshObservation: refresh,
-      observation: data,
-    };
+    return obs;
   };
 
   const createObservation = async (projectId: number) => {
@@ -294,13 +283,13 @@ export const useObservations = async (
     );
     const _projectId = requireNumber(params?.projectId, "projectId");
 
-    const { observation } = await getObservationById(_observationId);
+    const obs = await fetchObservationById(_observationId);
 
-    if (!observation.value) {
+    if (!obs) {
       throw new Error("Observation does not exist");
     }
 
-    return observation.value;
+    return obs;
   };
 
   function observationIsDeletable(
@@ -394,25 +383,25 @@ export const useObservations = async (
     createObservation,
     deleteObservation,
     deleteObservationFile,
-    getObservationById,
+    fetchObservationById,
+    filter,
+    filterOption,
     findObservationById,
     loading,
-    observations,
-    page,
-    patchObservation,
-    requireObservationFromParams,
-    totalObservations,
-    totalDraftObservations,
-    totalPages,
-    pageSize,
-    uploadObservationFile,
-    upsertObservationImage,
-    sort,
-    filter,
-    ownership,
-    filterOption,
     observationIsDeletable,
     observationIsDelockable,
+    observations,
+    ownership,
+    page,
+    pageSize,
+    patchObservation,
     refreshObservations,
+    requireObservationFromParams,
+    sort,
+    totalDraftObservations,
+    totalObservations,
+    totalPages,
+    uploadObservationFile,
+    upsertObservationImage,
   };
 };

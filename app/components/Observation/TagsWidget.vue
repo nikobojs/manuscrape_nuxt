@@ -14,10 +14,12 @@
         </UButton>
       </div>
     </template>
-    <div class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic">
-        Click tags to add or remove
+    <div
+      class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic"
+    >
+      Click tags to add or remove
     </div>
-    <div class="flex flex-wrap gap-2">          
+    <div class="flex flex-wrap gap-2">
       <UBadge
         v-for="tag in sortedTags"
         :key="tag.id"
@@ -31,7 +33,6 @@
     </div>
   </UCard>
 
-  
   <UModal
     v-model="openCreateNewTagModal"
     :ui="{ width: 'sm:max-w-xs max-w-xs' }"
@@ -42,11 +43,10 @@
       </template>
 
       <div class="flex flex-col gap-3">
-        <UInput
-          v-model="newTagName"
-          placeholder="Enter tag name"
-        />
-        <span class="text-red-500 text-xs" v-if="newTagError">{{ newTagError }}</span>
+        <UInput v-model="newTagName" placeholder="Enter tag name" />
+        <span class="text-red-500 text-xs" v-if="newTagError">{{
+          newTagError
+        }}</span>
       </div>
 
       <template #footer>
@@ -64,21 +64,27 @@ const props = defineProps({
     required: true,
   },
   tagsOnObservation: {
-    type: Array as PropType<Tag[]>,
+    type: Array as PropType<{ id: number; name: string }[]>,
     required: true,
-  }
+  },
 });
+
+console.log("tags on observation:", props.tagsOnObservation);
 
 const toast = useToast();
 const openCreateNewTagModal = ref(false);
-const newTagName = ref('');
-const newTagError = ref('');
+const newTagName = ref("");
+const newTagError = ref("");
 
-const selectedTagIds = ref(new Set(props.tagsOnObservation.map(t => t.id)));
+const selectedTagIds = ref(new Set(props.tagsOnObservation.map((t) => t.id)));
 
-watch(() => props.tagsOnObservation, (newTags) => {
-  selectedTagIds.value = new Set(newTags.map(t => t.id));
-}, { immediate: true });
+watch(
+  () => props.tagsOnObservation,
+  (newTags) => {
+    selectedTagIds.value = new Set(newTags.map((t) => t.id));
+  },
+  { immediate: true },
+);
 
 const {
   tags,
@@ -88,15 +94,12 @@ const {
   detachTagFromObservation,
 } = useTags(props.project.id);
 
-const {
-  refreshObservations
-} = await useObservations(props.project.id)
+const { refreshObservations } = await useObservations(props.project.id);
 
 onMounted(fetchTags);
 
 const sortedTags = computed(() =>
-  [...tags.value]
-    .sort((a, b) => a.name.localeCompare(b.name))
+  [...tags.value].sort((a, b) => a.name.localeCompare(b.name)),
 );
 
 const isTagSelected = (tagId: number) => selectedTagIds.value.has(tagId);
@@ -115,8 +118,8 @@ async function toggleTag(tagId: number) {
   } catch (err: any) {
     toast.add({
       title: err.message,
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
+      icon: "i-heroicons-exclamation-triangle",
+      color: "red",
     });
   }
 }
@@ -124,27 +127,27 @@ async function toggleTag(tagId: number) {
 async function handleCreateTag() {
   const name = newTagName.value.trim();
   if (!name) {
-    newTagError.value = 'Tag name cannot be empty';
+    newTagError.value = "Tag name cannot be empty";
     return;
   }
 
   try {
     await createTag(name, props.observationId);
     toast.add({
-      title: 'Tag created!',
-      icon: 'i-heroicons-check',
-      color: 'green',
+      title: "Tag created!",
+      icon: "i-heroicons-check",
+      color: "green",
     });
-    newTagName.value = '';
-    newTagError.value = '';
+    newTagName.value = "";
+    newTagError.value = "";
     openCreateNewTagModal.value = false;
     await fetchTags();
     await refreshObservations();
   } catch (err: any) {
     toast.add({
       title: err.message,
-      icon: 'i-heroicons-exclamation-triangle',
-      color: 'red',
+      icon: "i-heroicons-exclamation-triangle",
+      color: "red",
     });
   }
 }

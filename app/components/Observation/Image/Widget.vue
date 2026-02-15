@@ -55,8 +55,8 @@
 import { formatMb } from "#imports";
 
 const props = defineProps({
-  observationId: {
-    type: Number,
+  observation: {
+    type: Object as PropType<FullObservation>,
     required: true,
   },
   project: requireProjectProp,
@@ -79,10 +79,8 @@ const uploadChecker = ref();
 const route = useRoute();
 const router = useRouter();
 const { isElectron } = useDevice();
+const observation = computed(() => props.observation);
 
-const observation = computed(() =>
-  observations.value.find((o) => o.id === props.observationId),
-);
 const uploaded = computed(
   () => observation.value?.image?.id && observation.value?.image,
 );
@@ -131,7 +129,7 @@ async function onFilePicked(event: any) {
   try {
     await upsertObservationImage(
       props.project.id,
-      props.observationId,
+      props.observation.id,
       file.value,
     )
       .then(async () => {
