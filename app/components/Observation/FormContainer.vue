@@ -219,6 +219,7 @@ function buildInitialForm(obs: FullObservation, project: FullProject) {
 }
 
 const {
+  refreshObservations,
   deleteObservation,
   patchObservation,
   observationIsDeletable,
@@ -314,6 +315,7 @@ async function handleDiscardDraft() {
   if (!confirmed) return;
 
   await deleteObservation(props.project.id, props.observation.id);
+  removeObservationMetadataDraft(props.observation.id);
   if (isElectron.value) {
     window.close();
   } else {
@@ -322,6 +324,7 @@ async function handleDiscardDraft() {
       color: "green",
       icon: "i-heroicons-check",
     });
+    await refreshObservations();
     navigateTo(`/projects/${props.project.id}`);
   }
 }
@@ -335,6 +338,7 @@ async function handleDelete() {
   );
   if (!confirmed) return;
   await deleteObservation(props.project.id, props.observation.id);
+  removeObservationMetadataDraft(props.observation.id);
   if (isElectron.value) {
     window.close();
   } else {
@@ -343,6 +347,7 @@ async function handleDelete() {
       color: "green",
       icon: "i-heroicons-check",
     });
+    await refreshObservations();
     navigateTo(`/projects/${props.project.id}`);
   }
 }
