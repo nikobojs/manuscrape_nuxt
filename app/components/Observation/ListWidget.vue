@@ -44,7 +44,7 @@
     >
       <template #id-data="{ row }">
         <NuxtLink
-          :href="`/projects/${props.project?.id}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
+          :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
         >
           <span class="text-gray-600 pr-1 inline-block">#</span>
           <span class="font-semibold">{{ row.id }}</span>
@@ -70,7 +70,7 @@
             ></span>
           </div>
           <NuxtLink
-            :href="`/projects/${project?.id}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
+            :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
           >
             <span
               class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"

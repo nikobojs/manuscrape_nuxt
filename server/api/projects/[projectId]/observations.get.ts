@@ -81,7 +81,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // create initial observation where statement
-  const whereAnd: SQL<unknown>[] = [];
+  const whereAnd: SQL<unknown>[] = [eq(observations.projectId, projectId)];
 
   // set observation ownership filter in where statement
   // NOTE: only allow project OWNER to see everyone's observations
