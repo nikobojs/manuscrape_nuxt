@@ -94,7 +94,12 @@
         <div class="flex items-center gap-x-3">
           <NuxtLink @click.prevent="submitExport()">
             <UButton
-              :disabled="observationsCount === null || observationsCount < 1"
+              :disabled="
+                observationsCount === null ||
+                observationsCount < 1 ||
+                (exportType === 'UPLOADS' && fileUploadsCount === 0) ||
+                (exportType === 'MEDIA' && imagesCount === 0)
+              "
             >
               Generate export file
             </UButton>
@@ -105,6 +110,13 @@
                 ? ""
                 : `${observationsCount} observations`
             }}
+          </div>
+          <div
+            v-if="exportType === 'UPLOADS'"
+            class="text-gray-400 text-sm"
+            :class="{ 'text-red-500': fileUploadsCount === 0 }"
+          >
+            {{ fileUploadsCount }} file uploads
           </div>
         </div>
       </div>
@@ -129,6 +141,8 @@ const {
 } = await useProjectExports(props.project.id);
 
 const observationsCount = ref<number | null>(null);
+const imagesCount = ref<number | null>(null);
+const fileUploadsCount = ref<number | null>(null);
 
 // daterangepicker v-model
 const selectedDateRange = ref({
@@ -167,16 +181,10 @@ async function calculateNewCount() {
     exportType: exportType.value,
     includeTags: tagOption.value,
   });
-  const newCount = await getObservationsCount(params);
-  if (typeof newCount === "number") {
-    console.log("new count is", newCount);
-    observationsCount.value = newCount;
-  } else {
-    const err = new Error("Observation count is not a number");
-    console.log({ newCount });
-    console.error(err);
-    captureException(err);
-  }
+  const { obsCount, fileCount, imgCount } = await getObservationsCount(params);
+  observationsCount.value = obsCount;
+  imagesCount.value = imgCount;
+  fileUploadsCount.value = fileCount;
 }
 
 // calculate new count when startDate, endDate or exportType changes

@@ -69,7 +69,12 @@ export default safeResponseHandler(async (event) => {
   const start = new Date(exportSettings.startDate);
   const end = new Date(exportSettings.endDate);
 
-  const observationIds = await searchObservationIds(projectId, start, end);
+  const observationIds = await searchObservationIds(
+    projectId,
+    start,
+    end,
+    false,
+  );
 
   // ensure there will be any observations in this export
   await ensureExportHasData(observationIds, exportSettings);

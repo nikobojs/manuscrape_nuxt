@@ -41,6 +41,14 @@ export const generateProjectUploadsExport = async (
     observationId: true,
   });
 
+  // ensure export is meaningful
+  if (obsFiles.length === 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "There are no files uploaded to any observations",
+    });
+  }
+
   const archive = archiver("zip", {
     zlib: {
       level: 1,
@@ -63,14 +71,6 @@ export const generateProjectUploadsExport = async (
   archive.pipe(passThrough);
 
   const obsFileCounts: Record<number, number> = {};
-
-  // ensure export is meaningful
-  if (obsFiles.length === 0) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "There are no files uploaded to any observations",
-    });
-  }
 
   const downloads: Promise<any>[] = [];
   for (const upload of obsFiles) {

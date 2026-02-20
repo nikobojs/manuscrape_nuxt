@@ -1,5 +1,4 @@
 import { ExportProjectSchema } from "#shared/schemas/ExportProject";
-import { getObservationCount } from "~~/server/utils/observations";
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -18,6 +17,22 @@ export default safeResponseHandler(async (event) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  const result = await getObservationCount(projectId, start, end, false);
-  return { count: result };
+  const observationIds = await searchObservationIds(
+    projectId,
+    start,
+    end,
+    false,
+  );
+  const images = await getImageUploadsByObservationIds(observationIds, {
+    id: true,
+  });
+  const uploads = await getFileUploadsByObservationIds(observationIds, {
+    id: true,
+  });
+
+  return {
+    observationCount: observationIds.length,
+    imageCount: images.length,
+    uploadsCount: uploads.length,
+  };
 });

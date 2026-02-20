@@ -16,26 +16,6 @@ type ObservationSelect = Partial<
   Record<keyof typeof observations.$inferSelect, boolean>
 >;
 
-export async function getObservationCount(
-  projectId: number,
-  start: Date,
-  end: Date,
-  isDraft = false,
-): Promise<number> {
-  const result = await db
-    .select({ count: count() })
-    .from(observations)
-    .where(
-      and(
-        eq(observations.projectId, projectId),
-        gte(observations.createdAt, start),
-        lte(observations.createdAt, end),
-        eq(observations.isDraft, isDraft),
-      ),
-    );
-  return result[0]!.count;
-}
-
 export async function getObservationById<
   T extends Partial<Record<keyof ObservationSelect, boolean>>,
 >(obsId: number, select: T) {
@@ -274,6 +254,7 @@ export async function searchObservationIds(
   projectId: number,
   start: Date,
   end: Date,
+  isDraft: boolean,
 ): Promise<number[]> {
   return db
     .select({ id: observations.id })
@@ -283,7 +264,7 @@ export async function searchObservationIds(
         eq(observations.projectId, projectId),
         gte(observations.createdAt, start),
         lte(observations.createdAt, end),
-        eq(observations.isDraft, false),
+        eq(observations.isDraft, isDraft),
       ),
     )
     .then((r) => r.map((x) => x.id));

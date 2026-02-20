@@ -101,17 +101,34 @@ export const useProjectExports = async (projectId: number) => {
     });
   }
 
-  async function getObservationsCount(paramStr: string): Promise<number> {
-    const url = `/api/projects/${projectId}/observations/count?${paramStr}`;
-    const res = await $fetch<{ count: number }>(url, {});
-    const count = res?.count;
-    if (typeof count !== "number") {
+  async function getObservationsCount(paramStr: string) {
+    const res = await $fetch(
+      `/api/projects/${projectId}/observations/count?${paramStr}`,
+      {},
+    );
+    const obsCount = res?.observationCount;
+    const imgCount = res?.imageCount;
+    const fileCount = res?.uploadsCount;
+    if (
+      typeof obsCount !== "number" ||
+      typeof imgCount !== "number" ||
+      typeof fileCount !== "number"
+    ) {
       const err = new Error("Observation count is not a number!");
       console.error(err.message);
       captureException(err);
-      return 0;
+      return {
+        obsCount: 0,
+        imgCount: 0,
+        fileCount: 0,
+      };
     }
-    return count;
+
+    return {
+      obsCount,
+      imgCount,
+      fileCount,
+    };
   }
 
   async function notifyOnDone(
