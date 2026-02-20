@@ -285,6 +285,10 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
   projectExports: many(projectExports),
 }));
 
+export const observationRelations = relations(observations, ({ one }) => ({
+  user: one(users, { fields: [observations.userId], references: [users.id] }),
+}));
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });

@@ -42,22 +42,24 @@ export async function getFullObservationsByProjectId(
 
   const obsIds = allObs.map((o) => o.id);
 
-  const fullObservations = await db.query.observations.findMany({
-    columns: {
-      createdAt: true,
-      data: true,
-      id: true,
-      isDraft: true,
-      projectId: true,
-      updatedAt: true,
-      uploadInProgress: true,
-      userId: true,
-    },
-    where: inArray(observations.id, obsIds),
-    limit,
-    offset,
-    orderBy: orderByStatement,
-  });
+  const fullObservations = await db
+    .select({
+      createdAt: observations.createdAt,
+      data: observations.data,
+      id: observations.id,
+      isDraft: observations.isDraft,
+      projectId: observations.projectId,
+      updatedAt: observations.updatedAt,
+      uploadInProgress: observations.uploadInProgress,
+      userId: observations.userId,
+      author_email: users.email,
+    })
+    .from(observations)
+    .innerJoin(users, eq(observations.userId, users.id))
+    .where(inArray(observations.id, obsIds))
+    .limit(limit)
+    .offset(offset)
+    .orderBy(orderByStatement);
 
   const resultIds = fullObservations.map((o) => o.id);
   const userIds = fullObservations
