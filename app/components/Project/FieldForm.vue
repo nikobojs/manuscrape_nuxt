@@ -32,7 +32,7 @@
         {{ chosenFieldType?.label || "Select type" }}
       </template>
     </USelectMenu>
-    <div class="grid grid-cols-2 mt-3 w-full">
+    <div class="flex justify-between mt-3 w-full">
       <div class="items-center inline-flex">
         <UCheckbox
           :modelValue="required"
@@ -58,7 +58,7 @@
           @click="() => handleAddField()"
           :disabled="!newFieldIsValid"
         >
-          Add field
+          Add parameter
         </UButton>
       </div>
     </div>

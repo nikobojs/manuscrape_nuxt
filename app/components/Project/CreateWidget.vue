@@ -4,7 +4,7 @@
   >
     <form @submit.prevent="handleSubmitProject">
       <!-- project form left UCard -->
-      <UCard class="overflow-hidden w-80 shadow-xl max-h-[450px]">
+      <UCard class="overflow-hidden w-80 shadow-xl">
         <template #header>
           <CardHeader>Create project</CardHeader>
         </template>
@@ -20,15 +20,27 @@
           />
 
           <!-- project draft parameters form -->
-          <label class="mt-5" for="field-label-input">
-            Parameters
-            <UTooltip :ui="{ base: 'p-2 text-xs' }">
-              <template #text>
-                When adding observations later on, all the parameters will need
-                to be set manually for each observation.
+          <p class="mt-5 text-sm text-gray-500">
+            Configure the parameters you want to fill each time you (or a
+            collaborator) adds an observation.
+          </p>
+          <label class="flex gap-x-0.5" for="field-label-input">
+            <p>Parameters</p>
+            <UPopover>
+              <template #panel>
+                <UCard
+                  :ui="{
+                    body: { padding: 'px-2 py-2.5 sm:p-2' },
+                  }"
+                >
+                  <p class="max-w-[260px]">
+                    A parameter consists of a label and a type. This can be a
+                    number, multiple choice, checkbox, etc.
+                  </p>
+                </UCard>
               </template>
               <UIcon name="i-heroicons-information-circle" />
-            </UTooltip>
+            </UPopover>
           </label>
 
           <div class="flex flex-col gap-3">
@@ -88,6 +100,28 @@ const { params } = useRoute();
 const { createProject } = await useProjects(params);
 const toast = useToast();
 
+const defaultFields = [
+  {
+    label: "SoMe username (example)",
+    type: "STRING",
+    required: false,
+    index: 1,
+  },
+  {
+    label: "Number of posts (example)",
+    type: "INT",
+    required: false,
+    index: 2,
+  },
+  {
+    label: "Platform (example)",
+    type: "MULTIPLE_CHOICE_ADD",
+    required: false,
+    index: 3,
+    choices: ["X", "Reddit", "Meta"],
+  },
+] as NewProjectField[];
+
 const loading = ref(false);
 const error = ref("");
 const fieldLabelInput = ref();
@@ -108,14 +142,14 @@ function setFieldDraft(draft: NewProjectFieldDraft) {
 const { isElectron } = useDevice();
 const form = reactive<NewProjectBody>({
   name: "",
-  fields: [],
+  fields: defaultFields,
 });
 
 const newProjectIsValid = computed<boolean>(
   () => form.name.length > 0 && form.fields.length > 0,
 );
 
-const addedFields = ref([] as NewProjectField[]);
+const addedFields = ref(defaultFields);
 
 async function handleSubmitProject() {
   loading.value = true;
