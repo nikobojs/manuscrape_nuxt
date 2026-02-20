@@ -127,6 +127,7 @@ async function onObservationPublished() {
       color: "green",
     });
     await refreshObservation();
+    await refreshObservations();
   }
 }
 
@@ -142,6 +143,7 @@ async function onFormSubmit(showToast = true) {
 
 async function onDelockObservation() {
   await refreshObservation();
+  await refreshObservations();
 }
 
 async function onImageUploaded() {
@@ -197,6 +199,7 @@ async function onFileDeleted() {
     });
   }
   await refreshObservation();
+  await refreshObservations();
 }
 
 onMounted(async () => {
@@ -211,6 +214,7 @@ onMounted(async () => {
     }, 10000);
   } else {
     await refreshObservation();
+    await refreshObservations();
   }
 });
 </script>
