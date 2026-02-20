@@ -90,7 +90,7 @@ export default safeResponseHandler(async (event) => {
     (!isOwner && !project?.contributorsCanReadAllObservations)
   ) {
     // whereStatement.userId = event.context.user.id;
-    whereAnd.push(eq(observations.id, event.context.user.id));
+    whereAnd.push(eq(observations.userId, event.context.user.id));
   }
 
   // set published/drafts/all filter in where statement
