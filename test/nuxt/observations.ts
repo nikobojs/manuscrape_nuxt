@@ -262,9 +262,9 @@ describe("Observations", () => {
 
   test("invited user can't see another users' observations", async () => {
     const otherEmail = freshEmail();
-    await withTempProject(async (_user, project, _observations, token) => {
+    await withTempProject(async (_user, project, _observations, tokenA) => {
       await withTempUser(async (_userB, tokenB) => {
-        const inviteRes = await inviteToProject(token, project.id, {
+        const inviteRes = await inviteToProject(tokenA, project.id, {
           email: otherEmail,
         });
         expect(inviteRes.status).toBe(202);
@@ -275,7 +275,7 @@ describe("Observations", () => {
         expect(Array.isArray(observationJson?.observations));
         expect(observationJson.observations.length).toBe(0);
 
-        const createObsRes = await createObservation(tokenB, project.id);
+        const createObsRes = await createObservation(tokenA, project.id);
         expect(createObsRes.status).toBe(201);
 
         // expect invited cant see other users' observations
@@ -286,7 +286,7 @@ describe("Observations", () => {
         expect(observationJson.observations.length).toBe(0);
 
         // expect project owner can see all observations
-        observationRes = await getObservations(token, project.id);
+        observationRes = await getObservations(tokenA, project.id);
         expect(observationRes.status).toBe(200);
         observationJson = await observationRes.json();
         expect(Array.isArray(observationJson?.observations));
