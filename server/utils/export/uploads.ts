@@ -58,9 +58,10 @@ export const generateProjectUploadsExport = async (
     highWaterMark: 2147483648, // max 2gb
   });
 
-  // archive.on("error", function (err) {
-  //   throw err;
-  // });
+  archive.on("error", function (err) {
+    console.error(err);
+    // TODO: report error
+  });
   archive.on("warning", function (warn) {
     console.warn(warn);
   });
