@@ -66,9 +66,7 @@ function generateObservationRow(
 
   let tagFlags: boolean[] = [];
   if (includeTags) {
-    const tagSet = new Set(
-      obs.observationTags.map((t: { tag: { name: string } }) => t.tag.name),
-    );
+    const tagSet = new Set(obs.tags.map((t: { name: string }) => t.name));
     tagFlags = allTags.map((tag) => (tagSet.has(tag) ? true : false));
   }
 
@@ -258,7 +256,6 @@ export const generateNvivoExport = async (
   const newPath = generateFilename(projectId, "NVIVO");
   await uploadFile(newPath, Buffer.from(buffer), canUseS3());
 
-  // const mimetype = 'application/vnd.ms-excel';
   const mimetype =
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   return {
