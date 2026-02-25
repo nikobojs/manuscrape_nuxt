@@ -1,54 +1,84 @@
 <template>
-  <UCard>
-    <template #header>
-      <div class="flex justify-between w-full">
-        <CardHeader>Image</CardHeader>
-        <span
-          v-if="!$props.disabled && imageUploaded"
-          class="ml-2 i-heroicons-check text-lg text-green-500"
-        ></span>
-      </div>
-    </template>
-    <div v-if="!uploadInProgress">
-      <label class="block" v-if="!$props.disabled">
-        <UInput
-          class="hidden"
-          type="file"
-          accept="image/png, image/jpeg"
-          :on:change="onFilePicked"
-        />
-        <div class="text-sm">
-          <div
-            v-if="!$props.disabled"
-            class="underline text-green-500 cursor-pointer"
-          >
-            {{ observation?.image ? "Change image" : "Choose image" }}
-          </div>
+  <div>
+    <UCard>
+      <template #header>
+        <div class="flex justify-between w-full">
+          <CardHeader>Image</CardHeader>
+          <span
+            v-if="!$props.disabled && imageUploaded"
+            class="ml-2 i-heroicons-check text-lg text-green-500"
+          ></span>
         </div>
-      </label>
-      <div v-if="uploaded">
-        <NuxtLink
-          v-if="observation?.image && !$props.disabled"
-          class="text-sm underline text-green-500 cursor-pointer"
-          :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image${isElectron ? '?electron=1' : ''}`"
-        >
-          Edit image
-        </NuxtLink>
-        <ObservationImageThumbnail
-          v-if="observation"
-          class="mt-6 mb-4"
-          :image="uploaded"
-          :observation="observation"
-          :project="project"
-          :last-update="lastImageUpdate"
-        />
+      </template>
+      <div v-if="!uploadInProgress">
+        <label class="block" v-if="!$props.disabled">
+          <UInput
+            ref="fileInput"
+            class="hidden"
+            type="file"
+            accept="image/png, image/jpeg"
+            :on:change="onFilePicked"
+          />
+          <div class="text-sm">
+            <div
+              v-if="!$props.disabled"
+              class="underline text-green-500 cursor-pointer"
+            >
+              {{ observation?.image ? "Change image" : "Choose image" }}
+            </div>
+          </div>
+        </label>
+        <div v-if="uploaded">
+          <NuxtLink
+            v-if="observation?.image && !$props.disabled"
+            class="text-sm underline text-green-500 cursor-pointer"
+            :href="`/projects/${project?.id}/observations/${observation?.id}/edit-image${isElectron ? '?electron=1' : ''}`"
+          >
+            Edit image
+          </NuxtLink>
+          <ObservationImageThumbnail
+            v-if="observation"
+            class="mt-6 mb-4"
+            :image="uploaded"
+            :observation="observation"
+            :project="project"
+            :last-update="lastImageUpdate"
+          />
+        </div>
       </div>
-    </div>
-    <div v-else class="flex gap-x-1 items-center">
-      <Spinner />
-      Processing image...
-    </div>
-  </UCard>
+      <div v-else class="flex gap-x-1 items-center">
+        <Spinner />
+        Processing image...
+      </div>
+    </UCard>
+
+    <!-- Modal for pre-upload editing (web only) -->
+    <UModal
+      v-model="showEditorModal"
+      :ui="{ container: 'fixed inset-0' }"
+    >
+      <UCard class="w-full max-w-6xl">
+        <template #header>
+          <div class="flex justify-between items-center">
+            <CardHeader>Edit image before uploading</CardHeader>
+            <UButton
+              icon="i-heroicons-x-mark"
+              color="gray"
+              variant="ghost"
+              @click="closeModal"
+            />
+          </div>
+        </template>
+        <ObservationImageEditor
+          v-if="pendingFile && project"
+          :project="project"
+          :observation="observation"
+          :initial-file="pendingFile"
+          :on-submit="handleModalUploadSuccess"
+        />
+      </UCard>
+    </UModal>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -81,6 +111,11 @@ const router = useRouter();
 const { isElectron } = useDevice();
 const observation = computed(() => props.observation);
 
+// New state for pre-upload editing
+const showEditorModal = ref(false);
+const pendingFile = ref<File | undefined>();
+const fileInput = ref<HTMLInputElement | undefined>();
+
 const uploaded = computed(
   () => observation.value?.image?.id && observation.value?.image,
 );
@@ -110,6 +145,10 @@ async function onFilePicked(event: any) {
       icon: "i-heroicons-exclamation-triangle",
       color: "red",
     });
+    // Reset file input
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
     return;
   }
 
@@ -120,41 +159,92 @@ async function onFilePicked(event: any) {
       "Are you sure you want to overwrite the existing image?",
     );
     if (!res) {
+      // Reset file input
+      if (fileInput.value) {
+        fileInput.value.value = '';
+      }
       return;
     }
   }
 
   file.value = files[0] as File;
 
-  try {
-    await upsertObservationImage(
-      props.project.id,
-      props.observation.id,
-      file.value,
-    )
-      .then(async () => {
-        if (typeof props.project?.id !== "number") {
-          throw new Error("Project id is not found");
-        }
-        const isFirstImage = !!uploaded.value;
-        props.onSubmit?.(isFirstImage);
-      })
-      .catch((e: any) => {
-        let msg = "An error occured when uploading image";
-        if (e.message) {
-          msg = e.message;
-        }
-        toast.add({
-          title: "Image upload error",
-          description: msg,
-          icon: "i-heroicons-exclamation-triangle",
-          color: "red",
+  // For new images (no existing image), allow pre-upload editing
+  if (!observation.value?.image) {
+    if (isElectron.value) {
+      // For Electron: store file in sessionStorage and navigate to edit page
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        // Store only the data part (after the comma)
+        const base64Data = base64.split(',')[1];
+        sessionStorage.setItem('pendingImageFile', JSON.stringify({
+          name: file.value!.name,
+          type: file.value!.type,
+          data: base64Data,
+        }));
+        // Navigate to edit page
+        const electronParam = '?electron=1';
+        navigateTo(`/projects/${props.project.id}/observations/${props.observation.id}/edit-image-new${electronParam}`);
+      };
+      reader.readAsDataURL(file.value);
+    } else {
+      // For Web: show modal with editor
+      pendingFile.value = file.value;
+      showEditorModal.value = true;
+    }
+  } else {
+    // For existing images: upload directly and let user edit afterwards
+    try {
+      await upsertObservationImage(
+        props.project.id,
+        props.observation.id,
+        file.value,
+      )
+        .then(async () => {
+          if (typeof props.project?.id !== "number") {
+            throw new Error("Project id is not found");
+          }
+          const isFirstImage = !!uploaded.value;
+          props.onSubmit?.(isFirstImage);
+        })
+        .catch((e: any) => {
+          let msg = "An error occured when uploading image";
+          if (e.message) {
+            msg = e.message;
+          }
+          toast.add({
+            title: "Image upload error",
+            description: msg,
+            icon: "i-heroicons-exclamation-triangle",
+            color: "red",
+          });
         });
-      });
-  } catch (err) {
-    console.error("Upload image submit error:", err);
-    throw err;
+    } catch (err) {
+      console.error("Upload image submit error:", err);
+      throw err;
+    }
   }
+
+  // Reset file input
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+}
+
+function closeModal() {
+  showEditorModal.value = false;
+  pendingFile.value = undefined;
+}
+
+async function handleModalUploadSuccess(isFirstImage: boolean) {
+  closeModal();
+  toast.add({
+    title: "Image uploaded successfully",
+    icon: "i-heroicons-check",
+    color: "green",
+  });
+  props.onSubmit?.(isFirstImage);
 }
 
 // TODO: document better

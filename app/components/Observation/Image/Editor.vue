@@ -7,7 +7,7 @@
       <div class="flex justify-between">
         <div class="relative h-4">
           <CardHeader
-            >Image editor for observation #{{ observation.id }}</CardHeader
+            >{{ isPreUploadMode ? 'New image for' : 'Image editor for' }} observation #{{ observation.id }}</CardHeader
           >
           <UTooltip>
             <template #text>
@@ -87,7 +87,7 @@
             @click="save"
             variant="outline"
             size="xs"
-            >Overwrite image</UButton
+            >{{ isPreUploadMode ? 'Save & Upload' : 'Overwrite image' }}</UButton
           >
         </div>
       </div>
@@ -381,9 +381,16 @@ const props = defineProps({
   observation: requireObservationProp,
   project: requireProjectProp,
   onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
+  initialFile: {
+    type: Object as PropType<File>,
+    required: false,
+  },
 });
 
-if (!props.observation?.image?.id) {
+// For pre-upload mode, observation might not have an image yet
+const isPreUploadMode = computed(() => !!props.initialFile);
+
+if (!isPreUploadMode.value && !props.observation?.image?.id) {
   console.error("Observation does not have an image!");
   navigateTo("/");
 }
@@ -393,6 +400,7 @@ const canvasContainer = ref<HTMLDivElement>();
 const textInput = ref<HTMLInputElement>();
 const frontColor = ref<string>("#ffffff");
 const backColor = ref<string>("#000000");
+const initialFileRef = ref<File | undefined>(props.initialFile);
 
 const { upsertObservationImage } = await useObservations(props.project?.id);
 
@@ -437,20 +445,26 @@ const {
   textInput,
   frontColor,
   backColor,
+  initialFileRef,
 );
 
 function save() {
   createImageFile(async (file: File) => {
     await upsertObservationImage(props.project.id, props.observation.id, file);
 
-    // TODO: wait until redownload+rerender of image somehow
-    setTimeout(() => {
-      toast.add({
-        title: "Image was saved",
-        icon: "i-heroicons-check",
-        color: "green",
-      });
-    }, 250);
+    // For pre-upload mode, call onSubmit callback
+    if (isPreUploadMode.value && props.onSubmit) {
+      await props.onSubmit(true);
+    } else {
+      // TODO: wait until redownload+rerender of image somehow
+      setTimeout(() => {
+        toast.add({
+          title: "Image was saved",
+          icon: "i-heroicons-check",
+          color: "green",
+        });
+      }, 250);
+    }
   });
 }
 

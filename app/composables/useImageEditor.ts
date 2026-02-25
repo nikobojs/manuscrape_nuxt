@@ -28,6 +28,7 @@ export function useImageEditor(
   textInput: Ref<HTMLInputElement | undefined>,
   frontColor: Ref<string>,
   backColor: Ref<string>,
+  initialFile?: Ref<File | undefined>,
 ) {
   const aspectRatio = ref(1);
   const zoom = ref(1);
@@ -103,22 +104,47 @@ export function useImageEditor(
     }
 
     const bg = new Image();
-    bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
-    bg.addEventListener("load", () => {
-      if (canvas.value && context.value) {
-        aspectRatio.value = bg.height / bg.width;
-        resetZoom();
-        resetPosition();
-        window.requestAnimationFrame(() => {
-          drawImage();
-          drawBoxes();
-          drawLines();
-          drawTexts(zoom.value);
-        });
-        mode.value = EditorMode.GRAB; // initial editor mode
-        isSaving.value && (isSaving.value = false);
-      }
-    });
+
+    // Load from initial file if provided (for pre-upload editing)
+    if (initialFile?.value) {
+      const objectUrl = URL.createObjectURL(initialFile.value);
+      bg.src = objectUrl;
+      bg.addEventListener("load", () => {
+        if (canvas.value && context.value) {
+          aspectRatio.value = bg.height / bg.width;
+          resetZoom();
+          resetPosition();
+          window.requestAnimationFrame(() => {
+            drawImage();
+            drawBoxes();
+            drawLines();
+            drawTexts(zoom.value);
+          });
+          mode.value = EditorMode.GRAB; // initial editor mode
+          isSaving.value && (isSaving.value = false);
+          // Clean up object URL after image is loaded
+          URL.revokeObjectURL(objectUrl);
+        }
+      });
+    } else {
+      // Load from API URL (existing behavior for editing uploaded images)
+      bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+      bg.addEventListener("load", () => {
+        if (canvas.value && context.value) {
+          aspectRatio.value = bg.height / bg.width;
+          resetZoom();
+          resetPosition();
+          window.requestAnimationFrame(() => {
+            drawImage();
+            drawBoxes();
+            drawLines();
+            drawTexts(zoom.value);
+          });
+          mode.value = EditorMode.GRAB; // initial editor mode
+          isSaving.value && (isSaving.value = false);
+        }
+      });
+    }
 
     return bg;
   });
@@ -148,32 +174,68 @@ export function useImageEditor(
 
     window.requestAnimationFrame(() => {
       const bg = new Image();
-      bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
-      bg.addEventListener("load", () => {
-        if (canvas.value && context.value) {
-          aspectRatio.value = bg.height / bg.width;
 
-          zoom.value = 1;
-          clearCanvas();
-          context.value.drawImage(bg, 0, 0, targetWidth, targetHeight);
+      // Load from initial file if provided (for pre-upload editing)
+      if (initialFile?.value) {
+        const objectUrl = URL.createObjectURL(initialFile.value);
+        bg.src = objectUrl;
+        bg.addEventListener("load", () => {
+          if (canvas.value && context.value) {
+            aspectRatio.value = bg.height / bg.width;
 
-          window.requestAnimationFrame(async () => {
-            if (!context.value) {
-              throw new Error(
-                "Image cannot be drawn as context or image is not fully loaded",
-              );
-            }
-            drawBoxes();
-            drawLines();
-            drawTexts(zoom.value);
+            zoom.value = 1;
+            clearCanvas();
+            context.value.drawImage(bg, 0, 0, targetWidth, targetHeight);
 
-            await onLoaded();
+            window.requestAnimationFrame(async () => {
+              if (!context.value) {
+                throw new Error(
+                  "Image cannot be drawn as context or image is not fully loaded",
+                );
+              }
+              drawBoxes();
+              drawLines();
+              drawTexts(zoom.value);
 
-            canvas.value?.setAttribute("width", "" + initialCanvasWidth);
-            canvas.value?.setAttribute("height", "" + initialCanvasHeight);
-          });
-        }
-      });
+              await onLoaded();
+
+              canvas.value?.setAttribute("width", "" + initialCanvasWidth);
+              canvas.value?.setAttribute("height", "" + initialCanvasHeight);
+
+              // Clean up object URL after image is loaded
+              URL.revokeObjectURL(objectUrl);
+            });
+          }
+        });
+      } else {
+        // Load from API URL (existing behavior)
+        bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+        bg.addEventListener("load", () => {
+          if (canvas.value && context.value) {
+            aspectRatio.value = bg.height / bg.width;
+
+            zoom.value = 1;
+            clearCanvas();
+            context.value.drawImage(bg, 0, 0, targetWidth, targetHeight);
+
+            window.requestAnimationFrame(async () => {
+              if (!context.value) {
+                throw new Error(
+                  "Image cannot be drawn as context or image is not fully loaded",
+                );
+              }
+              drawBoxes();
+              drawLines();
+              drawTexts(zoom.value);
+
+              await onLoaded();
+
+              canvas.value?.setAttribute("width", "" + initialCanvasWidth);
+              canvas.value?.setAttribute("height", "" + initialCanvasHeight);
+            });
+          }
+        });
+      }
     });
   }
 
