@@ -15,12 +15,6 @@ export default safeResponseHandler(async (event) => {
     id: true,
     isDraft: true,
   });
-  if (!observation) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "Observation was not found",
-    });
-  }
 
   if (!observation) {
     throw createError({
@@ -52,7 +46,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // parse files
-  const [_fields, files] = await form.parse(event.node.req);
+  const [_, files] = await form.parse(event.node.req);
 
   // validate file was sent and save into variable 'file'
   if (!Object.keys(files).includes("file")) {
