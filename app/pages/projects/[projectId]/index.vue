@@ -1,5 +1,4 @@
 <template>
-  <ResourceAccessChecker>
     <UContainer>
       <BackButton href="/"> Go to projects </BackButton>
     </UContainer>
@@ -48,7 +47,6 @@
         </div>
       </div>
     </UContainer>
-  </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>

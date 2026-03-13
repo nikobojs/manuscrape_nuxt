@@ -1,5 +1,4 @@
 <template>
-  <ResourceAccessChecker>
     <UContainer>
       <BackButton
         v-if="isElectron && project"
@@ -37,7 +36,6 @@
         :project="project"
         :observation="observation"
         :onObservationPublished="onObservationPublished"
-        :awaitImageUpload="awaitImageUpload"
         :onImageUploaded="onImageUploaded"
         :onFormSubmit="onFormSubmit"
         :onDelockObservation="onDelockObservation"
@@ -47,7 +45,6 @@
         :onFileDeleted="onFileDeleted"
       />
     </UContainer>
-  </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>
@@ -59,15 +56,10 @@ const { project } = await useProjects(params);
 if (typeof project.value?.id !== "number") {
   throw new Error("Project is not defined");
 }
-const { refreshObservations, observations } = await useObservations(
+const { refreshObservations, requireObservationFromParams } = await useObservations(
   project.value?.id,
 );
-const { requireObservationFromParams } = await useObservations(
-  project.value.id,
-);
 const observation = ref<FullObservation | null>(null);
-const awaitImageUpload = computed(() => query?.uploading === "1");
-const imageInterval = ref<number | null>(null);
 const { isElectron } = useDevice();
 
 const isLocked = computed(
@@ -83,25 +75,13 @@ watch(
   [observation],
   ([obs]) => {
     const isDone = metadataIsDone(obs?.data);
+    imageUploaded.value = !!observation.value?.image;
     metadataDone.value = isDone;
   },
   { deep: true },
 );
 
 const imageUploaded = ref(false);
-watch(
-  [observation, imageInterval],
-  ([o, int]) => {
-    const imageFound = typeof o?.image?.id === "number";
-    const intervalIsRunning = typeof int === "number";
-    if (imageFound && intervalIsRunning) {
-      window.clearInterval(imageInterval.value!);
-      imageInterval.value = null;
-    }
-    imageUploaded.value = imageFound;
-  },
-  { deep: true, immediate: true },
-);
 
 async function refreshObservation() {
   const obs = await requireObservationFromParams(params);
@@ -156,9 +136,10 @@ async function onImageUploaded() {
       color: "red",
     });
   } else {
-    toast.add({
-      title: "Image uploaded successfully",
-    });
+    // redundant
+    // toast.add({
+    //   title: "Image uploaded successfully",
+    // });
   }
   await refreshObservation();
 }
@@ -203,18 +184,7 @@ async function onFileDeleted() {
 }
 
 onMounted(async () => {
-  if (!imageUploaded.value && awaitImageUpload.value) {
-    imageInterval.value = window.setInterval(async () => {
-      await refreshObservation();
-    }, 1000);
-
-    window.setTimeout(() => {
-      window.clearInterval(imageInterval.value!);
-      imageInterval.value = null;
-    }, 10000);
-  } else {
     await refreshObservation();
     await refreshObservations();
-  }
 });
 </script>

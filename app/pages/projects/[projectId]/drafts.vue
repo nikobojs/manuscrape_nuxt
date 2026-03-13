@@ -1,5 +1,4 @@
 <template>
-  <ResourceAccessChecker>
     <UContainer v-if="project">
       <div class="mt-6">
         <ObservationListWidget
@@ -10,7 +9,6 @@
         />
       </div>
     </UContainer>
-  </ResourceAccessChecker>
 </template>
 
 

@@ -5,12 +5,14 @@
         <div class="flex justify-between w-full">
           <CardHeader>Image</CardHeader>
           <span
-            v-if="!$props.disabled && imageUploaded"
-            class="ml-2 i-heroicons-check text-lg text-green-500"
-          ></span>
+            v-if="!disabled && imageUploaded"
+            class="ml-2 text-lg text-green-500"
+          >
+            <UIcon name="i-heroicons-check" />
+          </span>
         </div>
       </template>
-      <div v-if="!uploadInProgress">
+      <div>
         <label class="block" v-if="!$props.disabled">
           <UInput
             ref="fileInput"
@@ -46,21 +48,14 @@
           />
         </div>
       </div>
-      <div v-else class="flex gap-x-1 items-center">
-        <Spinner />
-        Processing image...
-      </div>
     </UCard>
 
     <!-- Modal for pre-upload editing (web only) -->
-    <UModal
-      v-model="showEditorModal"
-      :ui="{ container: 'fixed inset-0' }"
-    >
-      <UCard class="w-full max-w-6xl">
+    <UModal v-model="showEditorModal" fullscreen>
+      <UCard class="w-full">
         <template #header>
           <div class="flex justify-between items-center">
-            <CardHeader>Edit image before uploading</CardHeader>
+            <CardHeader> Edit image before uploading </CardHeader>
             <UButton
               icon="i-heroicons-x-mark"
               color="gray"
@@ -69,13 +64,15 @@
             />
           </div>
         </template>
-        <ObservationImageEditor
-          v-if="pendingFile && project"
-          :project="project"
-          :observation="observation"
-          :initial-file="pendingFile"
-          :on-submit="handleModalUploadSuccess"
-        />
+        <UContainer>
+          <ObservationImageEditor
+            v-if="pendingFile && project"
+            :project="project"
+            :observation="observation"
+            :initial-file="pendingFile"
+            :on-submit="handleModalUploadSuccess"
+          />
+        </UContainer>
       </UCard>
     </UModal>
   </div>
@@ -93,7 +90,6 @@ const props = defineProps({
   onSubmit: Function as PropType<(isFirstImage: boolean) => Promise<void>>,
   disabled: Boolean as PropType<boolean>,
   imageUploaded: Boolean as PropType<boolean>,
-  uploadInProgress: Boolean as PropType<boolean>,
 });
 
 if (!props.project?.id) {
@@ -101,13 +97,7 @@ if (!props.project?.id) {
 }
 
 const toast = useToast();
-const { upsertObservationImage, observations } = await useObservations(
-  props.project.id,
-);
 const file = ref<File | undefined>();
-const uploadChecker = ref();
-const route = useRoute();
-const router = useRouter();
 const { isElectron } = useDevice();
 const observation = computed(() => props.observation);
 
@@ -119,7 +109,6 @@ const fileInput = ref<HTMLInputElement | undefined>();
 const uploaded = computed(
   () => observation.value?.image?.id && observation.value?.image,
 );
-const timeout = ref<null | number>(null);
 const config = useRuntimeConfig().public;
 const lastImageUpdate = computed(() => {
   return (
@@ -147,7 +136,7 @@ async function onFilePicked(event: any) {
     });
     // Reset file input
     if (fileInput.value) {
-      fileInput.value.value = '';
+      fileInput.value.value = "";
     }
     return;
   }
@@ -156,12 +145,12 @@ async function onFilePicked(event: any) {
   if (observation.value?.image) {
     // TODO: create nice confirm box
     const res = confirm(
-      "Are you sure you want to overwrite the existing image?",
+      "Are you sure you want to overwrite the existing image? You will still be able to edit the image before it is uploaded",
     );
     if (!res) {
       // Reset file input
       if (fileInput.value) {
-        fileInput.value.value = '';
+        fileInput.value.value = "";
       }
       return;
     }
@@ -177,58 +166,35 @@ async function onFilePicked(event: any) {
       reader.onload = () => {
         const base64 = reader.result as string;
         // Store only the data part (after the comma)
-        const base64Data = base64.split(',')[1];
-        sessionStorage.setItem('pendingImageFile', JSON.stringify({
-          name: file.value!.name,
-          type: file.value!.type,
-          data: base64Data,
-        }));
+        const base64Data = base64.split(",")[1];
+        sessionStorage.setItem(
+          "pendingImageFile",
+          JSON.stringify({
+            name: file.value!.name,
+            type: file.value!.type,
+            data: base64Data,
+          }),
+        );
         // Navigate to edit page
-        const electronParam = '?electron=1';
-        navigateTo(`/projects/${props.project.id}/observations/${props.observation.id}/edit-image-new${electronParam}`);
+        const electronParam = "?electron=1";
+        navigateTo(
+          `/projects/${props.project.id}/observations/${props.observation.id}/edit-image-new${electronParam}`,
+        );
       };
       reader.readAsDataURL(file.value);
     } else {
-      // For Web: show modal with editor
       pendingFile.value = file.value;
       showEditorModal.value = true;
     }
   } else {
-    // For existing images: upload directly and let user edit afterwards
-    try {
-      await upsertObservationImage(
-        props.project.id,
-        props.observation.id,
-        file.value,
-      )
-        .then(async () => {
-          if (typeof props.project?.id !== "number") {
-            throw new Error("Project id is not found");
-          }
-          const isFirstImage = !!uploaded.value;
-          props.onSubmit?.(isFirstImage);
-        })
-        .catch((e: any) => {
-          let msg = "An error occured when uploading image";
-          if (e.message) {
-            msg = e.message;
-          }
-          toast.add({
-            title: "Image upload error",
-            description: msg,
-            icon: "i-heroicons-exclamation-triangle",
-            color: "red",
-          });
-        });
-    } catch (err) {
-      console.error("Upload image submit error:", err);
-      throw err;
-    }
+    pendingFile.value = file.value;
+    showEditorModal.value = true;
+    return;
   }
 
   // Reset file input
   if (fileInput.value) {
-    fileInput.value.value = '';
+    fileInput.value.value = "";
   }
 }
 
@@ -246,39 +212,4 @@ async function handleModalUploadSuccess(isFirstImage: boolean) {
   });
   props.onSubmit?.(isFirstImage);
 }
-
-// TODO: document better
-async function handleIfUploadDone(): Promise<void> {
-  if (!props.uploadInProgress) {
-    setTimeout(async () => {
-      router.replace({ query: { electron: route.query?.electron || 0 } });
-      window.clearInterval(uploadChecker.value);
-      timeout.value !== null && clearTimeout(timeout.value);
-      uploadChecker.value = null;
-    }, 10);
-  }
-}
-
-// TODO: improve error handling and implement for ordinary file upload
-onBeforeMount(async () => {
-  if (props.imageUploaded) {
-    await handleIfUploadDone();
-  } else if (props.uploadInProgress) {
-    // handle timeout on image upload
-    timeout.value = window.setTimeout(() => {
-      if (props.uploadInProgress) {
-        toast.add({
-          title: "Uploading takes longer than usual",
-          description:
-            "This could indicate something went wrong. Try to refresh the page.",
-        });
-        uploadChecker.value && window.clearInterval(uploadChecker.value);
-        uploadChecker.value = null;
-      }
-    }, 20000);
-
-    // check and handle if image was uploaded
-    uploadChecker.value = window.setInterval(handleIfUploadDone, 2000);
-  }
-});
 </script>

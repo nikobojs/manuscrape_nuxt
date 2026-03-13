@@ -28,7 +28,7 @@
         :observation="observation"
         :onSubmit="onImageUploaded"
         :disabled="isLocked"
-        :imageUploaded="imageUploaded"
+        :imageUploaded="imgUploaded"
         :uploadInProgress="uploadInProgress"
       />
 
@@ -54,7 +54,7 @@
           <UButton
             icon="i-heroicons-lock-closed"
             class=""
-            :disabled="!imageUploaded || !metadataDone"
+            :disabled="!metadataDone"
             @click="() => handlePublishObservation()"
           >
             Submit and lock
@@ -139,7 +139,6 @@ const props = defineProps({
   >,
   onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
   onFileDeleted: requireFunctionProp<() => Promise<void>>(),
-  awaitImageUpload: Boolean as PropType<boolean>,
   metadataDone: Boolean as PropType<boolean>,
   imageUploaded: Boolean as PropType<boolean>,
   observation: {
@@ -149,6 +148,7 @@ const props = defineProps({
   project: requireProjectProp,
 });
 
+const imgUploaded = computed(() => props.imageUploaded);
 const formLoading = ref(true);
 const hasUnsavedVersion = ref(false);
 
@@ -242,7 +242,7 @@ const isLocked = computed(
 
 const uploadInProgress = computed(() => {
   return (
-    props.observation && props.awaitImageUpload && !props.observation?.image?.id
+    props.observation && !props.observation?.image?.id
   );
 });
 

@@ -1,13 +1,16 @@
 <template>
   <UCard
-    v-if="typeof observation?.image?.id === 'number'"
+    v-if="typeof observation?.image?.id === 'number' || props.initialFile"
     class="overflow-visible"
   >
     <template #header>
       <div class="flex justify-between">
         <div class="relative h-4">
           <CardHeader
-            >{{ isPreUploadMode ? 'New image for' : 'Image editor for' }} observation #{{ observation.id }}</CardHeader
+            >{{
+              isPreUploadMode ? "New image for" : "Image editor for"
+            }}
+            observation #{{ observation.id }}</CardHeader
           >
           <UTooltip>
             <template #text>
@@ -41,9 +44,7 @@
                   <span>(Text mode) Save text</span>
                 </div>
                 <div class="flex gap-x-2">
-                  <span class="flex gap-x-1">
-                    <UKbd>Esc</UKbd> </span
-                  >:
+                  <span class="flex gap-x-1"> <UKbd>Esc</UKbd> </span>:
                   <span>(Text mode) Discard text</span>
                 </div>
                 <div class="flex gap-x-2">
@@ -82,12 +83,17 @@
           >
           <UButton
             icon="i-mdi-content-save-outline"
-            :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
+            :disabled="
+              (!hasPendingChanges && !isPreUploadMode) ||
+              modeActive(EditorMode.DISABLED)
+            "
             color="primary"
             @click="save"
             variant="outline"
             size="xs"
-            >{{ isPreUploadMode ? 'Save & Upload' : 'Overwrite image' }}</UButton
+            >{{
+              isPreUploadMode ? "Save & Upload" : "Overwrite image"
+            }}</UButton
           >
         </div>
       </div>

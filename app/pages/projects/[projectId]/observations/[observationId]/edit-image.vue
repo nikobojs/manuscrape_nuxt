@@ -1,5 +1,4 @@
 <template>
-  <ResourceAccessChecker>
     <UContainer>
       <BackButton
         :href="backbuttonUrl"
@@ -9,7 +8,6 @@
       </BackButton>
       <ObservationImageEditor v-if="project" :project="project" :observation="observation" />
     </UContainer>
-  </ResourceAccessChecker>
 </template>
 
 <script lang="ts" setup>
