@@ -24,6 +24,7 @@
 
     <div class="row-span-3 flex flex-col gap-6">
       <ObservationImageWidget
+        v-if="projectHasImageParams"
         :project="project"
         :observation="observation"
         :onSubmit="onImagesChange"
@@ -151,6 +152,12 @@ const tagsOnObservation = computed(() => props.observation?.tags || []);
 const imgUploaded = computed(() => props.imageUploaded);
 const formLoading = ref(true);
 const hasUnsavedVersion = ref(false);
+const projectHasImageParams = computed(
+  () =>
+    props.project.fields
+      .map((f) => f.type)
+      .findIndex((t) => ["IMAGE_SINGLE", "IMAGE_MULTIPLE"].includes(t)) !== -1,
+);
 
 const { user } = await useUser();
 
