@@ -281,14 +281,14 @@ export const useProjectExports = async (projectId: number) => {
       value: "UPLOADS",
       shortLabel: "Uploads",
       label: "Uploaded observation files",
-      help: "All uploaded files on observations except the primary observation image",
+      help: "Zip file containing files uploaded on observations (not including images)",
       icon: "mdi:folder-file",
     },
     {
       value: "MEDIA",
       shortLabel: "Images",
       label: "Observation images",
-      help: "All primary images of observations",
+      help: "Zip file containing observation images named in the format: `[obsId].[parameterId].jpg`",
       icon: "mdi:folder-multiple-image",
     },
   ] satisfies {

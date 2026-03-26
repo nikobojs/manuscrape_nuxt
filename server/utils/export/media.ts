@@ -34,6 +34,7 @@ export const generateProjectMediaExport = async (
   const obs = await getObservations({ id: true }, observationFilter);
   const obsIds = obs.map((o) => o.id);
   const obsImgs = await getImageUploadsByObservationIds(obsIds, {
+    projectFieldId: true,
     observationId: true,
     filePath: true,
     isS3: true,
@@ -81,7 +82,8 @@ export const generateProjectMediaExport = async (
         });
 
         // initialize download stream from s3 directly into zip file
-        archive.append(readable, { name: id + fileEnding });
+        let name = id + "." + image.projectFieldId + fileEnding;
+        archive.append(readable, { name });
       },
     );
 
