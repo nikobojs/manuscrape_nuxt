@@ -118,6 +118,13 @@
           >
             {{ fileUploadsCount }} file uploads
           </div>
+          <div
+            v-else-if="exportType === 'MEDIA'"
+            class="text-gray-400 text-sm"
+            :class="{ 'text-red-500': imagesCount === 0 }"
+          >
+            {{ imagesCount }} images
+          </div>
         </div>
       </div>
     </UCard>
