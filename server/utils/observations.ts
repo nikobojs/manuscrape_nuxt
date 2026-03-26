@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, lte, SQL } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, SQL } from "drizzle-orm";
 import {
   fileUploads,
   imageUploads,
@@ -76,13 +76,17 @@ export async function getFullObservationsByProjectId(
     originalName: true,
     observationId: true,
   });
-  const imageUploadsRes = await getImageUploadsByObservationIds(resultIds, {
-    id: true,
-    createdAt: true,
-    mimetype: true,
-    originalName: true,
-    observationId: true,
-  });
+  const imageUploadsRes: ImageUpload[] = await getImageUploadsByObservationIds(
+    resultIds,
+    {
+      id: true,
+      createdAt: true,
+      mimetype: true,
+      originalName: true,
+      observationId: true,
+      projectFieldId: true,
+    },
+  );
   const relatedUsersRes = await getUsersByIds(userIds, {
     id: true,
     email: true,
@@ -102,7 +106,7 @@ export async function getFullObservationsByProjectId(
       ...o,
       data: o.data as Record<string, any>,
       fileUploads: fileUploadMap[o.id] || [],
-      image: observationImageMap[o.id]?.[0] || null,
+      images: observationImageMap[o.id] || [],
       user: relatedUsersRes?.find((u) => u.id === o.userId) || null,
       tags: (projectTagsMap[o.projectId] || []).map((t) => ({
         id: t.id,
@@ -149,13 +153,17 @@ export async function getObservationsByProjectId<
   return res;
 }
 
-export async function getObservationImage(observationId: number) {
+export async function getObservationImages(
+  observationId: number,
+): Promise<ImageUpload[]> {
   const imageRes = await db
     .select({
       id: imageUploads.id,
       createdAt: imageUploads.createdAt,
       mimetype: imageUploads.mimetype,
       originalName: imageUploads.originalName,
+      projectFieldId: imageUploads.projectFieldId,
+      observationId: imageUploads.observationId,
     })
     .from(imageUploads)
     .where(eq(imageUploads.observationId, observationId));
@@ -194,7 +202,7 @@ export async function getFullObservation(observationId: number) {
     mimetype: true,
     originalName: true,
   });
-  const observationImage = await getObservationImage(observationId);
+  const observationImages = await getObservationImages(observationId);
   const tags = await getObservationTagsByObservationId(observationId);
   let relatedUser = null;
   if (o.userId) {
@@ -204,7 +212,7 @@ export async function getFullObservation(observationId: number) {
   return {
     ...o,
     fileUploads: fileUploadsRes,
-    image: observationImage[0]!,
+    images: observationImages,
     user: relatedUser ? relatedUser : null,
     tags: tags,
     data: o.data as Record<string, any>,

@@ -54,13 +54,12 @@ export default safeResponseHandler(async (event) => {
     isS3: true,
   });
 
-  const imageUpload = await getImageUploadByObservationId(observationId, {
+  const imageUploads = await getImageUploadsByObservationIds([observationId], {
     filePath: true,
     isS3: true,
   });
 
-  const filesToDelete = [...fileUploads];
-  if (imageUpload) filesToDelete.push(imageUpload);
+  const filesToDelete = [...fileUploads, ...imageUploads];
 
   // delete all the files from s3 in the array (skips if empty)
   for (const fileToDelete of filesToDelete) {

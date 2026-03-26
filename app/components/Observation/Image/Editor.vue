@@ -1,8 +1,5 @@
 <template>
-  <UCard
-    v-if="typeof observation?.image?.id === 'number' || props.initialFile"
-    class="overflow-visible"
-  >
+  <UCard v-if="props.initialFile" class="overflow-visible">
     <template #header>
       <div class="flex justify-between">
         <div class="relative h-4">
@@ -79,8 +76,9 @@
             @click="reset"
             variant="outline"
             size="xs"
-            >Reset all changes</UButton
           >
+            Reset all changes
+          </UButton>
           <UButton
             icon="i-mdi-content-save-outline"
             :disabled="
@@ -91,10 +89,9 @@
             @click="save"
             variant="outline"
             size="xs"
-            >{{
-              isPreUploadMode ? "Save & Upload" : "Overwrite image"
-            }}</UButton
           >
+            {{ isPreUploadMode ? "Save & Upload" : "Overwrite image" }}
+          </UButton>
         </div>
       </div>
     </template>
@@ -241,9 +238,9 @@
                   >Save text</UButton
                 >
                 <!-- discard text button-->
-                <UButton color="red" variant="outline" @click="resetTextDraft"
-                  >Discard</UButton
-                >
+                <UButton color="red" variant="outline" @click="resetTextDraft">
+                  Discard
+                </UButton>
               </form>
 
               <!-- font size input field -->
@@ -391,15 +388,14 @@ const props = defineProps({
     type: Object as PropType<File>,
     required: false,
   },
+  projectFieldId: {
+    type: Number,
+    required: true,
+  },
 });
 
 // For pre-upload mode, observation might not have an image yet
 const isPreUploadMode = computed(() => !!props.initialFile);
-
-if (!isPreUploadMode.value && !props.observation?.image?.id) {
-  console.error("Observation does not have an image!");
-  navigateTo("/");
-}
 
 const canvas = ref<HTMLCanvasElement>();
 const canvasContainer = ref<HTMLDivElement>();
@@ -446,6 +442,7 @@ const {
 } = useImageEditor(
   props.observation.id,
   props.project.id,
+  props.projectFieldId,
   canvas,
   canvasContainer,
   textInput,
@@ -456,18 +453,34 @@ const {
 
 function save() {
   createImageFile(async (file: File) => {
-    await upsertObservationImage(props.project.id, props.observation.id, file);
+    try {
+      await upsertObservationImage(
+        props.project.id,
+        props.observation.id,
+        props.projectFieldId,
+        file,
+      );
 
-    // For pre-upload mode, call onSubmit callback
-    if (isPreUploadMode.value && props.onSubmit) {
-      await props.onSubmit(true);
-    } else {
-      // TODO: wait until redownload+rerender of image somehow
+      // For pre-upload mode, call onSubmit callback
+      if (isPreUploadMode.value && props.onSubmit) {
+        await props.onSubmit(true);
+      } else {
+        // TODO: wait until redownload+rerender of image somehow
+        setTimeout(() => {
+          toast.add({
+            title: "Image was saved",
+            icon: "i-heroicons-check",
+            color: "green",
+          });
+        }, 250);
+      }
+    } catch (e) {
       setTimeout(() => {
         toast.add({
-          title: "Image was saved",
-          icon: "i-heroicons-check",
-          color: "green",
+          title: "An error happened when saving the image",
+          description: (e as Error)?.message || "Unknown error description",
+          icon: "i-heroicons-exclamation-triangle",
+          color: "red",
         });
       }, 250);
     }

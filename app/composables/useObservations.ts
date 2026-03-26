@@ -188,6 +188,7 @@ export const useObservations = async (
   const upsertObservationImage = async (
     projectId: number,
     observationId: number,
+    projectFieldId: number,
     file: File,
   ) => {
     const form = new FormData();
@@ -195,8 +196,11 @@ export const useObservations = async (
 
     try {
       await $fetch(
-        `/api/projects/${projectId}/observations/${observationId}/image`,
+        `/api/projects/${projectId}/observations/${observationId}/image-uploads`,
         {
+          query: {
+            projectFieldId,
+          },
           method: "PUT",
           body: form,
           onRequest: (ctx) => {

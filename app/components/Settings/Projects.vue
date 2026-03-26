@@ -66,9 +66,9 @@
             />
           </div>
           <div v-if="isOwner">
-            <UButton class="mt-4" type="submit" :disabled="loading"
-              >Save settings</UButton
-            >
+            <UButton class="mt-4" type="submit" :disabled="loading">
+              Save settings
+            </UButton>
           </div>
           <span class="text-red-500 block mt-2 mb-2" v-if="error">{{
             error
@@ -136,7 +136,7 @@ async function saveSettings() {
 
   try {
     const res = await patchProject(project.value.id, patch);
-    if (res.status !== 200) {
+    if (res.status !== 204) {
       console.error(`patchProject api response returned ${res.status}`);
       toast.add({
         title: "Server error :(",

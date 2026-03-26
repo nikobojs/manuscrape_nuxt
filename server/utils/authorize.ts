@@ -66,7 +66,7 @@ export async function requireUser(
 }
 
 export async function ensureObservationOwnership(
-  obs: FullObservation | FullObservationPayload,
+  obs: FullObservation,
   user: User,
 ): Promise<void> {
   if (obs.user?.email !== user.email) {

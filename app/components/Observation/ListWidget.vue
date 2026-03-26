@@ -62,12 +62,13 @@
       <template #actions-data="{ row }">
         <div class="w-full justify-end flex gap-x-3">
           <div
-            v-if="typeof row.image?.id === 'number'"
-            @click="() => openObservationImage(row)"
+            v-if="row.images?.length"
+            @click="() => openObservationImages(row)"
           >
-            <span
-              class="i-heroicons-photo text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
-            ></span>
+            <UIcon
+              name="i-heroicons-photo"
+              class="text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
+            />
           </div>
           <NuxtLink
             :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
@@ -100,10 +101,9 @@
       />
     </div>
   </UCard>
-
   <!-- TODO: move these modals -->
   <ObservationImageModal
-    v-if="selectedObservation"
+    v-if="selectedObservation?.images"
     :open="openImageDialog"
     :observation="selectedObservation"
     :project="project"
@@ -194,13 +194,9 @@ const columns = [
   },
 ];
 
-function openObservationImage(row: any) {
-  if (typeof row?.image?.id !== "number") {
-    throw new Error("Image id is not a number");
-  } else {
-    selectedObservation.value = row;
-    openImageDialog.value = true;
-  }
+function openObservationImages(row: any) {
+  selectedObservation.value = row;
+  openImageDialog.value = true;
 }
 
 async function beginDeleteObservation(row: any) {

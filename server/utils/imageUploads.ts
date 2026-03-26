@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { imageUploads } from "../drizzle/schema";
 
 type ImageUploadInsert = Omit<
@@ -22,12 +22,25 @@ export async function createImageUpload(imageUpload: ImageUploadInsert) {
     .then((res) => res[0]!);
 }
 
-export function getImageUploadByObservationId<
+export function getImageUploadByObsAndField<
   T extends Partial<Record<keyof ImageUploadSelect, boolean>>,
->(observationId: number, select: T) {
+>(observationId: number, projectFieldId: number, select: T) {
+  console.log("finding image upload by", { observationId, projectFieldId });
   return db.query.imageUploads.findFirst({
     columns: select,
-    where: eq(imageUploads.observationId, observationId),
+    where: and(
+      eq(imageUploads.observationId, observationId),
+      eq(imageUploads.projectFieldId, projectFieldId),
+    ),
+  });
+}
+
+export function getImageUploadById<
+  T extends Partial<Record<keyof ImageUploadSelect, boolean>>,
+>(imgUploadId: number, select: T) {
+  return db.query.imageUploads.findFirst({
+    columns: select,
+    where: eq(imageUploads.id, imgUploadId),
   });
 }
 

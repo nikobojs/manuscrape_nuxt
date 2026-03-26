@@ -1,19 +1,20 @@
 import {
+  dynamicProjectFields,
   exportStatusEnum,
   exportTypeEnum,
   fieldOperatorEnum,
   fieldTypeEnum,
   projectRoleEnum,
+  observations,
 } from "~~/server/drizzle/schema";
 import type { H3Event } from "h3";
 import {
   NewProjectFieldSchema,
   NewProjectSchema,
-} from "~~/server/api/projects/project.post";
+} from "~~/server/api/projects.post";
 import type { InferType } from "yup";
 import { SignInRequestSchema } from "~~/server/api/auth.post";
 import { SignUpRequestSchema } from "~~/server/api/user.post";
-// import { ExportProjectSchema } from "~~/server/api/projects/[projectId]/exports/exports.post";
 import type {
   exportProjectQuery,
   bigUserQuery,
@@ -37,10 +38,7 @@ declare global {
 
   interface FullObservation {
     id: number;
-    image: Omit<
-      Omit<Omit<ImageUpload, "filePath">, "isS3">,
-      "observationId"
-    > | null;
+    images: ImageUpload[];
     fileUploads: Omit<FileUploadResponse, "observationId">[];
     user: { email: string; id?: number } | null;
     data: Record<string, any> | null;
@@ -52,6 +50,15 @@ declare global {
     updatedAt: Date | string;
     createdAt: Date | string;
   }
+
+  type ImageUpload = {
+    id: number;
+    createdAt: Date;
+    observationId: number;
+    projectFieldId: number;
+    mimetype: string;
+    originalName: string;
+  };
 
   type User = {
     id: number;
@@ -153,13 +160,23 @@ declare global {
     choices: string[];
   }
 
+  interface CMSImageProps {
+    label: string;
+  }
+
+  interface CMSImagesProps {
+    label: string;
+  }
+
   interface CMSInput {
-    field: NewProjectField;
+    field: NewProjectField & { id: number };
     props:
       | CMSInputProps
       | CMSCheckboxProps
       | CMSMultipleChoiceProps
-      | CMSTextAreaProps;
+      | CMSTextAreaProps
+      | CMSImageProps
+      | CMSImagesProps;
   }
 
   interface Window {
@@ -301,21 +318,24 @@ declare global {
     includeTags: Boolean;
   };
 
-  type AllFieldColumns = Prisma.ProjectFieldGetPayload<{
-    select: typeof allFieldColumns;
-  }>;
-  type AllDynamicFieldColumns = Prisma.DynamicProjectFieldGetPayload<{
-    select: typeof allDynamicFieldColumns;
-  }>;
-  type FullObservationPayload = Prisma.ObservationGetPayload<{
-    select: typeof observationColumns;
-  }>;
   type ExportProjectPayload = InferType<typeof ExportProjectSchema>;
 
   type Transaction = PgTransaction<
     PostgresJsQueryResultHKT,
     typeof schema,
     ExtractTablesWithRelations<typeof schema>
+  >;
+
+  type FullObservation = Pick<
+    typeof observations.$inferSelect,
+    | "id"
+    | "createdAt"
+    | "data"
+    | "isDraft"
+    | "projectId"
+    | "updatedAt"
+    | "uploadInProgress"
+    | "userId"
   >;
 
   type SmallProjectField = Pick<
@@ -328,6 +348,17 @@ declare global {
     | "projectId"
     | "required"
     | "type"
+  >;
+
+  type FullDynamicProjectField = Pick<
+    typeof dynamicProjectFields.$inferSelect,
+    | "id"
+    | "field0Id"
+    | "field1Id"
+    | "createdAt"
+    | "operator"
+    | "label"
+    | "projectId"
   >;
 
   type SmallProject = Omit<FullProject, "observations" | "tags"> & {

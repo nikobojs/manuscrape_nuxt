@@ -1,4 +1,7 @@
-import { deserializeChoices } from "#shared/utils/observationFields";
+import {
+  deserializeChoices,
+  inputTypes,
+} from "#shared/utils/observationFields";
 import type { FormError } from "#ui/types";
 
 function extractField(
@@ -7,10 +10,13 @@ function extractField(
     | CMSMultipleChoiceProps
     | CMSInputProps
     | CMSTextAreaProps
-    | CMSCheckboxProps,
+    | CMSCheckboxProps
+    | CMSImageProps
+    | CMSImagesProps,
 ): CMSInput {
   const newField: CMSInput = {
     field: {
+      id: field.id,
       type: field.type as FieldType,
       index: field.index,
       label: field.label,
@@ -24,8 +30,10 @@ function extractField(
 
 export function buildForm(fields: ProjectFieldResponse[]): {
   inputs: CMSInput[];
+  imageInputs: CMSInput[];
 } {
   const inputs: CMSInput[] = [];
+  const imageInputs: CMSInput[] = [];
 
   for (const field of fields) {
     const useSimpleInput = Object.keys(inputTypes).includes(field.type);
@@ -84,6 +92,12 @@ export function buildForm(fields: ProjectFieldResponse[]): {
             name: field.label,
           } as CMSMultipleChoiceProps),
         );
+      } else if (["IMAGE_SINGLE", "IMAGE_MULTIPLE"].includes(typ)) {
+        imageInputs.push(
+          extractField(field, {
+            label: field.label,
+          } as CMSImageProps | CMSImagesProps),
+        );
       } else {
         throw new Error(`Field with type '${field.type}' is not supported :(`);
       }
@@ -92,6 +106,7 @@ export function buildForm(fields: ProjectFieldResponse[]): {
 
   return {
     inputs,
+    imageInputs,
   };
 }
 

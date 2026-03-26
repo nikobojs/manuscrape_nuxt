@@ -230,9 +230,9 @@
             <div class="border-b border-gray-800 w-full"></div>
           </div>
           <UButton
-            v-if="!props.disabled"
+            v-show="!props.disabled"
             variant="outline"
-            type="submit"
+            @click="submit"
             :disabled="!!$props.disabled"
           >
             Save observation parameters
@@ -273,7 +273,9 @@ const emit = defineEmits<{
 }>();
 
 const form = ref();
-const sortedFields = computed(() => sortFieldsByIndex(props.project.fields));
+const sortedFields = computed(
+  () => sortFieldsByIndex(props.project.fields).filter(pf => !['IMAGE_SINGLE', 'IMAGE_MULTIPLE'].includes(pf.type))
+);
 
 const state = ref({ ...(props.initialState || {}) } as any);
 
@@ -332,8 +334,10 @@ function getMultipleChoiceAddOptions(field: {
 
 async function submit() {
   try {
+    console.log('validating form...')
     await form.value!.validate();
   } catch (e) {
+    console.warn(e);
     // Do nothing as library takes care of errors
     // NOTE: this is to avoid uncaught rejected promises
     return;

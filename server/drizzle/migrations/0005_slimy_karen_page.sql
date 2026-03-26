@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "image_uploads_observation_id_project_field_id_unique" ON "ImageUpload" USING btree ("observation_id","project_field_id");

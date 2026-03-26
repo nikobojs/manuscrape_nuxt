@@ -10,6 +10,8 @@ export const FieldTypeValues: Array<FieldType> = [
   "MULTIPLE_CHOICE_ADD",
   "STRING",
   "TEXTAREA",
+  "IMAGE_SINGLE",
+  "IMAGE_MULTIPLE",
 ];
 
 export type SimpleInputTypes = "DATETIME" | "DATE" | "FLOAT" | "INT" | "STRING";
@@ -32,6 +34,8 @@ export const ObservationFieldTypes: Record<string, FieldType> = {
   "Radio buttons": "CHOICE",
   "Text (multi line)": "TEXTAREA",
   "Text (single line)": "STRING",
+  "Single image": "IMAGE_SINGLE",
+  "Multiple images": "IMAGE_MULTIPLE",
   "Whole number": "INT",
 };
 

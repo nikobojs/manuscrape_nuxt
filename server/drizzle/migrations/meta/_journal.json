@@ -22,6 +22,34 @@
       "when": 1769757136871,
       "tag": "0002_strange_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773415307516,
+      "tag": "0003_useful_morph",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773596946682,
+      "tag": "0004_neat_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773597014097,
+      "tag": "0005_slimy_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773936747820,
+      "tag": "0006_real_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

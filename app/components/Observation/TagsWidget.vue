@@ -1,59 +1,61 @@
 <template>
-  <UCard class="col-span-2 h-full">
-    <template #header>
-      <div class="h-4 flex justify-between relative">
-        <CardHeader>Tags</CardHeader>
-        <UButton
-          class="-mt-2 -mb-2"
-          variant="outline"
-          color="blue"
-          icon="i-mdi-add"
-          @click="openCreateNewTagModal = true"
-        >
-          Create new
-        </UButton>
-      </div>
-    </template>
-    <div
-      class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic"
-    >
-      Click tags to add or remove
-    </div>
-    <div class="flex flex-wrap gap-2">
-      <UBadge
-        v-for="tag in sortedTags"
-        :key="tag.id"
-        :color="isTagSelected(tag.id) ? 'blue' : 'gray'"
-        variant="solid"
-        class="text-xs px-2 py-1 cursor-pointer"
-        @click="toggleTag(tag.id)"
-      >
-        #{{ tag.name }}
-      </UBadge>
-    </div>
-  </UCard>
-
-  <UModal
-    v-model="openCreateNewTagModal"
-    :ui="{ width: 'sm:max-w-xs max-w-xs' }"
-  >
-    <UCard>
+  <div>
+    <UCard class="col-span-2 h-full">
       <template #header>
-        <div>Create new tag</div>
+        <div class="h-4 flex justify-between relative">
+          <CardHeader>Tags</CardHeader>
+          <UButton
+            class="-mt-2 -mb-2"
+            variant="outline"
+            color="blue"
+            icon="i-mdi-add"
+            @click="openCreateNewTagModal = true"
+          >
+            Create new
+          </UButton>
+        </div>
       </template>
-
-      <div class="flex flex-col gap-3">
-        <UInput v-model="newTagName" placeholder="Enter tag name" />
-        <span class="text-red-500 text-xs" v-if="newTagError">{{
-          newTagError
-        }}</span>
+      <div
+        class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic"
+      >
+        Click tags to add or remove
       </div>
-
-      <template #footer>
-        <UButton @click="handleCreateTag" color="blue">Create</UButton>
-      </template>
+      <div class="flex flex-wrap gap-2">
+        <UBadge
+          v-for="tag in sortedTags"
+          :key="tag.id"
+          :color="isTagSelected(tag.id) ? 'blue' : 'gray'"
+          variant="solid"
+          class="text-xs px-2 py-1 cursor-pointer"
+          @click="toggleTag(tag.id)"
+        >
+          #{{ tag.name }}
+        </UBadge>
+      </div>
     </UCard>
-  </UModal>
+
+    <UModal
+      v-model="openCreateNewTagModal"
+      :ui="{ width: 'sm:max-w-xs max-w-xs' }"
+    >
+      <UCard>
+        <template #header>
+          <div>Create new tag</div>
+        </template>
+
+        <div class="flex flex-col gap-3">
+          <UInput v-model="newTagName" placeholder="Enter tag name" />
+          <span class="text-red-500 text-xs" v-if="newTagError">{{
+            newTagError
+          }}</span>
+        </div>
+
+        <template #footer>
+          <UButton @click="handleCreateTag" color="blue">Create</UButton>
+        </template>
+      </UCard>
+    </UModal>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -67,6 +69,7 @@ const props = defineProps({
     type: Array as PropType<{ id: number; name: string }[]>,
     required: true,
   },
+  onTagCreated: requireFunctionProp<() => Promise<void>>(),
 });
 
 console.log("tags on observation:", props.tagsOnObservation);
@@ -93,8 +96,6 @@ const {
   attachTagToObservation,
   detachTagFromObservation,
 } = useTags(props.project.id);
-
-const { refreshObservations } = await useObservations(props.project.id);
 
 onMounted(fetchTags);
 
@@ -141,8 +142,7 @@ async function handleCreateTag() {
     newTagName.value = "";
     newTagError.value = "";
     openCreateNewTagModal.value = false;
-    await fetchTags();
-    await refreshObservations();
+    props.onTagCreated();
   } catch (err: any) {
     toast.add({
       title: err.message,

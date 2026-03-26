@@ -1,18 +1,30 @@
 import { captureException } from "@sentry/node";
 import formidable from "formidable";
 import { setObservationUploadProgress } from "~~/server/utils/observations";
+import * as yup from "yup";
+import { requireProjectFieldById } from "~~/server/utils/projectFields";
 
 const allowedMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
 const config = useRuntimeConfig();
+
+const queryDto = yup
+  .object({
+    projectFieldId: yup.string().required(),
+  })
+  .required();
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user);
   const params = event.context.params;
+  const _query = getQuery(event);
+  const query = await queryDto.validate(_query);
+  const projectFieldId = parseIntParam(query.projectFieldId);
   const observationId = parseIntParam(params?.observationId);
 
   const observation = await getObservationById(observationId, {
     id: true,
+    projectId: true,
     isDraft: true,
   });
 
@@ -31,11 +43,31 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const existingImage = await getImageUploadByObservationId(observation.id, {
+  // ensure project field id is in the same project as the observation
+  const projectField = await requireProjectFieldById(projectFieldId, {
     id: true,
-    isS3: true,
-    filePath: true,
+    projectId: true,
+    type: true,
   });
+  if (projectField.projectId !== observation.projectId) {
+    // TODO: report error
+    throw createError({
+      status: 400,
+      message:
+        "The project field does not exist in the same project as the requested observation",
+    });
+  }
+
+  // fetch existing image on this parameter
+  const existingImage = await getImageUploadByObsAndField(
+    observation.id,
+    projectFieldId,
+    {
+      id: true,
+      isS3: true,
+      filePath: true,
+    },
+  );
 
   // define our fileupload helper config
   const form = formidable({
@@ -111,8 +143,8 @@ export default safeResponseHandler(async (event) => {
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
   await uploadFile(newS3Path, file.filepath, canUseS3());
 
-  // remove existing image from database and s3
-  if (existingImage) {
+  // remove existing image from database and s3 unless project field type is multiple images
+  if (existingImage && projectField.type !== "IMAGE_MULTIPLE") {
     // delete existing ImageUpload row
     await deleteImageUpload(existingImage.id);
     try {
@@ -131,6 +163,7 @@ export default safeResponseHandler(async (event) => {
     filePath: `${newS3Path}`,
     isS3: canUseS3(),
     observationId: observation.id,
+    projectFieldId: projectFieldId,
   });
 
   // adjust progress and updated at

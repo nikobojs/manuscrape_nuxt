@@ -1,0 +1,1 @@
+DROP INDEX "image_uploads_observation_id_project_field_id_unique";

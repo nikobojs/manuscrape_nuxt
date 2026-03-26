@@ -23,6 +23,7 @@ const lineWidths = [2, 3, 5, 8, 13, 21].map((v) => ({
 export function useImageEditor(
   observationId: number,
   projectId: number,
+  projectFieldId: number | undefined,
   canvas: Ref<HTMLCanvasElement | undefined>,
   container: Ref<HTMLDivElement | undefined>,
   textInput: Ref<HTMLInputElement | undefined>,
@@ -128,7 +129,7 @@ export function useImageEditor(
       });
     } else {
       // Load from API URL (existing behavior for editing uploaded images)
-      bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+      bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads?v=${Number(lastReload.value)}`;
       bg.addEventListener("load", () => {
         if (canvas.value && context.value) {
           aspectRatio.value = bg.height / bg.width;
@@ -209,7 +210,7 @@ export function useImageEditor(
         });
       } else {
         // Load from API URL (existing behavior)
-        bg.src = `/api/projects/${projectId}/observations/${observationId}/image?v=${Number(lastReload.value)}`;
+        bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads?v=${Number(lastReload.value)}`;
         bg.addEventListener("load", () => {
           if (canvas.value && context.value) {
             aspectRatio.value = bg.height / bg.width;

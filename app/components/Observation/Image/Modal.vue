@@ -6,10 +6,9 @@
       base: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
     }"
   >
-    <div v-if="imageSrc">
-      <img :src="imageSrc" />
+    <div v-for="src in imageSrcs">
+      <img :src="src" />
     </div>
-    <div v-if="!imageSrc">Observation has no image</div>
   </UModal>
 </template>
 
@@ -28,21 +27,30 @@ function closeObservationImage() {
   props.onClose?.();
 }
 
-function getImageSrc(observation: FullObservation, lastUpdate: Date) {
-  let result;
+const imageSrcs = computed(() =>
+  (props.observation?.images || []).map((img) => {
+    const result = [];
+    const src = `${config.baseUrl}/api/projects/${props.project.id}/observations/${props.observation.id}/image-uploads/${img.id}?projectFieldId=${img.projectFieldId}&latestUpdate=${props.lastUpdate?.getTime()}`;
+    result.push(src);
+    return src;
+  }),
+);
 
-  if (observation && observation?.image?.id && props.project) {
-    result = `${config.baseUrl}/api/projects/${props.project.id}/observations/${observation.id}/image?now=${lastUpdate.getTime()}`;
-  }
+// function getImageSrc(observation: FullObservation, lastUpdate: Date) {
+//   let result;
 
-  return result;
-}
+//   if (observation && observation.images.length && props.project) {
+//     result = `${config.baseUrl}/api/projects/${props.project.id}/observations/${observation.id}/image-uploads/${props.image.id}?projectFieldId=${props.image.projectFieldId}&latestUpdate=${lastUpdate.getTime()}`;
+//   }
 
-const imageSrc = computed(() => {
-  if (!props.observation) {
-    throw new Error("No observation");
-  }
-  const src = getImageSrc(props.observation, new Date());
-  return src;
-});
+//   return result;
+// }
+
+// const imageSrc = computed(() => {
+//   if (!props.observation) {
+//     throw new Error("No observation");
+//   }
+//   const src = getImageSrc(props.observation, new Date());
+//   return src;
+// });
 </script>

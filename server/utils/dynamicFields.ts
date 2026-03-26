@@ -72,13 +72,23 @@ export function requireAllowedMatch(
 }
 
 export function calculateDynamicFieldValue(
-  dynamicField: AllDynamicFieldColumns,
-  fields: AllFieldColumns[],
-  obs: FullObservationPayload,
+  dynamicField: FullDynamicProjectField,
+  fields: SmallProjectField[],
+  obs: FullObservation,
 ) {
   // get dynamic field match from config
   const field0 = fields.find((f) => f.id === dynamicField.field0Id);
   const field1 = fields.find((f) => f.id === dynamicField.field1Id);
+
+  if (!field0 || !field1) {
+    // TODO: report error
+    throw createError({
+      statusMessage:
+        "Project fields referenced from dynamic field does not exist",
+      statusCode: 500,
+    });
+  }
+
   requireAllowedMatch(field0, field1, dynamicField.operator);
 
   // TODO: improve maintainability and readability
@@ -100,6 +110,7 @@ export function calculateDynamicFieldValue(
       } else if (["INT"].some((t) => t === types[i])) {
         vals[i] = parseInt(rawVals[i]);
       } else {
+        // TODO: report error
         throw createError({
           statusMessage:
             "Dynamic field error: Provided fieldtypes is not supported",

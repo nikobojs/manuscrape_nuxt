@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     invitationSalt: process.env.INVITATION_SALT || "saltyFreciousTrembleCat42",
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
-    manuscrapeClientVersionRequirement: ">=1.0.9",
+    manuscrapeClientVersionRequirement: ">=1.0.11",
   },
 
   colorMode: {

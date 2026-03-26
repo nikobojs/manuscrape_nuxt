@@ -3,15 +3,14 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
-  ListObjectsCommand,
-} from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
-import { Readable } from 'node:stream';
-import type { ReadableStream } from 'node:stream/web';
-import { captureException } from '@sentry/node';
-import fs from 'node:fs';
-import path from 'node:path';
-import { PassThrough } from 'stream';
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
+import { captureException } from "@sentry/node";
+import fs from "node:fs";
+import path from "node:path";
+import { PassThrough } from "stream";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
 const config = useRuntimeConfig() || {};
@@ -39,7 +38,7 @@ const createS3Client = (): S3Client => {
     }),
     endpoint: config.s3Endpoint as string,
     forcePathStyle: true,
-    responseChecksumValidation: 'WHEN_REQUIRED',
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 };
 
@@ -50,21 +49,23 @@ export const canUseFileSystem = (): boolean => {
 // ensure file uploads works in some way
 // TODO: test if they work (has write access on either system)
 if (!canUseS3() && !canUseFileSystem()) {
-  throw new Error('File-upload environment variables are missing.');
+  throw new Error("File-upload environment variables are missing.");
 }
 
 // optional clients that can be shared by different commands
 const uploadsPath = canUseFileSystem() ? config.fileUploadPath : null;
 
-console.info(`> using ${canUseS3() ? 's3' : 'file system'} to store user uploaded data`);
+console.info(
+  `> using ${canUseS3() ? "s3" : "file system"} to store user uploaded data`,
+);
 
 // upload a file to configured s3
 export async function uploadFile(
   key: string,
   file: string | Buffer,
-  isS3: boolean
+  isS3: boolean,
 ): Promise<void> {
-  const contents = typeof file === 'string' ? fs.readFileSync(file) : file;
+  const contents = typeof file === "string" ? fs.readFileSync(file) : file;
 
   if (isS3) {
     try {
@@ -74,24 +75,24 @@ export async function uploadFile(
           Bucket: config.s3BucketName,
           Key: key,
           Body: contents,
-        })
+        }),
       );
       if (res.$metadata.httpStatusCode !== 200) {
         const err = createError({
           statusCode: res.$metadata.httpStatusCode,
-          statusMessage: 'Unable to upload file',
+          statusMessage: "Unable to upload file",
         });
         captureException(err);
         throw err;
       }
-    } catch(e) {
-      console.error('The server is unable to connect to S3');
-      console.error(e)
+    } catch (e) {
+      console.error("The server is unable to connect to S3");
+      console.error(e);
       captureException(e);
       if (e instanceof Error) {
         throw createError({
           statusCode: 500,
-          statusMessage: 'Internal server error'
+          statusMessage: "Internal server error",
         });
       } else {
         throw e;
@@ -100,7 +101,7 @@ export async function uploadFile(
   } else if (uploadsPath && !isS3) {
     // retrieve file and dir path
     const fullPath = path.join(uploadsPath, key);
-    const dirPath = fullPath.split('/').slice(0, -1).join('/');
+    const dirPath = fullPath.split("/").slice(0, -1).join("/");
 
     // make dirs if they dont exist
     fs.mkdirSync(dirPath, { recursive: true });
@@ -113,7 +114,9 @@ export async function uploadFile(
     });
   } else {
     console.error({ isS3, uploadsPath });
-    throw new Error('Unable to upload file. Server is not configured correctly');
+    throw new Error(
+      "Unable to upload file. Server is not configured correctly",
+    );
   }
 }
 
@@ -125,13 +128,13 @@ export async function deleteFiles(key: string, isS3: boolean): Promise<void> {
       new DeleteObjectCommand({
         Bucket: config.s3BucketName,
         Key: key,
-      })
+      }),
     );
     if (deleteRes.$metadata.httpStatusCode !== 204) {
       // TODO: add details on captured error
       const err = createError({
         statusCode: deleteRes.$metadata.httpStatusCode,
-        statusMessage: 'Unable to delete existing file',
+        statusMessage: "Unable to delete existing file",
       });
       captureException(err, { data: { path: key, s3: true } });
       throw err;
@@ -142,7 +145,7 @@ export async function deleteFiles(key: string, isS3: boolean): Promise<void> {
     // capture createError 404 if file not found
     // NOTE: happens silently so fn will still resolve!
     if (!fs.existsSync(fullPath)) {
-      const error = new Error('File does not exist on server');
+      const error = new Error("File does not exist on server:" + fullPath);
       captureException(error, { data: { path: fullPath, s3: false } });
       return;
     }
@@ -160,13 +163,15 @@ export async function deleteFiles(key: string, isS3: boolean): Promise<void> {
       });
     });
   } else {
-    throw new Error('Unable to delete file. Server is not configured correctly');
+    throw new Error(
+      "Unable to delete file. Server is not configured correctly",
+    );
   }
 }
 
 export async function getUpload(
   key: string,
-  isS3: boolean
+  isS3: boolean,
 ): Promise<{ readable: Readable; s3: S3Client | null }> {
   if (isS3) {
     const s3 = createS3Client();
@@ -174,14 +179,14 @@ export async function getUpload(
       new GetObjectCommand({
         Bucket: config.s3BucketName,
         Key: key,
-      })
+      }),
     );
 
     // validate response
     if (res.$metadata.httpStatusCode !== 200 || !res.Body) {
       const err = createError({
         statusCode: res.$metadata.httpStatusCode,
-        statusMessage: 'File could not be retrieved on server',
+        statusMessage: "File could not be retrieved on server",
       });
       captureException(err, { data: { path: key, s3: true } });
       throw err;
@@ -202,26 +207,29 @@ export async function getUpload(
     return { readable: fs.createReadStream(fullPath), s3: null };
   } else {
     if (isS3 && !canUseS3()) {
-      const err = 'This file is currently not available (no s3 connection)';
+      const err = "This file is currently not available (no s3 connection)";
       throw createError({
         statusCode: 500,
         statusMessage: err,
       });
     } else if (!isS3 && !canUseFileSystem()) {
-      const err = 'This file is currently not available (missing file upload config)';
+      const err =
+        "This file is currently not available (missing file upload config)";
       throw createError({
         statusCode: 500,
         statusMessage: err,
       });
     }
 
-    throw new Error('Unable to download file. Server is not configured correctly');
+    throw new Error(
+      "Unable to download file. Server is not configured correctly",
+    );
   }
 }
 
 export function archiverUploadPipe(
   key: string,
-  isS3: boolean
+  isS3: boolean,
 ): {
   passThrough: NodeJS.WritableStream;
   upload: { done: () => void };
@@ -242,7 +250,7 @@ export function archiverUploadPipe(
   } else if (uploadsPath && !isS3) {
     // retrieve file and dir path
     const fullPath = path.join(uploadsPath, key);
-    const dirPath = fullPath.split('/').slice(0, -1).join('/');
+    const dirPath = fullPath.split("/").slice(0, -1).join("/");
 
     // make dirs if they dont exist
     fs.mkdirSync(dirPath, { recursive: true });
@@ -258,14 +266,16 @@ export function archiverUploadPipe(
       },
     };
   } else {
-    throw new Error('Unable to upload file. Server is not configured correctly');
+    throw new Error(
+      "Unable to upload file. Server is not configured correctly",
+    );
   }
 }
 
 // throw createError 404 if filesystem file not found
 function ensureFilePathExists(filePath: string) {
   if (!checkFilePathExists(filePath)) {
-    const error = new Error('File does not exist on server');
+    const error = new Error("File does not exist on server:" + filePath);
     captureException(error, { data: { filePath, s3: false } });
     throw createError({
       statusCode: 404,

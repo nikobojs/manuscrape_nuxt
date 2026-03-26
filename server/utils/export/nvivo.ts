@@ -9,9 +9,9 @@ import { observations } from "~~/server/drizzle/schema";
 import { getCollaboratorsInProjects } from "../collaborators";
 
 function generateObservationRow(
-  obs: FullObservationPayload,
-  fields: AllFieldColumns[],
-  dynamicFields: AllDynamicFieldColumns[],
+  obs: FullObservation,
+  fields: SmallProjectField[],
+  dynamicFields: FullDynamicProjectField[],
   contributors: { nameInProject: string; user_id: number }[],
   allTags: string[],
   includeTags: boolean,
@@ -23,7 +23,7 @@ function generateObservationRow(
   const fieldValues = new Array(fields.length + dynamicFields.length);
 
   // for each data entry
-  const entries = Object.entries(obs.data);
+  const entries = Object.entries(obs.data!);
   for (let i = 0; i < entries.length; i++) {
     const [key, rawVal] = entries[i]!;
 
@@ -52,7 +52,7 @@ function generateObservationRow(
   // calculate and add the dynamic values to the row
   const dynamicFieldsIndexOffset = fieldValues.length - dynamicFields.length;
   for (let i = 0; i < dynamicFields.length; i++) {
-    const val = calculateDynamicFieldValue(dynamicFields[i], fields, obs);
+    const val = calculateDynamicFieldValue(dynamicFields[i]!, fields, obs);
     const columnIndex = i + dynamicFieldsIndexOffset;
     fieldValues[columnIndex] = val;
   }
@@ -85,8 +85,8 @@ function generateObservationRow(
 }
 
 function getWorksheetColumns(
-  fields: AllFieldColumns[],
-  dynamicFields: AllDynamicFieldColumns[],
+  fields: SmallProjectField[],
+  dynamicFields: FullDynamicProjectField[],
   allTags: string[] = [],
 ): Partial<excel.Column>[] {
   const predefinedColumns = [
@@ -191,8 +191,8 @@ export const generateNvivoExport = async (
   ); // max a hundred thousand rows
 
   // initialize a few shortcut variables
-  const fields: AllFieldColumns[] = project.fields;
-  const dynamicFields: AllDynamicFieldColumns[] = project.dynamicFields;
+  const fields: SmallProjectField[] = project.fields;
+  const dynamicFields: FullDynamicProjectField[] = project.dynamicFields;
 
   // ensure export is meaningful
   if (obs.length === 0) {

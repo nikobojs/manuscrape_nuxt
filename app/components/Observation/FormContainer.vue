@@ -26,10 +26,9 @@
       <ObservationImageWidget
         :project="project"
         :observation="observation"
-        :onSubmit="onImageUploaded"
+        :onSubmit="onImagesChange"
+        :inputs="observationForm.imageInputs"
         :disabled="isLocked"
-        :imageUploaded="imgUploaded"
-        :uploadInProgress="uploadInProgress"
       />
 
       <UCard
@@ -123,7 +122,8 @@
       <ObservationTagsWidget
         :project="project"
         :observation-id="observation.id"
-        :tags-on-observation="(observation as FullObservation).tags"
+        :tags-on-observation="tagsOnObservation"
+        :on-tag-created="onTagCreated"
       />
     </div>
   </div>
@@ -134,11 +134,10 @@ const props = defineProps({
   onObservationPublished: Function as PropType<Function>,
   onFormSubmit: Function as PropType<(showToast?: boolean) => void>,
   onDelockObservation: Function as PropType<Function>,
-  onImageUploaded: Function as PropType<
-    (isFirstImage: boolean) => Promise<void>
-  >,
+  onImagesChange: Function as PropType<() => Promise<void>>,
   onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
   onFileDeleted: requireFunctionProp<() => Promise<void>>(),
+  onTagCreated: requireFunctionProp<() => Promise<void>>(),
   metadataDone: Boolean as PropType<boolean>,
   imageUploaded: Boolean as PropType<boolean>,
   observation: {
@@ -148,6 +147,7 @@ const props = defineProps({
   project: requireProjectProp,
 });
 
+const tagsOnObservation = computed(() => props.observation?.tags || []);
 const imgUploaded = computed(() => props.imageUploaded);
 const formLoading = ref(true);
 const hasUnsavedVersion = ref(false);
@@ -197,7 +197,8 @@ function onMetadataDraftUpdate(data: any) {
 }
 const observationForm = ref<{
   inputs: CMSInput[];
-}>({ inputs: [] });
+  imageInputs: CMSInput[];
+}>({ inputs: [], imageInputs: [] });
 
 function buildInitialForm(obs: FullObservation, project: FullProject) {
   const sessStorageCached = getObservationMetadataDraft(obs.id);
@@ -240,12 +241,6 @@ const isLocked = computed(
   () => props.observation != null && !props.observation.isDraft,
 );
 
-const uploadInProgress = computed(() => {
-  return (
-    props.observation && !props.observation?.image?.id
-  );
-});
-
 onBeforeMount(() => {
   if (!props.observation)
     throw new Error("Observation is not defined when populating metadata form");
@@ -253,9 +248,9 @@ onBeforeMount(() => {
     props.observation,
     props.project,
   );
-  const metadataFormVal = buildForm(props.project.fields);
+  const form = buildForm(props.project.fields);
   initialObservationForm.value = initialMetadataFormVal;
-  observationForm.value = metadataFormVal;
+  observationForm.value = form;
   formLoading.value = false;
 });
 

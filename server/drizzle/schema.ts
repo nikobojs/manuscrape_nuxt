@@ -27,6 +27,8 @@ export const fieldTypeEnum = pgEnum("field_type", [
   "AUTOCOMPLETE",
   "AUTOCOMPLETE_ADD",
   "TEXTAREA",
+  "IMAGE_SINGLE",
+  "IMAGE_MULTIPLE",
 ]);
 
 export const fieldOperatorEnum = pgEnum("field_operator", ["DIFF", "SUM"]);
@@ -237,8 +239,10 @@ export const imageUploads = pgTable("ImageUpload", {
   filePath: varchar("file_path", { length: 1024 }).unique().notNull(),
   mimetype: varchar("mimetype", { length: 255 }).notNull(),
   originalName: varchar("original_name", { length: 255 }).notNull(),
+  projectFieldId: integer("project_field_id")
+    .notNull()
+    .references(() => projectFields.id, { onDelete: "cascade" }),
   observationId: integer("observation_id")
-    .unique()
     .notNull()
     .references(() => observations.id, { onDelete: "cascade" }),
 });
@@ -288,6 +292,16 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
 export const observationRelations = relations(observations, ({ one }) => ({
   user: one(users, { fields: [observations.userId], references: [users.id] }),
 }));
+
+export const dynamicProjectFieldRelations = relations(
+  dynamicProjectFields,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [dynamicProjectFields.projectId],
+      references: [projects.id],
+    }),
+  }),
+);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

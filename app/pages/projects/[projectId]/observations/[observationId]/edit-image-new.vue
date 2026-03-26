@@ -4,15 +4,16 @@
         Cancel
       </BackButton>
       <ObservationImageEditor
-        v-if="project && initialFile && observation"
+        v-if="project && initialFile && observation && projectFieldId"
         :project="project"
         :observation="observation"
         :initial-file="initialFile"
         :on-submit="handleUploadSuccess"
+        :project-field-id="projectFieldId"
       />
       <UCard v-else class="p-8 text-center">
         <p class="text-gray-500" v-if="project && observation">
-          No image file provided. Please go back and select an image.
+          {{ error || "No image file provided. Please go back and select an image." }}
         </p>
         <p v-else-if="loading || !observation">Loading..</p>
       </UCard>
@@ -27,6 +28,9 @@ const { params } = useRoute();
 const { isElectron } = useDevice();
 const { project, loading } = await useProjects(params);
 const toast = useToast();
+const route = useRoute();
+const projectFieldId = ref<number>();
+const error = ref<string>();
 
 const disableBackbutton = ref(false);
 
@@ -48,7 +52,17 @@ async function refreshObservation() {
 // Get the initial file from sessionStorage (stored by the widget before navigation)
 const initialFile = ref<File | undefined>(undefined);
 onMounted(async () => {
+  // refresh observation
   await refreshObservation();
+
+  // retrieve (require) `projectFieldId` from query parameters
+  const _projectFieldId = route.query?.projectFieldId;
+  if (typeof _projectFieldId !== 'string' || !_projectFieldId || isNaN(parseInt(_projectFieldId))) {
+    error.value = 'Project field id is not defined in the URL query parameters';
+    return;
+  }
+  projectFieldId.value = parseInt(_projectFieldId);
+
   const fileData = sessionStorage.getItem("pendingImageFile");
   if (fileData) {
     const { name, type, data } = JSON.parse(fileData);

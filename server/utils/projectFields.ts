@@ -165,6 +165,18 @@ export function getNewFieldId(
   return newField;
 }
 
+export async function requireProjectFieldById<
+  T extends Partial<Record<keyof ProjectFieldSelect, boolean>>,
+>(projectFieldId: number, select: T) {
+  const res = await getProjectFieldById(projectFieldId, select);
+  if (!res)
+    throw createError({
+      status: 404,
+      message: "Project field id does not exist",
+    });
+  return res;
+}
+
 export function getProjectFieldById<
   T extends Partial<Record<keyof ProjectFieldSelect, boolean>>,
 >(projectFieldId: number, select: T) {
