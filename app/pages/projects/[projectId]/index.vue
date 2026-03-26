@@ -1,52 +1,52 @@
 <template>
-    <UContainer>
-      <BackButton href="/"> Go to projects </BackButton>
-    </UContainer>
-    <UContainer v-if="project">
-      <div class="text-2xl">
-        {{ project.name }}
+  <UContainer>
+    <BackButton href="/projects"> Go to projects </BackButton>
+  </UContainer>
+  <UContainer v-if="project">
+    <div class="text-2xl">
+      {{ project.name }}
+    </div>
+    <div class="mt-6 grid grid-cols-7 gap-x-6">
+      <ObservationListWidget
+        :project="project"
+        :show-create-button="true"
+        :on-project-updated="
+          () => {
+            refreshObservations();
+          }
+        "
+      />
+      <ProjectParametersWidget
+        :project="project"
+        :on-project-updated="
+          () => {
+            refreshUser();
+          }
+        "
+      />
+    </div>
+    <div class="mt-6">
+      <CollaboratorWidget v-if="isOwner" :project="project" />
+    </div>
+    <div
+      class="grid grid-cols-1 gap-6 mt-6"
+      v-if="isOwner || project.contributorsCanReadAllObservations"
+    >
+      <div>
+        <ProjectExportWidget :project="project" />
       </div>
-      <div class="mt-6 grid grid-cols-7 gap-x-6">
-        <ObservationListWidget
-          :project="project"
-          :show-create-button="true"
-          :on-project-updated="
-            () => {
-              refreshObservations();
-            }
-          "
-        />
-        <ProjectParametersWidget
-          :project="project"
-          :on-project-updated="
-            () => {
-              refreshUser();
-            }
-          "
-        />
+    </div>
+    <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
+      <div class="col-span-1">
+        <ProjectDynamicFieldWidget :project="project" />
       </div>
-      <div class="mt-6">
-        <CollaboratorWidget v-if="isOwner" :project="project" />
+    </div>
+    <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
+      <div class="col-span-1">
+        <ProjectTagsWidget :project="project" />
       </div>
-      <div
-        class="grid grid-cols-1 gap-6 mt-6"
-        v-if="isOwner || project.contributorsCanReadAllObservations"
-      >
-        <div>
-          <ProjectExportWidget :project="project" />
-        </div>
-      </div>
-      <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
-        <div class="col-span-1">
-          <ProjectDynamicFieldWidget :project="project" />
-        </div>
-      </div>
-      <div class="grid grid-cols-1 gap-6 mt-6" v-if="isOwner">
-        <div class="col-span-1">
-          <ProjectTagsWidget :project="project" />
-        </div>
-      </div>
-    </UContainer>
+    </div>
+  </UContainer>
 </template>
 
 <script lang="ts" setup>

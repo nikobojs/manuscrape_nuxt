@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gray-950">
     <Header v-if="!isElectron" />
-    <main class="pt-9 pb-6">
+    <main class="pt-9 pb-6 min-h-[calc(100vh-180px)]">
       <slot />
     </main>
     <Footer />
@@ -10,10 +10,10 @@
 </template>
 
 <script lang="ts" setup>
-  const colorMode = useColorMode();
-  colorMode.value = 'dark'
-  colorMode.forced = true
-  const { isElectron } = useDevice();
-  
-  await useAuth();
+const colorMode = useColorMode();
+colorMode.value = "dark";
+colorMode.forced = true;
+const { isElectron } = useDevice();
+
+await useAuth();
 </script>
