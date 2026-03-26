@@ -2,92 +2,118 @@
   <div
     class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0"
   >
-    <form @submit.prevent="handleSubmitProject">
-      <!-- project form left UCard -->
-      <UCard class="overflow-hidden w-80 shadow-xl">
-        <template #header>
-          <CardHeader>Create project</CardHeader>
-        </template>
+    <div v-if="!templateSelected">
+      <ProjectSelectTemplateForm
+        @close="
+          (ok) => {
+            if (ok) {
+              templateSelected = true;
+            } else {
+              props.onClose();
+            }
+          }
+        "
+        @select:parameters="
+          (params) => {
+            console.log('SELECTED THESE PARAMS', params);
+            addedFields = params;
+          }
+        "
+      />
+    </div>
+    <div class="w-full flex flex-col xl:flex-row gap-6" v-else>
+      <form @submit.prevent="handleSubmitProject">
+        <!-- project form left UCard -->
+        <UCard class="overflow-hidden w-80 shadow-xl">
+          <template #header>
+            <CardHeader>Create project</CardHeader>
+          </template>
 
-        <div class="flex gap-3 flex-col" @submit.prevent="handleSubmitProject">
-          <!-- project name -->
-          <label for="name-input"> Project name: </label>
-          <UInput
-            v-model="form.name"
-            placeholder="Enter project name"
-            id="name-input"
-            required
-          />
-
-          <!-- project draft parameters form -->
-          <p class="mt-5 text-sm text-gray-500">
-            Configure the parameters you want to fill each time you (or a
-            collaborator) adds an observation.
-          </p>
-          <label class="flex gap-x-0.5" for="field-label-input">
-            <p>Parameters</p>
-            <UPopover>
-              <template #panel>
-                <UCard
-                  :ui="{
-                    body: { padding: 'px-2 py-2.5 sm:p-2' },
-                  }"
-                >
-                  <p class="max-w-[260px]">
-                    A parameter consists of a label and a type. This can be a
-                    number, multiple choice, checkbox, etc.
-                  </p>
-                </UCard>
-              </template>
-              <UIcon name="i-heroicons-information-circle" />
-            </UPopover>
-          </label>
-
-          <div class="flex flex-col gap-3">
-            <ProjectFieldForm
-              :required="typeRequired"
-              :label="typeLabel"
-              :field-type="typeType"
-              :added-fields="addedFields"
-              :on-field-update="(field) => setFieldDraft(field)"
-              :on-error="(msg) => (error = msg)"
-              :on-field-add="(field) => addField(field)"
+          <div
+            class="flex gap-3 flex-col"
+            @submit.prevent="handleSubmitProject"
+          >
+            <!-- project name -->
+            <label for="name-input"> Project name: </label>
+            <UInput
+              v-model="form.name"
+              placeholder="Enter project name"
+              id="name-input"
+              required
             />
-          </div>
 
-          <span
-            v-text="error"
-            v-if="error"
-            class="block text-xs text-red-600"
-          ></span>
-        </div>
-        <template #footer>
-          <div class="flex gap-x-3 justify-start">
-            <UButton
-              type="submit"
-              :loading="loading"
-              :disabled="!newProjectIsValid"
-            >
-              Create project
-            </UButton>
-            <UButton @click="onClose" color="gray" variant="outline">
-              Cancel
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </form>
+            <!-- project draft parameters form -->
+            <p class="mt-5 text-sm text-gray-500">
+              Configure the parameters you want to fill each time you (or a
+              collaborator) adds an observation.
+            </p>
+            <label class="flex gap-x-0.5" for="field-label-input">
+              <p>Parameters</p>
+              <UPopover>
+                <template #panel>
+                  <UCard
+                    :ui="{
+                      body: { padding: 'px-2 py-2.5 sm:p-2' },
+                    }"
+                  >
+                    <p class="max-w-[260px]">
+                      A parameter consists of a label and a type. This can be a
+                      number, multiple choice, checkbox, etc.
+                    </p>
+                  </UCard>
+                </template>
+                <UIcon name="i-heroicons-information-circle" />
+              </UPopover>
+            </label>
 
-    <!-- project fields right UCard -->
-    <ProjectFieldList
-      :fields="addedFields"
-      :onFieldsUpdate="
-        (fields) => {
-          addedFields = [...fields];
-          form.fields = [...fields];
-        }
-      "
-    />
+            <div class="flex flex-col gap-3">
+              <ProjectFieldForm
+                :required="typeRequired"
+                :label="typeLabel"
+                :field-type="typeType"
+                :added-fields="addedFields"
+                :on-field-update="(field) => setFieldDraft(field)"
+                :on-error="(msg) => (error = msg)"
+                :on-field-add="(field) => addField(field)"
+              />
+            </div>
+
+            <span
+              v-text="error"
+              v-if="error"
+              class="block text-xs text-red-600"
+            ></span>
+          </div>
+          <template #footer>
+            <div class="flex gap-x-3 justify-start">
+              <UButton
+                type="submit"
+                :loading="loading"
+                :disabled="!newProjectIsValid"
+              >
+                Create project
+              </UButton>
+              <UButton @click="onClose" color="gray" variant="outline">
+                Cancel
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </form>
+
+      <!-- project fields right UCard -->
+      <div class="w-full">
+        <ProjectFieldList
+          :fields="addedFields"
+          :onFieldsUpdate="
+            (fields) => {
+              addedFields = [...fields];
+              form.fields = [...fields];
+            }
+          "
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -100,29 +126,8 @@ const { params } = useRoute();
 const { createProject } = await useProjects(params);
 const toast = useToast();
 
-const defaultFields = [
-  {
-    label: "SoMe username (example)",
-    type: "STRING",
-    required: false,
-    index: 1,
-  },
-  {
-    label: "Number of posts (example)",
-    type: "INT",
-    required: false,
-    index: 2,
-  },
-  {
-    label: "Platform (example)",
-    type: "MULTIPLE_CHOICE_ADD",
-    required: false,
-    index: 3,
-    choices: ["X", "Reddit", "Meta"],
-  },
-] as NewProjectField[];
-
 const loading = ref(false);
+const templateSelected = ref<boolean>(false);
 const error = ref("");
 const fieldLabelInput = ref();
 
@@ -142,14 +147,14 @@ function setFieldDraft(draft: NewProjectFieldDraft) {
 const { isElectron } = useDevice();
 const form = reactive<NewProjectBody>({
   name: "",
-  fields: defaultFields,
+  fields: [],
 });
 
 const newProjectIsValid = computed<boolean>(
   () => form.name.length > 0 && form.fields.length > 0,
 );
 
-const addedFields = ref(defaultFields);
+const addedFields = ref<NewProjectField[]>([]);
 
 async function handleSubmitProject() {
   loading.value = true;

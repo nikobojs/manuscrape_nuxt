@@ -4,10 +4,11 @@
     v-if="fields.length > 0"
     class="overflow-y-auto shadow-xl max-w-full lg:w-full h-full max-h-[450px]"
     :ui="{
-      header: { background: 'bg-[#0d1528]' },
-      body: { background: 'bg-[#0d1528]', padding: 'p-0' },
+      body: { padding: 'p-0' },
+      background: 'bg-[#0d1528] dark:bg-[#0d1528]',
     }"
   >
+    <template #header> <CardHeader> Parameters </CardHeader> </template>
     <UTable
       v-if="fields.length > 0"
       :rows="fields"

@@ -4,8 +4,8 @@
     v-on:close="onClose"
     :ui="{
       background: 'bg-transparent dark:bg-transparent',
-      width: 'max-w-full sm:max-w-4xl lg:max-w-4xl xl:max-w-4xl',
-      shadow: 'shadow-none'
+      width: 'max-w-full sm:max-w-4xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-6xl',
+      shadow: 'shadow-none',
     }"
     prevent-close
   >
@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-  defineProps({
-    ...requireModalProps,
-  });
+defineProps({
+  ...requireModalProps,
+});
 </script>
