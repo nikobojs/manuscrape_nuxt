@@ -1,13 +1,18 @@
 <template>
   <div
-    class="flex flex-col lg:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0"
+    class="flex flex-col xl:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0 relative"
   >
     <Transition name="fade">
       <div
-        v-if="!templateSelected"
-        class="absolute open:z-10 top-[50%] -translate-y-1/2"
+        v-show="!templateSelected"
+        class="lg:absolute open:z-10 lg:left-[50%] lg:-translate-x-1/2 w-full"
+        :class="{
+          'lg:top-[50%] lg:-translate-y-1/2': translateY,
+          'lg:top-0': !translateY,
+        }"
       >
         <ProjectSelectTemplateForm
+          :cancelable="cancelable"
           @close="
             (ok) => {
               if (ok) {
@@ -21,7 +26,6 @@
             (params) => {
               addedFields = params;
               form.fields = params;
-              console.log('SELECTED PARAMS:::', params);
             }
           "
         />
@@ -30,7 +34,7 @@
     <Transition name="fade">
       <div
         class="w-full flex flex-col xl:flex-row gap-6"
-        v-if="templateSelected"
+        v-show="templateSelected"
       >
         <form @submit.prevent="handleSubmitProject">
           <!-- project form left UCard -->
@@ -103,7 +107,12 @@
                 >
                   Create project
                 </UButton>
-                <UButton @click="onClose" color="gray" variant="outline">
+                <UButton
+                  v-if="cancelable"
+                  @click="onClose"
+                  color="gray"
+                  variant="outline"
+                >
                   Cancel
                 </UButton>
               </div>
@@ -131,6 +140,16 @@
 <script setup lang="ts">
 const props = defineProps({
   onClose: requireFunctionProp<() => void>(),
+  cancelable: {
+    type: Boolean,
+    required: false,
+    default: () => false,
+  },
+  translateY: {
+    type: Boolean,
+    required: false,
+    default: () => false,
+  },
 });
 
 const { params } = useRoute();

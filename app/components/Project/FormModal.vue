@@ -8,7 +8,7 @@
       shadow: 'shadow-none',
     }"
   >
-    <ProjectCreateWidget :onClose="onClose" />
+    <ProjectCreateWidget :onClose="onClose" cancelable translate-y />
   </UModal>
 </template>
 

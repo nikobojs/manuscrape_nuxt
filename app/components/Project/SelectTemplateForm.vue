@@ -2,7 +2,7 @@
   <div>
     <div>
       <div
-        class="[&_h2]:flex [&_h2]:items-center [&_h2_span]:text-4xl [&_h2]:gap-2 [&_h2_span]:text-green-500 grid grid-cols-3 gap-x-6 [&_strong]:font-semibold [&_h2]:text-xl [&_p]:text-sm [&_li]:text-sm [&_h2]:mb-4 [&_p]:mb-3 [&_ul]:mb-3 [&_li]:list-disc [&_ul]:pl-3"
+        class="grid grid-cols-1 lg:grid-cols-3 gap-6 [&_h2]:flex [&_h2]:items-center [&_h2_span]:text-4xl [&_h2]:gap-2 [&_h2_span]:text-green-500 [&_strong]:font-semibold [&_h2]:text-xl [&_p]:text-sm [&_li]:text-sm [&_h2]:mb-4 [&_p]:mb-3 [&_ul]:mb-3 [&_li]:list-disc [&_ul]:pl-3"
       >
         <SubCard class="w-full">
           <h2>
@@ -127,7 +127,7 @@
         </SubCard>
       </div>
     </div>
-    <div class="mt-6 flex gap-x-3 justify-end">
+    <div class="mt-6 flex gap-x-3 justify-end mb-9">
       <UButton
         variant="outline"
         color="blue"
@@ -136,6 +136,7 @@
         Skip
       </UButton>
       <UButton
+        v-if="cancelable"
         variant="outline"
         color="gray"
         @click="() => emit('close', false)"
@@ -151,6 +152,14 @@ const emit = defineEmits<{
   close: [boolean];
   "select:parameters": [NewProjectField[]];
 }>();
+
+const props = defineProps({
+  cancelable: {
+    type: Boolean,
+    required: false,
+    default: () => false,
+  },
+});
 
 type TemplateName = "exploratory" | "mission-based" | "event-based";
 
