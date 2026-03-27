@@ -5,10 +5,18 @@
         <div class="flex justify-between w-full relative">
           <CardHeader>Image</CardHeader>
           <div>
-
-            <div class="absolute right-0 top-0 -translate-y-1/4" v-if="isElectron">
+            <div
+              class="absolute right-0 top-0 -translate-y-1/4"
+              v-if="isElectron"
+            >
               <div class="">
-                <UButton @click="takeAnotherScreenshot" color="white" size="sm" class="ring-slate-400 focus:ring-slate-200 hover:ring-slate-200 text-slate-300 hover:text-slate-100 transition-all" variant="outline">
+                <UButton
+                  @click="takeAnotherScreenshot"
+                  color="white"
+                  size="sm"
+                  class="ring-slate-400 focus:ring-slate-200 hover:ring-slate-200 text-slate-300 hover:text-slate-100 transition-all"
+                  variant="outline"
+                >
                   Take another
                   <UIcon class="text-lg" name="mdi:image-size-select-large" />
                 </UButton>
@@ -47,7 +55,6 @@
               />
             </div>
           </div>
-
         </div>
       </div>
     </UCard>

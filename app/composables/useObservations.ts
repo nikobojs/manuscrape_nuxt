@@ -217,6 +217,9 @@ export const useObservations = async (
               "image uploaded successfully, status is",
               ctx.response.status,
             );
+            if (window.electronAPI) {
+              window.electronAPI.observationImageUploaded();
+            }
           },
           onResponseError: (ctx) => {
             const statusCode = ctx.response?.status;
