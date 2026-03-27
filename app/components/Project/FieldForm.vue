@@ -1,74 +1,76 @@
 <template>
-  <UInput
-    :modelValue="label"
-    ref="fieldLabelInput"
-    id="field-label-input"
-    placeholder="Enter label"
-    :onUpdate:modelValue="
-      (_label: string) => {
-        onFieldUpdate({
-          label: _label,
-          type: fieldType as FieldType,
-          required,
-        });
-      }
-    "
-  />
-
-  <div>
-    <USelectMenu
+  <div class="flex flex-col gap-1.5">
+    <UInput
+      :modelValue="label"
+      ref="fieldLabelInput"
+      id="field-label-input"
+      placeholder="Enter label"
       :onUpdate:modelValue="
-        (_type: string) => {
-          onFieldUpdate({ label, type: _type as FieldType, required });
+        (_label: string) => {
+          onFieldUpdate({
+            label: _label,
+            type: fieldType as FieldType,
+            required,
+          });
         }
       "
-      :modelValue="fieldType"
-      :options="fieldTypeOptions"
-      placeholder="Select type"
-      valueAttribute="type"
-      optionAttribute="label"
-    >
-      <template #label>
-        {{ chosenFieldType?.label || "Select type" }}
-      </template>
-    </USelectMenu>
-    <div class="flex justify-between mt-3 w-full">
-      <div class="items-center inline-flex">
-        <UCheckbox
-          :modelValue="required"
-          :disabled="forceFieldRequired"
-          label="Required?"
-          :onUpdate:modelValue="
-            (_required: boolean) => {
-              onFieldUpdate({
-                label,
-                type: fieldType as FieldType,
-                required: _required,
-              });
-            }
-          "
-        />
-      </div>
-      <div class="w-full text-right">
-        <UButton
-          icon="i-heroicons-plus"
-          variant="outline"
-          color="blue"
-          type="button"
-          @click="() => handleAddField()"
-          :disabled="!newFieldIsValid"
-        >
-          Add parameter
-        </UButton>
+    />
+
+    <div>
+      <USelectMenu
+        :onUpdate:modelValue="
+          (_type: string) => {
+            onFieldUpdate({ label, type: _type as FieldType, required });
+          }
+        "
+        :modelValue="fieldType"
+        :options="fieldTypeOptions"
+        placeholder="Select type"
+        valueAttribute="type"
+        optionAttribute="label"
+      >
+        <template #label>
+          {{ chosenFieldType?.label || "Select type" }}
+        </template>
+      </USelectMenu>
+      <div class="flex justify-between mt-3 w-full">
+        <div class="items-center inline-flex">
+          <UCheckbox
+            :modelValue="required"
+            :disabled="forceFieldRequired"
+            label="Required?"
+            :onUpdate:modelValue="
+              (_required: boolean) => {
+                onFieldUpdate({
+                  label,
+                  type: fieldType as FieldType,
+                  required: _required,
+                });
+              }
+            "
+          />
+        </div>
+        <div class="w-full text-right">
+          <UButton
+            icon="i-heroicons-plus"
+            variant="outline"
+            color="blue"
+            type="button"
+            @click="() => handleAddField()"
+            :disabled="!newFieldIsValid"
+          >
+            Add parameter
+          </UButton>
+        </div>
       </div>
     </div>
+    <ProjectSetupChoicesModal
+      :open="openDropdownModal"
+      :onSubmit="addDropdownField"
+      :onClose="() => (openDropdownModal = false)"
+      :defaultChoices="_defaultChoices"
+    />
   </div>
-  <ProjectSetupChoicesModal
-    :open="openDropdownModal"
-    :onSubmit="addDropdownField"
-    :onClose="() => (openDropdownModal = false)"
-    :defaultChoices="_defaultChoices"
-  />
 </template>
 
 <script setup lang="ts">

@@ -1,7 +1,6 @@
 <template>
   <!-- added fields right UCard -->
   <UCard
-    v-if="fields.length > 0"
     class="overflow-y-auto shadow-xl max-w-full lg:w-full h-full max-h-[450px]"
     :ui="{
       body: { padding: 'p-0' },
@@ -9,6 +8,9 @@
     }"
   >
     <template #header> <CardHeader> Parameters </CardHeader> </template>
+    <p class="text-slate-400 text-sm italic" v-if="fields.length === 0">
+      No parameters added yet
+    </p>
     <UTable
       v-if="fields.length > 0"
       :rows="fields"
@@ -104,11 +106,11 @@ const fieldColumns = [
     class: "px-0 flex items-center",
   },
   {
-    label: "Parameter label",
+    label: "Label",
     key: "label",
   },
   {
-    label: "Parameter type",
+    label: "Type",
     key: "field",
   },
   {

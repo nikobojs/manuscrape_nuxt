@@ -7,7 +7,6 @@
       width: 'max-w-full sm:max-w-4xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-6xl',
       shadow: 'shadow-none',
     }"
-    prevent-close
   >
     <ProjectCreateWidget :onClose="onClose" />
   </UModal>
