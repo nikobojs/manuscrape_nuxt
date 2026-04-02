@@ -11,13 +11,19 @@
             >
               <div class="">
                 <UButton
+                  v-if="inputsWithImage.length > 0"
                   @click="takeAnotherScreenshot"
                   color="white"
                   size="sm"
                   class="ring-slate-400 focus:ring-slate-200 hover:ring-slate-200 text-slate-300 hover:text-slate-100 transition-all"
                   variant="outline"
                 >
-                  Take another
+                  {{
+                    inputsWithImage.length === 1 &&
+                    inputsWithImage[0]!.field.type !== "IMAGE_MULTIPLE"
+                      ? "Replace image"
+                      : "Take another"
+                  }}
                   <UIcon class="text-lg" name="mdi:image-size-select-large" />
                 </UButton>
               </div>
