@@ -1,13 +1,13 @@
 <template>
-  <UCard class="mb-4 overflow-visible col-span-5 h-full">
+  <UCard class="mb-4 pb-6 overflow-visible col-span-5 h-full">
     <template #header>
       <div class="flex justify-between items-center">
         <div class="flex gap-3">
           <CardHeader>Observations</CardHeader>
           <UBadge variant="soft">{{ totalObservations }} total</UBadge>
-          <UBadge color="yellow" variant="soft"
-            >{{ totalDraftObservations }} draft</UBadge
-          >
+          <UBadge color="yellow" variant="soft">
+            {{ totalDraftObservations }} draft
+          </UBadge>
         </div>
 
         <div class="inline-flex gap-3 -mt-2 -mb-2">
@@ -91,7 +91,7 @@
         <ObservationTagListOverflow :tags="row.tags" />
       </template>
     </UTable>
-    <div class="flex w-full mt-3 -mb-7 justify-center">
+    <div class="flex w-full mt-4 -mb-7 justify-center">
       <UPagination
         v-if="totalPages > 1"
         v-model="page"

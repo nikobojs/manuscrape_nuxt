@@ -14,11 +14,15 @@ export const useObservations = async (
   });
   const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
-  const filter = useState<"all" | "drafts" | "published">(
-    () => "all" as "all" | "drafts" | "published",
+  const filter = useState<"all" | "drafts" | "published">(() =>
+    defaultObservationFilter
+      ? ObservationFilter[defaultObservationFilter]!.filter
+      : ("all" as "all" | "drafts" | "published"),
   );
   const ownership = useState<"me" | "everyone">(
-    () => "everyone" as "everyone" | "me",
+    defaultObservationFilter
+      ? ObservationFilter[defaultObservationFilter]!.ownership
+      : ("everyone" as "everyone" | "me"),
   );
   const totalObservations = useState<number>("totalObservations", () => 1); // should change after first fetch
   const totalDraftObservations = useState<number>(
@@ -29,20 +33,16 @@ export const useObservations = async (
     Math.ceil(totalObservations.value / pageSize),
   );
 
-  const filterOption = useState<ObservationFilterConfig>(() => {
-    // lazy way to validate enum is actually set
-    // NOTE: sets default observation filter if passed to useObservations()
-    if (
-      typeof defaultObservationFilter === "number" ||
-      typeof defaultObservationFilter === "string"
-    ) {
-      const obsFilter = ObservationFilter[defaultObservationFilter];
-      if (obsFilter) {
-        filter.value = obsFilter.filter;
-        ownership.value = obsFilter.ownership;
-        page.value = 1;
-        return obsFilter;
-      }
+  // const filterOption = useState<ObservationFilterConfig>(() => {
+  const filterOption = ref<ObservationFilterConfig>(
+    ObservationFilter[defaultObservationFilter || ObservationFilterTypes.ALL]!,
+  );
+  watch(filterOption, (obsFilter) => {
+    if (obsFilter) {
+      filter.value = obsFilter.filter;
+      ownership.value = obsFilter.ownership;
+      page.value = 1;
+      return obsFilter;
     }
 
     return ObservationFilter[ObservationFilterTypes.ALL]!;
