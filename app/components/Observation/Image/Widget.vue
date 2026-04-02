@@ -145,7 +145,15 @@ function findExistingImage(projectFieldId: number) {
 }
 
 function takeAnotherScreenshot() {
-  window.electronAPI.takeAnother();
+  if (observation.value) {
+    window.electronAPI.takeAnother(observation.value.id);
+  } else {
+    // TODO: report
+    toast.add({
+      description: "Unable to use this function, observation is undefined",
+      color: "red",
+    });
+  }
 }
 
 async function onDeleteImageUpload(imgId: number) {
