@@ -176,7 +176,10 @@
                     </div>
                   </div>
                   <!-- TODO: not working -->
-                  <div v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'">
+                  <div
+                    v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'"
+                    class="items-end flex-col flex"
+                  >
                     <USelectMenu
                       :name="field.label"
                       class="min-w-[200px]"
@@ -213,6 +216,12 @@
                         <span v-else>Select multiple options</span>
                       </template>
                     </USelectMenu>
+                    <div
+                      @click="() => (state[field.label] = [])"
+                      class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                    >
+                      reset
+                    </div>
                   </div>
                   <UInput
                     v-else
@@ -273,8 +282,10 @@ const emit = defineEmits<{
 }>();
 
 const form = ref();
-const sortedFields = computed(
-  () => sortFieldsByIndex(props.project.fields).filter(pf => !['IMAGE_SINGLE', 'IMAGE_MULTIPLE'].includes(pf.type))
+const sortedFields = computed(() =>
+  sortFieldsByIndex(props.project.fields).filter(
+    (pf) => !["IMAGE_SINGLE", "IMAGE_MULTIPLE"].includes(pf.type),
+  ),
 );
 
 const state = ref({ ...(props.initialState || {}) } as any);
@@ -334,7 +345,7 @@ function getMultipleChoiceAddOptions(field: {
 
 async function submit() {
   try {
-    console.log('validating form...')
+    console.log("validating form...");
     await form.value!.validate();
   } catch (e) {
     console.warn(e);
