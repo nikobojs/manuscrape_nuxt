@@ -137,7 +137,7 @@ async function onObservationPublished() {
 }
 
 async function onFormSubmit(showToast = true) {
-  if (!isElectron.value && showToast) {
+  if (showToast) {
     toast.add({
       description: "Observation parameters was successfully saved",
       color: "green",
