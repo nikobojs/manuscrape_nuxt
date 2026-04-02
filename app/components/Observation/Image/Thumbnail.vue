@@ -5,7 +5,7 @@
     @click="() => (openImageDialog = true)"
   >
     <img
-      :src="`/api/projects/${project?.id}/observations/${observation?.id}/image-uploads/${image?.id}?projectFieldId=${image?.projectFieldId}&lastUpdate=${(props.lastUpdate || new Date()).getTime()}`"
+      :src="`/api/projects/${project?.id}/observations/${observation?.id}/image-uploads/${image?.id}?projectFieldId=${image?.projectFieldId}&lastUpdate=${lastUpdate.getTime()}`"
     />
 
     <ObservationImageModal
@@ -15,6 +15,7 @@
       :open="openImageDialog"
       :on-close="() => (openImageDialog = false)"
       :project-field-id="image?.projectFieldId"
+      :last-update="lastUpdate"
     />
   </div>
 </template>
@@ -24,7 +25,10 @@ const props = defineProps({
   observation: requireObservationProp,
   project: requireProjectProp,
   image: Object as PropType<ImageUpload>,
-  lastUpdate: Date as PropType<Date>,
+  lastUpdate: {
+    type: Date as PropType<Date>,
+    required: true,
+  },
 });
 
 const openImageDialog = ref(false);
