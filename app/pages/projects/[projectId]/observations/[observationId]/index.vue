@@ -75,8 +75,8 @@ watch(
   [observation],
   ([obs]) => {
     const isDone = metadataIsDone(obs?.data);
-    ((imageUploaded.value = requiredImagesUploaded()),
-      (metadataDone.value = isDone));
+    imageUploaded.value = requiredImagesUploaded();
+    metadataDone.value = isDone;
   },
   { deep: true },
 );
@@ -115,7 +115,12 @@ async function refreshObservation() {
 
 function metadataIsDone(data: any): boolean {
   if (!project.value?.fields) return false;
-  const formErrors = validateObservationForm(data, project.value.fields);
+
+  const excludedFieldTypes: FieldType[] = ["IMAGE_SINGLE", "IMAGE_MULTIPLE"];
+  const nonImageTypes = project.value.fields.filter(
+    (f) => !excludedFieldTypes.includes(f.type),
+  );
+  const formErrors = validateObservationForm(data, nonImageTypes);
   return formErrors.length === 0;
 }
 
