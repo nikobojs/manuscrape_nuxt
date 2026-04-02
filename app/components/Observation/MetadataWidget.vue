@@ -356,6 +356,6 @@ async function submit() {
     data: state.value,
   });
 
-  props.onSubmit?.();
+  props.onSubmit?.(true);
 }
 </script>

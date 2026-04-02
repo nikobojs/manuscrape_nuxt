@@ -139,7 +139,9 @@ async function onObservationPublished() {
 async function onFormSubmit(showToast = true) {
   if (!isElectron.value && showToast) {
     toast.add({
-      title: "Observation data was saved.",
+      description: "Observation parameters was successfully saved",
+      color: "green",
+      icon: "i-mdi-check",
     });
   }
   await refreshObservation();
