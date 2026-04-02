@@ -76,7 +76,7 @@
                     :default-value="false"
                   />
                   <UTextarea
-                    v-else-if="field.type === 'TEXTAREA' && state[field.label]"
+                    v-else-if="field.type === 'TEXTAREA'"
                     v-model="state[field.label]"
                     v-bind="props"
                     variant="outline"
@@ -138,7 +138,6 @@
                       reset
                     </div>
                   </div>
-                  <!-- TODO: not working -->
                   <div
                     v-else-if="field.type === 'AUTOCOMPLETE_ADD'"
                     class="items-end flex-col flex"
@@ -175,7 +174,6 @@
                       reset
                     </div>
                   </div>
-                  <!-- TODO: not working -->
                   <div
                     v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'"
                     class="items-end flex-col flex"
