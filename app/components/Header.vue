@@ -33,10 +33,25 @@
               :set-project="onProjectChange"
             />
           </div>
-          <UDropdown class="flex self-center" :items="settingsItems">
+          <UDropdown class="flex self-center relative" :items="settingsItems">
             <div class="w-9 h-9 p-1.5">
               <UIcon class="w-full h-full" name="i-heroicons-user-circle" />
             </div>
+            <template #email="{ item }">
+              <div
+                class="flex gap-x-1.5 pl-1.5 items-center justify-start border-b border-b-slate-600"
+              >
+                <div>
+                  <UIcon
+                    class="text-xl text-slate-500"
+                    name="i-mdi-lock-outline"
+                  />
+                </div>
+                <p class="text-sm py-1.5 text-slate-400 text-left">
+                  {{ item.label }}
+                </p>
+              </div>
+            </template>
           </UDropdown>
         </nav>
 
@@ -72,6 +87,7 @@ ul {
 </style>
 
 <script setup lang="ts">
+import type { DropdownItem } from "#ui/types";
 const { ensureUserFetched } = await useAuth();
 await ensureUserFetched();
 const { user, hasFetched } = await useUser();
@@ -104,8 +120,14 @@ function onLogoClick() {
   navigateTo("/");
 }
 
-const settingsItems = [
+const settingsItems: DropdownItem[][] = [
   [
+    {
+      label: user.value?.email || "Undefined user",
+      disabled: true,
+      slot: "email",
+      class: "contents",
+    },
     {
       label: "Settings",
       icon: "i-mdi-settings-outline",
