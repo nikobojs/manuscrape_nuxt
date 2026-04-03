@@ -8,7 +8,7 @@
             background: 'dark:bg-slate-800 bg-slate-800',
             ring: 'ring-1 ring-gray-500 dark:ring-gray-700',
             body: {
-              padding: 'pt-0 py-0 sm:p-2 sm:pb-2',
+              padding: 'pt-0 py-0 sm:p-0 sm:pb-1.5',
             },
           }"
         >
@@ -22,7 +22,13 @@
           </template>
           <ProjectSuggestedFieldsTable
             v-model="suggested"
-            @select:field="(field) => emit('update:fields', [...fields, field])"
+            @select:field="
+              (field) => {
+                const nextIndex = Math.max(...fields.map((f) => f.index)) + 1;
+                field.index = nextIndex;
+                emit('update:fields', [...fields, field]);
+              }
+            "
           />
         </UCard>
       </div>

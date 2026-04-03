@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col xl:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0 relative"
+    class="flex flex-col xl:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0 relative pb-12 xl:pb-24 2xl:pb-48 pt-48!"
   >
     <Transition name="fade">
       <div

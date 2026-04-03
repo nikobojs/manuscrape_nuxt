@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div
+    class="[&_h2]:flex [&_h2]:items-center [&_h2_span]:text-4xl [&_h2]:gap-2 [&_h2_span]:text-green-500 [&_strong]:font-semibold [&_h2]:text-xl [&_p]:text-sm [&_li]:text-sm [&_h2]:mb-4 [&_p]:mb-3 [&_ul]:mb-3 [&_li]:list-disc [&_ul]:pl-3"
+  >
     <div>
-      <div
-        class="grid grid-cols-1 lg:grid-cols-3 gap-6 [&_h2]:flex [&_h2]:items-center [&_h2_span]:text-4xl [&_h2]:gap-2 [&_h2_span]:text-green-500 [&_strong]:font-semibold [&_h2]:text-xl [&_p]:text-sm [&_li]:text-sm [&_h2]:mb-4 [&_p]:mb-3 [&_ul]:mb-3 [&_li]:list-disc [&_ul]:pl-3"
-      >
+      <div v-if="!isEventSubStep" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SubCard class="w-full">
           <h2>
             <UIcon name="heroicons:device-tablet" />
@@ -39,7 +39,7 @@
                 variant="outline"
                 class="bg-green-950/50 hover:bg-green-950"
                 size="xl"
-                @click="() => selectTemplate('event-based')"
+                @click="() => (isEventSubStep = true)"
               >
                 Select template
               </UButton>
@@ -126,12 +126,111 @@
           </template>
         </SubCard>
       </div>
+
+      <div v-if="isEventSubStep" class="[&_h2]:text-xl text-center">
+        <div class="mb-9">
+          <h1 class="text-3xl mb-3">Event based</h1>
+
+          <div class="mb-3 max-w-[800px] mx-auto w-full">
+            <div>
+              Event based observations focuses on a specific observed behaviour
+              in a concrete observation context.
+            </div>
+          </div>
+          <div class="max-w-[800px] mx-auto w-full">
+            <div>
+              You can do a simple event based ethnography across multiple
+              platforms or you can do an experiment setup, where you observe
+              events from multiple subjects.
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="grid grid-cols-1 xl:grid-cols-2 gap-6 xl:gap-12 max-w-[900px] w-full mx-auto"
+        >
+          <SubCard class="w-full">
+            <h2 class="justify-center">Simple</h2>
+            <p>
+              Simple Event Based ethnography seeks to collect observations
+              depending on the presence of specific behaviour in one or across
+              multiple platforms.
+            </p>
+            <p>
+              You will as a minimum have to code which behaviour you observe. We
+              suggest parameter type ‘ multiple choice or free text’ as multiple
+              behaviours can be present in one event and an open coding might be
+              necessary for novel interest in behaviour types.
+            </p>
+            <p>
+              If you observe on multiple platforms, you will need to code that
+              as well.
+            </p>
+            <template #bottom>
+              <div class="flex justify-center">
+                <UButton
+                  size="xl"
+                  variant="outline"
+                  class="bg-green-950/50 hover:bg-green-950"
+                  @click="() => selectTemplate('event-based-simple')"
+                >
+                  Select
+                </UButton>
+              </div>
+            </template>
+          </SubCard>
+          <SubCard class="w-full">
+            <h2 class="justify-center">Experiment</h2>
+            <p>
+              Experiment type observations are subject specific ethnographies,
+              where events are observed chronologically for specific subjects.
+            </p>
+            <p>
+              Observations are done for multiple subjects or profiles to create
+              a trajectory for each subject.
+            </p>
+            <p>
+              To build this trajectory we must create a behavioural scheme for
+              each subject, and record what actions it takes, and what
+              observations follow what actions.
+            </p>
+            <p>
+              We are not only interested in the observed event, but which
+              subject observed the event and during what subject action. The
+              project blueprint provided is observing criminal trajectories on
+              Snapchat.
+            </p>
+            <template #bottom>
+              <div class="flex justify-center">
+                <UButton
+                  size="xl"
+                  variant="outline"
+                  class="bg-green-950/50 hover:bg-green-950"
+                  @click="() => selectTemplate('event-based-experiment')"
+                >
+                  Select
+                </UButton>
+              </div>
+            </template>
+          </SubCard>
+        </div>
+      </div>
     </div>
-    <div class="mt-6 flex gap-x-3 justify-end mb-9">
+
+    <div class="flex gap-x-3 justify-center mt-12 mb-9">
+      <UButton
+        variant="outline"
+        color="blue"
+        @click="() => (isEventSubStep = false)"
+        v-if="isEventSubStep"
+      >
+        Go back
+      </UButton>
       <UButton
         variant="outline"
         color="blue"
         @click="() => emit('close', true)"
+        v-if="!isEventSubStep"
       >
         Skip
       </UButton>
@@ -161,92 +260,149 @@ const props = defineProps({
   },
 });
 
-type TemplateName = "exploratory" | "mission-based" | "event-based";
+type TemplateName =
+  | "exploratory"
+  | "mission-based"
+  | "event-based-simple"
+  | "event-based-experiment";
+
+const isEventSubStep = ref(false);
 
 const template: Record<TemplateName, NewProjectField[]> = {
-  "event-based": [
+  "event-based-experiment": [
     {
-      label: "SoMe username",
-      type: "STRING",
-      required: true,
+      type: "CHOICE",
+      label: "Profile #",
+      choices: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
       index: 1,
-      suggestion: true,
+      required: true,
     },
     {
-      label: "Platform",
-      type: "AUTOCOMPLETE",
+      label: "Action",
+      type: "MULTIPLE_CHOICE_ADD",
+      choices: [
+        "Drug sales",
+        "Sex work/content ",
+        "Digital sexwork (sexting, nudes, vids)",
+        "Traditional Sexwork (meet up)",
+        "Soliciting sexwork (sugar daddying)",
+        "Sugar dating (sugar baby)",
+        "Sexual Hookup profile",
+        "Deviant behaviour and miscellaneous",
+        "Nicotine sales (vapes, Snuff, e-liquid)",
+        "Stolen goods",
+        "Weapons",
+        "Peptides (Ozempic, Wegovy)",
+        "Steroids (tren, roids)",
+      ],
       required: true,
       index: 2,
-      choices: ["X", "Reddit", "Meta"],
-      suggestion: true,
     },
     {
-      label: "Profile picture",
-      type: "IMAGE_SINGLE",
+      label: "Observation comments / researcher reflections",
+      type: "STRING",
       required: false,
       index: 3,
-      suggestion: true,
+    },
+  ],
+  "event-based-simple": [
+    {
+      label: "Platform",
+      type: "CHOICE",
+      choices: [
+        "Facebook",
+        "Instagram",
+        "Snapchat",
+        "Tiktok",
+        "Discord",
+        "Reddit",
+        "X",
+      ],
+      required: true,
+      index: 1,
+    },
+    {
+      label: "Behaviour",
+      type: "MULTIPLE_CHOICE_ADD",
+      choices: [
+        "Drug sales",
+        "Nicotine sales",
+        "Stoken goods",
+        "Bullying",
+        "Thread(s)",
+        "Recruitment",
+        "Scam",
+        "Self harm",
+        "Image based sexual abuse",
+        "Child sexual abuse material",
+      ],
+      required: true,
+      index: 2,
+    },
+    {
+      label: "Actor",
+      type: "STRING",
+      required: false,
+      index: 3,
+    },
+    {
+      label: "Observation comments / researcher reflections",
+      type: "TEXTAREA",
+      required: false,
+      index: 4,
     },
   ],
   "mission-based": [
     {
-      label: "SoMe username",
-      type: "STRING",
+      label: "When was the content published?",
+      type: "DATETIME",
       required: true,
       index: 1,
-      suggestion: true,
     },
     {
-      label: "Number of posts",
-      type: "INT",
-      required: false,
+      label: "Describe how the situation fits into this thread/forum",
+      type: "TEXTAREA",
+      required: true,
       index: 2,
-      suggestion: true,
     },
     {
-      label: "Platform (example)",
-      type: "MULTIPLE_CHOICE_ADD",
+      label:
+        "How does this person's post appear compared to how this person has otherwise posted?",
+      type: "TEXTAREA",
       required: true,
       index: 3,
-      choices: ["X", "Reddit", "Meta"],
-      suggestion: true,
     },
     {
-      label: "Observation specification",
-      type: "STRING",
-      required: true,
-      index: 4,
-      suggestion: true,
-    },
-    {
-      label: "Screenshots",
-      type: "IMAGE_MULTIPLE",
+      label: "Examples of whom it is hateful towards",
+      type: "TEXTAREA",
       required: false,
-      index: 5,
-      suggestion: true,
+      index: 4,
     },
   ],
   exploratory: [
     {
-      label: "Notes",
-      type: "STRING",
-      required: true,
-      index: 1,
-      suggestion: true,
-    },
-    {
       label: "Date and time",
       type: "DATETIME",
       required: false,
+      index: 1,
+    },
+    {
+      label: "Title",
+      type: "STRING",
+      required: true,
       index: 2,
-      suggestion: true,
+    },
+    {
+      label: "Description",
+      type: "TEXTAREA",
+      required: false,
+      index: 3,
     },
     {
       label: "Images",
       type: "IMAGE_MULTIPLE",
       required: false,
-      index: 3,
-      suggestion: true,
+      index: 4,
     },
   ],
 };

@@ -23,7 +23,7 @@
               name="mdi:lightbulb-alert-outline"
             />
           </div>
-          <div class="flex items-center gap-x-1.5 w-full max-w-[320px]">
+          <div class="flex items-center gap-x-1.5 w-full">
             <UInput
               v-model="row.label"
               class="w-full"
@@ -115,25 +115,6 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
   const fieldMenu: DropdownItem[][] = [];
   const upDown: DropdownItem[] = [];
   const actions: DropdownItem[] = [];
-
-  // add required checkbox action
-  actions.push(
-    row.required
-      ? {
-          icon: "i-heroicons-wrench",
-          label: "Make optional",
-          click: () => {
-            row.required = false;
-          },
-        }
-      : {
-          icon: "i-heroicons-wrench",
-          label: "Make required",
-          click: () => {
-            row.required = true;
-          },
-        },
-  );
 
   // add modify choices option if multiple choice field
   if (row.choices?.length) {
