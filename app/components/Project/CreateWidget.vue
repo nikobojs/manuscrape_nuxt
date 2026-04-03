@@ -24,8 +24,7 @@
           "
           @select:parameters="
             (params) => {
-              addedFields = params;
-              form.fields = params;
+              suggestedFields = params;
             }
           "
         />
@@ -50,7 +49,7 @@
               <!-- project name -->
               <label for="name-input"> Project name: </label>
               <UInput
-                v-model="form.name"
+                v-model="projectName"
                 placeholder="Enter project name"
                 id="name-input"
                 required
@@ -81,22 +80,8 @@
               </label>
 
               <div class="flex flex-col gap-3">
-                <ProjectFieldForm
-                  :required="typeRequired"
-                  :label="typeLabel"
-                  :field-type="typeType"
-                  :added-fields="addedFields"
-                  :on-field-update="(field) => setFieldDraft(field)"
-                  :on-error="(msg) => (error = msg)"
-                  :on-field-add="(field) => addField(field)"
-                />
+                <ProjectFieldForm v-model="addedFields" />
               </div>
-
-              <span
-                v-text="error"
-                v-if="error"
-                class="block text-xs text-red-600"
-              ></span>
             </div>
             <template #footer>
               <div class="flex gap-x-3 justify-start">
@@ -124,10 +109,13 @@
         <div class="w-full">
           <ProjectFieldList
             :fields="addedFields"
-            :onFieldsUpdate="
+            :suggestedFields="suggestedFields"
+            @update:fields="
               (fields) => {
-                addedFields = [...fields];
-                form.fields = [...fields];
+                console.log('fields updated from field list:', [
+                  ...fields.map((f) => toRaw(f)),
+                ]);
+                addedFields = [...fields.map((f) => toRaw(f))];
               }
             "
           />
@@ -155,42 +143,23 @@ const props = defineProps({
 const { params } = useRoute();
 const { createProject } = await useProjects(params);
 const toast = useToast();
-
 const loading = ref(false);
 const templateSelected = ref<boolean>(false);
-const error = ref("");
-const fieldLabelInput = ref();
-
-const typeRequired = ref(false);
-const typeLabel = ref("");
-const typeType = ref<undefined | string>();
-const typeChoices = ref<undefined | string[]>();
-
-function setFieldDraft(draft: NewProjectFieldDraft) {
-  typeRequired.value = draft.required;
-  typeChoices.value = draft.choices;
-  typeLabel.value = draft.label;
-  typeType.value = draft.type;
-}
-
 const { isElectron } = useDevice();
-const form = reactive<NewProjectBody>({
-  name: "",
-  fields: [],
-});
+
+const projectName = ref<string>("");
+const addedFields = ref<NewProjectField[]>([]);
+const suggestedFields = ref<NewProjectField[]>([]);
 
 const newProjectIsValid = computed<boolean>(
-  () => form.name.length > 0 && form.fields.length > 0,
+  () => projectName.value.length > 0 && addedFields.value.length > 0,
 );
-
-const addedFields = ref<NewProjectField[]>([]);
 
 async function handleSubmitProject() {
   loading.value = true;
   try {
-    const res = await createProject(form.name, form.fields);
+    const res = await createProject(projectName.value, addedFields.value);
 
-    error.value = "";
     loading.value = false;
 
     if (!res?.id) {
@@ -200,6 +169,7 @@ async function handleSubmitProject() {
         color: "red",
         description: `We're working to fix this as soon as possible`,
       });
+      return;
       // TODO: capture error
     }
 
@@ -213,55 +183,23 @@ async function handleSubmitProject() {
       props.onClose();
       // navigate to project
       await navigateTo(`/projects/${res.id}`);
-      form.name = "";
-      form.fields = [];
+
+      projectName.value = "";
       addedFields.value = [];
-      typeLabel.value = "";
-      typeType.value = undefined;
-      typeChoices.value = undefined;
-      error.value = "";
     }
   } catch (err: any) {
     console.error(" caught error:", { err });
-    const msg = getErrMsg(err);
-    error.value = msg;
+    const msg =
+      getErrMsg(err) || `We're working to fix this as soon as possible`;
+    toast.add({
+      title: "Error when creating project",
+      color: "red",
+      description: msg,
+    });
   } finally {
     setTimeout(() => (loading.value = false), 300);
   }
 }
-
-async function addField(field: NewProjectFieldDraft) {
-  const label = field.label;
-  const type = field?.type;
-  const required = field.required;
-  const choices = [...(field?.choices || [])];
-
-  if (!type) {
-    error.value = "You need to choose a type for the new field";
-    return;
-  }
-
-  const newField = {
-    label,
-    type,
-    required,
-    choices,
-    index: addedFields.value.length,
-  };
-
-  form.fields.push(newField);
-  addedFields.value.push(newField);
-
-  typeLabel.value = "";
-  typeType.value = undefined;
-  typeChoices.value = undefined;
-  error.value = "";
-  window.requestAnimationFrame(() => fieldLabelInput.value?.input?.focus?.());
-}
-
-onMounted(() => {
-  error.value = "";
-});
 </script>
 
 <style>

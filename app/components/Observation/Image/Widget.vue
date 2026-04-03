@@ -3,7 +3,7 @@
     <UCard>
       <template #header>
         <div class="flex justify-between w-full relative">
-          <CardHeader>Image</CardHeader>
+          <CardHeader>Images</CardHeader>
           <div>
             <div
               class="absolute right-0 top-0 -translate-y-1/4"

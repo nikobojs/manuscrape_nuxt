@@ -170,6 +170,7 @@ const template: Record<TemplateName, NewProjectField[]> = {
       type: "STRING",
       required: true,
       index: 1,
+      suggestion: true,
     },
     {
       label: "Platform",
@@ -177,12 +178,14 @@ const template: Record<TemplateName, NewProjectField[]> = {
       required: true,
       index: 2,
       choices: ["X", "Reddit", "Meta"],
+      suggestion: true,
     },
     {
       label: "Profile picture",
       type: "IMAGE_SINGLE",
       required: false,
       index: 3,
+      suggestion: true,
     },
   ],
   "mission-based": [
@@ -191,12 +194,14 @@ const template: Record<TemplateName, NewProjectField[]> = {
       type: "STRING",
       required: true,
       index: 1,
+      suggestion: true,
     },
     {
       label: "Number of posts",
       type: "INT",
       required: false,
       index: 2,
+      suggestion: true,
     },
     {
       label: "Platform (example)",
@@ -204,18 +209,21 @@ const template: Record<TemplateName, NewProjectField[]> = {
       required: true,
       index: 3,
       choices: ["X", "Reddit", "Meta"],
+      suggestion: true,
     },
     {
       label: "Observation specification",
       type: "STRING",
       required: true,
       index: 4,
+      suggestion: true,
     },
     {
       label: "Screenshots",
       type: "IMAGE_MULTIPLE",
       required: false,
       index: 5,
+      suggestion: true,
     },
   ],
   exploratory: [
@@ -224,18 +232,21 @@ const template: Record<TemplateName, NewProjectField[]> = {
       type: "STRING",
       required: true,
       index: 1,
+      suggestion: true,
     },
     {
       label: "Date and time",
       type: "DATETIME",
       required: false,
       index: 2,
+      suggestion: true,
     },
     {
       label: "Images",
       type: "IMAGE_MULTIPLE",
       required: false,
       index: 3,
+      suggestion: true,
     },
   ],
 };

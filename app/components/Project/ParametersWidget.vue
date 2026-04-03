@@ -111,15 +111,13 @@
       </template>
 
       <div class="flex flex-col gap-3">
-        <ProjectFieldForm
-          :added-fields="[]"
-          :label="newFieldLabel"
-          :field-type="newFieldType"
-          :required="newFieldRequired"
-          :on-field-update="(field) => setFieldDraft(field)"
-          :on-error="(msg) => (newFieldError = msg)"
-          :on-field-add="(field) => handleCreateParameter(field)"
-        />
+        <!-- :label="newFieldLabel"
+        :field-type="newFieldType"
+        :required="newFieldRequired" -->
+        <!-- :on-field-update="(field) => setFieldDraft(field)"
+        :on-error="(msg) => (newFieldError = msg)"
+        :on-field-add="(field) => handleCreateParameter(field)" -->
+        <ProjectFieldForm :modelValue="[]" @add:field="handleCreateParameter" />
         <span class="red text-xs" v-if="newFieldError">{{
           newFieldError
         }}</span>
@@ -153,9 +151,10 @@ const {
 } = await useProjects(params);
 const { report } = useSentry();
 
+// TODO: remove this
 const newFieldRequired = ref(false);
 const newFieldLabel = ref("");
-const newFieldType = ref<undefined | string>();
+const newFieldType = ref<undefined | FieldType>();
 const newFieldChoices = ref<undefined | string[]>();
 const newFieldError = ref("");
 
@@ -198,7 +197,8 @@ function generateParameterSettings(
 ) {
   const settings = [];
 
-  if (field.index !== 0) {
+  // TODO: untested NIKOOOOOOOOO
+  if (field.index !== 1) {
     settings.push({
       label: `Move up`,
       icon: "i-mdi-arrow-up",
@@ -275,27 +275,7 @@ function handleMoveParameter(
     });
 }
 
-function setFieldDraft(draft: NewProjectFieldDraft) {
-  newFieldRequired.value = draft.required;
-  newFieldChoices.value = draft.choices;
-  newFieldLabel.value = draft.label;
-  newFieldType.value = draft.type;
-}
-
-async function handleCreateParameter(field: NewProjectFieldDraft) {
-  const nextIndex = Math.max(...props.project.fields.map((f) => f.index)) + 1;
-  if (!field.type) {
-    newFieldError.value = "You did not select a field type";
-    return;
-  } else if (typeof nextIndex !== "number") {
-    newFieldError.value = "Unable to determine field index";
-    report(
-      "fatal",
-      "Field index could not be calculated when adding new field",
-    );
-    return;
-  }
-
+async function handleCreateParameter(field: NewProjectField) {
   const newField: NewProjectField = {
     label: field.label,
     required: field.required,
