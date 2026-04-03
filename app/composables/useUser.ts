@@ -10,8 +10,8 @@ export const useUser = async () => {
   const { refresh: refreshUser, pending: loading } =
     await useFetch<CurrentUser>("/api/user", {
       method: "GET",
-      immediate: false,
       server: true,
+      immediate: false,
       onResponse: async (context) => {
         if (context.response.status === 200) {
           const res = context.response._data as CurrentUser;
@@ -26,15 +26,14 @@ export const useUser = async () => {
             .sort(sortById);
           projectAccess.value = res.projectAccess || [];
         } else if (context.response.status === 401) {
-          user.value = undefined;
-          projects.value = [];
+          resetUserState();
           await navigateTo("/login", { replace: true });
         }
       },
       onResponseError: async (context) => {
+        loading.value = false;
         if (context.response.status === 401) {
-          user.value = undefined;
-          projects.value = [];
+          resetUserState();
           await navigateTo("/login", { replace: true });
         }
       },
@@ -54,6 +53,11 @@ export const useUser = async () => {
     return roles.includes(access?.role);
   }
 
+  function resetUserState() {
+    user.value = undefined;
+    projects.value = [];
+  }
+
   return {
     user,
     projects,
@@ -62,6 +66,7 @@ export const useUser = async () => {
     hasFetched,
     hasRoles,
     projectAccess,
+    resetUserState,
   };
 };
 

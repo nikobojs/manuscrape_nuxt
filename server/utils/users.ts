@@ -26,19 +26,6 @@ export async function createUser(
       createdAt: users.createdAt,
     })
     .then((x) => x[0]!);
-
-  // const user = await db.user.create({
-  //   data: {
-  //     email: parsed.email,
-  //     password: hashedPassword,
-  //   },
-  //   select: {
-  //     id: true,
-  //     email: true,
-  //     password: true,
-  //     createdAt: true,
-  //   },
-  // });
 }
 
 export async function getUserById<
@@ -85,6 +72,13 @@ export async function getFullUserById(userId: number) {
     password: true,
     createdAt: true,
   });
+
+  if (!user) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "User could not be found",
+    });
+  }
 
   const accesses = await getProjectAccessesByUserId(userId);
 

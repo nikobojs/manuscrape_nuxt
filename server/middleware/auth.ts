@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
   const cookieValue = getCookie(event, "authcookie");
   const headers = getHeaders(event);
   const authToken = headers.authentication || cookieValue;
-  let loginSuccesfull = false;
 
   if (!authToken && !isOpenUrl(event)) {
     return onNotAuthed(event);
@@ -18,7 +17,6 @@ export default defineEventHandler(async (event) => {
       if (typeof decoded !== "string" && decoded?.id) {
         const user = await getFullUserById(decoded.id);
         if (user) {
-          loginSuccesfull = true;
           event.context.user = user as CurrentUser;
         } else {
           return onNotAuthed(event, "Session is valid but user does not exist");
@@ -29,14 +27,6 @@ export default defineEventHandler(async (event) => {
     } catch (e) {
       return onNotAuthed(event, "Malformed JWT");
     }
-  }
-
-  if (
-    loginSuccesfull &&
-    ["/user/new", "/login"].includes(event.path) &&
-    event.node.req.method === "GET"
-  ) {
-    await sendRedirect(event, "/", 302);
   }
 });
 
@@ -51,9 +41,9 @@ async function onNotAuthed(
   if (!isOpenUrl(event) && isApiUrl) {
     throw createError({
       statusCode: 401,
-      statusMessage: msg,
+      statusText: msg,
     });
   } else if (!isOpenUrl(event) && !isApiUrl) {
-    await sendRedirect(event, "/login", 302);
+    return sendRedirect(event, "/login", 302);
   }
 }

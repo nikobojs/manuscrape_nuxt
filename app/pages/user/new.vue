@@ -1,18 +1,31 @@
 <template>
   <UContainer>
-    <div class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer" @click="onLogoClick">
+    <div
+      class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
+      @click="onLogoClick"
+    >
       <span class="dark:hidden">
-        <img src="/logo/manuscrape-logo-dark.svg"  alt="manuscrape logo dark">
+        <img src="/logo/manuscrape-logo-dark.svg" alt="manuscrape logo dark" />
       </span>
       <span class="hidden dark:block">
-        <img src="/logo/manuscrape-logo-light.svg" alt="manuscrape logo light">
+        <img
+          src="/logo/manuscrape-logo-light.svg"
+          alt="manuscrape logo light"
+        />
       </span>
     </div>
     <div class="title">
-        <div class="flex">
-          <h2 class="text-2xl mb-8">Create account</h2>
-        </div>
+      <div class="flex">
+        <ULink
+          to="/login"
+          class="text-2xl mb-8 text-slate-600 dark:text-slate-600 hover:text-green-500 hover:dark:text-green-500 hover:underline"
+        >
+          Sign in
+        </ULink>
+        <h2 class="text-2xl mb-8 px-2">/</h2>
+        <ULink to="/user/new" class="text-2xl mb-8">Create account</ULink>
       </div>
+    </div>
     <UForm
       class="w-80"
       @submit="submit"
@@ -42,9 +55,18 @@
         />
       </UFormGroup>
 
-      <span class="block mt-3 text-red-500" v-if="errorMessage" v-text="errorMessage"></span>
+      <span
+        class="block mt-3 text-red-500"
+        v-if="errorMessage"
+        v-text="errorMessage"
+      ></span>
 
-      <UButton :disabled="loading" :loading="loading" type="submit" class="mt-5">
+      <UButton
+        :disabled="loading"
+        :loading="loading"
+        type="submit"
+        class="mt-5"
+      >
         Create and login
       </UButton>
       <ULink
@@ -53,52 +75,64 @@
         active-class="text-primary"
         inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
       >
-      I already have an account
+        I already have an account
       </ULink>
     </UForm>
   </UContainer>
 </template>
 
 <script lang="ts" setup>
-import type { FormError } from '#ui/types';
-import { getErrMsg } from '~/utils/getErrMsg';
+import type { FormError } from "#ui/types";
+import { getErrMsg } from "~/utils/getErrMsg";
 
-  const state = ref({
-    email: '',
-    password: '',
-  });
+const state = ref({
+  email: "",
+  password: "",
+});
 
-  const errorMessage = ref('');
+const errorMessage = ref("");
 
-  const form = ref();
-  const loading = ref(false);
+const form = ref();
+const loading = ref(false);
 
-  const { signUp, ensureUserFetched } = await useAuth();
-  await ensureUserFetched()
+const { signUp, user, refreshUser } = await useAuth();
 
-  function validate(state: any): FormError[] {
-    const errors = [] as FormError[];
-    if (!state.email) errors.push({ path: 'email', message: 'Required' });
-    if (state.email.split('').filter((c: string) => c == '@').length !== 1) errors.push({ path: 'email', message: 'Should contain exactly one \'@\''});
-    if (state.email.split('').filter((c: string) => c == '.').length < 1) errors.push({ path: 'email', message: 'Should contain at least one \'.\''});
-    if (!state.password) errors.push({ path: 'password', message: 'Required' });
-    return errors;
+await callOnce(async () => {
+  await refreshUser();
+});
+await callOnce(async () => {
+  if (user.value) {
+    await navigateTo("/projects");
   }
+});
 
-  async function submit() {
-    await form.value!.validate();
-    loading.value = true;
-    await signUp(state.value.email, state.value.password).then(() => {
-      window.location.href = '/';
-    }).catch(err => {
-      errorMessage.value = getErrMsg(err)
-    }).finally(() => {
+function validate(state: any): FormError[] {
+  const errors = [] as FormError[];
+  if (!state.email) errors.push({ path: "email", message: "Required" });
+  if (state.email.split("").filter((c: string) => c == "@").length !== 1)
+    errors.push({ path: "email", message: "Should contain exactly one '@'" });
+  if (state.email.split("").filter((c: string) => c == ".").length < 1)
+    errors.push({ path: "email", message: "Should contain at least one '.'" });
+  if (!state.password) errors.push({ path: "password", message: "Required" });
+  return errors;
+}
+
+async function submit() {
+  await form.value!.validate();
+  loading.value = true;
+  await signUp(state.value.email, state.value.password)
+    .then(() => {
+      window.location.href = "/";
+    })
+    .catch((err) => {
+      errorMessage.value = getErrMsg(err);
+    })
+    .finally(() => {
       loading.value = false;
     });
-  };
+}
 
-  function onLogoClick() {
-    navigateTo('/');
-  }
-  
+function onLogoClick() {
+  navigateTo("/");
+}
 </script>

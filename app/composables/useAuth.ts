@@ -1,77 +1,66 @@
-// TODO: use this pattern maybe?
-class NotAuthorizedError extends Error {
-    constructor () {
-        super('Not authorized to view component');
-        Object.setPrototypeOf(this, NotAuthorizedError.prototype);
-    }
-}
-
-
 export const useAuth = async () => {
+  const { user, refreshUser, hasFetched } = await useUser();
 
-    const { user, refreshUser, hasFetched } = await useUser();
+  const login = async (email: string, password: string) => {
+    return $fetch<TokenResponse>("/api/auth", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  };
 
-    const login = async (email: string, password: string) => {
-        return $fetch<TokenResponse>('/api/auth', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    };
+  const signOut = async () => {
+    await $fetch("/api/auth", { method: "DELETE" });
+    await navigateTo("/login");
+    user.value = undefined;
+  };
 
-    const signOut = async () => {
-        await $fetch('/api/auth', { method: 'DELETE' });
-        await navigateTo('/login');
-        user.value = undefined;
+  const signUp = async (email: string, password: string) => {
+    return $fetch<TokenResponse>("/api/user", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  };
+
+  const ensureLoggedIn = async () => {
+    if (!user.value) {
+      await navigateTo("/login", { redirectCode: 302 });
     }
+  };
 
-    const signUp = async (email: string, password: string) => {
-        return $fetch<TokenResponse>('/api/user', {
-            method: 'POST',
-            body: JSON.stringify({ email, password }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
+  const ensureUserFetched = async () => {
+    if (!hasFetched.value) {
+      hasFetched.value = true;
+      const res = await refreshUser();
+      return res;
     }
+  };
 
-    const ensureLoggedIn = async () => {
-        await ensureUserFetched();
-        if (!user.value) {
-            await navigateTo('/login');
-        }
-    }
+  const deleteUser = async (password: string) => {
+    const res = await $fetch("/api/user", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res;
+  };
 
-    const ensureUserFetched = async () => {
-        if (!hasFetched.value) {
-            hasFetched.value = true
-            const res = await refreshUser()
-            return res;
-        }
-    }
-
-    const deleteUser = async (password: string) => {
-        const res = await $fetch<TokenResponse>('/api/user', {
-            method: 'DELETE',
-            body: JSON.stringify({ password }),
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        return res;
-    }
-
-    return {
-        deleteUser,
-        ensureLoggedIn,
-        ensureUserFetched,
-        hasFetched,
-        login,
-        refreshUser,
-        signOut,
-        signUp,
-        user,
-    }
+  return {
+    deleteUser,
+    ensureLoggedIn,
+    ensureUserFetched,
+    hasFetched,
+    login,
+    refreshUser,
+    signOut,
+    signUp,
+    user,
+  };
 };
