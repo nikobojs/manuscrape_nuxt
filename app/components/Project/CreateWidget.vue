@@ -31,7 +31,7 @@
       </div>
     </Transition>
     <Transition name="fade">
-      <div class="w-full">
+      <div class="w-full" v-show="templateSelected">
         <div class="mb-3 flex justify-between">
           <div>
             <UButton
@@ -46,10 +46,7 @@
           </div>
         </div>
 
-        <div
-          class="w-full flex flex-col xl:flex-row gap-6"
-          v-show="templateSelected"
-        >
+        <div class="w-full flex flex-col xl:flex-row gap-6">
           <form @submit.prevent="handleSubmitProject">
             <!-- project form left UCard -->
             <UCard class="overflow-hidden w-80 shadow-xl">
