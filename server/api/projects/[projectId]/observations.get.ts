@@ -3,6 +3,7 @@ import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObserva
 import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { observations, users } from "~~/server/drizzle/schema";
 import { getFullObservationsByProjectId } from "~~/server/utils/observations";
+import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
   // require login
@@ -15,7 +16,8 @@ export default safeResponseHandler(async (event) => {
 
   // require access to project
   if (!projectAccess) {
-    // TODO: report error
+    const errMsg = `User ${user.id} requested access to observations they don't have access to`;
+    captureException(errMsg);
     throw createError({
       statusCode: 403,
       statusMessage: "You don't have access to this project",

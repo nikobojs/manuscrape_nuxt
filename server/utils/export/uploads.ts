@@ -3,6 +3,7 @@ import archiver from "archiver";
 import { generateFilename } from "./helpers";
 import { canUseS3 } from "../fileUpload";
 import { SQL } from "drizzle-orm";
+import { captureException } from "@sentry/node";
 
 export const generateProjectUploadsExport = async (
   event: H3Event,
@@ -60,7 +61,7 @@ export const generateProjectUploadsExport = async (
 
   archive.on("error", function (err) {
     console.error(err);
-    // TODO: report error
+    captureException(err);
   });
   archive.on("warning", function (warn) {
     console.warn(warn);

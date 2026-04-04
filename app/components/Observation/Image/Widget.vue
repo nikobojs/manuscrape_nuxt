@@ -120,6 +120,7 @@ const toast = useToast();
 const file = ref<File | undefined>();
 const { isElectron } = useDevice();
 const observation = computed(() => props.observation);
+const { report } = useSentry();
 
 // New state for pre-upload editing
 const showEditorModal = ref(false);
@@ -148,9 +149,11 @@ function takeAnotherScreenshot() {
   if (observation.value) {
     window.electronAPI.takeAnother(observation.value.id);
   } else {
-    // TODO: report
+    const errMsg =
+      "Unable to take another screenshot - observation is undefined";
+    report("error", errMsg);
     toast.add({
-      description: "Unable to use this function, observation is undefined",
+      description: errMsg,
       color: "red",
     });
   }

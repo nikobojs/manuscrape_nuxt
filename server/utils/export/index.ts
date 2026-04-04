@@ -4,6 +4,7 @@ import { generateNvivoExport } from "./nvivo";
 import { generateProjectUploadsExport } from "./uploads";
 import { observations, projectExports } from "~~/server/drizzle/schema";
 import { and, eq, gte, lte, SQL } from "drizzle-orm";
+import { captureException } from "@sentry/node";
 
 export async function generateProjectExport(
   event: H3Event,
@@ -90,7 +91,7 @@ export async function exportErrored(
 ): Promise<void> {
   const errMsg = err instanceof Error ? err.message : err;
   console.error(`"Project export ${exportId} failed with err:`, errMsg);
-  // TODO: report error
+  captureException(errMsg);
   await db
     .update(projectExports)
     .set({

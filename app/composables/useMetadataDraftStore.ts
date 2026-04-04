@@ -1,11 +1,12 @@
 import { useSessionStorage } from "@vueuse/core";
+import { captureException } from "@sentry/vue";
 
 const METADATA_DRAFT_STORE_NAME = "observation-draft-store";
 const metadataDraft = useSessionStorage(METADATA_DRAFT_STORE_NAME, "{}", {
   mergeDefaults: false,
   onError(error) {
     console.error(error);
-    // TODO: report error
+    captureException(error);
   },
 });
 

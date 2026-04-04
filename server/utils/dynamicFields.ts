@@ -81,10 +81,11 @@ export function calculateDynamicFieldValue(
   const field1 = fields.find((f) => f.id === dynamicField.field1Id);
 
   if (!field0 || !field1) {
-    // TODO: report error
+    const errMsg =
+      "Project fields referenced from dynamic field does not exist";
+    captureException(errMsg);
     throw createError({
-      statusMessage:
-        "Project fields referenced from dynamic field does not exist",
+      statusMessage: errMsg,
       statusCode: 500,
     });
   }
@@ -110,10 +111,11 @@ export function calculateDynamicFieldValue(
       } else if (["INT"].some((t) => t === types[i])) {
         vals[i] = parseInt(rawVals[i]);
       } else {
-        // TODO: report error
+        const errMsg =
+          "Dynamic field error: Provided fieldtypes is not supported";
+        captureException(errMsg);
         throw createError({
-          statusMessage:
-            "Dynamic field error: Provided fieldtypes is not supported",
+          statusMessage: errMsg,
           statusCode: 501,
         });
       }

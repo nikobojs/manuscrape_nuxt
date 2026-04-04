@@ -4,6 +4,7 @@ import {
 } from "~~/server/utils/imageUploads";
 import * as yup from "yup";
 import { requireProjectFieldById } from "~~/server/utils/projectFields";
+import { captureException } from "@sentry/node";
 
 const queryDto = yup
   .object({
@@ -38,11 +39,12 @@ export default safeResponseHandler(async (event) => {
     projectId: true,
   });
   if (projectField.projectId !== observation.projectId) {
-    // TODO: report error
+    const errMsg =
+      "The project field does not exist in the same project as the requested observation";
+    captureException(errMsg);
     throw createError({
       status: 400,
-      message:
-        "The project field does not exist in the same project as the requested observation",
+      message: errMsg,
     });
   }
 
@@ -63,13 +65,17 @@ export default safeResponseHandler(async (event) => {
       statusMessage: "Observation has no image",
     });
   } else if (observationImage.observationId !== observation.id) {
-    // TODO: report error
+    const errMsg =
+      "observationImage.observationId not equal to observation.id when requesting image";
+    captureException(errMsg);
     throw createError({
       statusCode: 404,
       statusMessage: "Image upload was not found",
     });
   } else if (observationImage.projectFieldId !== projectFieldId) {
-    // TODO: report error
+    const errMsg =
+      "observationImage.projectFieldId not equal to projectFieldId when requesting image";
+    captureException(errMsg);
     throw createError({
       statusCode: 404,
       statusMessage: "Image upload was not found",

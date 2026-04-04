@@ -151,7 +151,6 @@ const {
 } = await useProjects(params);
 const { report } = useSentry();
 
-// TODO: remove this
 const newFieldRequired = ref(false);
 const newFieldLabel = ref("");
 const newFieldType = ref<undefined | FieldType>();

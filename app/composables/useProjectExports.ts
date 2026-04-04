@@ -162,9 +162,10 @@ export const useProjectExports = async (projectId: number) => {
           icon: "i-heroicons-exclamation-triangle",
         });
       } else {
-        // TODO: report error as this should never happen
+        const errMsg = "Unknown change in file generation state.";
+        captureException(errMsg);
         toast.add({
-          title: `Unknown change in file generation state.`,
+          title: errMsg,
           description:
             "Please reach out on Github or Discord if this error persists.",
           color: "red",

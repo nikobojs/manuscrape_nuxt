@@ -160,6 +160,7 @@ const projectHasImageParams = computed(
 );
 
 const { user } = await useUser();
+const { report } = useSentry();
 
 const {
   getObservationMetadataDraft,
@@ -189,8 +190,9 @@ watch(
 function onMetadataDraftUpdate(data: any) {
   const obs = props.observation;
   if (!obs) {
-    // TODO: report error
-    throw new Error("Observation value is not defined");
+    const err = new Error("Observation value is not defined");
+    report("error", err);
+    throw err;
   }
 
   const existingDraftData = getObservationMetadataDraft(obs.id);

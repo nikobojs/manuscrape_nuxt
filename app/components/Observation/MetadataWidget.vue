@@ -269,6 +269,7 @@ const props = defineProps({
 
 const observation = computed(() => props.observation);
 const hasUnsaved = computed(() => props.hasUnsaved);
+const { report } = useSentry();
 
 const { patchObservation, observations } = await useObservations(
   props.project.id,
@@ -322,8 +323,9 @@ function revertDraftChanges() {
     const emptyObsData = getEmptyObservationData(props.project);
     state.value = emptyObsData;
   } else {
-    console.error("Unexpected state during reverting of draftchanges");
-    // TODO: report error
+    const errMsg = "Unexpected state during reverting of draftchanges";
+    report("error", errMsg);
+    console.error(errMsg);
   }
   emit("revert:data");
 }

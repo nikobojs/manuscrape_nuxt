@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/node";
 import { and, eq } from "drizzle-orm";
 import { projectAccesses } from "~~/server/drizzle/schema";
 
@@ -9,7 +10,8 @@ export async function ensureProjectAccess(
 
   // require access to project
   if (!projectAccess) {
-    // TODO: report error
+    const errMsg = `User ${userId} requested access to a project they don't have access to`;
+    captureException(errMsg);
     throw createError({
       statusCode: 403,
       statusMessage: "You don't have access to this project",

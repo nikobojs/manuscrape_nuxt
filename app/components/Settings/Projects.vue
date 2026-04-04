@@ -85,6 +85,7 @@ await ensureUserFetched();
 const { hasRoles } = await useUser();
 const { patchProject } = await useProjects();
 const project = ref<FullProject | null>(null);
+const { report } = useSentry();
 
 const authorCanDelockObservations = ref(false);
 const ownerCanDelockObservations = ref(false);
@@ -137,13 +138,14 @@ async function saveSettings() {
   try {
     const res = await patchProject(project.value.id, patch);
     if (res.status !== 204) {
-      console.error(`patchProject api response returned ${res.status}`);
+      const errMsg = `patchProject api response returned ${res.status}`;
+      console.error(errMsg);
       toast.add({
         title: "Server error :(",
         color: "red",
         description: `We're working to fix this as soon as possible`,
       });
-      // TODO: report
+      report("error", errMsg);
     } else {
       toast.add({
         title: "Project settings updated successfully",
