@@ -3,6 +3,7 @@ import * as yup from "yup";
 import {
   getProjectFieldById,
   getProjectFieldsByProjectIds,
+  updateProjectFieldIndexes,
 } from "~~/server/utils/projectFields";
 
 export const MoveProjectFieldSchema = yup
@@ -52,7 +53,7 @@ export default safeResponseHandler(async (event) => {
   await moveProjectField(patch.up, field.id, fields);
 
   // ensure indexes are valid, and if not, then correct them
-  await enforceCorrectIndexes(fields);
+  await updateProjectFieldIndexes(fields);
 
   // return 204
   setResponseStatus(event, 204);

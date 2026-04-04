@@ -5,7 +5,10 @@ import {
 } from "#shared/utils/observationFields";
 import { createProjectAccess } from "../utils/projectAccess";
 import { createProject } from "../utils/project";
-import { createProjectFields } from "../utils/projectFields";
+import {
+  createProjectFields,
+  updateProjectFieldIndexes,
+} from "../utils/projectFields";
 
 export const NewProjectFieldSchema = yup
   .object({
@@ -68,7 +71,7 @@ export default safeResponseHandler(async (event) => {
   );
 
   // verify and update indexes if needed
-  await enforceCorrectIndexes(updatedFields);
+  await updateProjectFieldIndexes(updatedFields);
 
   setResponseStatus(event, 201);
   return createdProject;

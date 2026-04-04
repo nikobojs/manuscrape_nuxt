@@ -7,6 +7,7 @@ import {
   deleteProjectField,
   getProjectFieldById,
   getProjectFieldCountByProjectId,
+  updateProjectFieldIndexes,
 } from "~~/server/utils/projectFields";
 
 export default safeResponseHandler(async (event) => {
@@ -102,7 +103,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // verify and update indexes if needed
-  await enforceCorrectIndexes(updatedFields);
+  await updateProjectFieldIndexes(updatedFields);
 
   setResponseStatus(event, 204);
   return { success: true };

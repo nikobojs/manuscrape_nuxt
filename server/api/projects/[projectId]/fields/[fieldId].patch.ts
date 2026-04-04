@@ -8,6 +8,7 @@ import {
   getProjectFieldById,
   getProjectFieldsByProjectIds,
   updateProjectField,
+  updateProjectFieldIndexes,
 } from "~~/server/utils/projectFields";
 
 export const PatchProjectFieldSchema = yup
@@ -102,7 +103,7 @@ export default safeResponseHandler(async (event) => {
   });
 
   // ensure indexes are valid, and if not, then correct them
-  await enforceCorrectIndexes(fields);
+  await updateProjectFieldIndexes(fields);
 
   // return 204
   setResponseStatus(event, 204);

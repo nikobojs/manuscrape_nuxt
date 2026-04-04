@@ -24,7 +24,8 @@
             v-model="suggested"
             @select:field="
               (field) => {
-                const nextIndex = Math.max(...fields.map((f) => f.index)) + 1;
+                const nextIndex =
+                  Math.max(-1, ...fields.map((f) => f.index)) + 1;
                 field.index = nextIndex;
                 emit('update:fields', [...fields, field]);
               }

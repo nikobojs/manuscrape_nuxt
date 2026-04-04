@@ -1,8 +1,6 @@
 import { count, eq, inArray } from "drizzle-orm";
 import { projectFields } from "../drizzle/schema";
-
-const indexSorter = (a: { index: number }, b: { index: number }) =>
-  a.index === b.index ? 0 : a.index > b.index ? 1 : -1;
+import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 
 type ProjectFieldSelect = Partial<
   Record<keyof typeof projectFields.$inferSelect, boolean>
@@ -10,25 +8,6 @@ type ProjectFieldSelect = Partial<
 type ProjectFieldPatch = Partial<
   Omit<typeof projectFields.$inferInsert, "id" | "projectId" | "createdAt">
 >;
-
-// TODO: write unit tests
-export function hasValidIndexes(
-  sortedFields: {
-    index: number;
-  }[],
-): boolean {
-  // check if indexes match loop index
-  // NOTE: this checks if indexes are already correct
-  let isValid = true;
-  for (let i = 0; i < sortedFields.length; i++) {
-    if (i !== sortedFields[i]!.index) {
-      isValid = false;
-      break;
-    }
-  }
-
-  return isValid;
-}
 
 export function createProjectFields(
   projectId: number,
@@ -55,25 +34,10 @@ export function createProjectFields(
   });
 }
 
-// TODO: write unit tests somehow
-export async function enforceCorrectIndexes(
-  fields: {
-    index: number;
-    id: number;
-  }[],
+export async function updateProjectFieldIndexes(
+  fields: { index: number; id: number }[],
 ) {
-  const sortedExisting = fields.sort(indexSorter);
-
-  // return early if sorting is not needed
-  const indexesOk = hasValidIndexes(sortedExisting);
-  if (indexesOk) {
-    return;
-  }
-
-  // calculate correct indexes
-  for (let i = 0; i < sortedExisting.length; i++) {
-    sortedExisting[i]!.index = i;
-  }
+  const sortedExisting = enforceCorrectIndexes(fields);
 
   // update indexes for existing fields
   await db.transaction(async (tx) => {

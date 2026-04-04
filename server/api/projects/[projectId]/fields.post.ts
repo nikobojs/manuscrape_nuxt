@@ -1,5 +1,8 @@
 import { NewProjectFieldSchema } from "../../projects.post";
-import { getProjectFieldsByProjectIds } from "~~/server/utils/projectFields";
+import {
+  getProjectFieldsByProjectIds,
+  updateProjectFieldIndexes,
+} from "~~/server/utils/projectFields";
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
@@ -31,7 +34,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // ensure indexes are in order like [0, 1, 2, 3, 4, ...]
-  await enforceCorrectIndexes(existing);
+  await updateProjectFieldIndexes(existing);
 
   // create new field
   await createProjectFields(projectId, [

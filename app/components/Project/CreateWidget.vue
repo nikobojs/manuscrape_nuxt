@@ -124,10 +124,10 @@
               :suggestedFields="suggestedFields"
               @update:fields="
                 (fields) => {
-                  console.log('fields updated from field list:', [
+                  const newFields = enforceCorrectIndexes([
                     ...fields.map((f) => toRaw(f)),
                   ]);
-                  addedFields = [...fields.map((f) => toRaw(f))];
+                  addedFields = newFields;
                 }
               "
             />
@@ -139,6 +139,7 @@
 </template>
 
 <script setup lang="ts">
+import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 const props = defineProps({
   onClose: requireFunctionProp<() => void>(),
   cancelable: {

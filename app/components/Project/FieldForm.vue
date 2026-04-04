@@ -165,21 +165,12 @@ async function addField(field: NewProjectFieldDraft) {
     return;
   }
 
-  const nextIndex = Math.max(...model.value.map((f) => f.index)) + 1;
+  // const nextIndex = Math.max(-1, ...model.value.map((f) => f.index)) + 1;
   if (!field.type) {
     // newFieldError.value = "You did not select a field type";
     error.value = "You need to select a field type";
     return;
-  } else if (typeof nextIndex !== "number") {
-    // newFieldError.value = "Unable to determine field index";
-    error.value = "Unable to determine field index";
-    report(
-      "fatal",
-      "Field index could not be calculated when adding new field",
-    );
-    return;
   }
-
   const newField: NewProjectField = {
     label,
     type,
@@ -188,13 +179,10 @@ async function addField(field: NewProjectFieldDraft) {
     index: model.value.length,
   };
 
-  model.value.push(newField);
+  // ensure all other params are ok even though we know the indexes are ok at this point
+  const newFields = enforceCorrectIndexes([...model.value, newField]);
   emit("add:field", newField);
-
-  console.log("FieldForm.vue: added new field to model, which is now:", [
-    ...model.value,
-  ]);
-
+  model.value = newFields;
   resetForm();
 }
 </script>
