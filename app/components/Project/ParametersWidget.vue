@@ -196,8 +196,7 @@ function generateParameterSettings(
 ) {
   const settings = [];
 
-  // TODO: untested NIKOOOOOOOOO
-  if (field.index !== 1) {
+  if (field.index > 0) {
     settings.push({
       label: `Move up`,
       icon: "i-mdi-arrow-up",
@@ -208,7 +207,7 @@ function generateParameterSettings(
     });
   }
 
-  if (field.index !== allFields.length - 1) {
+  if (field.index < allFields.length - 1) {
     settings.push({
       label: `Move down`,
       icon: "i-mdi-arrow-down",

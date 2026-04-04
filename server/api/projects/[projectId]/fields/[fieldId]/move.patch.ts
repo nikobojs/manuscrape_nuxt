@@ -52,9 +52,6 @@ export default safeResponseHandler(async (event) => {
   // move project field up or down depending on json body
   await moveProjectField(patch.up, field.id, fields);
 
-  // ensure indexes are valid, and if not, then correct them
-  await updateProjectFieldIndexes(fields);
-
   // return 204
   setResponseStatus(event, 204);
 });

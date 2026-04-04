@@ -1,6 +1,7 @@
 import { count, eq, inArray } from "drizzle-orm";
 import { projectFields } from "../drizzle/schema";
 import { enforceCorrectIndexes } from "#shared/utils/observationFields";
+import { captureException } from "@sentry/node";
 
 type ProjectFieldSelect = Partial<
   Record<keyof typeof projectFields.$inferSelect, boolean>
@@ -88,20 +89,32 @@ export async function moveProjectField(
     });
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(projectFields)
-      .set({ index: -1 })
-      .where(eq(projectFields.id, fieldId));
-    await tx
-      .update(projectFields)
-      .set({ index: fieldIndex })
-      .where(eq(projectFields.id, swapField.id));
-    await tx
-      .update(projectFields)
-      .set({ index: swapIndex })
-      .where(eq(projectFields.id, fieldId));
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(projectFields)
+        .set({ index: -1 })
+        .where(eq(projectFields.id, fieldId));
+      await tx
+        .update(projectFields)
+        .set({ index: fieldIndex })
+        .where(eq(projectFields.id, swapField.id));
+      await tx
+        .update(projectFields)
+        .set({ index: swapIndex })
+        .where(eq(projectFields.id, fieldId));
+    });
+  } catch (e) {
+    console.error("Unable to swap project field indexes:", {
+      fieldIndex,
+      swapIndex,
+      fieldId,
+      up,
+    });
+    console.error(e);
+    captureException(e);
+    throw e;
+  }
 }
 
 // copy dynamic fields helper
