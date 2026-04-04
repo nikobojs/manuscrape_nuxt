@@ -31,94 +31,110 @@
       </div>
     </Transition>
     <Transition name="fade">
-      <div
-        class="w-full flex flex-col xl:flex-row gap-6"
-        v-show="templateSelected"
-      >
-        <form @submit.prevent="handleSubmitProject">
-          <!-- project form left UCard -->
-          <UCard class="overflow-hidden w-80 shadow-xl">
-            <template #header>
-              <CardHeader>Create project</CardHeader>
-            </template>
-
-            <div
-              class="flex gap-3 flex-col"
-              @submit.prevent="handleSubmitProject"
+      <div class="w-full">
+        <div class="mb-3 flex justify-between">
+          <div>
+            <UButton
+              variant="ghost"
+              color="gray"
+              class="flex items-center text-gray-500 dark:text-slate-500"
+              @click="() => (templateSelected = false)"
             >
-              <!-- project name -->
-              <label for="name-input"> Project name: </label>
-              <UInput
-                v-model="projectName"
-                placeholder="Enter project name"
-                id="name-input"
-                required
-              />
+              <UIcon class="text-lg" name="mdi:arrow-left-top" />
+              <span>Show project templates</span>
+            </UButton>
+          </div>
+        </div>
 
-              <!-- project draft parameters form -->
-              <p class="mt-5 text-sm text-gray-500">
-                Configure the parameters you want to fill each time you (or a
-                collaborator) adds an observation.
-              </p>
-              <label class="flex gap-x-0.5" for="field-label-input">
-                <p>Parameters</p>
-                <UPopover>
-                  <template #panel>
-                    <UCard
-                      :ui="{
-                        body: { padding: 'px-2 py-2.5 sm:p-2' },
-                      }"
-                    >
-                      <p class="max-w-[260px]">
-                        A parameter consists of a label and a type. This can be
-                        a number, multiple choice, checkbox, etc.
-                      </p>
-                    </UCard>
-                  </template>
-                  <UIcon name="i-heroicons-information-circle" />
-                </UPopover>
-              </label>
+        <div
+          class="w-full flex flex-col xl:flex-row gap-6"
+          v-show="templateSelected"
+        >
+          <form @submit.prevent="handleSubmitProject">
+            <!-- project form left UCard -->
+            <UCard class="overflow-hidden w-80 shadow-xl">
+              <template #header>
+                <CardHeader>Create project</CardHeader>
+              </template>
 
-              <div class="flex flex-col gap-3">
-                <ProjectFieldForm v-model="addedFields" />
+              <div
+                class="flex gap-3 flex-col"
+                @submit.prevent="handleSubmitProject"
+              >
+                <!-- project name -->
+                <label for="name-input"> Project name: </label>
+                <UInput
+                  v-model="projectName"
+                  placeholder="Enter project name"
+                  id="name-input"
+                  required
+                />
+
+                <!-- project draft parameters form -->
+                <p class="mt-5 text-sm text-gray-500">
+                  Configure the parameters you want to fill each time you (or a
+                  collaborator) adds an observation.
+                </p>
+                <label class="flex gap-x-0.5" for="field-label-input">
+                  <p>Parameters</p>
+                  <UPopover>
+                    <template #panel>
+                      <UCard
+                        :ui="{
+                          body: { padding: 'px-2 py-2.5 sm:p-2' },
+                        }"
+                      >
+                        <p class="max-w-[260px]">
+                          A parameter consists of a label and a type. This can
+                          be a number, multiple choice, checkbox, etc.
+                        </p>
+                      </UCard>
+                    </template>
+                    <UIcon name="i-heroicons-information-circle" />
+                  </UPopover>
+                </label>
+
+                <div class="flex flex-col gap-3">
+                  <ProjectFieldForm v-model="addedFields" />
+                </div>
               </div>
-            </div>
-            <template #footer>
-              <div class="flex gap-x-3 justify-start">
-                <UButton
-                  type="submit"
-                  :loading="loading"
-                  :disabled="!newProjectIsValid"
-                >
-                  Create project
-                </UButton>
-                <UButton
-                  v-if="cancelable"
-                  @click="onClose"
-                  color="gray"
-                  variant="outline"
-                >
-                  Cancel
-                </UButton>
-              </div>
-            </template>
-          </UCard>
-        </form>
+              <template #footer>
+                <div class="flex gap-x-3 justify-start">
+                  <UButton
+                    type="submit"
+                    :loading="loading"
+                    :disabled="!newProjectIsValid"
+                  >
+                    Create project
+                  </UButton>
+                  <UButton
+                    v-if="cancelable"
+                    @click="onClose"
+                    color="gray"
+                    variant="outline"
+                  >
+                    Cancel
+                  </UButton>
+                </div>
+              </template>
+            </UCard>
+          </form>
 
-        <!-- project fields right UCard -->
-        <div class="w-full">
-          <ProjectFieldList
-            :fields="addedFields"
-            :suggestedFields="suggestedFields"
-            @update:fields="
-              (fields) => {
-                console.log('fields updated from field list:', [
-                  ...fields.map((f) => toRaw(f)),
-                ]);
-                addedFields = [...fields.map((f) => toRaw(f))];
-              }
-            "
-          />
+          <!-- project fields right UCard -->
+          <div class="w-full">
+            <ProjectFieldList
+              :fields="addedFields"
+              :suggestedFields="suggestedFields"
+              @update:fields="
+                (fields) => {
+                  console.log('fields updated from field list:', [
+                    ...fields.map((f) => toRaw(f)),
+                  ]);
+                  addedFields = [...fields.map((f) => toRaw(f))];
+                }
+              "
+            />
+          </div>
         </div>
       </div>
     </Transition>
