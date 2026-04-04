@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import {
   testProject,
+  getProject,
   duplicateProject,
   withTempProject,
   withTempUser,
@@ -33,6 +34,49 @@ describe("Project management", () => {
       const res = await createProject(token, testProject);
       const json = await res.json();
       expect(res.status, json?.statusMessage).toBe(201);
+    });
+  });
+
+  test("user can read own project", async () => {
+    await withTempProject(async (_user, project, _obs, token) => {
+      expect(project.id).toBeTypeOf("number");
+      const projectRes = await getProject(token, project.id);
+      expect(projectRes.status).toBe(200);
+      const projectResJson = await projectRes.json();
+      expect(typeof projectResJson?.id === "number");
+    });
+  });
+
+  test("user cannot read other users' projects", async () => {
+    await withTempProject(async (_userA, projectA, _obs, tokenA) => {
+      await withTempUser(async (_user, tokenB) => {
+        const projectRes = await getProject(tokenB, projectA.id);
+        expect(projectRes.status).toBe(403);
+      });
+    });
+  });
+
+  test("403 is returned when project doesn't exist", async () => {
+    await withTempProject(async (_userA, projectA, _obs, tokenA) => {
+      const projectRes = await getProject(tokenA, projectA.id + 3212321);
+      expect(projectRes.status).toBe(403);
+    });
+  });
+
+  test("400 is returned when id is invalid", async () => {
+    await withTempProject(async (_userA, projectA, _obs, tokenA) => {
+      const projectRes = await getProject(
+        tokenA,
+        "pizza" + projectA.id + "abekat",
+      );
+      expect(projectRes.status).toBe(400);
+    });
+  });
+
+  test("401 is returned when not authed", async () => {
+    await withTempProject(async (_userA, projectA, _obs, _tokenA) => {
+      const projectRes = await getProject("", projectA.id);
+      expect(projectRes.status).toBe(401);
     });
   });
 

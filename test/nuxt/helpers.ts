@@ -132,6 +132,18 @@ export async function removeCollaborator(
   return res;
 }
 
+export async function getProject(
+  token: string,
+  id: string | number,
+): Promise<Response> {
+  const headers: HeadersInit = token ? authHeader(token) : {};
+  const res = await fetch("/api/projects/" + id, {
+    method: "GET",
+    headers,
+  });
+  return res;
+}
+
 export async function createProject(
   token: string,
   json: any,
