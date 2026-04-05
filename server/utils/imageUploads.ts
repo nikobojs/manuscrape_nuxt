@@ -27,7 +27,6 @@ export async function createImageUpload(imageUpload: ImageUploadInsert) {
 export function getImageUploadByObsAndField<
   T extends Partial<Record<keyof ImageUploadSelect, boolean>>,
 >(observationId: number, projectFieldId: number, select: T) {
-  console.log("finding image upload by", { observationId, projectFieldId });
   return db.query.imageUploads.findFirst({
     columns: select,
     where: and(

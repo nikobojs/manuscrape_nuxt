@@ -268,7 +268,10 @@ describe("Project management", () => {
 
         // validate field indexes to be sorted and equal to j: [0, 1, 2, 3, ...]
         for (let j = 0; j < project.fields.length; j++) {
-          expect(project.fields[j]?.index).toBe(j);
+          expect(
+            project.fields[j]?.index,
+            project.fields.map((f: any) => f.index),
+          ).toBe(j);
         }
       }
     });

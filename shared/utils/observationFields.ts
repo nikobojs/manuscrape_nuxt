@@ -1,3 +1,5 @@
+import { captureException } from "@sentry/vue";
+
 export const FieldTypeValues: Array<FieldType> = [
   "AUTOCOMPLETE",
   "AUTOCOMPLETE_ADD",
@@ -109,6 +111,7 @@ export function enforceCorrectIndexes<
   }
 
   // calculate correct indexes
+  captureException("Field indexes are wrong - calculating them manually");
   for (let i = 0; i < sortedExisting.length; i++) {
     sortedExisting[i]!.index = i;
   }
