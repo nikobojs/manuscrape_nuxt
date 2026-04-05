@@ -268,9 +268,7 @@ declare global {
   }
 
   type NewProjectBody = InferType<typeof NewProjectSchema>;
-  type NewProjectField = InferType<typeof NewProjectFieldSchema> & {
-    suggestion?: boolean;
-  };
+  type NewProjectField = InferType<typeof NewProjectFieldSchema>;
   type SignInBody = InferType<typeof SignInRequestSchema>;
   type SignUpBody = InferType<typeof SignUpRequestSchema>;
   type DynamicFieldsConfig = {

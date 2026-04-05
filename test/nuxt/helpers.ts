@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import { expect } from "vitest";
 import { fetch } from "@nuxt/test-utils";
 import { daysInFuture } from "../../shared/utils/datetime";
@@ -238,6 +239,60 @@ export async function patchObservation(
       },
     },
   );
+  return res;
+}
+
+export const validTestImage0 = await fs.openAsBlob("./public/cross-bg.png", {
+  type: "image/png",
+});
+export const invalidImages = [
+  await fs.openAsBlob("./test/run_all.sh", {
+    type: "image/png",
+  }),
+  await fs.openAsBlob("./test/run_all.sh", {
+    type: "text/x-shellscript",
+  }),
+  await fs.openAsBlob("./public/cross-bg.png", {
+    type: "text/x-shellscript",
+  }),
+].map((buf) => new File([buf], "test.png", { type: buf.type }));
+
+export async function uploadImageToObservation(
+  token: string,
+  projectId: number,
+  obsId: number,
+  fieldId: number,
+  imageFile: Blob | File,
+): Promise<Response> {
+  const formData = new FormData();
+  formData.append("file", imageFile);
+  const res = await fetch(
+    `/api/projects/${projectId}/observations/${obsId}/image-uploads?projectFieldId=${fieldId}`,
+    {
+      method: "PUT",
+      body: formData,
+      headers: authHeader(token),
+    },
+  );
+
+  return res;
+}
+
+export async function getObservationImage(
+  token: string,
+  projectId: number,
+  obsId: number,
+  imageUploadId: number,
+  fieldId: number,
+) {
+  const res = await fetch(
+    `/api/projects/${projectId}/observations/${obsId}/image-uploads/${imageUploadId}?projectFieldId=${fieldId}`,
+    {
+      method: "GET",
+      headers: authHeader(token),
+    },
+  );
+
   return res;
 }
 
@@ -632,6 +687,25 @@ export async function withTempProject(
   await callback(user, project, observations, json.token);
 }
 
+export async function withTempImageProject(
+  callback: (
+    user: CurrentUser,
+    project: FullProject,
+    observations: FullObservation[],
+    token: string,
+  ) => Promise<void>,
+) {
+  return withTempProject(
+    callback,
+    undefined,
+    defaultPassword,
+    {
+      fields: testImageProjectFields,
+    },
+    false,
+  );
+}
+
 export async function removeStuff() {
   try {
     console.log("begin delete all data from db..");
@@ -655,3 +729,18 @@ export async function removeStuff() {
     throw e;
   }
 }
+
+const testImageProjectFields: NewProjectField[] = [
+  {
+    index: 0,
+    label: "Single image",
+    required: true,
+    type: "IMAGE_SINGLE",
+  },
+  {
+    index: 1,
+    label: "Multiple image",
+    required: true,
+    type: "IMAGE_MULTIPLE",
+  },
+];
