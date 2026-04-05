@@ -6,8 +6,8 @@ import {
   getMe,
   inviteToProject,
   signup,
+  db,
 } from "./helpers";
-import { db } from "./helpers";
 import { count } from "drizzle-orm";
 import { projectInvitations } from "../../server/drizzle/schema";
 
