@@ -1,4 +1,4 @@
-import { count, eq, inArray } from "drizzle-orm";
+import { asc, count, eq, inArray } from "drizzle-orm";
 import { projectFields } from "../drizzle/schema";
 import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 import { captureException } from "@sentry/node";
@@ -169,6 +169,7 @@ export async function getProjectFieldsByProjectIds<
   const res = await db.query.projectFields.findMany({
     where: inArray(projectFields.projectId, projectIds),
     columns: select,
+    orderBy: asc(projectFields.index),
   });
   return res;
 }
