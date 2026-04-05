@@ -1,5 +1,7 @@
 import { eq, and, inArray } from "drizzle-orm";
+import sharp from "sharp";
 import { imageUploads } from "../drizzle/schema";
+import { captureException } from "@sentry/node";
 
 type ImageUploadInsert = Omit<
   Awaited<typeof imageUploads.$inferInsert>,
@@ -55,4 +57,33 @@ export function getImageUploadsByObservationIds<
 
 export function deleteImageUpload(imageUploadId: number) {
   return db.delete(imageUploads).where(eq(imageUploads.id, imageUploadId));
+}
+
+export async function stripImageExif(buffer: Buffer) {
+  try {
+    // validate actual file format
+    const metadata = await sharp(buffer).metadata();
+    if (!metadata.format) {
+      captureException(
+        new Error("User uploaded image without parsable input data"),
+      );
+      throw createError({
+        statusCode: 400,
+        message: "Could not determine image format",
+      });
+    }
+
+    // remove EXIF/metadata and process
+    // NOTE: This forces a re-encode and drops all metadata by default
+    const processedBuffer = await sharp(buffer).toBuffer();
+
+    // Return or save processedBuffer
+    return processedBuffer;
+  } catch (error) {
+    captureException(error);
+    throw createError({
+      status: 400,
+      message: "Could not determine image format",
+    });
+  }
 }

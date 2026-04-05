@@ -3,6 +3,8 @@ import formidable from "formidable";
 import { setObservationUploadProgress } from "~~/server/utils/observations";
 import * as yup from "yup";
 import { requireProjectFieldById } from "~~/server/utils/projectFields";
+import * as fs from "node:fs";
+import { stripImageExif } from "~~/server/utils/imageUploads";
 
 const allowedMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
 const config = useRuntimeConfig();
@@ -125,11 +127,16 @@ export default safeResponseHandler(async (event) => {
 
   // extract fileextension (safe)
   const fileNameParts = file.newFilename.split(".");
-  const extension =
-    fileNameParts.length > 1
-      ? "." + file.newFilename.split(".").reverse()[0]
-      : "";
+  if (fileNameParts.length < 2) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "You cannot upload images without file extension",
+    });
+  }
 
+  const extension = "." + file.newFilename.split(".").reverse()[0];
+
+  // TODO: make into util fn
   // generate random string for a unique s3 name
   const randomAlphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
@@ -140,9 +147,17 @@ export default safeResponseHandler(async (event) => {
     )
     .join("");
 
+  // read uploaded image into ram
+  let buffer: Buffer<ArrayBufferLike> = await fs.promises.readFile(
+    file.filepath,
+  );
+
+  // remove exif data + ensure it is actually a png or jpg (because parsing image)
+  buffer = await stripImageExif(buffer);
+
   // upload file
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
-  await uploadFile(newS3Path, file.filepath, canUseS3());
+  await uploadFile(newS3Path, buffer, canUseS3());
 
   // remove existing image from database and s3 unless project field type is multiple images
   if (existingImage && projectField.type !== "IMAGE_MULTIPLE") {
@@ -158,7 +173,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // create new ImageUpload row
-  await createImageUpload({
+  const { id: newImageUploadId } = await createImageUpload({
     mimetype: file.mimetype,
     originalName: file.originalFilename,
     filePath: `${newS3Path}`,
@@ -170,5 +185,5 @@ export default safeResponseHandler(async (event) => {
   // adjust progress and updated at
   await setObservationUploadProgress(observation.id, false);
 
-  return { success: true };
+  return { success: true, imageUploadId: newImageUploadId };
 });
