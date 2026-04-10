@@ -279,6 +279,18 @@ const template: Record<TemplateName, NewProjectField[]> = {
     },
     {
       label: "Action",
+      type: "CHOICE",
+      required: true,
+      index: 3,
+      choices: [
+        "Recording current network(Add backs)",
+        "Recommendations(Quick Add Scroll)",
+        "Adding seller",
+        "Removing seller",
+      ],
+    },
+    {
+      label: "Drug sales",
       type: "MULTIPLE_CHOICE_ADD",
       choices: [
         "Drug sales",
@@ -296,13 +308,13 @@ const template: Record<TemplateName, NewProjectField[]> = {
         "Steroids (tren, roids)",
       ],
       required: true,
-      index: 2,
+      index: 3,
     },
     {
       label: "Observation comments / researcher reflections",
-      type: "STRING",
+      type: "TEXTAREA",
       required: false,
-      index: 3,
+      index: 4,
     },
   ],
   "event-based-simple": [
