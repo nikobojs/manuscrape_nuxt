@@ -1,8 +1,8 @@
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig().public;
-  const sentryUrl = new URL(config.sentryDsn);
-
-  if (sentryUrl) {
+  const sentryDsn = config.sentryDsn;
+  if (sentryDsn) {
+    const sentryUrl = new URL(sentryDsn);
     const u = new URL(sentryUrl);
     const bugReportOrigin = u.origin;
     setHeader(
