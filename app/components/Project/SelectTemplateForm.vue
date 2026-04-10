@@ -368,9 +368,10 @@ const template: Record<TemplateName, NewProjectField[]> = {
     {
       label:
         "How does this person's post appear compared to how this person has otherwise posted?",
-      type: "TEXTAREA",
+      type: "CHOICE",
       required: true,
       index: 3,
+      choices: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
     },
     {
       label: "Examples of whom it is hateful towards",
