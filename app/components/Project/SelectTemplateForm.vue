@@ -2,7 +2,7 @@
   <div
     class="[&_h2]:flex [&_h2]:items-center [&_h2_span]:text-4xl [&_h2]:gap-2 [&_h2_span]:text-green-500 [&_strong]:font-semibold [&_h2]:text-xl [&_p]:text-sm [&_li]:text-sm [&_h2]:mb-4 [&_p]:mb-3 [&_ul]:mb-3 [&_li]:list-disc [&_ul]:pl-3"
   >
-    <div>
+    <div class="lg:pt-[200px] xl:pt-0">
       <div v-if="!isEventSubStep" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SubCard class="w-full">
           <h2>
