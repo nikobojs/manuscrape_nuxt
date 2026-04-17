@@ -3,7 +3,10 @@ import { updateProject } from "~~/server/utils/project";
 
 export default safeResponseHandler(async (event) => {
   const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
@@ -12,7 +15,7 @@ export default safeResponseHandler(async (event) => {
   if (projectRes.length !== 1) {
     throw createError({
       status: 404,
-      message: 'Project was not found',
+      message: "Project was not found",
     });
   }
 
