@@ -1,64 +1,98 @@
 <template>
-    <UContainer>
-      <BackButton :href="backbuttonUrl" :disabled="disableBackbutton">
-        Cancel
-      </BackButton>
-      <ObservationImageEditor
-        v-if="project && initialFile && observation && projectFieldId"
-        :project="project"
-        :observation="observation"
-        :initial-file="initialFile"
-        :on-submit="handleUploadSuccess"
-        :project-field-id="projectFieldId"
-      />
-      <UCard v-else class="p-8 text-center">
-        <p class="text-gray-500" v-if="project && observation">
-          {{ error || "No image file provided. Please go back and select an image." }}
-        </p>
-        <p v-else-if="loading || !observation">Loading..</p>
-      </UCard>
-    </UContainer>
+  <UContainer>
+    <BackButton
+      v-if="backbuttonUrl"
+      :href="backbuttonUrl"
+      :disabled="disableBackbutton"
+    >
+      Cancel
+    </BackButton>
+    <ObservationImageEditor
+      v-if="project && initialFile && observation && projectFieldId"
+      :project="project"
+      :observation="observation"
+      :initial-file="initialFile"
+      :on-submit="handleUploadSuccess"
+      :project-field-id="projectFieldId"
+    />
+    <UCard v-else class="p-8 text-center">
+      <p class="text-gray-500" v-if="project && observation">
+        {{
+          error || "No image file provided. Please go back and select an image."
+        }}
+      </p>
+      <p v-else-if="loading || !observation">Loading..</p>
+    </UCard>
+  </UContainer>
 </template>
 
 <script lang="ts" setup>
 const { ensureLoggedIn } = await useAuth();
 await useUser();
 await ensureLoggedIn();
-const { params } = useRoute();
 const { isElectron } = useDevice();
-const { project, loading } = await useProjects(params);
-const toast = useToast();
 const route = useRoute();
+const { project, loading } = await useProjects(route.params);
+const toast = useToast();
 const projectFieldId = ref<number>();
 const error = ref<string>();
+const { report } = useSentry();
 
 const disableBackbutton = ref(false);
 
-if (typeof project.value?.id !== "number") {
+if (typeof route.params.projectId !== "string" || !route.params.projectId) {
   throw new Error("Project is not defined");
 }
 
-const { requireObservationFromParams } = await useObservations(
-  project.value.id,
-);
 const observation = ref<FullObservation | null>(null);
 
 async function refreshObservation() {
-  const obs = await requireObservationFromParams(params);
+  if (import.meta.server || !route.params?.projectId) return;
+  const { requireObservationFromParams } = await useObservations(
+    parseInt(route.params?.projectId as string),
+  );
+  const obs = await requireObservationFromParams(route.params);
   observation.value = obs;
 }
-
 
 // Get the initial file from sessionStorage (stored by the widget before navigation)
 const initialFile = ref<File | undefined>(undefined);
 onMounted(async () => {
   // refresh observation
-  await refreshObservation();
+  try {
+    await refreshObservation();
+  } catch (e: unknown) {
+    if ((e as { message?: string; status?: number })?.status) {
+      report("error", e as Error);
+      const status = (e as any).status;
+      if (status === 403) {
+        toast.add({
+          description: "You do not have access to this project",
+          color: "red",
+          icon: "i-heroicons-exclamation-triangle",
+        });
+        return navigateTo("/");
+      } else {
+        toast.add({
+          description: (e as any)?.message || "Unknown error",
+          color: "red",
+          icon: "i-heroicons-exclamation-triangle",
+        });
+        return navigateTo("/");
+      }
+    }
+    console.error("Got error:", e);
+    throw e;
+  }
 
   // retrieve (require) `projectFieldId` from query parameters
   const _projectFieldId = route.query?.projectFieldId;
-  if (typeof _projectFieldId !== 'string' || !_projectFieldId || isNaN(parseInt(_projectFieldId))) {
-    error.value = 'Project field id is not defined in the URL query parameters';
+  if (
+    typeof _projectFieldId !== "string" ||
+    !_projectFieldId ||
+    isNaN(parseInt(_projectFieldId))
+  ) {
+    error.value = "Project field id is not defined in the URL query parameters";
     return;
   }
   projectFieldId.value = parseInt(_projectFieldId);

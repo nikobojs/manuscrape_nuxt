@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import type { H3Event, EventHandlerRequest } from "h3";
+import { captureException } from "@sentry/vue";
 
 const config = useRuntimeConfig();
 
@@ -45,5 +46,13 @@ async function onNotAuthed(
     });
   } else if (!isOpenUrl(event) && !isApiUrl) {
     return sendRedirect(event, "/login", 302);
+  } else {
+    const ctx = {
+      msg,
+      isOpenUrl: isOpenUrl(event),
+      isApiUrl,
+    };
+    captureException("Unexpected state in auth middleware", { data: ctx });
+    console.warn("onNotAuth unexpected state", ctx);
   }
 }

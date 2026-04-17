@@ -111,9 +111,9 @@ export async function ensureURLResourceAccess(
     if (!projectAccess) {
       const err = createError({
         statusCode: 403,
-        statusMessage: "You don't have access to this project",
+        statusMessage: `You don't have access to project ${projectIdInt}`,
       });
-      captureException(err);
+      captureException(err, { user });
       throw err;
     }
 

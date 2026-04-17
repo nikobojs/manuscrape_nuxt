@@ -11,7 +11,7 @@ export const useUser = async () => {
     await useFetch<CurrentUser>("/api/user", {
       method: "GET",
       server: true,
-      immediate: false,
+      immediate: true, // changed to true 2026-04-17
       onResponse: async (context) => {
         if (context.response.status === 200) {
           const res = context.response._data as CurrentUser;
