@@ -1,8 +1,5 @@
-import * as yup from "yup";
-import { updateProject } from "~~/server/utils/project";
-
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
+  await requireUser(event);
   await ensureURLResourceAccess(event, event.context.user, [
     "OWNER",
     "INVITED",
