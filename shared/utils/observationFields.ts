@@ -111,10 +111,19 @@ export function enforceCorrectIndexes<
   }
 
   // calculate correct indexes
-  captureException("Field indexes are wrong - calculating them manually");
+  // captureException("Field indexes are wrong - calculating them manually");
+  // TODO: find out why this happens so often, stop reporting it for now
+  console.error(
+    "Field indexes are wrong - calculating them manually. Wrong fields:",
+    sortedExisting.map((s) => s.index),
+  );
   for (let i = 0; i < sortedExisting.length; i++) {
     sortedExisting[i]!.index = i;
   }
+  console.error(
+    "New fields:",
+    sortedExisting.map((s) => s.index),
+  );
 
   return sortedExisting;
 }
