@@ -943,7 +943,8 @@ export function useImageEditor(
     }
   }
 
-  function reset() {
+  function reset(retry = 0) {
+    const maxRetries = 1;
     if (canvas.value && context.value) {
       clearCanvas();
       removeEventListeners(); // fix: naming (it removes all eventlisteners)
@@ -957,6 +958,8 @@ export function useImageEditor(
       writing.value = false;
       textDraft.value = "";
       drawImage();
+    } else if (retry < maxRetries) {
+      window.requestAnimationFrame(() => reset(1));
     } else {
       throw new Error("Canvas or canvas context is not defined!");
     }
