@@ -1,4 +1,5 @@
 import { getFileUploadById } from "~~/server/utils/fileUploads";
+import { toAsciiSafeFilename } from "#shared/utils/ascii";
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
@@ -29,10 +30,12 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
+  const fname = encodeURIComponent(file.originalName);
+  const asciiSafe = toAsciiSafeFilename(file.originalName);
   setHeader(
     event,
     "Content-Disposition",
-    `inline; filename="${file.originalName}"`,
+    `inline; filename="${asciiSafe}"; filename*=UTF-8''${fname}`,
   );
 
   const { readable, s3 } = await getUpload(file.filePath, file.isS3);
