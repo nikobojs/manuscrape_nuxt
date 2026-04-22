@@ -57,11 +57,13 @@ export default safeResponseHandler(async (event) => {
   const dataUpdates = affectedObservations.map((o) => {
     if (typeof o.data !== "string" || !o.data) {
       // capture error without telling user. Skip modifying this observation
+      // TODO: consider removing this capture as this probably happens for all empty observations
       const err = createError({
         statusCode: 500,
-        statusMessage: "Observation has no data is not a valid string",
+        statusMessage:
+          "Observation has no data when modifying observations after field deletion",
       });
-      captureException(err);
+      captureException(err, { data: { affectedObservation: o } });
       return o;
     }
 
