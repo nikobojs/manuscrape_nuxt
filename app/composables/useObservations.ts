@@ -109,23 +109,6 @@ export const useObservations = async (
     );
   };
 
-  const fetchObservationById = async (
-    obsId: number | string | string[] | null,
-  ): Promise<FullObservation | undefined> => {
-    obsId = requireNumber(obsId, "observationId");
-    const obs = await $fetch<FullObservation>(
-      `/api/projects/${projectId}/observations/${obsId}`,
-      {
-        credentials: "include",
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    return obs;
-  };
-
   const createObservation = async (projectId: number) => {
     return $fetch(`/api/projects/${projectId}/observations`, {
       method: "POST",
@@ -185,58 +168,6 @@ export const useObservations = async (
     return res;
   };
 
-  const upsertObservationImage = async (
-    projectId: number,
-    observationId: number,
-    projectFieldId: number,
-    file: File,
-  ) => {
-    const form = new FormData();
-    form.append("file", file);
-
-    try {
-      await $fetch(
-        `/api/projects/${projectId}/observations/${observationId}/image-uploads`,
-        {
-          query: {
-            projectFieldId,
-          },
-          method: "PUT",
-          body: form,
-          onRequest: (ctx) => {
-            console.log("begin uploading image..");
-          },
-          onRequestError: (ctx) => {
-            throw (
-              ctx.error ||
-              new Error("Unknown client error when uploading image")
-            );
-          },
-          onResponse: (ctx) => {
-            console.log(
-              "image uploaded successfully, status is",
-              ctx.response.status,
-            );
-            if (window.electronAPI) {
-              window.electronAPI.observationImageUploaded();
-            }
-          },
-          onResponseError: (ctx) => {
-            const statusCode = ctx.response?.status;
-            if (statusCode === 413) {
-              throw new Error("The uploaded observation image is too large");
-            }
-            const msg = getErrMsg(ctx.response?._data);
-            throw new Error(msg || "It seems that the fileupload failed :(");
-          },
-        },
-      );
-    } catch (err: any) {
-      console.error("upload image to observation err:", err);
-      throw err;
-    }
-  };
-
   const uploadObservationFile = async (
     projectId: number,
     observationId: number,
@@ -290,7 +221,7 @@ export const useObservations = async (
     );
     const _projectId = requireNumber(params?.projectId, "projectId");
 
-    const obs = await fetchObservationById(_observationId);
+    const obs = await fetchObservationById(_projectId, _observationId);
 
     if (!obs) {
       throw new Error("Observation does not exist");

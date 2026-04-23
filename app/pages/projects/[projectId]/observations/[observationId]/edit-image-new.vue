@@ -48,11 +48,19 @@ const observation = ref<FullObservation | null>(null);
 
 async function refreshObservation() {
   if (import.meta.server || !route.params?.projectId) return;
-  const { requireObservationFromParams } = await useObservations(
-    parseInt(route.params?.projectId as string),
-  );
-  const obs = await requireObservationFromParams(route.params);
-  observation.value = obs;
+  if (!project.value) throw new Error("Project is not defined");
+  const projId = requireNumber(project.value.id);
+  const obsId = requireNumber(route.params?.observationId);
+  const obs = await fetchObservationById(projId, obsId);
+
+  if (!obs) {
+    toast.add({
+      title: "Error",
+      description: "Observation does not seem to exist.",
+    });
+  } else {
+    observation.value = obs;
+  }
 }
 
 // Get the initial file from sessionStorage (stored by the widget before navigation)
@@ -67,7 +75,7 @@ onMounted(async () => {
       const status = (e as any).status;
       if (status === 403) {
         toast.add({
-          description: "You do not have access to this project",
+          description: "You do not have access to this observation or project",
           color: "red",
           icon: "i-heroicons-exclamation-triangle",
         });

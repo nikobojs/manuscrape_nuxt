@@ -403,9 +403,6 @@ const textInput = ref<HTMLInputElement>();
 const frontColor = ref<string>("#ffffff");
 const backColor = ref<string>("#000000");
 const initialFileRef = ref<File | undefined>(props.initialFile);
-
-const { upsertObservationImage } = await useObservations(props.project?.id);
-
 const toast = useToast();
 
 // initialize image editor!
