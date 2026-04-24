@@ -129,11 +129,10 @@ export async function ensureURLResourceAccess(
     const observationIdInt = parseIntParam(params.observationId);
 
     // get observations belonging to project
-    const obs = await getObservationsByProjectId(projectIdInt, {
+    const observation = await getObservationById(observationIdInt, {
       id: true,
       userId: true,
     });
-    const observation = obs.find((o) => o.id === observationIdInt);
 
     if (!observation) {
       throw createError({
