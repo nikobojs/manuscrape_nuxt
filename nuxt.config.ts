@@ -65,5 +65,19 @@ export default defineNuxtConfig({
     },
   },
 
+  vite: {
+    optimizeDeps: {
+      include: [
+        "date-fns",
+        "v-calendar",
+        "vuedraggable",
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+        "@sentry/vue",
+        "@vueuse/core",
+      ],
+    },
+  },
+
   compatibilityDate: "2025-03-13",
 });
