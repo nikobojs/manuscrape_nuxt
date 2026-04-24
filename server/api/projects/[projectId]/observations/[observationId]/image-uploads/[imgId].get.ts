@@ -32,6 +32,12 @@ export default safeResponseHandler(async (event) => {
       statusMessage: "Observation was not found",
     });
   }
+  if (!imageUploadId) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Bad image upload id",
+    });
+  }
 
   // ensure project field id is in the same project as the observation
   const projectField = await requireProjectFieldById(projectFieldId, {
@@ -62,7 +68,7 @@ export default safeResponseHandler(async (event) => {
   if (typeof observationImage?.filePath !== "string") {
     throw createError({
       statusCode: 400,
-      statusMessage: "Observation has no image",
+      statusMessage: "Observation image has no filePath",
     });
   } else if (observationImage.observationId !== observation.id) {
     const errMsg =
