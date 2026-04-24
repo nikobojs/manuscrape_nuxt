@@ -9,8 +9,23 @@
           :last-update="new Date(image.createdAt)"
           class="w-full"
         />
-        <div class="absolute top-1.5 right-1.5">
+        <div
+          class="absolute top-1.5 right-1.5 flex gap-x-1.5 justify-end"
+          v-if="removable || editable"
+        >
           <UButton
+            v-if="editable"
+            square
+            class="rounded-full bg-slate-900 transition-all opacity-80 hover:opacity-100 hover:border-slate-400 border border-transparent"
+            variant="soft"
+            size="xs"
+            color="gray"
+            :to="`/projects/${project.id}/observations/${observation.id}/edit-image?projectFieldId=${image.projectFieldId}`"
+          >
+            <UIcon name="mdi:pencil" />
+          </UButton>
+          <UButton
+            v-if="removable"
             square
             class="rounded-full bg-slate-900 transition-all opacity-80 hover:opacity-100 hover:border-slate-400 border border-transparent"
             variant="soft"
@@ -68,6 +83,10 @@ defineProps({
     type: Boolean,
   },
   removable: {
+    required: true,
+    type: Boolean,
+  },
+  editable: {
     required: true,
     type: Boolean,
   },

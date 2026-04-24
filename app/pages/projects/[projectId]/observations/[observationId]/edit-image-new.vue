@@ -27,16 +27,17 @@
 </template>
 
 <script lang="ts" setup>
-const { ensureLoggedIn } = await useAuth();
+const { ensureLoggedIn, ensureUserFetched } = await useAuth();
 await useUser();
+await ensureUserFetched(); // this is apparently required for this page to work correctly in electron
 await ensureLoggedIn();
-const { isElectron } = useDevice();
 const route = useRoute();
 const { project, loading } = await useProjects(route.params);
 const toast = useToast();
 const projectFieldId = ref<number>();
 const error = ref<string>();
 const { report } = useSentry();
+const { isElectron } = useDevice();
 
 const disableBackbutton = ref(false);
 
