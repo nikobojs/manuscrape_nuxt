@@ -49,6 +49,7 @@
             <div class="flex flex-col gap-3">
               <p class="text-sm">{{ inp.props.label }}:</p>
               <ImageUploadInput
+                :editable="observation.isDraft"
                 :removable="observation.isDraft"
                 :project="project"
                 :observation="observation"

@@ -1,5 +1,5 @@
 <template>
-  <UCard v-if="props.initialFile" class="overflow-visible">
+  <UCard class="overflow-visible">
     <template #header>
       <div class="flex justify-between">
         <div class="relative h-4">
@@ -396,6 +396,11 @@ const props = defineProps({
 
 // For pre-upload mode, observation might not have an image yet
 const isPreUploadMode = computed(() => !!props.initialFile);
+const imageUpload = computed(() =>
+  props.observation.images.find(
+    (i) => i.projectFieldId === props.projectFieldId,
+  ),
+);
 
 const canvas = ref<HTMLCanvasElement>();
 const canvasContainer = ref<HTMLDivElement>();
@@ -425,6 +430,7 @@ const {
   reset,
   resetTextDraft,
   resetZoom,
+  reloadImage,
   saveTextDraft,
   setMode,
   setTextDraft,
@@ -440,6 +446,7 @@ const {
   props.observation.id,
   props.project.id,
   props.projectFieldId,
+  imageUpload?.value?.id,
   canvas,
   canvasContainer,
   textInput,
@@ -451,7 +458,7 @@ const {
 function save() {
   createImageFile(async (file: File) => {
     try {
-      await upsertObservationImage(
+      const res = await upsertObservationImage(
         props.project.id,
         props.observation.id,
         props.projectFieldId,
@@ -463,13 +470,12 @@ function save() {
         await props.onSubmit(true);
       } else {
         // TODO: wait until redownload+rerender of image somehow
-        setTimeout(() => {
-          toast.add({
-            title: "Image was saved",
-            icon: "i-heroicons-check",
-            color: "green",
-          });
-        }, 250);
+        reloadImage(res.imageUploadId);
+        toast.add({
+          title: "Image was saved",
+          icon: "i-heroicons-check",
+          color: "green",
+        });
       }
     } catch (e) {
       setTimeout(() => {

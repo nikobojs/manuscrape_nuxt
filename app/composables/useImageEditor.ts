@@ -24,6 +24,7 @@ export function useImageEditor(
   observationId: number,
   projectId: number,
   projectFieldId: number | undefined,
+  _imageUploadId: number | undefined,
   canvas: Ref<HTMLCanvasElement | undefined>,
   container: Ref<HTMLDivElement | undefined>,
   textInput: Ref<HTMLInputElement | undefined>,
@@ -36,6 +37,7 @@ export function useImageEditor(
   const beginX = ref(0);
   const beginY = ref(0);
   const isSaving = ref(false);
+  const imageUploadId = ref(_imageUploadId);
   const boxes = ref<Box[]>([]);
   const draftLine = ref<Line>();
   const lines = ref<Line[]>([]);
@@ -84,7 +86,7 @@ export function useImageEditor(
 
   const mode = ref<EditorMode>(EditorMode.DISABLED);
   const previousMode = ref<EditorMode | undefined>();
-  const lastReload = ref(new Date());
+  const lastReload = ref(Date.now());
   const cursor = ref("grab");
   const texts = ref<TextBox[]>([]);
   const context = computed(() =>
@@ -95,11 +97,19 @@ export function useImageEditor(
     y: (container.value?.clientWidth || 0) * aspectRatio.value,
   }));
 
-  function reloadImage() {
-    lastReload.value = new Date();
+  function reloadImage(newImgUploadId?: number) {
+    if (newImgUploadId) {
+      imageUploadId.value = newImgUploadId;
+    }
+    const v = Date.now();
+    console.log("LAST RELOAD WAS", lastReload.value, "AND IS NOW", v);
+    lastReload.value = v;
+    loadImage();
   }
 
-  const image = computed(() => {
+  const image = ref<HTMLImageElement>();
+
+  function loadImage() {
     if (typeof observationId !== "number" || typeof projectId !== "number") {
       throw new Error("Props are not defined correctly");
     }
@@ -128,8 +138,15 @@ export function useImageEditor(
         }
       });
     } else {
+      if (typeof imageUploadId.value !== "number") {
+        throw createError({
+          status: 500,
+          statusText: "Image upload was not passed to useImageEditor",
+        });
+      }
       // Load from API URL (existing behavior for editing uploaded images)
-      bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads?v=${Number(lastReload.value)}`;
+      bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads/${imageUploadId.value}?v=${lastReload.value}&projectFieldId=${projectFieldId}`;
+      console.log("loading image from api url...", bg.src);
       bg.addEventListener("load", () => {
         if (canvas.value && context.value) {
           aspectRatio.value = bg.height / bg.width;
@@ -146,9 +163,9 @@ export function useImageEditor(
         }
       });
     }
-
+    image.value = bg;
     return bg;
-  });
+  }
 
   function forceHighQualityCanvas(onLoaded: () => Promise<void>) {
     if (typeof observationId !== "number" || typeof projectId !== "number") {
@@ -210,7 +227,7 @@ export function useImageEditor(
         });
       } else {
         // Load from API URL (existing behavior)
-        bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads?v=${Number(lastReload.value)}`;
+        bg.src = `/api/projects/${projectId}/observations/${observationId}/image-uploads/${imageUploadId.value}?v=${lastReload.value}&projectFieldId=${projectFieldId}`;
         bg.addEventListener("load", () => {
           if (canvas.value && context.value) {
             aspectRatio.value = bg.height / bg.width;
@@ -957,6 +974,7 @@ export function useImageEditor(
       grabbing.value = false;
       writing.value = false;
       textDraft.value = "";
+      reloadImage();
       drawImage();
     } else if (retry < maxRetries) {
       window.requestAnimationFrame(() => reset(1));
@@ -1005,9 +1023,9 @@ export function useImageEditor(
               });
               await onDone(file);
 
-              clearCanvas();
-              reloadImage();
-              reset();
+              // clearCanvas();
+              // // reloadImage();
+              // reset();
               resolve();
             },
             "image/jpeg",
@@ -1053,6 +1071,7 @@ export function useImageEditor(
 
   function resetZoom() {
     if (!canvas.value) throw new Error("Canvas is not defined");
+    if (!image.value) throw new Error("Image is not defined");
 
     if (image.value.width > canvas.value.width) {
       zoom.value =
@@ -1263,6 +1282,7 @@ export function useImageEditor(
     resetZoom,
     saveTextDraft,
     setMode,
+    reloadImage,
     setTextDraft,
     setTextDraftSolidBg,
     textDraft,
