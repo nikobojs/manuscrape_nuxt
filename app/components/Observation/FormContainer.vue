@@ -228,13 +228,6 @@ function buildInitialForm(obs: FullObservation, project: FullProject) {
   return result;
 }
 
-const {
-  refreshObservations,
-  deleteObservation,
-  patchObservation,
-  observationIsDeletable,
-  observationIsDelockable,
-} = await useObservations(props.project.id);
 const toast = useToast();
 const { isElectron } = useDevice();
 
@@ -328,7 +321,6 @@ async function handleDiscardDraft() {
       color: "green",
       icon: "i-heroicons-check",
     });
-    await refreshObservations();
     navigateTo(`/projects/${props.project.id}`);
   }
 }
@@ -351,7 +343,6 @@ async function handleDelete() {
       color: "green",
       icon: "i-heroicons-check",
     });
-    await refreshObservations();
     navigateTo(`/projects/${props.project.id}`);
   }
 }

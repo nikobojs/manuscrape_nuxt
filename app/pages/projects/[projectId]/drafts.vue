@@ -4,14 +4,13 @@
       <ObservationListWidget
         :project="project"
         :show-create-button="false"
-        :default-observation-filter="ObservationFilterTypes.ALL_DRAFTS"
-        :on-project-updated="
+        :defaultObservationFilter="ObservationFilterTypes.ALL_DRAFTS"
+        @on-project-updated="
           () => {
-            refreshObservations();
+            queryParamsUpdate();
           }
         "
       />
-      {{ ObservationFilterTypes.ALL_DRAFTS }}
     </div>
   </UContainer>
 </template>
@@ -24,6 +23,10 @@ const { params } = useRoute();
 const { project } = await useProjects(params);
 const toast = useToast();
 
+watch(project, () => {
+  queryParamsUpdate();
+});
+
 if (!project.value) {
   toast.add({
     title: "Access denied",
@@ -34,7 +37,8 @@ if (!project.value) {
   navigateTo("/");
 }
 
-const { refreshObservations } = await useObservations(
+const { refreshObservations, queryParamsUpdate } = await useObservations(
   project.value?.id as number,
+  ObservationFilterTypes.ALL_DRAFTS,
 );
 </script>

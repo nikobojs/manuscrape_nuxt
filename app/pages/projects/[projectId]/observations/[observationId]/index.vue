@@ -52,13 +52,13 @@
 const { ensureLoggedIn } = await useAuth();
 await useUser();
 await ensureLoggedIn();
+
 const { params, query } = useRoute();
 const { project } = await useProjects(params);
 if (typeof project.value?.id !== "number") {
   throw new Error("Project is not defined");
 }
-const { refreshObservations, requireObservationFromParams } =
-  await useObservations(project.value?.id);
+
 const observation = ref<FullObservation | null>(null);
 const { isElectron } = useDevice();
 
@@ -109,7 +109,15 @@ function requiredImagesUploaded(): boolean {
 }
 
 async function refreshObservation() {
-  const obs = await requireObservationFromParams(params);
+  const projId = requireNumber(project.value?.id);
+  const obsId = requireNumber(params?.observationId);
+  const obs = await fetchObservationById(projId, obsId);
+  if (!obs) {
+    throw createError({
+      message: "Observation does not exist",
+      status: 404,
+    });
+  }
   observation.value = obs;
 }
 
@@ -137,7 +145,6 @@ async function onObservationPublished() {
       color: "green",
     });
     await refreshObservation();
-    await refreshObservations();
   }
 }
 
@@ -155,7 +162,6 @@ async function onFormSubmit(showToast = true) {
 
 async function onDelockObservation() {
   await refreshObservation();
-  await refreshObservations();
 }
 
 async function onFileUploaded(file: File) {
@@ -194,11 +200,9 @@ async function onFileDeleted() {
     });
   }
   await refreshObservation();
-  await refreshObservations();
 }
 
 onMounted(async () => {
   await refreshObservation();
-  await refreshObservations();
 });
 </script>

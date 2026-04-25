@@ -31,7 +31,6 @@
         </div>
       </div>
     </template>
-
     <UTable
       v-model:sort="sort"
       :empty-state="{
@@ -59,6 +58,9 @@
       <template #isDraft-data="{ row }">
         <span>{{ row.isDraft ? "Yes" : "No" }}</span>
       </template>
+      <template #tags-data="{ row }">
+        <ObservationTagListOverflow :tags="row.tags" />
+      </template>
       <template #actions-data="{ row }">
         <div class="w-full justify-end flex gap-x-3">
           <div
@@ -73,22 +75,21 @@
           <NuxtLink
             :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
           >
-            <span
-              class="i-heroicons-arrow-top-right-on-square text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"
-            ></span>
+            <UIcon
+              name="i-heroicons-arrow-top-right-on-square"
+              class="text-xl -mt-1 -mb-1 hover:text-slate-300 transition-colors"
+            />
           </NuxtLink>
           <div
             @click="() => beginDeleteObservation(row)"
             v-if="observationIsDeletable(row, user, props.project)"
           >
-            <span
-              class="text-red-500 i-heroicons-trash text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
-            ></span>
+            <UIcon
+              name="i-heroicons-trash"
+              class="text-red-500 text-xl -mt-1 -mb-1 cursor-pointer hover:text-slate-300 transition-colors"
+            />
           </div>
         </div>
-      </template>
-      <template #tags-data="{ row }">
-        <ObservationTagListOverflow :tags="row.tags" />
       </template>
     </UTable>
     <div class="flex w-full mt-4 -mb-7 justify-center">
@@ -127,22 +128,51 @@ const props = defineProps({
   project: requireProjectProp,
   showCreateButton: requireProp<boolean>(Boolean),
   defaultObservationFilter: Number as PropType<keyof typeof ObservationFilter>,
-  onProjectUpdated: requireFunctionProp<() => void | Promise<void>>(),
 });
 
+const emit = defineEmits<{ "on-project-updated": [] }>();
+
 const {
-  createObservation,
   observations,
   totalPages,
   totalObservations,
   totalDraftObservations,
   page,
   pageSize,
-  sort,
+  orderBy,
+  orderByDirection,
   filterOption,
-  observationIsDeletable,
-  deleteObservation,
-} = await useObservations(props.project.id, props.defaultObservationFilter);
+  queryParamsUpdate,
+} = await useObservations(
+  props.project.id,
+  props.defaultObservationFilter,
+  false,
+);
+
+const sort = ref({
+  column: orderBy.value,
+  direction: orderByDirection.value,
+});
+
+// update useObservation's state when sorting properties are changed by table interactions
+watch(
+  sort,
+  (s) => {
+    let anythingChanged = false;
+    if (orderBy.value !== s.column) {
+      orderBy.value = s.column;
+      anythingChanged = true;
+    }
+    if (orderByDirection.value !== s.direction) {
+      orderByDirection.value = s.direction;
+      anythingChanged = true;
+    }
+    if (anythingChanged) {
+      queryParamsUpdate();
+    }
+  },
+  { immediate: false },
+);
 
 function addObservationClick() {
   if (typeof props.project.id !== "number") {
@@ -182,15 +212,15 @@ const columns = [
     key: "isDraft",
   },
   {
+    label: "Tags",
+    key: "tags",
+    sortable: false,
+  },
+  {
     label: "",
     sortable: false,
     key: "actions",
     class: "text-right",
-  },
-  {
-    label: "Tags",
-    key: "tags",
-    sortable: false,
   },
 ];
 
@@ -222,15 +252,15 @@ async function beginDeleteObservation(row: any) {
     }
 
     try {
-      const { msg } = await deleteObservation(props.project.id, row.id);
+      await deleteObservation(props.project.id, row.id);
 
       toast.add({
-        title: msg,
+        title: "Observation was deleted",
         color: "green",
         icon: "i-heroicons-check",
       });
 
-      await props.onProjectUpdated();
+      emit("on-project-updated");
     } catch (e) {
       report("error", e as string | Error);
       console.error("delete observation error:", e);

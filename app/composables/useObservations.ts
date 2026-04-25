@@ -1,17 +1,18 @@
-import type { AsyncDataExecuteOptions } from "#app/composables/asyncData";
 import type { RouteParams } from "vue-router";
 import { getErrMsg } from "#imports";
+import { captureException } from "@sentry/vue";
 
 export const useObservations = async (
   projectId: number,
   defaultObservationFilter?: keyof typeof ObservationFilter,
+  immediate = true,
 ) => {
   const observations = useState<FullObservation[]>("observations", () => []);
   const page = useState<number>(() => 1);
-  const sort = ref<{ column: string; direction: "asc" | "desc" }>({
-    column: "createdAt",
-    direction: "desc",
-  });
+  const orderBy = useState<string>(() => "createdAt");
+  const orderByDirection = useState<"asc" | "desc">(
+    () => "desc" as "asc" | "desc",
+  );
   const pageSize = 6;
   const skip = computed(() => (page.value - 1) * pageSize);
   const filter = useState<"all" | "drafts" | "published">(() =>
@@ -19,7 +20,7 @@ export const useObservations = async (
       ? ObservationFilter[defaultObservationFilter]!.filter
       : ("all" as "all" | "drafts" | "published"),
   );
-  const ownership = useState<"me" | "everyone">(
+  const ownership = useState<"me" | "everyone">(() =>
     defaultObservationFilter
       ? ObservationFilter[defaultObservationFilter]!.ownership
       : ("everyone" as "everyone" | "me"),
@@ -42,175 +43,72 @@ export const useObservations = async (
       filter.value = obsFilter.filter;
       ownership.value = obsFilter.ownership;
       page.value = 1;
-      return obsFilter;
     }
-
-    return ObservationFilter[ObservationFilterTypes.ALL]!;
   });
 
-  watch([filterOption], (value) => {
-    filter.value = value[0].filter;
-    ownership.value = value[0].ownership;
-    page.value = 1;
-  });
+  const nextObsUrl = computed(() =>
+    `
+    /api/projects/${projectId}/observations?
+      take=${pageSize}&
+      skip=${skip.value}&
+      orderBy=${orderBy.value}&
+      orderDirection=${orderByDirection.value}&
+      filter=${filter.value}&
+      ownership=${ownership.value}
+  `
+      .trim()
+      .replaceAll(/\s/g, ""),
+  );
 
-  if (typeof projectId !== "number") {
-    throw new Error(
-      `Project id ${projectId} is not a number (useObservations)!`,
-    );
+  const obsUrl = useState(() => nextObsUrl.value);
+
+  function queryParamsUpdate() {
+    obsUrl.value = nextObsUrl.value;
   }
 
+  watch(page, () => {
+    queryParamsUpdate();
+  });
+
   const { pending: loading, refresh: refreshObservations } =
-    await useFetch<GetObservationsResponse>(
-      () => {
-        const url = `
-        /api/projects/${projectId}/observations?
-          take=${pageSize}&
-          skip=${skip.value}&
-          orderBy=${sort.value.column}&
-          orderDirection=${sort.value.direction}&
-          filter=${filter.value}&
-          ownership=${ownership.value}
-      `
-          .trim()
-          .replaceAll(/\s/g, "");
-        return url;
-      },
-      {
-        method: "GET",
-        immediate: true,
-        server: true,
-        credentials: "include",
+    await useFetch<GetObservationsResponse>(() => obsUrl.value, {
+      method: "GET",
+      immediate: immediate,
+      server: immediate,
+      credentials: "include",
 
-        onResponse: async (context) => {
-          if (context.response.status === 200) {
-            observations.value =
-              context.response._data?.observations.reverse?.() || [];
-            totalObservations.value = context.response._data?.total || 0;
-            totalDraftObservations.value =
-              context.response._data?.totalDraft || 0;
-          } else if (context.response.status === 401) {
-            observations.value = [];
-            await navigateTo("/login", { replace: true });
-          }
-        },
-        onResponseError: async (context) => {
-          if (context.response.status === 401) {
-            observations.value = [];
-            await navigateTo("/login", { replace: true });
-          }
-        },
+      onRequest: () => {
+        console.log("requesting observations", {
+          ownership: ownership.value,
+          orderBy: orderBy.value,
+          orderByDirection: orderByDirection.value,
+          page: page.value,
+        });
       },
-    );
 
-  const findObservationById = (observationId: number) => {
-    return computed(() =>
-      observations.value.find((o) => o.id === observationId),
-    );
-  };
-
-  const createObservation = async (projectId: number) => {
-    return $fetch(`/api/projects/${projectId}/observations`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+      onResponse: async (context) => {
+        if (context.response.status === 200) {
+          observations.value =
+            context.response._data?.observations.reverse?.() || [];
+          totalObservations.value = context.response._data?.total || 0;
+          totalDraftObservations.value =
+            context.response._data?.totalDraft || 0;
+        } else if (context.response.status === 401) {
+          observations.value = [];
+          await navigateTo("/login", { replace: true });
+        }
       },
-    }).catch((err) => {
-      console.error("create observation err:", err);
-      throw err;
+      onResponseError: async (context) => {
+        console.error(context.error);
+        captureException(context.error, {
+          data: { _data: context.response?._data },
+        });
+        if (context.response.status === 401) {
+          observations.value = [];
+          await navigateTo("/login", { replace: true });
+        }
+      },
     });
-  };
-
-  const deleteObservationFile = async (
-    projectId: number,
-    observationId: number,
-    file: FileUploadResponse,
-  ) => {
-    return $fetch(
-      `/api/projects/${projectId}/observations/${observationId}/upload/${file.id}`,
-      {
-        method: "DELETE",
-      },
-    ).catch((err) => {
-      console.error("delete observation file err:", err);
-      throw err;
-    });
-  };
-
-  const patchObservation = async (
-    projectId: number,
-    obsId: number,
-    data: any,
-  ) => {
-    const res = await $fetch(
-      `/api/projects/${projectId}/observations/${obsId}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    return res;
-  };
-
-  const deleteObservation = async (projectId: number, obsId: number) => {
-    const res = await $fetch(
-      `/api/projects/${projectId}/observations/${obsId}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    return res;
-  };
-
-  const uploadObservationFile = async (
-    projectId: number,
-    observationId: number,
-    file: File,
-  ) => {
-    const form = new FormData();
-    form.append("file", file);
-
-    try {
-      await $fetch(
-        `/api/projects/${projectId}/observations/${observationId}/upload`,
-        {
-          method: "POST",
-          body: form,
-          onRequest: (ctx) => {
-            console.log("begin uploading file..");
-          },
-          onRequestError: (ctx) => {
-            throw (
-              ctx.error || new Error("Unknown client error when uploading file")
-            );
-          },
-          onResponse: (ctx) => {
-            console.log(
-              "file uploaded successfully, status is",
-              ctx.response.status,
-            );
-          },
-          onResponseError: (ctx) => {
-            const statusCode = ctx.response?.status;
-            if (statusCode === 413) {
-              throw new Error("The uploaded file is too large");
-            }
-            const msg = getErrMsg(ctx.response?._data);
-            throw new Error(msg || "It seems that the fileupload failed :(");
-          },
-        },
-      );
-    } catch (err: any) {
-      console.error("upload image to observation err:", err);
-      throw err;
-    }
-  };
 
   const requireObservationFromParams = async (
     params: RouteParams,
@@ -230,116 +128,21 @@ export const useObservations = async (
     return obs;
   };
 
-  function observationIsDeletable(
-    obs?: Partial<FullObservation>,
-    user?: CurrentUser,
-    project?: Partial<FullProject>,
-  ): boolean {
-    // TODO: validate types of used variables instead
-    if (!obs || !user || !project) {
-      // report missing arguments
-      console.error("missing arguments in observationIsDeletable()");
-      return false;
-    }
-
-    // report missing author id
-    if (!obs.user?.id) {
-      console.error("missing observation user id");
-      return false;
-    }
-
-    // find user role
-    const role = user.projectAccess.find(
-      (a) => a.project.id === project.id,
-    )?.role;
-    if (typeof role !== "string") {
-      // report invalid role
-      console.error(`Project access role '${role}' is not valid`);
-      return false;
-    }
-
-    // find out if user is author of observation
-    const isAuthor = obs.user.id === user.id;
-    const isProjectOwner = role === "OWNER";
-    const isDraft = obs.isDraft;
-
-    // ensure observation cannot be removed if it isn't a draft and user is not owner
-    if (!isDraft && !isProjectOwner) {
-      return false;
-    }
-
-    // ensure owner cannot delete other users' drafts
-    if (isDraft && !isAuthor) {
-      return false;
-    }
-
-    return true;
-  }
-
-  function observationIsDelockable(
-    obs?: Partial<FullObservation>,
-    user?: CurrentUser,
-    project?: Partial<FullProject>,
-  ): boolean {
-    // TODO: validate types of used variables instead
-    if (!obs || !user || !project) {
-      // report missing arguments
-      console.error("missing arguments in observationIsDelockable()");
-      return false;
-    }
-
-    // report missing author id
-    if (!obs.user?.id) {
-      console.error("missing observation user id");
-      return false;
-    }
-
-    // find user role
-    const role = user.projectAccess.find(
-      (a) => a.project.id === project.id,
-    )?.role;
-    if (typeof role !== "string") {
-      // report invalid role
-      console.error(`Project access role '${role}' is not valid`);
-      return false;
-    }
-
-    // find out if user is author of observation
-    const isAuthor = obs.user.id === user.id;
-    const isProjectOwner = role === "OWNER";
-
-    if (isAuthor && project.authorCanDelockObservations) {
-      return true;
-    } else if (isProjectOwner && project.ownerCanDelockObservations) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   return {
-    createObservation,
-    deleteObservation,
-    deleteObservationFile,
-    fetchObservationById,
     filter,
     filterOption,
-    findObservationById,
     loading,
-    observationIsDeletable,
-    observationIsDelockable,
     observations,
+    orderBy,
+    orderByDirection,
+    queryParamsUpdate,
     ownership,
     page,
     pageSize,
-    patchObservation,
     refreshObservations,
     requireObservationFromParams,
-    sort,
     totalDraftObservations,
     totalObservations,
     totalPages,
-    uploadObservationFile,
-    upsertObservationImage,
   };
 };

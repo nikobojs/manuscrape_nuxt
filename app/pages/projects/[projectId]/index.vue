@@ -10,7 +10,7 @@
       <ObservationListWidget
         :project="project"
         :show-create-button="true"
-        :on-project-updated="
+        @on-project-updated="
           () => {
             refreshObservations();
           }
@@ -68,5 +68,14 @@ if (!project.value) {
 }
 const { refreshObservations } = await useObservations(
   project.value?.id as number,
+  undefined,
 );
+const nuxtApp = useNuxtApp();
+
+onMounted(() => {
+  const isSSr = nuxtApp.isHydrating && nuxtApp.payload.serverRendered;
+  if (!isSSr) {
+    refreshObservations();
+  }
+});
 </script>
