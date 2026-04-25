@@ -112,7 +112,7 @@ const selectedProject = computed<FullProject | undefined>(() => {
 async function onProjectChange(_project: FullProject) {
   if (_project && _project.id !== selectedProjectId.value) {
     console.log("header navigating to project!", _project);
-    navigateTo(`/projects/${_project.id}`);
+    await navigateTo(`/projects/${_project.id}`, { external: true });
   }
 }
 
