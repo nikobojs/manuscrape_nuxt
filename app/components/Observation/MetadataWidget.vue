@@ -271,10 +271,6 @@ const observation = computed(() => props.observation);
 const hasUnsaved = computed(() => props.hasUnsaved);
 const { report } = useSentry();
 
-const { patchObservation, observations } = await useObservations(
-  props.project.id,
-);
-
 const emit = defineEmits<{
   "update:data": [any];
   "revert:data": [];
