@@ -42,6 +42,30 @@ describe("Observation tags", () => {
     });
   });
 
+  test("collaborator can create tag", async () => {
+    const collaboratorEmail = "collaborator-tags-0@codecollective.dk";
+    await withTempProject(async (user, project, _obs, tokenA) => {
+      const inviteRes = await inviteToProject(tokenA, project.id, {
+        email: collaboratorEmail,
+      });
+      expect(inviteRes.status).toBe(201);
+      await withTempUser(async (user2, tokenB) => {
+        // create new tag
+        const newTag = {
+          name: "hello123",
+        };
+        const res = await createTag(tokenB, project.id, newTag);
+        expect(res.status).toBe(201);
+
+        // ensure tag can be fetched afterwards
+        const afterTagsRes = await getTagsInProject(tokenB, project.id);
+        const afterTagsJson = await afterTagsRes.json();
+        expect(afterTagsJson.tags.length).toBe(1);
+        expect(afterTagsJson.tags[0]!.name).toBe("hello123");
+      }, collaboratorEmail);
+    });
+  });
+
   test("user can own tag when not used in observations", async () => {
     await withTempProject(async (user, project, _obs, token) => {
       // ensure projectId is a number

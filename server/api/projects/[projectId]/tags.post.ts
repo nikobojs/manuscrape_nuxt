@@ -6,7 +6,10 @@ import {
 
 export default safeResponseHandler(async (event) => {
   await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  await ensureURLResourceAccess(event, event.context.user, [
+    "OWNER",
+    "INVITED",
+  ]);
 
   const projectId = parseIntParam(event.context.params?.projectId);
   const userId = event.context.user.id;
