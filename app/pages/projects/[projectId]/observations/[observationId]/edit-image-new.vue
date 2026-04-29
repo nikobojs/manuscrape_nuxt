@@ -64,6 +64,25 @@ async function refreshObservation() {
   }
 }
 
+// load image as fast as possible through IPC (replaces sessionStorage)
+onBeforeMount(() => {
+  if (isElectron.value && window.electronAPI?.useLocalImg) {
+    window?.electronAPI?.useLocalImg((data: string) => {
+      // Convert base64 back to File
+      // TODO: handle errors better
+      const byteCharacters = atob(data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      initialFile.value = new File([byteArray], "image.jpg", {
+        type: "image/jpg",
+      });
+    });
+  }
+});
+
 // Get the initial file from sessionStorage (stored by the widget before navigation)
 const initialFile = ref<File | undefined>(undefined);
 onMounted(async () => {
@@ -106,6 +125,7 @@ onMounted(async () => {
   }
   projectFieldId.value = parseInt(_projectFieldId);
 
+  // TODO: deprecate after manuscrape_electron 0.1.14 2026-04-28
   const fileData = sessionStorage.getItem("pendingImageFile");
   if (fileData) {
     const { name, type, data } = JSON.parse(fileData);
