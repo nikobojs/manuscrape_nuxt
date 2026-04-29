@@ -11,7 +11,7 @@
 
 <script lang="ts" setup>
 const { ensureLoggedIn } = await useAuth();
-await ensureLoggedIn();
 const { user } = await useUser();
+await ensureLoggedIn();
 const { isElectron } = useDevice();
 </script>
