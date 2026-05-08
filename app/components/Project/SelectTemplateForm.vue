@@ -424,4 +424,17 @@ function selectTemplate(name: TemplateName) {
   emit("select:parameters", template[name]);
   emit("close", true);
 }
+
+defineShortcuts({
+  escape: {
+    usingInput: true,
+    handler: () => {
+      if (isEventSubStep.value) {
+        isEventSubStep.value = false;
+      } else {
+        emit("close", false);
+      }
+    },
+  },
+});
 </script>
