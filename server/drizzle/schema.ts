@@ -92,7 +92,7 @@ export const projectAccesses = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     projectId: integer("project_id")
       .notNull()
-      .references(() => projects.id, { onDelete: "no action" }), // matches Prisma's `NoAction`
+      .references(() => projects.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.userId] })],
 );
@@ -148,10 +148,10 @@ export const dynamicProjectFields = pgTable(
     operator: fieldOperatorEnum("operator").notNull(),
     field0Id: integer("field0_id")
       .notNull()
-      .references(() => projectFields.id, { onDelete: "no action" }),
+      .references(() => projectFields.id, { onDelete: "cascade" }),
     field1Id: integer("field1_id")
       .notNull()
-      .references(() => projectFields.id, { onDelete: "no action" }),
+      .references(() => projectFields.id, { onDelete: "cascade" }),
   },
   (t) => [
     uniqueIndex("dynamic_pf_unique").on(t.field0Id, t.field1Id, t.operator),
@@ -162,7 +162,7 @@ export const projectInvitations = pgTable("ProjectInvitation", {
   id: serial("id").primaryKey(),
   inviterId: integer("inviter_id")
     .notNull()
-    .references(() => users.id, { onDelete: "no action" }),
+    .references(() => users.id, { onDelete: "cascade" }),
   projectId: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
@@ -179,7 +179,7 @@ export const observations = pgTable("Observation", {
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
   userId: integer("user_id").references(() => users.id, {
-    onDelete: "no action",
+    onDelete: "set null",
   }),
   data: jsonb("data")
     .default(sql`'{}'::jsonb`)
@@ -198,7 +198,7 @@ export const observationTags = pgTable(
       .notNull()
       .references(() => tags.id, { onDelete: "cascade" }),
     createdById: integer("created_by_id").references(() => users.id, {
-      onDelete: "no action",
+      onDelete: "set null",
     }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -214,7 +214,7 @@ export const tags = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     createdById: integer("created_by_id").references(() => users.id, {
-      onDelete: "no action",
+      onDelete: "set null",
     }),
   },
   (t) => [uniqueIndex("tags_project_id_name_unique").on(t.projectId, t.name)],
