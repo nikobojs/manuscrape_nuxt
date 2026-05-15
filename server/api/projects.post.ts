@@ -1,8 +1,5 @@
 import * as yup from "yup";
-import {
-  FieldTypeValues,
-  serializeChoices,
-} from "#shared/utils/observationFields";
+import { FieldTypeValues } from "#shared/utils/observationFields";
 import { createProjectAccess } from "../utils/projectAccess";
 import { createProject } from "../utils/project";
 import {

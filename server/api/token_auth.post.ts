@@ -1,6 +1,5 @@
 import * as yup from "yup";
 import jwt from "jsonwebtoken";
-import { getFullUserById } from "../utils/users";
 
 const config = useRuntimeConfig();
 const TokenAuthBody = yup
@@ -17,17 +16,6 @@ export default safeResponseHandler(async (event) => {
   const decoded = jwt.verify(token, config.tokenSecret);
   if (typeof decoded !== "string" && decoded?.id) {
     const user = await getFullUserById(decoded.id);
-    // const user = await db.user.findFirst({
-    //   where: { id: decoded.id },
-    //   select: {
-    //     ...bigUserQuery,
-    //     id: true,
-    //     email: true,
-    //     password: true,
-    //     createdAt: true,
-    //   },
-    // });
-
     if (user) {
       const expires = new Date(new Date().setDate(new Date().getDate() + 365));
       event.context.user = user;
