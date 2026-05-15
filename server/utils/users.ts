@@ -101,3 +101,15 @@ export async function getFullUserById(userId: number) {
 
   return enrichedUser;
 }
+
+export async function updateUserPassword(
+  userId: number,
+  cleartextPassword: string,
+  saltRounds: number,
+) {
+  const hashedPassword = await hash(cleartextPassword, saltRounds);
+  return db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+}

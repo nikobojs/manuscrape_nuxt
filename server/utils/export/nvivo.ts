@@ -33,7 +33,7 @@ function generateObservationRow(
     // if label doesn't exist, it must be from some older fields that wasn't deleted correctly
     if (columnIndex === -1) {
       const errMsg = `Label '${key}' does not exist when generating nvivo export, obsId ${obs.id}`;
-      if (process.env.NODE_ENV !== "test") {
+      if (process.env.VITEST !== "true") {
         console.error(errMsg);
       }
       captureException(errMsg);

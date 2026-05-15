@@ -172,3 +172,18 @@ export async function deleteObservation(projectId: number, obsId: number) {
   });
   return res;
 }
+
+export function postPasswordReset(token: string, password: string) {
+  const tokenEncoded = encodeURIComponent(token.trim());
+  return $fetch("/api/reset-password/reset", {
+    method: "POST",
+    body: { token: tokenEncoded, password },
+  });
+}
+
+export function requestForgotPasswordEmail(email: string) {
+  return $fetch("/api/reset-password/request", {
+    method: "POST",
+    body: { email },
+  });
+}

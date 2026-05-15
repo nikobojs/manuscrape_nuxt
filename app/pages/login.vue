@@ -62,14 +62,24 @@
             v-text="error"
           ></span>
 
-          <UButton
-            class="mt-5"
-            type="submit"
-            :disabled="loading"
-            :loading="loading"
-          >
-            Log in
-          </UButton>
+          <div class="flex items-center gap-x-3 mt-5">
+            <UButton
+              class="px-6"
+              type="submit"
+              :disabled="loading"
+              :loading="loading"
+            >
+              Log in
+            </UButton>
+            <ULink
+              to="/forgot-password"
+              class="text-sm hover:underline"
+              active-class="text-primary"
+              inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+            >
+              Forgot password?
+            </ULink>
+          </div>
         </form>
       </div>
     </UContainer>
@@ -105,7 +115,7 @@ async function handleLogin() {
     return;
   }
   if (!pw) {
-    error.value = "Password requried";
+    error.value = "Password required";
     loading.value = false;
     return;
   }

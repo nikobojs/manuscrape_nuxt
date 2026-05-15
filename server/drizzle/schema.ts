@@ -48,6 +48,25 @@ export const exportStatusEnum = pgEnum("export_status", [
   "ERRORED",
 ]);
 
+export const resetPasswordToken = pgTable("ResetPasswordToken", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => users.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull(), // sha256 = 64 characters
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  usedAt: timestamp("used_at", { mode: "string" }),
+  expiresAt: timestamp("expires_at", {
+    mode: "string",
+    withTimezone: false,
+  }).notNull(),
+  revokedAt: timestamp("revoked_at", { mode: "string" }),
+  ipAddress: varchar("ip_address", { length: 15 }).notNull(), // "xxx.xxx.xxx.xxx".length == 5
+  userAgent: text("user_agent").notNull(),
+});
+
 export const users = pgTable("User", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),

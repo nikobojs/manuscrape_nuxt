@@ -162,9 +162,8 @@ export async function delayedResponse(
   response: Record<string, any> | (() => Record<string, any>),
   responseTimeMs: number = config.authResponseTime,
 ): Promise<Record<string, any>> {
-  const nowMs = new Date().getTime();
   const startTime = getRequestBeginTime(event);
-  const alreadyTookMs = nowMs - startTime;
+  const alreadyTookMs = Date.now() - startTime;
 
   // calculate how many ms response should be delayed
   let waitMs = responseTimeMs - alreadyTookMs;

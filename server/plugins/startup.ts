@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/node";
 import type { PublicRuntimeConfig } from "nuxt/schema";
 import type { NitroApp } from "nitropack/types";
 import { sql } from "drizzle-orm";
+import { getMailer } from "../utils/mails/mailer";
 
 export default defineNitroPlugin(async (nitro) => {
   const config = useRuntimeConfig().public;
@@ -13,6 +14,7 @@ export default defineNitroPlugin(async (nitro) => {
   // TODO: make exit() work with `yarn dev` forever/pm2/etc setup
   try {
     await ensureDbConnected(nitro);
+    await initMailer();
   } catch (e) {
     throw e;
   }
@@ -70,5 +72,16 @@ async function ensureDbConnected(nitro: NitroApp) {
       nitro.hooks.callHook("close");
       process.exit(1);
     }, 100);
+  }
+}
+
+async function initMailer() {
+  if (process.env.VITEST === "true") return;
+  try {
+    await getMailer();
+  } catch (e) {
+    // Log detailed error information
+    console.error(e);
+    Sentry.captureException(e);
   }
 }

@@ -16,6 +16,7 @@ import {
   projectAccesses,
   projectExports,
   projectFields,
+  resetPasswordToken,
 } from "../../server/drizzle/schema";
 
 export const db = _db;
@@ -43,6 +44,33 @@ export async function signup(json: any): Promise<Response> {
   const res = await fetch("/api/user", {
     method: "POST",
     body: JSON.stringify(json),
+    headers: {
+      ...contentTypeJson,
+    },
+  });
+  return res;
+}
+
+export async function requestResetPasswordEmail(
+  email: string,
+): Promise<Response> {
+  const res = await fetch("/api/reset-password/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+    headers: {
+      ...contentTypeJson,
+    },
+  });
+  return res;
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<Response> {
+  const res = await fetch("/api/reset-password/reset", {
+    method: "POST",
+    body: JSON.stringify({ token, password: newPassword }),
     headers: {
       ...contentTypeJson,
     },
@@ -714,6 +742,7 @@ export async function removeStuff() {
       await tx.delete(projectAccesses);
       await tx.delete(projectExports);
       await tx.delete(projectInvitations);
+      await tx.delete(resetPasswordToken);
       await tx.delete(dynamicProjectFields);
       await tx.delete(projectFields);
       await tx.delete(fileUploads);

@@ -57,6 +57,13 @@
       "when": 1778738813386,
       "tag": "0007_flaky_hannibal_king",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778758684263,
+      "tag": "0008_young_annihilus",
+      "breakpoints": true
     }
   ]
 }

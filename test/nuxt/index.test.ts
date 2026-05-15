@@ -23,6 +23,7 @@ export * from "./auth";
 export * from "./collaborators";
 export * from "./deletion";
 export * from "./dynamicFields";
+export * from "./forgotPassword";
 export * from "./imageUploads";
 export * from "./invitations";
 export * from "./observations";

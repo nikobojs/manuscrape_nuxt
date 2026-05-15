@@ -1,14 +1,5 @@
 import { compare } from "bcrypt";
 import * as yup from "yup";
-import { deleteProjectAccessByUserId } from "../utils/projectAccess";
-import { removeUserFromObservations } from "../utils/observations";
-import { removeUserFromProjectExports } from "../utils/projectExports";
-import {
-  deleteProjectsByIds,
-  getDanglingProjects,
-  removeProjectOwnershipByUserId,
-} from "../utils/project";
-import { deleteUserById } from "../utils/users";
 
 export const DeleteUserSchema = yup
   .object({

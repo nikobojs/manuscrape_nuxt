@@ -1,9 +1,21 @@
 import type { H3Event } from "h3";
 
 export function isOpenUrl(event: H3Event): boolean {
-  const openPostUrls = ["/api/user", "/api/auth", "/api/token_auth"];
-  const openGetUrls = ["/user/new", "/login"];
-  const openGetUrlsStartWith = ["/api/_nuxt", "/_nuxt"];
+  const openPostUrls = [
+    "/api/user",
+    "/api/auth",
+    "/api/token_auth",
+    "/api/reset-password/reset",
+    "/api/reset-password/request",
+  ];
+  const openGetUrls = ["/user/new", "/login", "/forgot-password"];
+  const openGetUrlsStartWith = [
+    "/api/_nuxt",
+    "/_nuxt",
+    "/__nuxt",
+    "/reset-password",
+    "/api/reset-password",
+  ];
   const isPostRequest = event.node.req.method === "POST";
   const isGetRequest = event.node.req.method === "GET";
   const isOpenUrl =
