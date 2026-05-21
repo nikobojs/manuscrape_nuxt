@@ -130,6 +130,7 @@ const props = defineProps({
   defaultObservationFilter: Number as PropType<keyof typeof ObservationFilter>,
 });
 
+const project = computed(() => props.project);
 const emit = defineEmits<{ "on-project-updated": [] }>();
 
 const {
@@ -142,12 +143,8 @@ const {
   orderBy,
   orderByDirection,
   filterOption,
-  queryParamsUpdate,
-} = await useObservations(
-  props.project.id,
-  props.defaultObservationFilter,
-  false,
-);
+  refreshObservations,
+} = await useObservations(project, props.defaultObservationFilter, false);
 
 const sort = ref({
   column: orderBy.value,
@@ -168,7 +165,7 @@ watch(
       anythingChanged = true;
     }
     if (anythingChanged) {
-      queryParamsUpdate();
+      refreshObservations();
     }
   },
   { immediate: false },
