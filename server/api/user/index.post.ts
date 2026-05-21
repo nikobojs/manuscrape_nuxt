@@ -1,7 +1,5 @@
 import * as yup from "yup";
 
-const config = useRuntimeConfig();
-
 export const SignUpRequestSchema = yup
   .object({
     email: yup
@@ -16,6 +14,8 @@ export const SignUpRequestSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
+  const config = useRuntimeConfig();
+
   // read body and initiate parsed body
   const body = await readBody(event);
   let parsed: SignUpBody | undefined;
