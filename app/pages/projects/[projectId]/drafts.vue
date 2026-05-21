@@ -7,7 +7,7 @@
         :defaultObservationFilter="ObservationFilterTypes.ALL_DRAFTS"
         @on-project-updated="
           () => {
-            queryParamsUpdate();
+            refreshObservations();
           }
         "
       />
@@ -24,7 +24,7 @@ const { project } = await useProjects(params);
 const toast = useToast();
 
 watch(project, () => {
-  queryParamsUpdate();
+  refreshObservations();
 });
 
 if (!project.value) {
@@ -37,8 +37,8 @@ if (!project.value) {
   navigateTo("/");
 }
 
-const { refreshObservations, queryParamsUpdate } = await useObservations(
-  project.value?.id as number,
+const { refreshObservations } = await useObservations(
+  project,
   ObservationFilterTypes.ALL_DRAFTS,
 );
 </script>

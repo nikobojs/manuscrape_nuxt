@@ -3,9 +3,10 @@ import { type RouteParams } from "vue-router";
 
 export const useProjects = async (params?: RouteParams | undefined) => {
   const { hasRoles, refreshUser, loading, projects } = await useUser();
-  const project = computed(() =>
-    params ? getProjectFromParams(params) : undefined,
-  );
+  // const project = computed(() =>
+  //   params ? getProjectFromParams(params) : undefined,
+  // );
+  const project = ref<FullProject | undefined>();
 
   const getProjectById = (
     projectId: number | string | undefined | null | string[],
@@ -174,6 +175,24 @@ export const useProjects = async (params?: RouteParams | undefined) => {
 
   const isOwner = computed(
     () => project.value?.id && hasRoles(project.value.id, ["OWNER"]),
+  );
+
+  watch(
+    [() => params?.projectId, projects],
+    ([newId]) => {
+      if (newId && params) {
+        const asNumber = parseInt(newId as string);
+        if (!project.value || asNumber !== project.value.id) {
+          project.value = getProjectFromParams(params);
+          console.log("useProjects: project updated to", toRaw(project.value));
+        } else {
+          project.value = undefined;
+        }
+      } else {
+        project.value = undefined;
+      }
+    },
+    { immediate: true },
   );
 
   return {

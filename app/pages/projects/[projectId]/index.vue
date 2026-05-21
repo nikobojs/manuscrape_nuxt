@@ -66,10 +66,7 @@ if (!project.value) {
   });
   navigateTo("/");
 }
-const { refreshObservations } = await useObservations(
-  project.value?.id as number,
-  undefined,
-);
+const { refreshObservations } = await useObservations(project, undefined);
 const nuxtApp = useNuxtApp();
 
 onMounted(() => {

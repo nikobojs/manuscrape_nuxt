@@ -3,7 +3,7 @@ import { getErrMsg } from "#imports";
 import { captureException } from "@sentry/vue";
 
 export const useObservations = async (
-  projectId: number,
+  project: Ref<FullProject | undefined>,
   defaultObservationFilter?: keyof typeof ObservationFilter,
   immediate = true,
 ) => {
@@ -34,7 +34,6 @@ export const useObservations = async (
     Math.ceil(totalObservations.value / pageSize),
   );
 
-  // const filterOption = useState<ObservationFilterConfig>(() => {
   const filterOption = ref<ObservationFilterConfig>(
     ObservationFilter[defaultObservationFilter || ObservationFilterTypes.ALL]!,
   );
@@ -46,69 +45,61 @@ export const useObservations = async (
     }
   });
 
-  const nextObsUrl = computed(() =>
-    `
-    /api/projects/${projectId}/observations?
-      take=${pageSize}&
-      skip=${skip.value}&
-      orderBy=${orderBy.value}&
-      orderDirection=${orderByDirection.value}&
-      filter=${filter.value}&
-      ownership=${ownership.value}
-  `
-      .trim()
-      .replaceAll(/\s/g, ""),
-  );
-
-  const obsUrl = useState(() => nextObsUrl.value);
-
-  function queryParamsUpdate() {
-    obsUrl.value = nextObsUrl.value;
-  }
-
-  watch(page, () => {
-    queryParamsUpdate();
-  });
-
   const { pending: loading, refresh: refreshObservations } =
-    await useFetch<GetObservationsResponse>(() => obsUrl.value, {
-      method: "GET",
-      immediate: immediate,
-      server: immediate,
-      credentials: "include",
+    await useFetch<GetObservationsResponse>(
+      () =>
+        `
+        /api/projects/${project.value?.id}/observations?
+          take=${pageSize}&
+          skip=${skip.value}&
+          orderBy=${orderBy.value}&
+          orderDirection=${orderByDirection.value}&
+          filter=${filter.value}&
+          ownership=${ownership.value}
+      `
+          .trim()
+          .replaceAll(/\s/g, ""),
+      {
+        method: "GET",
+        immediate: immediate,
+        server: immediate,
+        credentials: "include",
 
-      onRequest: () => {
-        console.log("requesting observations", {
-          ownership: ownership.value,
-          orderBy: orderBy.value,
-          orderByDirection: orderByDirection.value,
-          page: page.value,
-        });
-      },
+        onRequest: () => {
+          console.log("requesting observations", {
+            projectId: project.value?.id,
+            // url: obsUrl.value,
+            ownership: ownership.value,
+            orderBy: orderBy.value,
+            orderByDirection: orderByDirection.value,
+            page: page.value,
+          });
+        },
 
-      onResponse: async (context) => {
-        if (context.response.status === 200) {
-          observations.value =
-            context.response._data?.observations.reverse?.() || [];
-          totalObservations.value = context.response._data?.total || 0;
-          totalDraftObservations.value =
-            context.response._data?.totalDraft || 0;
-        } else if (context.response.status === 401) {
-          observations.value = [];
-          await navigateTo("/login", { replace: true });
-        }
+        onResponse: async (context) => {
+          if (context.response.status === 200) {
+            observations.value =
+              context.response._data?.observations.reverse?.() || [];
+            totalObservations.value = context.response._data?.total || 0;
+            totalDraftObservations.value =
+              context.response._data?.totalDraft || 0;
+          } else if (context.response.status === 401) {
+            observations.value = [];
+            await navigateTo("/login", { replace: true });
+          }
+        },
+        onResponseError: async (context) => {
+          console.error(context.error);
+          captureException(context.error, {
+            data: { _data: context.response?._data },
+          });
+          if (context.response.status === 401) {
+            observations.value = [];
+            await navigateTo("/login", { replace: true });
+          }
+        },
       },
-      onResponseError: async (context) => {
-        console.error(context.error);
-        captureException(context.error, {
-          data: { _data: context.response?._data },
-        });
-        if (context.response.status === 401) {
-          observations.value = [];
-          await navigateTo("/login", { replace: true });
-        }
-      },
-    });
+    );
 
   const requireObservationFromParams = async (
     params: RouteParams,
@@ -135,7 +126,6 @@ export const useObservations = async (
     observations,
     orderBy,
     orderByDirection,
-    queryParamsUpdate,
     ownership,
     page,
     pageSize,
