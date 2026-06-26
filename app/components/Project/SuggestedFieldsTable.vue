@@ -95,7 +95,9 @@ const choicesOnOpen = ref<string[]>([]);
 const emit = defineEmits<{
   "select:field": [NewProjectField];
 }>();
-const suggestedFields = defineModel<NewProjectField[]>({ default: [] });
+const suggestedFields = defineModel<NewProjectField[]>({
+  default: () => [],
+});
 const fieldColumns = [
   {
     label: "",

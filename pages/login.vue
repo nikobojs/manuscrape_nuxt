@@ -20,14 +20,13 @@
       </div>
       <div class="title">
         <div class="flex">
-          <ULink to="/login" class="text-2xl mb-8">Sign in</ULink>
+          <ULink to="/" class="text-2xl mb-8">Sign in</ULink>
           <h2 class="text-2xl mb-8 px-2">/</h2>
           <ULink
             to="/user/new"
-            class="text-2xl mb-8 dark:text-slate-600 hover:dark:text-green-500 hover:text-green-500 hover:underline"
+            class="text-2xl mb-8 dark:text-slate-600 hover:dark:text-primary hover:underline"
+            >Create account</ULink
           >
-            Create account
-          </ULink>
         </div>
       </div>
       <div class="w-80">
@@ -62,28 +61,18 @@
             v-text="error"
           ></span>
 
-          <div class="flex items-center gap-x-3 mt-5">
-            <UButton
-              class="px-6"
-              type="submit"
-              :disabled="loading"
-              :loading="loading"
-            >
-              Log in
-            </UButton>
-            <div class="mt-5">
-              <UButton @click="loginWithSaml">Login with WAYF</UButton>
-            </div>
-            <ULink
-              to="/forgot-password"
-              class="text-sm hover:underline"
-              active-class="text-primary"
-              inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
-            >
-              Forgot password?
-            </ULink>
-          </div>
+          <UButton
+            class="mt-5"
+            type="submit"
+            :disabled="loading"
+            :loading="loading"
+          >
+            Log inaaa
+          </UButton>
         </form>
+        <div class="mt-5">
+          <UButton @click="loginWithSaml">Login with WAYF</UButton>
+        </div>
       </div>
     </UContainer>
   </div>
@@ -93,22 +82,14 @@
 // import { getErrMsg } from '~/utils/getErrMsg';
 
 const error = ref("");
-const { login, user, refreshUser } = await useAuth();
-// await ensureUserFetched();
+const { login, ensureUserFetched } = await useAuth();
+await ensureUserFetched();
 const loading = ref(false);
 const passwordInput = ref();
 const emailInput = ref();
-await callOnce(async () => {
-  await refreshUser();
-});
 const loginWithSaml = () => {
   window.location.href = "/api/auth/saml/login";
 };
-await callOnce(async () => {
-  if (user.value) {
-    await navigateTo("/projects");
-  }
-});
 
 async function handleLogin() {
   const em = emailInput.value?.input?.value;
@@ -121,7 +102,7 @@ async function handleLogin() {
     return;
   }
   if (!pw) {
-    error.value = "Password required";
+    error.value = "Password requried";
     loading.value = false;
     return;
   }

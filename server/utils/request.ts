@@ -7,8 +7,15 @@ export function isOpenUrl(event: H3Event): boolean {
     "/api/token_auth",
     "/api/reset-password/reset",
     "/api/reset-password/request",
+    "/api/auth/saml/callback",
   ];
-  const openGetUrls = ["/user/new", "/login", "/forgot-password"];
+  const openGetUrls = [
+    "/user/new",
+    "/login",
+    "/forgot-password",
+    "/api/auth/saml/login",
+    "/api/auth/saml/metadata",
+  ];
   const openGetUrlsStartWith = [
     "/api/_nuxt",
     "/_nuxt",

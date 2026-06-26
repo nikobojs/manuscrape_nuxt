@@ -19,10 +19,32 @@ export async function createUser(
       email: email,
       password: hashedPassword,
       createdAt: new Date(),
+      authSource: "PASSWORD",
+      samlNameId: null,
     })
     .returning({
       id: users.id,
       email: users.email,
+      authSource: users.authSource,
+      createdAt: users.createdAt,
+    })
+    .then((x) => x[0]!);
+}
+
+export async function createSamlUser(email: string, samlNameId: string | null) {
+  return db
+    .insert(users)
+    .values({
+      email: email,
+      password: "",
+      createdAt: new Date(),
+      authSource: "SAML",
+      samlNameId: samlNameId,
+    })
+    .returning({
+      id: users.id,
+      email: users.email,
+      authSource: users.authSource,
       createdAt: users.createdAt,
     })
     .then((x) => x[0]!);
@@ -70,6 +92,7 @@ export async function getFullUserById(userId: number) {
     id: true,
     email: true,
     password: true,
+    authSource: true,
     createdAt: true,
   });
 

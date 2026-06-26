@@ -64,6 +64,13 @@
       "when": 1778758684263,
       "tag": "0008_young_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782466079152,
+      "tag": "0009_pretty_dexter_bennett",
+      "breakpoints": true
     }
   ]
 }

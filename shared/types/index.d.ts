@@ -24,9 +24,11 @@ import type {
 } from "~~/server/utils/prisma";
 import { ExportProjectSchema } from "~~/shared/schemas/ExportProject";
 import { projectFields } from "~~/server/drizzle/schema";
+import { AuthSource } from "./auth-source";
 
 declare global {
   interface CurrentUser extends Omit<User, "tags"> {
+    authSource: AuthSource;
     projectAccess: ExtendedProjectAccess[];
   }
 
@@ -124,11 +126,10 @@ declare global {
     observationCount: number;
   }
 
-  interface FullImage
-    extends Omit<
-      Omit<Omit<ImageUpload, "filePath">, "isS3">,
-      "observationId"
-    > {}
+  interface FullImage extends Omit<
+    Omit<Omit<ImageUpload, "filePath">, "isS3">,
+    "observationId"
+  > {}
 
   type NewDynamicField = {
     label: string;

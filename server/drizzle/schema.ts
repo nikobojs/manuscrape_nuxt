@@ -48,6 +48,8 @@ export const exportStatusEnum = pgEnum("export_status", [
   "ERRORED",
 ]);
 
+export const authSourceEnum = pgEnum("auth_source", ["SAML", "PASSWORD"]);
+
 export const resetPasswordToken = pgTable("ResetPasswordToken", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
@@ -72,6 +74,8 @@ export const users = pgTable("User", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  samlNameId: text("saml_name_id"),
+  authSource: authSourceEnum("auth_source").notNull(),
 });
 
 export const projects = pgTable("Project", {

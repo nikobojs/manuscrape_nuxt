@@ -54,7 +54,7 @@ const typeRequired = ref(false);
 const typeLabel = ref("");
 const typeType = ref<undefined | FieldType>();
 const typeChoices = ref<undefined | string[]>();
-const model = defineModel<NewProjectField[]>({ default: [] });
+const model = defineModel<NewProjectField[]>({ default: () => [] });
 
 const emit = defineEmits<{
   "add:field": [NewProjectField];

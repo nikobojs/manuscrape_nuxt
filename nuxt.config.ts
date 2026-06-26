@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from "./package.json";
+import fs from "node:fs";
 
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_DEV !== "production" },
@@ -56,6 +57,14 @@ export default defineNuxtConfig({
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
     manuscrapeClientVersionRequirement: ">=1.0.11",
+    saml: {
+      entryPoint: process.env.SAML_ENTRYPOINT || "",
+      issuer: process.env.SAML_ISSUER || "",
+      callbackUrl: process.env.SAML_CALLBACK_URL || "",
+      cert: process.env.SAML_IDP_CERT_PATH
+        ? fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8")
+        : "fake cert",
+    },
   },
 
   colorMode: {
