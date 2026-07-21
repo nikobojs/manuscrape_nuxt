@@ -1,10 +1,10 @@
-import type { H3Event } from 'h3';
+import type { H3Event } from "h3";
 
 export default defineNitroPlugin((nitro) => {
   // always set `requestBegin` (also used by auth)
   nitro.hooks.hook("request", ((event: H3Event) => {
     const headers = getRequestHeaders(event);
-    const userAgent = headers['user-agent'] || headers['User-Agent'];
+    const userAgent = headers["user-agent"] || headers["User-Agent"];
     event.context.requestBegin = new Date().getTime();
     event.context.requestUserAgent = userAgent;
   }) as never);
@@ -12,46 +12,46 @@ export default defineNitroPlugin((nitro) => {
   const enableLogs = useRuntimeConfig().enableHttpLog;
   if (!enableLogs) return;
 
-  nitro.hooks.hook('afterResponse', (async (
+  nitro.hooks.hook("afterResponse", (async (
     event: H3Event,
-    response?: { body?: undefined }
+    response?: { body?: undefined },
   ) => {
     const now = new Date().getTime();
     const diff = now - event.context.requestBegin;
-    const status = getResponseStatus(event)
-    const statusMsg = getResponseStatusText(event)
+    const status = getResponseStatus(event);
+    const statusMsg = getResponseStatusText(event);
     const headers = getResponseHeaders(event);
-    const contentType = headers['content-type'] || headers['Content-Type'];
+    const contentType = headers["content-type"] || headers["Content-Type"];
     let log = [
       `[${new Date().toISOString()}]`,
       event.req.method,
       getRequestURL(event).pathname,
       event.context.requestUserAgent,
-      '->',
+      "->",
       status,
       statusMsg,
       contentType,
       `(${diff}ms)`,
     ];
 
-    if (response?.body && !status.toString().startsWith('2')) {
+    if (response?.body && !status.toString().startsWith("2")) {
       const cleanedResponse = redactResponse(response?.body);
       log.push(JSON.stringify(cleanedResponse, null, 2));
     }
 
     log = log.filter((l) => !!l);
-    console.log(log.join(' '))
+    console.log(log.join(" "));
   }) as never);
 });
 
 // remove some sensitive data from logs
 function redactResponse(body: any) {
-  if (body && typeof body === 'object') {
+  if (body && typeof body === "object") {
     if (body?.token) {
-        body.token = '<REDACTED>';
+      body.token = "<REDACTED>";
     }
-    if(body?.password) {
-        body.password = '<REDACTED>';
+    if (body?.password) {
+      body.password = "<REDACTED>";
     }
   }
 

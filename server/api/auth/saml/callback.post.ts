@@ -10,6 +10,7 @@ import { captureException } from "@sentry/node";
 export default defineEventHandler(async (event: H3Event) => {
   const body = await readBody(event);
   const samlResponse: string | undefined = body?.SAMLResponse;
+  const config = useRuntimeConfig();
   console.info("SAML CALLBACK ENDPOINT CALLED!");
 
   if (!samlResponse) {
@@ -47,21 +48,41 @@ export default defineEventHandler(async (event: H3Event) => {
     profile = result.profile;
   } catch (err) {
     console.error("SAML validation failed:", err);
+    captureException(err);
     throw createError({
       statusCode: 401,
       statusMessage: "SAML validation failed",
     });
   }
 
+  // require nameID which is the main SAML2 identifier
   if (!profile?.nameID) {
-    console.error("No profile.nameID returned from SAML response:", {
+    const err = new Error("No profile.nameID returned from SAML response");
+    console.error(err, {
       profile,
     });
+    captureException(err);
     throw createError({
       statusCode: 401,
       statusMessage: "Invalid SAML response",
     });
   }
+
+  // require sessionIndex to support log out
+  if (!profile?.sessionIndex) {
+    const err = new Error(
+      "No profile.sessionIndex returned from SAML response",
+    );
+    console.error(err, {
+      profile,
+    });
+    captureException(err);
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Invalid SAML response",
+    });
+  }
+
   const samlNameId = profile.nameID;
   const samlOrgName =
     (profile.schacHomeOrganization as string | undefined) || null;
@@ -87,6 +108,14 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   await authorize(event, user);
+
+  setCookie(event, "saml_session", profile.sessionIndex, {
+    httpOnly: true,
+    path: "/",
+    domain: config.cookieDomain,
+    sameSite: "strict",
+    secure: config.cookieSecure,
+  });
 
   return sendRedirect(event, "/", 302);
 });

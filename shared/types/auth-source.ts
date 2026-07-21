@@ -1,4 +1,4 @@
 export enum AuthSource {
-  LOCAL = 'LOCAL',
-  SAML = 'SAML',
+  PASSWORD = "PASSWORD",
+  SAML = "SAML",
 }

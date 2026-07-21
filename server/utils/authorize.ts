@@ -28,7 +28,126 @@ export function updateAuthCookie(
 }
 
 export function resetAuthCookie(event: H3Event<EventHandlerRequest>) {
-  return updateAuthCookie(event, null);
+  return deleteCookie(event, "authcookie");
+  // return updateAuthCookie(event, null);
+}
+
+export async function logoutUser(
+  event: H3Event<EventHandlerRequest>,
+  user: {
+    authSource: AuthSource.PASSWORD | AuthSource.SAML;
+    email: string | null;
+    samlNameId: string | null;
+  },
+  logoutFinishRedirect = "/login",
+) {
+  console.log("Logging out the following user:", user);
+  // ensure user has authSource
+  if (!user.authSource) {
+    const errMsg = "Unable to logout, passed user has no `auth_source`";
+    console.error(errMsg, { user });
+    captureException(errMsg);
+    throw createError({
+      statusCode: 500,
+      statusMessage: errMsg,
+    });
+  }
+
+  // delete the saml cookie if it exists
+  const samlSessionRaw = getCookie(event, "saml_session");
+  if (samlSessionRaw) {
+    deleteCookie(event, "saml_session");
+  }
+
+  // always clear auth
+  resetAuthCookie(event);
+  if (user.authSource === "PASSWORD") {
+    // if auth source is LOCAL (email/password), just delete the cookies and move on
+    console.log("[LOGOUT] Resetting the auth cookie for user", user);
+    return {};
+  } else if (user.authSource === "SAML") {
+    // if auth source is SAML, delete the cookies AND sign out of the SAML IdP
+    const samlStrategy = getSamlStrategy();
+
+    // TODO: remove log if this fits sessionIndex
+    console.log(
+      "[SAML] ! got samlSession raw (should match saml sessionIndex):",
+      samlSessionRaw,
+    );
+
+    // log error if samlSessionRaw is not defined
+    if (!samlSessionRaw) {
+      const err = new Error(
+        "[SAML] Logout: User auth source is SAML but does not have a saml auth cookie",
+      );
+      console.error(err);
+      captureException(err);
+    }
+
+    // log error if samlStrategy._saml is not defined
+    if (!samlStrategy?._saml) {
+      const err = new Error(
+        "[SAML] Logout: User auth source is SAML but saml strategy is not initialized correctly",
+      );
+      console.error(err);
+      captureException(err);
+    }
+
+    if (!user.samlNameId) {
+      const err = new Error(
+        "[SAML] Logout: User auth source is SAML but has no samlNameId",
+      );
+      console.error(err);
+      captureException(err);
+    }
+
+    // log out for real if using saml
+    if (
+      samlStrategy._saml &&
+      user.samlNameId &&
+      samlSessionRaw &&
+      config?.saml?.identifierFormat
+    ) {
+      try {
+        const payload = {
+          nameID: user?.samlNameId!,
+          nameIDFormat: config?.saml?.identifierFormat,
+          sessionIndex: samlSessionRaw,
+        };
+
+        console.log("[SAML] Logging out user from saml!", payload);
+        const logoutUrl = await samlStrategy!._saml?.getLogoutUrlAsync(
+          payload,
+          logoutFinishRedirect,
+          {},
+        );
+        console.log("[SAML] Successfully got a logout url:", logoutUrl);
+        console.log("[SAML] Will redirect to that URL!");
+        return { logoutUrl };
+      } catch (e) {
+        console.error(
+          "[SAML] Unable to get logout url from saml identity provider",
+          {
+            user,
+          },
+        );
+        console.error(e);
+        captureException(e);
+      }
+    } else {
+      console.error(
+        '[SAML] Some arguments was missing during saml logout - error is logged above this line"',
+      );
+    }
+  } else {
+    console.error();
+    const errMsg = `[LOGOUT] The AuthSource '${user.authSource}' is not recognized!`;
+    captureException(errMsg);
+    console.error(errMsg);
+
+    // clear auth cookie anyway
+    resetAuthCookie(event);
+  }
 }
 
 export async function authorize(

@@ -141,7 +141,7 @@ export function useImageEditor(
       if (typeof imageUploadId.value !== "number") {
         throw createError({
           status: 500,
-          statusText: "Image upload was not passed to useImageEditor",
+          message: "Image upload was not passed to useImageEditor",
         });
       }
       // Load from API URL (existing behavior for editing uploaded images)

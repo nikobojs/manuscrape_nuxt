@@ -42,7 +42,7 @@ async function onNotAuthed(
   if (!isOpenUrl(event) && isApiUrl) {
     throw createError({
       statusCode: 401,
-      statusText: msg,
+      statusMessage: msg,
     });
   } else if (!isOpenUrl(event) && !isApiUrl) {
     return sendRedirect(event, "/login", 302);

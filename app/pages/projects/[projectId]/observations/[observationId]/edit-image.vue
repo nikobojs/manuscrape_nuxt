@@ -64,12 +64,12 @@ onMounted(async () => {
   if (isNaN(obsId))
     throw createError({
       status: 400,
-      statusText: "Invalid observation id",
+      message: "Invalid observation id",
     });
   if (!project.value) {
     throw createError({
       status: 400,
-      statusText: "Project is not defined",
+      message: "Project is not defined",
     });
   }
   const _obs = await fetchObservationById(project.value.id, obsId);

@@ -153,7 +153,6 @@ function onLogoClick() {
 }
 
 onMounted(() => {
-  console.log("ROUTE.QUERY???", !!route.query?.wayf);
   showWayf.value = !!route.query?.wayf;
 });
 </script>

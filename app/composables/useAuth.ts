@@ -1,3 +1,5 @@
+import { captureException } from "@sentry/vue";
+
 export const useAuth = async () => {
   const { user, refreshUser, hasFetched } = await useUser();
 
@@ -12,8 +14,39 @@ export const useAuth = async () => {
   };
 
   const signOut = async () => {
-    await $fetch("/api/auth", { method: "DELETE" });
-    await navigateTo("/login");
+    await $fetch("/api/auth", {
+      method: "DELETE",
+      onResponse: async (ctx) => {
+        if (ctx.response.status === 200) {
+          const j = ctx.response._data;
+          console.log("[Logout]: this is logout response data: ", j);
+          if (j?.logoutUrl) {
+            await navigateTo(j.logoutUrl);
+          } else {
+            await navigateTo("/login");
+          }
+        } else {
+          console.error("Unable to log out - response error");
+          const errMsg =
+            ctx?.error?.message ||
+            ctx?.response?._data?.message ||
+            "Unknown error";
+          console.error(errMsg);
+          captureException(errMsg);
+          await navigateTo("/login");
+        }
+      },
+      onResponseError: async (ctx) => {
+        console.error("Unable to log out - response error");
+        const errMsg =
+          ctx?.error?.message ||
+          ctx?.response?._data?.message ||
+          "Unknown error";
+        console.error(errMsg);
+        captureException(errMsg);
+        await navigateTo("/login");
+      },
+    });
     user.value = undefined;
   };
 
