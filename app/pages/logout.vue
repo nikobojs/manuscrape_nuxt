@@ -11,8 +11,6 @@ if (!user.value) {
   navigateTo("/login");
 } else {
   clearAllMetadataDrafts();
-  signOut().finally(() => {
-    navigateTo("/login?sign_out=1");
-  });
+  await signOut();
 }
 </script>

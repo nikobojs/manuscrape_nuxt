@@ -21,9 +21,9 @@ export const useAuth = async () => {
           const j = ctx.response._data;
           console.log("[Logout]: this is logout response data: ", j);
           if (j?.logoutUrl) {
-            await navigateTo(j.logoutUrl);
+            await navigateTo(j.logoutUrl, { external: true });
           } else {
-            await navigateTo("/login");
+            await navigateTo("/login?sign_out=1");
           }
         } else {
           console.error("Unable to log out - response error");
@@ -33,7 +33,7 @@ export const useAuth = async () => {
             "Unknown error";
           console.error(errMsg);
           captureException(errMsg);
-          await navigateTo("/login");
+          await navigateTo("/login?sign_out=1");
         }
       },
       onResponseError: async (ctx) => {
@@ -44,7 +44,7 @@ export const useAuth = async () => {
           "Unknown error";
         console.error(errMsg);
         captureException(errMsg);
-        await navigateTo("/login");
+        await navigateTo("/login?sign_out=1");
       },
     });
     user.value = undefined;
