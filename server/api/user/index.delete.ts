@@ -3,10 +3,7 @@ import * as yup from "yup";
 
 export const DeleteUserSchema = yup
   .object({
-    password: yup
-      .string()
-      .required("Password is required")
-      .typeError("Password is not valid"),
+    password: yup.string().typeError("Password is not valid"),
   })
   .required();
 
@@ -31,10 +28,19 @@ export default safeResponseHandler(async (event) => {
     return await delayedError(event, 403, "User does not exist");
   }
 
-  // validate password
-  const passwordOk = await compare(parsed.password, user.password);
-  if (!passwordOk) {
-    return await delayedError(event, 403, "Wrong password");
+  // validate password if user has one
+  if (user.password) {
+    if (!parsed.password) {
+      return await delayedError(
+        event,
+        403,
+        "User has a password, but you didn't send one",
+      );
+    }
+    const passwordOk = await compare(parsed.password, user.password);
+    if (!passwordOk) {
+      return await delayedError(event, 403, "Wrong password");
+    }
   }
 
   await deleteProjectAccessByUserId(userId);

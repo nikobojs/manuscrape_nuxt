@@ -82,7 +82,12 @@ export default safeResponseHandler(async (event) => {
   }
 
   // add ownership of duplicated project
-  await createProjectAccess(user.id, createdProject.id, user.email, "OWNER");
+  await createProjectAccess(
+    user.id,
+    createdProject.id,
+    getCollaboratorName(user),
+    "OWNER",
+  );
 
   // try copying dynamic fields if there are any
   if (sourceProject.dynamicFields.length > 0) {

@@ -71,6 +71,13 @@
       "when": 1782466079152,
       "tag": "0009_pretty_dexter_bennett",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784639310858,
+      "tag": "0010_wonderful_chamber",
+      "breakpoints": true
     }
   ]
 }

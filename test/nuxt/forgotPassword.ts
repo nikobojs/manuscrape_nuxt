@@ -5,16 +5,16 @@ import { withTempUser, requestResetPasswordEmail } from "./helpers";
 describe("Forgot password", () => {
   test("User can request a forgot password email", async () => {
     await withTempUser(async (user, token) => {
-      const res = await requestResetPasswordEmail(user.email);
+      const res = await requestResetPasswordEmail(user.email!);
       expect(res.status).toBe(200);
     });
   });
 
   test("User cannot request multiple forgot password email within 50ms", async () => {
     await withTempUser(async (user, token) => {
-      const res = await requestResetPasswordEmail(user.email);
+      const res = await requestResetPasswordEmail(user.email!);
       expect(res.status).toBe(200);
-      const res1 = await requestResetPasswordEmail(user.email);
+      const res1 = await requestResetPasswordEmail(user.email!);
       expect(res1.status).toBe(400);
     });
   });
@@ -32,7 +32,7 @@ describe("Forgot password", () => {
   test("User can reset their password with the forgot password token", async () => {
     await withTempUser(async (user, token) => {
       // request password and expect clear text token to be returned (only happens in test environment)
-      const requestRes = await requestResetPasswordEmail(user.email);
+      const requestRes = await requestResetPasswordEmail(user.email!);
       expect(requestRes.status).toBe(200);
       const json = await requestRes.json();
       expect(json?.success).toBeTruthy();

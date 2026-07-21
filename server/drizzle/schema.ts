@@ -71,10 +71,11 @@ export const resetPasswordToken = pgTable("ResetPasswordToken", {
 
 export const users = pgTable("User", {
   id: serial("id").primaryKey(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  password: varchar("password", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   samlNameId: text("saml_name_id"),
+  samlOrganizationName: text("saml_organization_name"),
   authSource: authSourceEnum("auth_source").notNull(),
 });
 

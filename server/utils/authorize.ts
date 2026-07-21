@@ -113,7 +113,7 @@ export async function ensureURLResourceAccess(
         statusCode: 403,
         statusMessage: `You don't have access to project ${projectIdInt}`,
       });
-      captureException(err, { user });
+      captureException(err, { data: { user } });
       throw err;
     }
 

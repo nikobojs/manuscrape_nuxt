@@ -42,7 +42,11 @@ declare global {
     id: number;
     images: ImageUpload[];
     fileUploads: Omit<FileUploadResponse, "observationId">[];
-    user: { email: string; id?: number } | null;
+    user: {
+      email: string | null;
+      samlOrganizationName: string | null;
+      id: number;
+    } | null;
     data: Record<string, any> | null;
     tags: { name: string; id: number }[];
     uploadInProgress: boolean;
@@ -64,7 +68,8 @@ declare global {
 
   type User = {
     id: number;
-    email: string;
+    email: string | null;
+    samlOrganizationName: string | null;
     createdAt: Date | string;
   };
 
@@ -83,7 +88,7 @@ declare global {
     userId: number;
     user: {
       id: number;
-      email: string;
+      email: string | null;
     } | null;
   };
 

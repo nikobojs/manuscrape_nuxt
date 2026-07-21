@@ -68,7 +68,11 @@ export async function addUserToTags(
     createdById: number | null;
     id: number;
     name: string;
-    createdBy: { id: number; email: string } | null;
+    createdBy: {
+      id: number;
+      email: string | null;
+      samlOrganizationName: string | null;
+    } | null;
   }[]
 > {
   const userIds = Array.from(new Set(tags.map((t) => t.createdById))).filter(
@@ -78,6 +82,7 @@ export async function addUserToTags(
     .select({
       id: users.id,
       email: users.email,
+      samlOrganizationName: users.samlOrganizationName,
     })
     .from(users)
     .where(inArray(users.id, userIds));
@@ -87,7 +92,11 @@ export async function addUserToTags(
       createdById: number | null;
       id: number;
       name: string;
-      createdBy: { id: number; email: string } | null;
+      createdBy: {
+        id: number;
+        email: null | string;
+        samlOrganizationName: string | null;
+      } | null;
     } = { ...t, createdBy: null };
     if (t.createdById) {
       const tagUser = userMap[t.createdById]?.[0]!;

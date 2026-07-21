@@ -90,6 +90,7 @@ export async function getFullObservationsByProjectId(
   const relatedUsersRes = await getUsersByIds(userIds, {
     id: true,
     email: true,
+    samlOrganizationName: true,
   });
   const tagsRes = await getObservationTagsByProjectIds(projectIds);
 
@@ -206,7 +207,11 @@ export async function getFullObservation(observationId: number) {
   const tags = await getObservationTagsByObservationId(observationId);
   let relatedUser = null;
   if (o.userId) {
-    relatedUser = await getUserById(o.userId, { id: true, email: true });
+    relatedUser = await getUserById(o.userId, {
+      id: true,
+      email: true,
+      samlOrganizationName: true,
+    });
   }
 
   return {

@@ -67,7 +67,7 @@ export default safeResponseHandler(async (event) => {
   if (invitations.length > 0) {
     await createMultipleProjectAccess(
       user.id,
-      user.email,
+      parsed.email,
       invitationProjectIds,
       "INVITED",
     );

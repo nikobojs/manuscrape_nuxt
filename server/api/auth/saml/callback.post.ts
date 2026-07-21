@@ -5,6 +5,7 @@ import { AuthSource } from "#shared/types/auth-source";
 import { and, eq } from "drizzle-orm";
 import { users } from "~~/server/drizzle/schema";
 import { createSamlUser } from "~~/server/utils/users";
+import { captureException } from "@sentry/node";
 
 export default defineEventHandler(async (event: H3Event) => {
   const body = await readBody(event);
@@ -36,6 +37,13 @@ export default defineEventHandler(async (event: H3Event) => {
       SAMLResponse: samlResponse,
     });
     console.info("SAML RESPONSE PARSED:", result);
+    if (!result.profile) {
+      const err = new Error(
+        "SAML response was parsed but provided no `profile` argument",
+      );
+      captureException(err);
+      throw err;
+    }
     profile = result.profile;
   } catch (err) {
     console.error("SAML validation failed:", err);
@@ -55,14 +63,9 @@ export default defineEventHandler(async (event: H3Event) => {
     });
   }
   const samlNameId = profile.nameID;
-  if (!profile?.email) {
-    console.error("Email not found in SAML profile");
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Email not found in SAML profile",
-    });
-  }
-  const email = profile.email;
+  const samlOrgName =
+    (profile.schacHomeOrganization as string | undefined) || null;
+  const email = profile.email || null;
 
   let user = await db.query.users.findFirst({
     columns: {
@@ -70,6 +73,7 @@ export default defineEventHandler(async (event: H3Event) => {
       email: true,
       authSource: true,
       createdAt: true,
+      samlOrganizationName: true,
     },
     where: and(
       eq(users.samlNameId, samlNameId),
@@ -79,7 +83,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
   if (!user) {
     console.log(`Creating new user for SAML email: ${email}`);
-    user = await createSamlUser(email, profile?.nameId + "" || null);
+    user = await createSamlUser(email, samlNameId, samlOrgName);
   }
 
   await authorize(event, user);

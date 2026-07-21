@@ -43,6 +43,7 @@ export default safeResponseHandler(async (event) => {
   const collaborator = await getUserByEmail(parsed.email, {
     id: true,
     email: true,
+    samlOrganizationName: true,
   });
 
   // if collaborator is already an existing user,
@@ -59,7 +60,7 @@ export default safeResponseHandler(async (event) => {
     await createProjectAccess(
       collaborator.id,
       projectId,
-      collaborator.email,
+      getCollaboratorName(collaborator),
       "INVITED",
     );
 

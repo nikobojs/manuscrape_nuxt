@@ -37,6 +37,7 @@ export default safeResponseHandler(async (event) => {
     password: true,
     createdAt: true,
     samlNameId: true,
+    samlOrganizationName: true,
     authSource: true,
   });
 

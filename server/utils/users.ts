@@ -21,31 +21,39 @@ export async function createUser(
       createdAt: new Date(),
       authSource: "PASSWORD",
       samlNameId: null,
+      samlOrganizationName: null,
     })
     .returning({
       id: users.id,
       email: users.email,
       authSource: users.authSource,
       createdAt: users.createdAt,
+      samlOrganizationName: users.samlOrganizationName,
     })
     .then((x) => x[0]!);
 }
 
-export async function createSamlUser(email: string, samlNameId: string | null) {
+export async function createSamlUser(
+  email: string | null,
+  samlNameId: string,
+  samlOrganizationName: string | null,
+) {
   return db
     .insert(users)
     .values({
       email: email,
-      password: "",
+      password: null,
       createdAt: new Date(),
       authSource: "SAML",
       samlNameId: samlNameId,
+      samlOrganizationName: samlOrganizationName,
     })
     .returning({
       id: users.id,
       email: users.email,
       authSource: users.authSource,
       createdAt: users.createdAt,
+      samlOrganizationName: users.samlOrganizationName,
     })
     .then((x) => x[0]!);
 }
@@ -94,6 +102,8 @@ export async function getFullUserById(userId: number) {
     password: true,
     authSource: true,
     createdAt: true,
+    samlOrganizationName: true,
+    samlNameId: true,
   });
 
   if (!user) {
@@ -135,4 +145,15 @@ export async function updateUserPassword(
     .update(users)
     .set({ password: hashedPassword })
     .where(eq(users.id, userId));
+}
+
+export function getCollaboratorName(col: {
+  email: string | null;
+  samlOrganizationName: string | null;
+}): string {
+  return col.email
+    ? col.email
+    : col?.samlOrganizationName
+      ? `WAYF user from ${col.samlOrganizationName}`
+      : "Anonymous";
 }

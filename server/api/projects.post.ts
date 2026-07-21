@@ -59,7 +59,12 @@ export default safeResponseHandler(async (event) => {
     name: newProject.name,
     authorId: user.id,
   });
-  await createProjectAccess(user.id, createdProject.id, user.email, "OWNER");
+  await createProjectAccess(
+    user.id,
+    createdProject.id,
+    getCollaboratorName(user),
+    "OWNER",
+  );
 
   // get the updated fields to ensure indexes are ok
   const updatedFields = await createProjectFields(
