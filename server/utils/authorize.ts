@@ -28,8 +28,8 @@ export function updateAuthCookie(
 }
 
 export function resetAuthCookie(event: H3Event<EventHandlerRequest>) {
-  return deleteCookie(event, "authcookie");
-  // return updateAuthCookie(event, null);
+  // return deleteCookie(event, "authcookie");
+  return updateAuthCookie(event, null);
 }
 
 export async function logoutUser(
@@ -61,6 +61,8 @@ export async function logoutUser(
 
   // always clear auth
   resetAuthCookie(event);
+  event.context.user = null;
+
   if (user.authSource === "PASSWORD") {
     // if auth source is LOCAL (email/password), just delete the cookies and move on
     console.log("[LOGOUT] Resetting the auth cookie for user", user);
@@ -144,9 +146,6 @@ export async function logoutUser(
     const errMsg = `[LOGOUT] The AuthSource '${user.authSource}' is not recognized!`;
     captureException(errMsg);
     console.error(errMsg);
-
-    // clear auth cookie anyway
-    resetAuthCookie(event);
   }
 }
 
