@@ -66,7 +66,7 @@ export default defineNuxtConfig({
         "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
       logoutUrl: process.env.SAML_LOGOUT_URL || "",
       cert: process.env.SAML_IDP_CERT_PATH
-        ? fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8")
+        ? fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8").trim()
         : "fake cert",
     },
   },
