@@ -172,14 +172,15 @@ export async function requireUser(
     });
   }
 
-  if (!event.context.user?.email) {
-    // TODO: why is email not kept between requests?
-    console.warn(
-      "refetching user as only id missing in H3Event context (FIXME)",
-    );
-    const user = await getFullUserById(event.context.user.id);
-    event.context.user = user;
-  }
+  // EXPERIMENT: remove this weird block of code
+  // if (!event.context.user?.email) {
+  //   // TODO: why is email not kept between requests?
+  //   console.warn(
+  //     "refetching user as only id missing in H3Event context (FIXME)",
+  //   );
+  //   const user = await getFullUserById(event.context.user.id);
+  //   event.context.user = user;
+  // }
   return event.context.user as User;
 }
 
