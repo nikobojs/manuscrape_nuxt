@@ -61,6 +61,10 @@ export default defineNuxtConfig({
       entryPoint: process.env.SAML_ENTRYPOINT || "",
       issuer: process.env.SAML_ISSUER || "",
       callbackUrl: process.env.SAML_CALLBACK_URL || "",
+      identifierFormat:
+        process.env.SAML_IDENTIFIER_FORMAT ||
+        "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+      logoutUrl: process.env.SAML_LOGOUT_URL || "",
       cert: process.env.SAML_IDP_CERT_PATH
         ? fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8")
         : "fake cert",

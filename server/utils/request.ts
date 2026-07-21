@@ -11,15 +11,15 @@ export function isOpenUrl(event: H3Event): boolean {
   ];
   const openGetUrls = [
     "/user/new",
-    "/login",
     "/forgot-password",
-    "/api/auth/saml/login",
     "/api/auth/saml/metadata",
   ];
   const openGetUrlsStartWith = [
     "/api/_nuxt",
     "/_nuxt",
     "/__nuxt",
+    "/login",
+    "/api/auth/saml/login",
     "/reset-password",
     "/api/reset-password",
   ];

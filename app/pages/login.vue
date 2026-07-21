@@ -61,6 +61,16 @@
             v-if="error"
             v-text="error"
           ></span>
+          <div class="mt-3">
+            <ULink
+              to="/forgot-password"
+              class="text-sm hover:underline"
+              active-class="text-primary"
+              inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+            >
+              Forgot password?
+            </ULink>
+          </div>
 
           <div class="flex items-center gap-x-3 mt-5">
             <UButton
@@ -71,17 +81,9 @@
             >
               Log in
             </UButton>
-            <div class="mt-5">
+            <div v-if="showWayf">
               <UButton @click="loginWithSaml">Login with WAYF</UButton>
             </div>
-            <ULink
-              to="/forgot-password"
-              class="text-sm hover:underline"
-              active-class="text-primary"
-              inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
-            >
-              Forgot password?
-            </ULink>
           </div>
         </form>
       </div>
@@ -95,6 +97,8 @@
 const error = ref("");
 const { login, user, refreshUser } = await useAuth();
 // await ensureUserFetched();
+const route = useRoute();
+const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
 const passwordInput = ref();
 const emailInput = ref();
@@ -147,4 +151,9 @@ async function handleLogin() {
 function onLogoClick() {
   navigateTo("/");
 }
+
+onMounted(() => {
+  console.log("ROUTE.QUERY???", !!route.query?.wayf);
+  showWayf.value = !!route.query?.wayf;
+});
 </script>
