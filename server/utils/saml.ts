@@ -1,6 +1,4 @@
-// lib/samlStrategy.ts
 import { Strategy } from "passport-saml";
-import { useRuntimeConfig } from "#imports";
 import type { Profile } from "passport-saml";
 
 export function getSamlStrategy() {

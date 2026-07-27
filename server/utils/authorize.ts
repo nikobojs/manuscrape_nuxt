@@ -54,6 +54,7 @@ export async function logoutUser(
   }
 
   // delete the saml cookie if it exists
+  // TODO: maybe deprecate this
   const samlSessionRaw = getCookie(event, "saml_session");
   if (samlSessionRaw) {
     deleteCookie(event, "saml_session");

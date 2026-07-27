@@ -10,7 +10,6 @@ import { captureException } from "@sentry/node";
 export default defineEventHandler(async (event: H3Event) => {
   const body = await readBody(event);
   const samlResponse: string | undefined = body?.SAMLResponse;
-  const config = useRuntimeConfig();
   console.info("SAML CALLBACK ENDPOINT CALLED!");
 
   if (!samlResponse) {
@@ -31,21 +30,52 @@ export default defineEventHandler(async (event: H3Event) => {
     });
   }
 
-  let profile: Profile | null | undefined;
-
   try {
     const result = await samlStrategy._saml.validatePostResponseAsync({
       SAMLResponse: samlResponse,
     });
-    console.info("SAML RESPONSE PARSED:", result);
-    if (!result.profile) {
-      const err = new Error(
-        "SAML response was parsed but provided no `profile` argument",
+
+    const parsedProfile = parseSamlProfile(result);
+
+    let user = await db.query.users.findFirst({
+      columns: {
+        id: true,
+        email: true,
+        authSource: true,
+        createdAt: true,
+        samlOrganizationName: true,
+      },
+      where: and(
+        eq(users.samlIdentifier, parsedProfile.samlIdentifier),
+        eq(users.authSource, AuthSource.SAML),
+      ),
+    });
+
+    if (!user) {
+      console.log(
+        `Creating new user for SAML identifier: ${parsedProfile.samlIdentifier}`,
       );
-      captureException(err);
-      throw err;
+      user = await createSamlUser(
+        null,
+        parsedProfile.eduPersonPrincipalName,
+        parsedProfile.samlIdentifier,
+        parsedProfile.shacHomeOrganization,
+      );
     }
-    profile = result.profile;
+
+    await authorize(event, user);
+
+    // TODO: experiment to remove, please also consider removing in logout logic
+    // setCookie(event, "saml_session", profile.sessionIndex, {
+    //   httpOnly: true,
+    //   path: "/",
+    //   domain: config.cookieDomain,
+    //   sameSite: "strict",
+    //   secure: config.cookieSecure,
+    // });
+
+    await new Promise((ok) => setTimeout(ok, 100));
+    return sendRedirect(event, "/", 302);
   } catch (err) {
     console.error("SAML validation failed:", err);
     captureException(err);
@@ -54,12 +84,32 @@ export default defineEventHandler(async (event: H3Event) => {
       statusMessage: "SAML validation failed",
     });
   }
+});
+
+// NOTE: the result type comes directly from passport-saml
+function parseSamlProfile(result: {
+  profile?: Profile | null | undefined;
+  loggedOut?: boolean;
+}) {
+  console.info("SAML RESPONSE PARSED:", result);
+  if (!result.profile) {
+    const err = new Error(
+      "SAML response was parsed but provided no `profile` argument",
+    );
+    captureException(err);
+    throw err;
+  }
 
   // require nameID which is the main SAML2 identifier
-  if (!profile?.nameID) {
-    const err = new Error("No profile.nameID returned from SAML response");
+  if (
+    typeof result.profile?.eduPersonPrincipalName !== "string" ||
+    !result.profile?.eduPersonPrincipalName
+  ) {
+    const err = new Error(
+      "No profile.eduPersonPrincipalName returned from SAML response",
+    );
     console.error(err, {
-      profile,
+      result,
     });
     captureException(err);
     throw createError({
@@ -69,12 +119,15 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // require sessionIndex to support log out
-  if (!profile?.sessionIndex) {
+  if (
+    typeof result.profile?.shacHomeOrganization !== "string" ||
+    !result.profile?.shacHomeOrganization
+  ) {
     const err = new Error(
-      "No profile.sessionIndex returned from SAML response",
+      "No profile.shacHomeOrganization returned from SAML response",
     );
     console.error(err, {
-      profile,
+      result,
     });
     captureException(err);
     throw createError({
@@ -83,39 +136,14 @@ export default defineEventHandler(async (event: H3Event) => {
     });
   }
 
-  const samlNameId = profile.nameID;
-  const samlOrgName =
-    (profile.schacHomeOrganization as string | undefined) || null;
-  const email = profile.email || null;
+  const samlIdentifier =
+    result.profile.shacHomeOrganization +
+    "-" +
+    result.profile.eduPersonPrincipalName;
 
-  let user = await db.query.users.findFirst({
-    columns: {
-      id: true,
-      email: true,
-      authSource: true,
-      createdAt: true,
-      samlOrganizationName: true,
-    },
-    where: and(
-      eq(users.samlNameId, samlNameId),
-      eq(users.authSource, AuthSource.SAML),
-    ),
-  });
-
-  if (!user) {
-    console.log(`Creating new user for SAML email: ${email}`);
-    user = await createSamlUser(email, samlNameId, samlOrgName);
-  }
-
-  await authorize(event, user);
-
-  setCookie(event, "saml_session", profile.sessionIndex, {
-    httpOnly: true,
-    path: "/",
-    domain: config.cookieDomain,
-    sameSite: "strict",
-    secure: config.cookieSecure,
-  });
-
-  return sendRedirect(event, "/", 302);
-});
+  return {
+    shacHomeOrganization: result.profile.shacHomeOrganization,
+    eduPersonPrincipalName: result.profile.eduPersonPrincipalName,
+    samlIdentifier,
+  };
+}

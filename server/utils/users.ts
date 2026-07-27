@@ -20,8 +20,9 @@ export async function createUser(
       password: hashedPassword,
       createdAt: new Date(),
       authSource: "PASSWORD",
-      samlNameId: null,
+      samlIdentifier: null,
       samlOrganizationName: null,
+      samlName: null,
     })
     .returning({
       id: users.id,
@@ -35,8 +36,9 @@ export async function createUser(
 
 export async function createSamlUser(
   email: string | null,
-  samlNameId: string,
-  samlOrganizationName: string | null,
+  samlName: string,
+  samlIdentifier: string,
+  samlOrganizationName: string,
 ) {
   return db
     .insert(users)
@@ -45,7 +47,8 @@ export async function createSamlUser(
       password: null,
       createdAt: new Date(),
       authSource: "SAML",
-      samlNameId: samlNameId,
+      samlName: samlName,
+      samlIdentifier: samlIdentifier,
       samlOrganizationName: samlOrganizationName,
     })
     .returning({

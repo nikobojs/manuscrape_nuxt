@@ -74,7 +74,8 @@ export const users = pgTable("User", {
   email: varchar("email", { length: 255 }),
   password: varchar("password", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  samlNameId: text("saml_name_id"),
+  samlName: text("saml_name"),
+  samlIdentifier: text("saml_identifier"),
   samlOrganizationName: text("saml_organization_name"),
   authSource: authSourceEnum("auth_source").notNull(),
 });
