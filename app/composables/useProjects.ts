@@ -184,7 +184,6 @@ export const useProjects = async (params?: RouteParams | undefined) => {
         const asNumber = parseInt(newId as string);
         if (!project.value || asNumber !== project.value.id) {
           project.value = getProjectFromParams(params);
-          console.log("useProjects: project updated to", toRaw(project.value));
         } else {
           project.value = undefined;
         }
