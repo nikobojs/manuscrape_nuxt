@@ -59,7 +59,7 @@ export default defineEventHandler(async (event: H3Event) => {
         null,
         parsedProfile.eduPersonPrincipalName,
         parsedProfile.samlIdentifier,
-        parsedProfile.shacHomeOrganization,
+        parsedProfile.schacHomeOrganization,
       );
     }
 
@@ -120,11 +120,11 @@ function parseSamlProfile(result: {
 
   // require sessionIndex to support log out
   if (
-    typeof result.profile?.shacHomeOrganization !== "string" ||
-    !result.profile?.shacHomeOrganization
+    typeof result.profile?.schacHomeOrganization !== "string" ||
+    !result.profile?.schacHomeOrganization
   ) {
     const err = new Error(
-      "No profile.shacHomeOrganization returned from SAML response",
+      "No profile.schacHomeOrganization returned from SAML response",
     );
     console.error(err, {
       result,
@@ -137,12 +137,12 @@ function parseSamlProfile(result: {
   }
 
   const samlIdentifier =
-    result.profile.shacHomeOrganization +
+    result.profile.schacHomeOrganization +
     "-" +
     result.profile.eduPersonPrincipalName;
 
   return {
-    shacHomeOrganization: result.profile.shacHomeOrganization,
+    schacHomeOrganization: result.profile.schacHomeOrganization,
     eduPersonPrincipalName: result.profile.eduPersonPrincipalName,
     samlIdentifier,
   };
