@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   const cookieValue = getCookie(event, "authcookie");
   const headers = getHeaders(event);
   const authToken = headers.authentication || cookieValue;
-
-  if (!authToken && !isOpenUrl(event) && !event.context?.user) {
+  const openUrl = isOpenUrl(event);
+  if (!authToken && !openUrl && !event.context?.user) {
     return onNotAuthed(event);
   } else if (typeof authToken == "string" && authToken.length > 0) {
     try {

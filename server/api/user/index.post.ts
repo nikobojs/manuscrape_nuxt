@@ -76,7 +76,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // authorize user
-  const { token } = await authorize(event, user);
+  const { token } = await authorize(event, user, null);
 
   // return delayed response
   setResponseStatus(event, 201);

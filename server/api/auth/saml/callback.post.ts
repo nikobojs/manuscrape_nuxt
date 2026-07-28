@@ -63,7 +63,12 @@ export default defineEventHandler(async (event: H3Event) => {
       );
     }
 
-    await authorize(event, user);
+    const samlSession = {
+      sessionIndex: parsedProfile.sessionIndex,
+      nameID: parsedProfile.nameID,
+      // samlIdentifier: parsedProfile.samlIdentifier, // not used at the moment
+    };
+    await authorize(event, user, samlSession);
 
     // TODO: experiment to remove, please also consider removing in logout logic
     // setCookie(event, "saml_session", profile.sessionIndex, {
@@ -75,6 +80,7 @@ export default defineEventHandler(async (event: H3Event) => {
     // });
 
     await new Promise((ok) => setTimeout(ok, 100));
+
     return sendRedirect(event, "/", 302);
   } catch (err) {
     console.error("SAML validation failed:", err);
@@ -91,13 +97,22 @@ function parseSamlProfile(result: {
   profile?: Profile | null | undefined;
   loggedOut?: boolean;
 }) {
-  console.info("SAML RESPONSE PARSED:", result);
+  console.info("PARSING SAML RESPONSE:", result);
+
+  const throwErr = (msg: string, ...data: any[]) => {
+    const err = new Error(msg);
+    console.error(err, ...data);
+    captureException(err, { data });
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Invalid SAML response",
+    });
+  };
+
   if (!result.profile) {
-    const err = new Error(
+    return throwErr(
       "SAML response was parsed but provided no `profile` argument",
     );
-    captureException(err);
-    throw err;
   }
 
   // require nameID which is the main SAML2 identifier
@@ -105,35 +120,37 @@ function parseSamlProfile(result: {
     typeof result.profile?.eduPersonPrincipalName !== "string" ||
     !result.profile?.eduPersonPrincipalName
   ) {
-    const err = new Error(
+    return throwErr(
       "No profile.eduPersonPrincipalName returned from SAML response",
-    );
-    console.error(err, {
       result,
-    });
-    captureException(err);
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Invalid SAML response",
-    });
+    );
   }
 
-  // require sessionIndex to support log out
+  // require schacHomeOrganization
   if (
     typeof result.profile?.schacHomeOrganization !== "string" ||
     !result.profile?.schacHomeOrganization
   ) {
-    const err = new Error(
+    return throwErr(
       "No profile.schacHomeOrganization returned from SAML response",
-    );
-    console.error(err, {
       result,
-    });
-    captureException(err);
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Invalid SAML response",
-    });
+    );
+  }
+
+  // require sessionIndex to support log out
+  if (
+    typeof result.profile?.sessionIndex !== "string" ||
+    !result.profile?.sessionIndex
+  ) {
+    return throwErr(
+      "No profile.sessionIndex returned from SAML response",
+      result,
+    );
+  }
+
+  // require sessionIndex to support log out
+  if (typeof result.profile?.nameID !== "string" || !result.profile?.nameID) {
+    return throwErr("No profile.nameID returned from SAML response", result);
   }
 
   const samlIdentifier =
@@ -141,9 +158,13 @@ function parseSamlProfile(result: {
     "-" +
     result.profile.eduPersonPrincipalName;
 
-  return {
+  const parsedResult = {
     schacHomeOrganization: result.profile.schacHomeOrganization,
     eduPersonPrincipalName: result.profile.eduPersonPrincipalName,
     samlIdentifier,
+    sessionIndex: result.profile.sessionIndex,
+    nameID: result.profile.nameID,
   };
+  console.info("PARSING SAML RESPONSE:", parsedResult);
+  return parsedResult;
 }

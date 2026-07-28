@@ -5,6 +5,7 @@ import { getRequestBeginTime, parseIntParam } from "./request";
 import { captureException } from "@sentry/node";
 
 const config = useRuntimeConfig();
+type SAMLSessionData = { saml: { nameID: string; sessionIndex: string } };
 
 export function updateAuthCookie(
   event: H3Event<EventHandlerRequest>,
@@ -37,10 +38,20 @@ export async function logoutUser(
   user: {
     authSource: AuthSource.PASSWORD | AuthSource.SAML;
     email: string | null;
-    samlNameId: string | null;
   },
   logoutFinishRedirect = "/login",
 ) {
+  const config = useRuntimeConfig();
+  const session = await useSession<SAMLSessionData>(event, {
+    password: config.saml.sessionSecret,
+  });
+
+  const samlNameId = session.data?.saml?.nameID as string | undefined;
+  const sessionIndex = session.data?.saml?.sessionIndex as string | undefined;
+
+  // clear app server session no matter what
+  await session.clear();
+
   console.log("Logging out the following user:", user);
   // ensure user has authSource
   if (!user.authSource) {
@@ -51,13 +62,6 @@ export async function logoutUser(
       statusCode: 500,
       statusMessage: errMsg,
     });
-  }
-
-  // delete the saml cookie if it exists
-  // TODO: maybe deprecate this
-  const samlSessionRaw = getCookie(event, "saml_session");
-  if (samlSessionRaw) {
-    deleteCookie(event, "saml_session");
   }
 
   // always clear auth
@@ -72,21 +76,6 @@ export async function logoutUser(
     // if auth source is SAML, delete the cookies AND sign out of the SAML IdP
     const samlStrategy = getSamlStrategy();
 
-    // TODO: remove log if this fits sessionIndex
-    console.log(
-      "[SAML] ! got samlSession raw (should match saml sessionIndex):",
-      samlSessionRaw,
-    );
-
-    // log error if samlSessionRaw is not defined
-    if (!samlSessionRaw) {
-      const err = new Error(
-        "[SAML] Logout: User auth source is SAML but does not have a saml auth cookie",
-      );
-      console.error(err);
-      captureException(err);
-    }
-
     // log error if samlStrategy._saml is not defined
     if (!samlStrategy?._saml) {
       const err = new Error(
@@ -94,39 +83,82 @@ export async function logoutUser(
       );
       console.error(err);
       captureException(err);
+      throw createError({
+        message: err.message,
+        status: 500,
+      });
     }
 
-    if (!user.samlNameId) {
+    if (!config.saml?.identifierFormat) {
+      const err = new Error(
+        "[SAML] Logout: User auth source is SAML but saml identifier format is undefined",
+      );
+      console.error(err);
+      captureException(err);
+      throw createError({
+        message: err.message,
+        status: 500,
+      });
+    }
+
+    if (!samlNameId) {
       const err = new Error(
         "[SAML] Logout: User auth source is SAML but has no samlNameId",
       );
       console.error(err);
       captureException(err);
+      throw createError({
+        message: err.message,
+        status: 500,
+      });
+    }
+
+    if (!sessionIndex) {
+      const err = new Error(
+        "[SAML] Logout: User auth source is SAML but sessionIndex is nodefined",
+      );
+      console.error(err);
+      captureException(err);
+      throw createError({
+        message: err.message,
+        status: 500,
+      });
     }
 
     // log out for real if using saml
-    if (
-      samlStrategy._saml &&
-      user.samlNameId &&
-      samlSessionRaw &&
-      config?.saml?.identifierFormat
-    ) {
+    if (samlStrategy._saml && config?.saml?.identifierFormat) {
       try {
         const payload = {
-          nameID: user?.samlNameId!,
+          nameID: samlNameId,
           nameIDFormat: config?.saml?.identifierFormat,
-          sessionIndex: samlSessionRaw,
+          sessionIndex: sessionIndex,
         };
 
-        console.log("[SAML] Logging out user from saml!", payload);
-        const logoutUrl = await samlStrategy!._saml?.getLogoutUrlAsync(
-          payload,
-          logoutFinishRedirect,
-          {},
+        // console.log("[SAML] Logging out user from saml!", payload);
+        // const logoutUrl = await samlStrategy!._saml?.getLogoutUrlAsync(
+        //   payload,
+        //   logoutFinishRedirect,
+        //   { },
+        // );
+        const spPrivCertPath = config.saml.cert;
+        const logoutRequestXml =
+          await samlStrategy!._saml?._generateLogoutRequest(payload);
+
+        // Base64-encode WITHOUT deflation (POST binding requirement)
+        const samlRequest = Buffer.from(logoutRequestXml, "utf8").toString(
+          "base64",
         );
+
+        const logoutUrl = config?.saml?.logoutUrl;
         console.log("[SAML] Successfully got a logout url:", logoutUrl);
         console.log("[SAML] Will redirect to that URL!");
-        return { logoutUrl };
+
+        // TODO: fix how to handle logout url...
+        return {
+          logoutUrl,
+          SAMLRequest: samlRequest,
+          RelayState: logoutFinishRedirect,
+        };
       } catch (e) {
         console.error(
           "[SAML] Unable to get logout url from saml identity provider",
@@ -138,12 +170,12 @@ export async function logoutUser(
         captureException(e);
       }
     } else {
-      console.error(
-        '[SAML] Some arguments was missing during saml logout - error is logged above this line"',
-      );
+      const errMsg =
+        '[SAML] Some arguments was missing during saml logout - error is logged above this line"';
+      captureException(errMsg);
+      console.error(errMsg);
     }
   } else {
-    console.error();
     const errMsg = `[LOGOUT] The AuthSource '${user.authSource}' is not recognized!`;
     captureException(errMsg);
     console.error(errMsg);
@@ -153,12 +185,29 @@ export async function logoutUser(
 export async function authorize(
   event: H3Event,
   user: User,
+  samlSession: {
+    nameID: string;
+    sessionIndex: string;
+  } | null,
 ): Promise<{ token: string }> {
   const expires = new Date(new Date().setDate(new Date().getDate() + 365));
   event.context.user = user;
   const token = jwt.sign({ id: user.id }, config.tokenSecret);
 
   updateAuthCookie(event, token, expires);
+
+  // if logging in using saml, add samlSession data to server-side session
+  if (samlSession) {
+    console.log("Adding saml session data", { samlSession });
+    // add data to session
+    const config = useRuntimeConfig();
+    const session = await useSession<SAMLSessionData>(event, {
+      password: config.saml.sessionSecret,
+    });
+    await session.update({ saml: samlSession });
+  } else {
+    console.log("No saml data provided, no session created");
+  }
 
   return { token };
 }

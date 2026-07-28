@@ -120,10 +120,17 @@ function onLogoClick() {
   navigateTo("/");
 }
 
+function getUserLabel(user?: CurrentUser) {
+  if (user?.email) return user.email;
+  else if (user?.samlOrganizationName)
+    return `Anonymous (${user.samlOrganizationName})`;
+  else return "Undefined user";
+}
+
 const settingsItems: DropdownItem[][] = [
   [
     {
-      label: user.value?.email || "Undefined user",
+      label: getUserLabel(user.value),
       disabled: true,
       slot: "email",
       class: "contents",

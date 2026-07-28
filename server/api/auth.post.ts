@@ -57,7 +57,7 @@ export default safeResponseHandler(async (event) => {
   }
 
   // create cookies, tokens, etc
-  const { token } = await authorize(event, user);
+  const { token } = await authorize(event, user, null);
 
   // return delayed succes response
   const res = await delayedResponse(event, { token });

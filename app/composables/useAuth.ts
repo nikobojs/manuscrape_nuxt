@@ -13,6 +13,39 @@ export const useAuth = async () => {
     });
   };
 
+  // NOTE: needs to be a browser that POSTs the query params securely as a form
+  async function samlSignout(
+    logoutUrl: string,
+    params: { SAMLRequest: string; RelayState: string; logoutUrl: string },
+  ) {
+    // Create a hidden form
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = logoutUrl;
+    form.style.display = "none";
+
+    // Extract base URL and query params from logoutUrl
+    const url = new URL(logoutUrl);
+
+    // Append all query params as hidden inputs (SAMLRequest, RelayState, etc.)
+    Object.entries({
+      SAMLRequest: params.SAMLRequest,
+      RelayState: params.RelayState,
+    }).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    // Override action to base URL without query string
+    form.action = `${url.origin}${url.pathname}`;
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+
   const signOut = async () => {
     await $fetch("/api/auth", {
       method: "DELETE",
@@ -21,7 +54,8 @@ export const useAuth = async () => {
           const j = ctx.response._data;
           console.log("[Logout]: this is logout response data: ", j);
           if (j?.logoutUrl) {
-            await navigateTo(j.logoutUrl, { external: true });
+            await samlSignout(j.logoutUrl, j);
+            // await navigateTo(j.logoutUrl, { external: true });
           } else {
             await navigateTo("/login?sign_out=1");
           }
