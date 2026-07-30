@@ -102,16 +102,9 @@ const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
 const passwordInput = ref();
 const emailInput = ref();
-await callOnce(async () => {
-  await refreshUser();
-  if (user.value) {
-    await navigateTo("/");
-  }
-});
 const loginWithSaml = () => {
   window.location.href = "/api/auth/saml/login";
 };
-
 
 async function handleLogin() {
   const em = emailInput.value?.input?.value;
