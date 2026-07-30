@@ -23,6 +23,7 @@ export function updateAuthCookie(
     domain: config.cookieDomain,
     sameSite: "strict",
     secure: config.cookieSecure,
+    path: "/",
   };
 
   setCookie(event, "authcookie", token, flags);
