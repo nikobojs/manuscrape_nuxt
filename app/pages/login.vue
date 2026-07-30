@@ -104,15 +104,14 @@ const passwordInput = ref();
 const emailInput = ref();
 await callOnce(async () => {
   await refreshUser();
+  if (user.value) {
+    await navigateTo("/");
+  }
 });
 const loginWithSaml = () => {
   window.location.href = "/api/auth/saml/login";
 };
-await callOnce(async () => {
-  if (user.value) {
-    await navigateTo("/projects");
-  }
-});
+
 
 async function handleLogin() {
   const em = emailInput.value?.input?.value;
