@@ -6,7 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { users } from "~~/server/drizzle/schema";
 import { createSamlUser } from "~~/server/utils/users";
 import { captureException } from "@sentry/node";
-const crypto = require("crypto");
+import crypto from "node:crypto";
 
 export function getSamlStrategy() {
   const config = useRuntimeConfig();
