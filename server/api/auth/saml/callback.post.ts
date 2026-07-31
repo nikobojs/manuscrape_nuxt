@@ -66,6 +66,7 @@ export default defineEventHandler(async (event: H3Event) => {
     const samlSession = {
       sessionIndex: parsedProfile.sessionIndex,
       nameID: parsedProfile.nameID,
+      inResponseTo: parsedProfile.inResponseTo, // required for logging out
       // samlIdentifier: parsedProfile.samlIdentifier, // not used at the moment
     };
     await authorize(event, user, samlSession);
@@ -148,23 +149,38 @@ function parseSamlProfile(result: {
     );
   }
 
+  // require inResponseTo to support log out
+  if (
+    typeof result.profile?.inResponseTo !== "string" ||
+    !result.profile?.inResponseTo
+  ) {
+    return throwErr(
+      "No profile.inResponseTo returned from SAML response",
+      result,
+    );
+  }
+
   // require sessionIndex to support log out
   if (typeof result.profile?.nameID !== "string" || !result.profile?.nameID) {
     return throwErr("No profile.nameID returned from SAML response", result);
   }
 
-  const samlIdentifier =
-    result.profile.schacHomeOrganization +
-    "-" +
-    result.profile.eduPersonPrincipalName;
-
   const parsedResult = {
     schacHomeOrganization: result.profile.schacHomeOrganization,
     eduPersonPrincipalName: result.profile.eduPersonPrincipalName,
-    samlIdentifier,
+    samlIdentifier: generateSamlIdentifier(result.profile),
     sessionIndex: result.profile.sessionIndex,
     nameID: result.profile.nameID,
+    inResponseTo: result.profile.inResponseTo as string,
   };
   console.info("PARSING SAML RESPONSE:", parsedResult);
   return parsedResult;
+}
+
+function generateSamlIdentifier(profile: Profile) {
+  const samlIdentifier =
+    profile.schacHomeOrganization + "-" + profile.eduPersonPrincipalName;
+
+  // TODO: hash this value
+  return samlIdentifier;
 }

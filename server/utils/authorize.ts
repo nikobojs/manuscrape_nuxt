@@ -5,7 +5,9 @@ import { getRequestBeginTime, parseIntParam } from "./request";
 import { captureException } from "@sentry/node";
 
 const config = useRuntimeConfig();
-type SAMLSessionData = { saml: { nameID: string; sessionIndex: string } };
+type SAMLSessionData = {
+  saml: { nameID: string; sessionIndex: string; inResponseTo: string };
+};
 
 export function updateAuthCookie(
   event: H3Event<EventHandlerRequest>,
@@ -49,6 +51,7 @@ export async function logoutUser(
 
   const samlNameId = session.data?.saml?.nameID as string | undefined;
   const sessionIndex = session.data?.saml?.sessionIndex as string | undefined;
+  const inResponseTo = session.data?.saml?.inResponseTo as string | undefined;
 
   // clear app server session no matter what
   await session.clear();
@@ -133,6 +136,7 @@ export async function logoutUser(
           nameID: samlNameId,
           nameIDFormat: config?.saml?.identifierFormat,
           sessionIndex: sessionIndex,
+          inResponseTo,
         };
 
         // console.log("[SAML] Logging out user from saml!", payload);
@@ -141,7 +145,7 @@ export async function logoutUser(
         //   logoutFinishRedirect,
         //   { },
         // );
-        const spPrivCertPath = config.saml.cert;
+        //
         const logoutRequestXml =
           await samlStrategy!._saml?._generateLogoutRequest(payload);
 
@@ -186,10 +190,7 @@ export async function logoutUser(
 export async function authorize(
   event: H3Event,
   user: User,
-  samlSession: {
-    nameID: string;
-    sessionIndex: string;
-  } | null,
+  samlSession: SAMLSessionData["saml"] | null,
 ): Promise<{ token: string }> {
   const expires = new Date(new Date().setDate(new Date().getDate() + 365));
   event.context.user = user;
