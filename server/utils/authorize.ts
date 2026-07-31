@@ -144,13 +144,17 @@ export async function logoutUser(
             sessionIndex: sessionIndex,
           });
 
-        const patchedXml = logoutRequestXml.replace(
-          /<samlp:LogoutRequest([^>]*)>/,
-          `<samlp:LogoutRequest$1 InResponseTo="${inResponseTo}">`,
-        );
+        // EXPERIMENT: remove this
+        // const patchedXml = logoutRequestXml.replace(
+        //   /<samlp:LogoutRequest([^>]*)>/,
+        //   `<samlp:LogoutRequest$1 InResponseTo="${inResponseTo}">`,
+        // );
 
         // base64-encode WITHOUT deflation (POST binding requirement)
-        const samlRequest = Buffer.from(patchedXml, "utf8").toString("base64");
+        // const samlRequest = Buffer.from(patchedXml, "utf8").toString("base64");
+        const samlRequest = Buffer.from(logoutRequestXml, "utf8").toString(
+          "base64",
+        );
 
         // return the request the client should do from their device
         return {
