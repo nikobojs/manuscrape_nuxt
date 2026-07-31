@@ -5,6 +5,7 @@ export function isOpenUrl(event: H3Event): boolean {
     "/api/user",
     "/api/auth",
     "/api/token_auth",
+    "/api/auth/saml/logout",
     "/api/reset-password/reset",
     "/api/reset-password/request",
     "/api/auth/saml/callback",
