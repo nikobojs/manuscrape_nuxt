@@ -42,9 +42,14 @@ export async function logoutUser(
     authSource: AuthSource.PASSWORD | AuthSource.SAML;
     email: string | null;
   },
-  logoutFinishRedirect = "/login",
 ) {
   const config = useRuntimeConfig();
+
+  // define relayState / log out final redirect url
+  const relayState = encodeURIComponent(
+    config.public.baseUrl + "/login?sign_out=1",
+  );
+
   const session = await useSession<SAMLSessionData>(event, {
     password: config.saml.sessionSecret,
   });
@@ -132,37 +137,26 @@ export async function logoutUser(
     // log out for real if using saml
     if (samlStrategy._saml && config?.saml?.identifierFormat) {
       try {
-        const payload = {
-          nameID: samlNameId,
-          nameIDFormat: config?.saml?.identifierFormat,
-          sessionIndex: sessionIndex,
-          inResponseTo,
-        };
-
-        // console.log("[SAML] Logging out user from saml!", payload);
-        // const logoutUrl = await samlStrategy!._saml?.getLogoutUrlAsync(
-        //   payload,
-        //   logoutFinishRedirect,
-        //   { },
-        // );
-        //
         const logoutRequestXml =
-          await samlStrategy!._saml?._generateLogoutRequest(payload);
+          await samlStrategy!._saml?._generateLogoutRequest({
+            nameID: samlNameId,
+            nameIDFormat: config?.saml?.identifierFormat,
+            sessionIndex: sessionIndex,
+          });
 
-        // Base64-encode WITHOUT deflation (POST binding requirement)
-        const samlRequest = Buffer.from(logoutRequestXml, "utf8").toString(
-          "base64",
+        const patchedXml = logoutRequestXml.replace(
+          /<samlp:LogoutRequest([^>]*)>/,
+          `<samlp:LogoutRequest$1 InResponseTo="${inResponseTo}">`,
         );
 
-        const logoutUrl = config?.saml?.logoutUrl;
-        console.log("[SAML] Successfully got a logout url:", logoutUrl);
-        console.log("[SAML] Will redirect to that URL!");
+        // base64-encode WITHOUT deflation (POST binding requirement)
+        const samlRequest = Buffer.from(patchedXml, "utf8").toString("base64");
 
-        // TODO: fix how to handle logout url...
+        // return the request the client should do from their device
         return {
-          logoutUrl,
+          logoutUrl: config?.saml?.logoutUrl,
           SAMLRequest: samlRequest,
-          RelayState: logoutFinishRedirect,
+          RelayState: relayState,
         };
       } catch (e) {
         console.error(

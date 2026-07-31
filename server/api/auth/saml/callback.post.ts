@@ -67,18 +67,8 @@ export default defineEventHandler(async (event: H3Event) => {
       sessionIndex: parsedProfile.sessionIndex,
       nameID: parsedProfile.nameID,
       inResponseTo: parsedProfile.inResponseTo, // required for logging out
-      // samlIdentifier: parsedProfile.samlIdentifier, // not used at the moment
     };
     await authorize(event, user, samlSession);
-
-    // TODO: experiment to remove, please also consider removing in logout logic
-    // setCookie(event, "saml_session", profile.sessionIndex, {
-    //   httpOnly: true,
-    //   path: "/",
-    //   domain: config.cookieDomain,
-    //   sameSite: "strict",
-    //   secure: config.cookieSecure,
-    // });
 
     await new Promise((ok) => setTimeout(ok, 100));
 
@@ -173,7 +163,6 @@ function parseSamlProfile(result: {
     nameID: result.profile.nameID,
     inResponseTo: result.profile.inResponseTo as string,
   };
-  console.info("PARSING SAML RESPONSE:", parsedResult);
   return parsedResult;
 }
 
