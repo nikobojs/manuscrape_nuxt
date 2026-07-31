@@ -21,7 +21,7 @@ export function updateAuthCookie(
     expires: expiresAt,
     httpOnly: true,
     domain: config.cookieDomain,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: config.cookieSecure,
     path: "/",
   };

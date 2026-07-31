@@ -36,20 +36,21 @@ async function onNotAuthed(
   msg: string = "You are not logged in. Please log in and try again",
 ): Promise<void> {
   const isApiUrl = event.path.startsWith("/api/");
+  const openUrl = isOpenUrl(event);
 
   deleteCookie(event, "authcookie");
 
-  if (!isOpenUrl(event) && isApiUrl) {
+  if (!openUrl && isApiUrl) {
     throw createError({
       statusCode: 401,
       statusMessage: msg,
     });
-  } else if (!isOpenUrl(event) && !isApiUrl) {
+  } else if (!openUrl && !isApiUrl) {
     return sendRedirect(event, "/login", 302);
   } else {
     const ctx = {
       msg,
-      isOpenUrl: isOpenUrl(event),
+      isOpenUrl: openUrl,
       isApiUrl,
     };
     captureException("Unexpected state in auth middleware", { data: ctx });
