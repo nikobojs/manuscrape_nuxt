@@ -56,7 +56,6 @@ export async function logoutUser(
 
   const samlNameId = session.data?.saml?.nameID as string | undefined;
   const sessionIndex = session.data?.saml?.sessionIndex as string | undefined;
-  const inResponseTo = session.data?.saml?.inResponseTo as string | undefined;
 
   // clear app server session no matter what
   await session.clear();
@@ -82,6 +81,7 @@ export async function logoutUser(
     console.log("[LOGOUT] Resetting the auth cookie for user", user);
     return {};
   } else if (user.authSource === "SAML") {
+    // TODO: extract as fn + move saml logout logic into server/util/saml.ts
     // if auth source is SAML, delete the cookies AND sign out of the SAML IdP
     const samlStrategy = getSamlStrategy();
 
@@ -144,7 +144,7 @@ export async function logoutUser(
             sessionIndex: sessionIndex,
           });
 
-        // EXPERIMENT: remove this
+        // NOTE: this returns 500 schema could not be validated on the first logout request
         // const patchedXml = logoutRequestXml.replace(
         //   /<samlp:LogoutRequest([^>]*)>/,
         //   `<samlp:LogoutRequest$1 InResponseTo="${inResponseTo}">`,

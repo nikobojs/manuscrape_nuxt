@@ -58,6 +58,7 @@ export default defineNuxtConfig({
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
     manuscrapeClientVersionRequirement: ">=1.0.11",
     saml: {
+      identifierSecret: process.env.SAML_IDENTIFIER_SECRET || "",
       sessionSecret: process.env.SAML_SESSION_SECRET || "",
       entryPoint: process.env.SAML_ENTRYPOINT || "",
       issuer: process.env.SAML_ISSUER || "",
