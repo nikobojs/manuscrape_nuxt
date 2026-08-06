@@ -34,6 +34,7 @@ export default safeResponseHandler(async (event) => {
   const user = await getUserByEmail(parsed.email, {
     id: true,
     email: true,
+    name: true,
     password: true,
     createdAt: true,
     samlNameId: true,

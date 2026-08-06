@@ -33,6 +33,31 @@
       :state="state"
       ref="form"
     >
+      <UFormGroup label="Full Name" name="name">
+        <template #label>
+          <div class="flex gap-1 items-center">
+            <span>Full Name</span>
+            <UTooltip :ui="{base: 'p-2 text-xs'}">
+              <template #text>
+                <p class="whitespace-normal break-words">
+                  Visible to project collaborators and on project exports
+                </p>
+              </template>
+              <UIcon name="i-heroicons-information-circle" class="text-lg" />
+            </UTooltip>
+          </div>
+        </template>
+        <UInput
+          autocomplete="off"
+          v-model="state.name"
+          type="text"
+          placeholder="Enter full name"
+          required
+        />
+      </UFormGroup>
+
+      <br />
+
       <UFormGroup label="Email" name="email">
         <UInput
           autocomplete="off"
@@ -86,6 +111,7 @@ import type { FormError } from "#ui/types";
 import { getErrMsg } from "~/utils/getErrMsg";
 
 const state = ref({
+  name: "",
   email: "",
   password: "",
 });
@@ -108,6 +134,7 @@ await callOnce(async () => {
 
 function validate(state: any): FormError[] {
   const errors = [] as FormError[];
+  if (!state.name) errors.push({ path: "name", message: "Required" });
   if (!state.email) errors.push({ path: "email", message: "Required" });
   if (state.email.split("").filter((c: string) => c == "@").length !== 1)
     errors.push({ path: "email", message: "Should contain exactly one '@'" });
@@ -120,7 +147,7 @@ function validate(state: any): FormError[] {
 async function submit() {
   await form.value!.validate();
   loading.value = true;
-  await signUp(state.value.email, state.value.password)
+  await signUp(state.value.email, state.value.password, state.value.name)
     .then(() => {
       window.location.href = "/";
     })

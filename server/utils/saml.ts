@@ -87,6 +87,7 @@ export async function authorizeOrCreateUserSAML(
       columns: {
         id: true,
         email: true,
+        name: true,
         authSource: true,
         createdAt: true,
         samlOrganizationName: true,

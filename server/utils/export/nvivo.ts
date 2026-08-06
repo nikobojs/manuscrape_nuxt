@@ -60,12 +60,8 @@ function generateObservationRow(
     fieldValues[columnIndex] = val;
   }
 
-  // get name / initials / alias for author of observation
-  const { nameInProject } = contributors.find(
-    (a) => a.user_id === obs.user?.id,
-  ) || {
-    nameInProject: "<deleted user>",
-  };
+  // get name for author of observation
+  const userName = obs.user?.name || obs.user?.email || "<deleted user>";
 
   let tagFlags: boolean[] = [];
   if (includeTags) {
@@ -78,7 +74,7 @@ function generateObservationRow(
     obs.id,
     obs.createdAt,
     obs.updatedAt,
-    nameInProject,
+    userName,
     ...fieldValues,
     ...tagFlags,
   ];

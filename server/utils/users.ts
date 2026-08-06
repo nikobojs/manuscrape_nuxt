@@ -9,6 +9,7 @@ type UserSelect = Partial<Record<keyof typeof users.$inferSelect, boolean>>;
 export async function createUser(
   email: string,
   passwordClear: string,
+  name: string,
   saltRounds: number,
 ) {
   // salt and hash password
@@ -18,6 +19,7 @@ export async function createUser(
     .values({
       email: email,
       password: hashedPassword,
+      name: name,
       createdAt: new Date(),
       authSource: "PASSWORD",
       samlIdentifier: null,
@@ -27,6 +29,7 @@ export async function createUser(
     .returning({
       id: users.id,
       email: users.email,
+      name: users.name,
       authSource: users.authSource,
       createdAt: users.createdAt,
       samlOrganizationName: users.samlOrganizationName,
@@ -45,6 +48,7 @@ export async function createSamlUser(
     .values({
       email: email,
       password: null,
+      name: "Anonymous",
       createdAt: new Date(),
       authSource: "SAML",
       samlName: samlName,
@@ -54,6 +58,7 @@ export async function createSamlUser(
     .returning({
       id: users.id,
       email: users.email,
+      name: users.name,
       authSource: users.authSource,
       createdAt: users.createdAt,
       samlOrganizationName: users.samlOrganizationName,
@@ -102,6 +107,7 @@ export async function getFullUserById(userId: number) {
   const user = await getUserById(userId, {
     id: true,
     email: true,
+    name: true,
     password: true,
     authSource: true,
     createdAt: true,

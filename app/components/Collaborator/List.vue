@@ -1,7 +1,7 @@
 <template>
   <UTable :rows="collaborators" :loading="loading" :columns="columns">
-    <template #email-data="{ row }">
-      {{ row.user_email }}
+    <template #name-data="{ row }">
+      {{ row.user_name || "Deleted user" }}
     </template>
     <template #role-data="{ row }">
       {{ row.role }}
@@ -59,33 +59,33 @@ const toast = useToast();
 const { refreshUser } = await useUser();
 const { removeCollaborator } = await useProjects(params);
 
-const columns = [
-  {
-    label: "Email",
-    key: "email",
-  },
-  {
-    label: "Role",
-    key: "role",
-  },
-  {
-    label: "Alias",
-    key: "nameInProject",
-  },
-  {
-    label: "Permission created at",
-    key: "createdAt",
-  },
-  {
-    label: "",
-    key: "actions",
-  },
-];
+  const columns = [
+    {
+      label: "Name",
+      key: "name",
+    },
+    {
+      label: "Role",
+      key: "role",
+    },
+    {
+      label: "Alias",
+      key: "nameInProject",
+    },
+    {
+      label: "Permission created at",
+      key: "createdAt",
+    },
+    {
+      label: "",
+      key: "actions",
+    },
+  ];
 
 function handleRemoveCollaborator(collaborator: Collaborator) {
   // TODO: create nice confirm box
   const res = confirm(
-    `Are you sure you want to remove '${collaborator?.user_email}' from the project?`,
+    `Are you sure you want to remove '${collaborator.user_name || "Deleted user"}' from the project?`,
   );
   if (!res) {
     return;

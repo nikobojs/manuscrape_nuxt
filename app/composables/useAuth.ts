@@ -84,10 +84,10 @@ export const useAuth = async () => {
     user.value = undefined;
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     return $fetch<TokenResponse>("/api/user", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, name }),
       headers: {
         "Content-Type": "application/json",
       },
