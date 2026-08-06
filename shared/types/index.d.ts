@@ -44,6 +44,7 @@ declare global {
     fileUploads: Omit<FileUploadResponse, "observationId">[];
     user: {
       email: string | null;
+      name: string | null;
       samlOrganizationName: string | null;
       id: number;
     } | null;
@@ -69,6 +70,7 @@ declare global {
   type User = {
     id: number;
     email: string | null;
+    name: string;
     samlOrganizationName: string | null;
     createdAt: Date | string;
   };
@@ -89,6 +91,7 @@ declare global {
     user: {
       id: number;
       email: string | null;
+      name: string | null;
     } | null;
   };
 
@@ -290,6 +293,7 @@ declare global {
     user_id: number;
     project_id: number;
     user_email: string | null;
+    user_name: string | null;
   };
 
   type Tag = {

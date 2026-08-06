@@ -109,6 +109,7 @@ export async function addUserToProjectExports(
     columns: {
       id: true,
       email: true,
+      name: true,
     },
   });
 

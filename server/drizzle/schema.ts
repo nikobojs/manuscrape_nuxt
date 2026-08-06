@@ -73,6 +73,7 @@ export const users = pgTable("User", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }),
   password: varchar("password", { length: 255 }),
+  name: varchar("name", { length: 255 }).notNull().default("Anonymous"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   samlName: text("saml_name"),
   samlIdentifier: text("saml_identifier"),

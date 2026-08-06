@@ -121,7 +121,8 @@ function onLogoClick() {
 }
 
 function getUserLabel(user?: CurrentUser) {
-  if (user?.email) return user.email;
+  if (user?.name) return user.name;
+  else if (user?.email) return user.email;
   else if (user?.samlOrganizationName)
     return `Anonymous (${user.samlOrganizationName})`;
   else return "Undefined user";

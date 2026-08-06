@@ -50,7 +50,7 @@
         </template>
         <template #user-data="{ row }">
           <div class="">
-            {{  row.user?.email || '<REMOVED>' }}
+            {{  row.user?.name || row.user?.email || '<REMOVED>' }}
           </div>
         </template>
         <template #actions-data="{ row }">

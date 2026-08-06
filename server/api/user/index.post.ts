@@ -10,6 +10,10 @@ export const SignUpRequestSchema = yup
       .string()
       .required("Password is required")
       .typeError("Password is not valid"),
+    name: yup
+      .string()
+      .required("Full Name is required")
+      .typeError("Full Name is not valid"),
   })
   .required();
 
@@ -49,6 +53,7 @@ export default safeResponseHandler(async (event) => {
   const user = await createUser(
     parsed.email,
     parsed.password,
+    parsed.name,
     config.saltRounds,
   );
 
