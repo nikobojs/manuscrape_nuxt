@@ -25,7 +25,6 @@
     "@iconify-json/mdi": "^1.1.60",
     "@nuxt/devtools": "^2.0.0",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/test-utils": "^3.13.1",
     "@sentry/node": "^10.36.0",
     "@sentry/tracing": "^7.114.0",
     "@sentry/vue": "^10.36.0",
@@ -51,6 +50,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
     "@aws-sdk/lib-storage": "^3.758.0",
+    "@nuxt/test-utils": "^4.1.0",
     "@nuxt/ui": "^2.22.3",
     "archiver": "^7.0.1",
     "bcrypt": "^6.0.0",
