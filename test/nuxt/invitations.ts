@@ -123,6 +123,7 @@ describe("Project invitations", () => {
       expect(inviteRes.status).toBe(201);
 
       const signupRes = await signup({
+        name: "invitation-test-user",
         email: nonExistingEmail,
         password: "abcdefg1234567!",
       });

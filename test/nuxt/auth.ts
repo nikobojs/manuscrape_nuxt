@@ -76,6 +76,7 @@ describe("Sign up endpoint", async () => {
 
   test('returns "Email required" when only sending password', async () => {
     const res = await signup({
+      name: "abc 123",
       email: "",
       password: "copycat",
     });
@@ -98,6 +99,7 @@ describe("Sign up endpoint", async () => {
   test("takes more than 100ms on bad payload", async () => {
     const before = new Date();
     const res = await signup({
+      name: "abc 123",
       email: "",
     });
     expect(res.status).toBe(400);
@@ -120,6 +122,7 @@ describe("Sign up endpoint", async () => {
 
     for (let pw of badPasswords) {
       const res = await signup({
+        name: "abc 123",
         email: "nfb+test-0@codecollective.dk",
         password: pw,
       });
@@ -152,6 +155,7 @@ describe("Sign up endpoint", async () => {
       const res = await signup({
         email,
         password: "Password123",
+        name: "abc 123",
       });
 
       const json = await res.json();
@@ -170,6 +174,7 @@ describe("Sign up endpoint", async () => {
       async (user: CurrentUser) => {
         expect(user?.email).toBe(email);
         const res = await signup({
+          name: "abc 123",
           email,
           password,
         });

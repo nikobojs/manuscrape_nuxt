@@ -16,6 +16,7 @@ describe("Project exporting", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       false,
     );
   });

@@ -85,6 +85,13 @@
       "when": 1785155688900,
       "tag": "0011_chunky_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785155688901,
+      "tag": "0012_add_name_to_users",
+      "breakpoints": true
     }
   ]
 }

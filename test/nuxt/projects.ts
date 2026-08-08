@@ -386,6 +386,7 @@ describe("Project management", () => {
       },
       undefined,
       defaultPassword,
+      undefined,
       {
         name: "project-1",
       },

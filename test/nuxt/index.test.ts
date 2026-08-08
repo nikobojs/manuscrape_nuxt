@@ -17,6 +17,7 @@ await setup({
     DATABASE_URL: dbUrl,
   },
   logLevel: 0,
+  dev: true,
 });
 
 export * from "./auth";

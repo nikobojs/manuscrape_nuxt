@@ -602,19 +602,28 @@ export const testObservations = [
 
 let emailIndex = 0;
 export const freshEmail = () => `nfb+test${emailIndex++}@codecollective.dk`;
+let nameIndex = 0;
+export const freshName = () => `test-name-${nameIndex++}`;
+export const defaultPassword = "Password123";
 
 export async function withTempUser(
   callback: (user: CurrentUser, token: string) => Promise<void>,
   email: string | undefined = undefined,
-  password: string = "Password123",
+  password: string = defaultPassword,
+  name?: string | undefined,
 ): Promise<void> {
   // if email is not defined, set it to some new unique email
   if (email === undefined) {
     email = freshEmail();
   }
+  // if name is not defined, set it to some new name
+  if (name === undefined) {
+    name = freshName();
+  }
 
   // first, sign up new user
   const signupRes = await signup({
+    name,
     email,
     password,
   });
@@ -634,8 +643,6 @@ export async function withTempUser(
   await callback(user, json.token);
 }
 
-export const defaultPassword = "Password123";
-
 export async function withTempProject(
   callback: (
     user: CurrentUser,
@@ -645,6 +652,7 @@ export async function withTempProject(
   ) => Promise<void>,
   email: string | undefined = undefined,
   password: string = defaultPassword,
+  name: string | undefined = undefined,
   projectOptions?: Record<string, any>,
   createObservations = true,
 ): Promise<void> {
@@ -652,9 +660,14 @@ export async function withTempProject(
   if (email === undefined) {
     email = freshEmail();
   }
+  // if name is not defined, set it to some new name
+  if (name === undefined) {
+    name = freshName();
+  }
 
   // first, sign up new user
   const signupRes = await signup({
+    name,
     email,
     password,
   });
@@ -727,6 +740,7 @@ export async function withTempImageProject(
     callback,
     undefined,
     defaultPassword,
+    undefined,
     {
       fields: testImageProjectFields,
     },
