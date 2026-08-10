@@ -9,6 +9,7 @@ export function isOpenUrl(event: H3Event): boolean {
     "/api/reset-password/reset",
     "/api/reset-password/request",
     "/api/auth/saml/callback",
+    "/api/auth/saml/logout",
   ];
   const openGetUrls = [
     "/user/new",
