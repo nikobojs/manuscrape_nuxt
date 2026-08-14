@@ -130,16 +130,13 @@ async function handleLogin() {
     // at this point it is safe to assume that the values are truthy
      login(em, pw)
        .then(async (res) => {
-         console.log('Login API response:', res);
-         console.log('isElectron:', isElectron.value);
-         console.log('window.electronAPI exists:', typeof window !== 'undefined' && !!window.electronAPI);
-         
          if (isElectron.value) {
            if (window.electronAPI) {
-             console.log('Calling window.electronAPI.loginSuccess()');
              window.electronAPI.loginSuccess(
-               () => console.log('Electron loginSuccess callback: Success'),
-               (error: any) => console.error('Electron loginSuccess callback: Error:', error)
+               () => {},
+               (err: any) => {
+                 error.value = typeof err === "string" ? err : getErrMsg(err);
+               }
              );
            } else {
              console.warn('window.electronAPI not available in Electron environment');
@@ -149,9 +146,6 @@ async function handleLogin() {
              window.location.href = "/";
            }
          }
-
-
-        
       })
       .catch((err) => {
         error.value = getErrMsg(err);

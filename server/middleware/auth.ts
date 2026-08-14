@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import type { H3Event, EventHandlerRequest } from "h3";
-import { captureException } from "@sentry/vue";
 
 const config = useRuntimeConfig();
 
@@ -51,13 +50,7 @@ async function onNotAuthed(
     });
   } else if (!openUrl && !isApiUrl) {
     return sendRedirect(event, "/login", 302);
-  } else {
-    const ctx = {
-      msg,
-      isOpenUrl: openUrl,
-      isApiUrl,
-    };
-    captureException("Unexpected state in auth middleware", { data: ctx });
-    console.warn("onNotAuth unexpected state", ctx);
   }
+  // open url with a bad/expired token: cookie is deleted above, continue as
+  // an unauthenticated request (routine case, e.g. /login with a stale cookie)
 }
