@@ -123,6 +123,8 @@ const loading = ref(false);
 
 const { signUp, user, refreshUser } = await useAuth();
 
+const {isElectron}=useDevice();
+
 await callOnce(async () => {
   await refreshUser();
 });
@@ -149,7 +151,24 @@ async function submit() {
   loading.value = true;
   await signUp(state.value.email, state.value.password, state.value.name)
     .then(() => {
-      window.location.href = "/";
+      console.log('Signup API response successful');
+      console.log('isElectron:', isElectron.value);
+      console.log('window.electronAPI exists:', typeof window !== 'undefined' && !!window.electronAPI);
+      
+      if (isElectron.value) {
+        if (window.electronAPI) {
+          console.log('Calling window.electronAPI.signupSuccess()');
+          window.electronAPI.signupSuccess(
+            () => console.log('Electron signupSuccess callback: Success'),
+            (error: any) => console.error('Electron signupSuccess callback: Error:', error)
+          );
+        } else {
+          console.warn('window.electronAPI not available in Electron environment');
+        }
+      } else {
+        window.location.href = "/";
+      }
+       
     })
     .catch((err) => {
       errorMessage.value = getErrMsg(err);

@@ -33,6 +33,7 @@ export function updateAuthCookie(
 
 export function resetAuthCookie(event: H3Event<EventHandlerRequest>) {
   // return deleteCookie(event, "authcookie");
+  console.log('resetting auth cookie', event.method, event.path)
   return updateAuthCookie(event, null);
 }
 

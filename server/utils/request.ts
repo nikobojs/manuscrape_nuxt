@@ -22,6 +22,7 @@ export function isOpenUrl(event: H3Event): boolean {
     "/__nuxt",
     "/login",
     "/api/auth/saml/login",
+    "/user/new?",
     "/reset-password",
     "/api/reset-password",
   ];
