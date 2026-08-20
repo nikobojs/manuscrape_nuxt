@@ -13,9 +13,7 @@
               onEmailEdit(email);
             }
           "
-        >
-          {{ user?.email }}
-        </InputImportant>
+        />
         <span class="text-gray-500">Name:</span>
         <InputImportant
           :value="user.name"
@@ -24,9 +22,7 @@
               onNameEdit(name);
             }
           "
-        >
-          {{ user?.name }}
-        </InputImportant>
+        />
         <span class="text-gray-500">Created at:</span>
         <span>{{ prettyDate(user.createdAt) }}</span>
       </div>
