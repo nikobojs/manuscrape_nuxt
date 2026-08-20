@@ -187,3 +187,10 @@ export function requestForgotPasswordEmail(email: string) {
     body: { email },
   });
 }
+
+export function updateProfile(name: string, email: string | null) {
+  return $fetch("/api/user", {
+    method: "PUT",
+    body: { name, email },
+  });
+}

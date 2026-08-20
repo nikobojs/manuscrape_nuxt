@@ -32,3 +32,4 @@ export * from "./projectExports";
 export * from "./projectFields";
 export * from "./projects";
 export * from "./tags";
+export * from "./updateUser";

@@ -155,3 +155,20 @@ export async function updateUserPassword(
     .set({ password: hashedPassword })
     .where(eq(users.id, userId));
 }
+
+export async function updateUserProfile(
+  userId: number,
+  email: string | null,
+  name: string,
+) {
+  if (!isValidEmail(email || "")) {
+    throw createError({
+      statusCode: 400,
+      message: "Invalid email",
+    });
+  }
+  return db
+    .update(users)
+    .set({ email: email, name: name })
+    .where(eq(users.id, userId));
+}

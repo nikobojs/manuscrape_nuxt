@@ -24,7 +24,7 @@ export const resetPasswordTemplate = (
     </table>
   `;
   const fullHtml = generateMail(
-    "Please verify your email",
+    "ManuScrape Password Reset",
     content,
     "",
     username,

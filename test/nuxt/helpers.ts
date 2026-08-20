@@ -450,6 +450,18 @@ export async function getTagsInProject(token: string, projectId: number) {
   return res;
 }
 
+export async function updateUserProfile(token: string, body: any) {
+  const res = await fetch(`/api/user`, {
+    method: "PUT",
+    headers: {
+      ...contentTypeJson,
+      ...authHeader(token),
+    },
+    body: JSON.stringify(body),
+  });
+  return res;
+}
+
 export async function deleteTag(
   token: string,
   tagId: number,
