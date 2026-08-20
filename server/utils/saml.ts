@@ -7,6 +7,26 @@ import { users } from "~~/server/drizzle/schema";
 import { createSamlUser } from "~~/server/utils/users";
 import { captureException } from "@sentry/node";
 import crypto from "node:crypto";
+import fs from "node:fs";
+
+let samlCertContent: string | null = null;
+function getSamlCert(): string {
+  const config = useRuntimeConfig();
+  if (config.saml.cert && samlCertContent) {
+    return samlCertContent;
+  } else if (config.saml.cert) {
+    try {
+      const content = fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8").trim();
+      samlCertContent = content;
+      return samlCertContent;
+    } catch (e) {
+      console.error(e);
+      captureException(e);
+    }
+  } else {
+    return '';
+  }
+}
 
 export function getSamlStrategy() {
   const config = useRuntimeConfig();
@@ -23,7 +43,7 @@ export function getSamlStrategy() {
       callbackUrl: config.saml.callbackUrl,
 
       // WAYF's X509 signing certificate (PEM format, no headers)
-      cert: config.saml.cert,
+      cert: getSamlCert(),
 
       // Use configured callbackUrl instead of dynamic
       disableRequestAcsUrl: true,

@@ -1,6 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from "./package.json";
-import fs from "node:fs";
 
 export default defineNuxtConfig({
   devtools: { enabled: false },
@@ -67,9 +66,7 @@ export default defineNuxtConfig({
         process.env.SAML_IDENTIFIER_FORMAT ||
         "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
       logoutUrl: process.env.SAML_LOGOUT_URL || "",
-      cert: process.env.SAML_IDP_CERT_PATH
-        ? fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8").trim()
-        : "fake cert",
+      cert: process.env.SAML_IDP_CERT_PATH,
     },
   },
 
