@@ -185,7 +185,8 @@ export const useProjects = async (params?: RouteParams | undefined) => {
         if (!project.value || asNumber !== project.value.id) {
           project.value = getProjectFromParams(params);
         } else {
-          project.value = undefined;
+          // Always update the project reference when projects change
+          project.value = getProjectFromParams(params);
         }
       } else {
         project.value = undefined;
