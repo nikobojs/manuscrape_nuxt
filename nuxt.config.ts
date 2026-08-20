@@ -3,7 +3,7 @@ import pkg from "./package.json";
 import fs from "node:fs";
 
 export default defineNuxtConfig({
-  devtools: { enabled: process.env.NODE_DEV !== "production" },
+  devtools: { enabled: false },
   sourcemap: true,
   modules: ["@nuxt/ui", "@nuxt/image"],
 
