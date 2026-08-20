@@ -98,6 +98,24 @@
 
   <UModal
     v-if="isOwner"
+    v-bind:model-value="openModifyNameModal"
+    v-on:close="() => (openModifyNameModal = false)"
+  >
+    <UCard>
+      <template #header>
+        <div>Modify parameter name</div>
+      </template>
+      <div class="flex flex-col gap-4">
+        <InputImportant
+          :value="selectedParameter?.label || ''"
+          @edit="handleUpdateParameterName"
+        />
+      </div>
+    </UCard>
+  </UModal>
+
+  <UModal
+    v-if="isOwner"
     v-bind:model-value="openAddParamModal"
     v-on:close="() => (openAddParamModal = false)"
     :ui="{
@@ -135,9 +153,11 @@
 
 <script setup lang="ts">
 import { isMultipleChoice } from "#imports";
+import InputImportant from "~/components/InputImportant.vue";
 
 const openConfirmDeleteParamModal = ref(false);
 const openModifyChoicesModal = ref(false);
+const openModifyNameModal = ref(false);
 const selectedParameter = ref<null | Record<string, any>>();
 const openAddParamModal = ref(false);
 const toast = useToast();
@@ -163,6 +183,27 @@ const props = defineProps({
 });
 
 const sortedFields = computed(() => sortFieldsByIndex(props.project.fields));
+
+async function handleUpdateParameterName(newName: string) {
+  if (!selectedParameter.value?.id) {
+    report("error", "Parameter not selected when trying to update name");
+    return;
+  }
+
+  try {
+    await updateParameter(props.project.id, selectedParameter.value.id, { label: newName });
+    openModifyNameModal.value = false;
+    toast.add({
+      title: "Parameter name was successfully updated",
+      icon: "i-heroicons-check",
+      color: "green",
+    });
+    props.onProjectUpdated();
+  } catch (e: any) {
+    report("error", e);
+    console.error(e);
+  }
+}
 
 async function handleUpdateField(field: Partial<NewProjectField>) {
   try {
@@ -230,6 +271,17 @@ function generateParameterSettings(
       },
     });
   }
+
+  // add modify name option
+  settings.push({
+    label: "Modify name",
+    icon: "i-mdi-pencil-outline",
+    click: () => {
+      selectedParameter.value = field;
+      openModifyNameModal.value = true;
+      closePopover();
+    },
+  });
 
   // add delete option
   settings.push({

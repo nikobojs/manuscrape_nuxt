@@ -34,11 +34,17 @@
                 </p>
               </div>
             </template>
-            <span
-              class="block relative whitespace-nowrap overflow-hidden text-ellipsis max-w-[256px] content-center"
-            >
-              {{ row.label }}
-            </span>
+            <div class="block relative">
+            <InputImportant
+              :value="row.label || '-'"
+              @edit="(newName: string) => {
+                const oldName = row.label;
+                if (oldName !== newName) {
+                  editParameterName(oldName, newName);
+                }
+              }"
+            />
+            </div>
             <span
               v-if="row.required"
               class="text-red-500 text-sm ml-1 inline-block"
@@ -77,6 +83,7 @@
   </div>
 </template>
 
+import { isPropertyAccessOrQualifiedName } from "typescript";
 <script setup lang="ts">
 import type { DropdownItem } from "#ui/types";
 const toast = useToast();
@@ -192,6 +199,15 @@ function removeParameter(field: any) {
 
   // props.onFieldsUpdate(newFields);
   emit("update:fields", newFields);
+}
+function editParameterName(oldName: string, newName: string) {
+  const existingField = props.fields.find((f) => f.label === oldName);
+  if (existingField) {
+    existingField.label = newName;
+  }
+
+  // props.onFieldsUpdate(newFields);
+  emit("update:fields", props.fields);
 }
 
 function modifyChoices(row: NewProjectField) {
