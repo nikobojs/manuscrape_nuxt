@@ -16,15 +16,16 @@ function getSamlCert(): string {
     return samlCertContent;
   } else if (config.saml.cert) {
     try {
-      const content = fs.readFileSync(process.env.SAML_IDP_CERT_PATH, "utf-8").trim();
+      const content = fs.readFileSync(config.saml.cert, "utf-8").trim();
       samlCertContent = content;
-      return samlCertContent;
+      return samlCertContent || "";
     } catch (e) {
       console.error(e);
       captureException(e);
+      return "";
     }
   } else {
-    return '';
+    return "";
   }
 }
 
