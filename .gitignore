@@ -30,3 +30,7 @@ logs
 .uploads
 
 certs
+.certs
+
+*.tar
+*.tar*
