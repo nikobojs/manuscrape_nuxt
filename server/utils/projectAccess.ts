@@ -1,6 +1,7 @@
 import { captureException } from "@sentry/node";
 import { and, eq } from "drizzle-orm";
 import { projectAccesses } from "~~/server/drizzle/schema";
+import { db } from "./drizzle";
 
 export async function ensureProjectAccess(
   userId: number,

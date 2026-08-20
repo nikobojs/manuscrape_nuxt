@@ -2,6 +2,7 @@ import { asc, count, eq, inArray } from "drizzle-orm";
 import { projectFields } from "../drizzle/schema";
 import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 import { captureException } from "@sentry/node";
+import { db } from "./drizzle";
 
 type ProjectFieldSelect = Partial<
   Record<keyof typeof projectFields.$inferSelect, boolean>

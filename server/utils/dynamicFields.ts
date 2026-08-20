@@ -2,6 +2,7 @@ import { captureException } from "@sentry/node";
 import yup from "yup";
 import { dynamicProjectFields, projectFields } from "../drizzle/schema";
 import { and, eq, inArray } from "drizzle-orm";
+import { db } from "./drizzle";
 
 type DynamicFieldSelect = Partial<
   Record<keyof typeof dynamicProjectFields.$inferSelect, boolean>

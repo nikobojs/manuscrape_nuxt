@@ -10,6 +10,7 @@ import {
 } from "../drizzle/schema";
 import { getProjectFieldsByProjectIds } from "./projectFields";
 import { getDynamicFieldsByProjectIds } from "./dynamicFields";
+import { db } from "./drizzle";
 
 type ProjectInsert = Awaited<typeof projects.$inferInsert>;
 
@@ -106,9 +107,25 @@ export async function getSmallProjects(
   });
 
   // tags
-  const tagsRes = await getObservationTagsByProjectIds(projectIds);
-  const projectTagMap = Object.groupBy(tagsRes, (x) => x.projectId);
-  const projectFieldMap = Object.groupBy(fieldsRes, (x) => x.projectId);
+  const tagsRes: {
+    id: number;
+    name: string;
+    projectId: number;
+    createdById: number | null;
+  }[] = await getObservationTagsByProjectIds(projectIds);
+  const projectTagMap = Object.groupBy(
+    tagsRes,
+    (x: {
+      id: number;
+      name: string;
+      projectId: number;
+      createdById: number | null;
+    }) => x.projectId,
+  );
+  const projectFieldMap = Object.groupBy(
+    fieldsRes,
+    (x: SmallProjectField) => x.projectId,
+  );
   const projectDynamicFieldMap = Object.groupBy(
     dynamicFieldsRes,
     (x) => x.projectId,

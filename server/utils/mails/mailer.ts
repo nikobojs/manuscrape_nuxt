@@ -71,6 +71,17 @@ export async function sendMail(to: string, subject: string, html: string) {
     return;
   }
 
+  if (
+    !config.smtpHost ||
+    !config.smtpFrom ||
+    !config.smtpPass ||
+    !config.smtpTlsHost ||
+    !!config.smtpUser
+  ) {
+    console.log("not sending email, because smtp variables are not set");
+    return;
+  }
+
   const mailer = await getMailer();
   const res = await mailer.sendMail({
     to,
