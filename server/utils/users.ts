@@ -1,5 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 import { users } from "../drizzle/schema";
 import { getProjectAccessesByUserId } from "./projectAccess";
 import { getSmallProjects } from "./project";

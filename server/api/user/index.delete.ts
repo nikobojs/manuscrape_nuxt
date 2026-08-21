@@ -1,4 +1,4 @@
-import { compare } from "bcrypt";
+import { compare } from "bcryptjs";
 import * as yup from "yup";
 
 export const DeleteUserSchema = yup
