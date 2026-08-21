@@ -7,6 +7,7 @@ import {
 import {
   getProjectFieldById,
   getProjectFieldsByProjectIds,
+  renameFieldLabelInObservations,
   updateProjectField,
   updateProjectFieldIndexes,
 } from "~~/server/utils/projectFields";
@@ -61,6 +62,16 @@ export default safeResponseHandler(async (event) => {
     });
     captureException(err);
     throw err;
+  }
+
+  // if modifying label/name of parameter, update all observations
+  if (patch.label && patch.label !== field.label) {
+    console.log(
+      "renaming of field detected, will rename data values in related observations",
+    );
+    await renameFieldLabelInObservations(field.label, patch.label, projectId);
+  } else {
+    console.log("Renaming of field not detected", { patch, field });
   }
 
   // filter in patch by value if null or undefined

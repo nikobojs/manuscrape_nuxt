@@ -1,5 +1,5 @@
 import { asc, count, eq, inArray } from "drizzle-orm";
-import { projectFields } from "../drizzle/schema";
+import { observations, projectFields } from "../drizzle/schema";
 import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 import { captureException } from "@sentry/node";
 import { db } from "./drizzle";
@@ -194,4 +194,55 @@ export function updateProjectField(fieldId: number, patch: ProjectFieldPatch) {
     .update(projectFields)
     .set(patch)
     .where(eq(projectFields.id, fieldId));
+}
+
+export async function renameFieldLabelInObservations(
+  oldFieldName: string,
+  newFieldName: string,
+  projectId: number,
+) {
+  // get all observations in project (id, data)
+  const projectObs = await db.query.observations.findMany({
+    where: eq(observations.projectId, projectId),
+    columns: {
+      id: true,
+      data: true,
+    },
+  });
+
+  // filter by all observations that has field label defined in its data
+  const patchObs = projectObs.filter(
+    (o) => o.data && Object.keys(o.data).includes(oldFieldName),
+  );
+
+  // create patch objects
+  const patchedObs = patchObs.map((o) => {
+    const newData = o.data! as Record<string, any>;
+    const oldParamValue = newData[oldFieldName];
+    newData[newFieldName] = oldParamValue;
+    delete newData[oldFieldName];
+    return {
+      id: o.id,
+      data: newData,
+    };
+  });
+
+  console.log({
+    projectObs: JSON.stringify(projectObs),
+    patchObs: JSON.stringify(patchObs),
+    patchedObs: JSON.stringify(patchedObs),
+  });
+
+  // do the db update if any patch objects
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < patchedObs.length; i++) {
+      await tx
+        .update(observations)
+        .set({ data: patchedObs[i]!.data })
+        .where(eq(observations.id, patchedObs[i]!.id));
+    }
+  });
+  console.log(
+    `successfully renamed parameter from ${oldFieldName} to ${newFieldName}, affecting ${patchedObs.length} observations`,
+  );
 }
