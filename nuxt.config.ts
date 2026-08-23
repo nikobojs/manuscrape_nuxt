@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
   sourcemap: true,
-  modules: ["@nuxt/ui", "@nuxt/image"],
+  modules: ["@nuxt/ui"],
 
   typescript: {
     strict: true,
