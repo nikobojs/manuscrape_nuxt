@@ -1,12 +1,16 @@
 <template>
   <UContainer>
-    <BackButton
-      v-if="backbuttonUrl"
-      :href="backbuttonUrl"
+    <UButton
+      v-if="project && observation"
+      @click="handleDiscard"
       :disabled="disableBackbutton"
+      color="red"
+      variant="ghost"
+      class="mb-3 text-sm flex gap-x-1.5 items-center"
     >
-      Cancel
-    </BackButton>
+      <UIcon name="i-heroicons-x-mark" />
+      Discard
+    </UButton>
     <ObservationImageEditor
       v-if="project && initialFile && observation && projectFieldId"
       :project="project"
@@ -27,6 +31,7 @@
 </template>
 
 <script lang="ts" setup>
+const { deleteObservation } = await import("#imports");
 const { ensureLoggedIn, ensureUserFetched } = await useAuth();
 await useUser();
 await ensureUserFetched(); // this is apparently required for this page to work correctly in electron
@@ -142,17 +147,24 @@ onMounted(async () => {
   }
 });
 
-const backbuttonUrl = computed(() => {
+async function handleDiscard() {
   if (!project.value || !observation.value) {
-    disableBackbutton.value = true;
-    return "#";
-  } else {
-    const electronParam = isElectron.value ? "?electron=1" : "";
-    return `
-        /projects/${project.value.id}/observations/${observation.value.id}${electronParam}
-      `.trim();
+    return;
   }
-});
+  try {
+    await deleteObservation(project.value.id, observation.value.id);
+    if (isElectron.value) {
+      window.close();
+    }
+  } catch (e) {
+    toast.add({
+      title: "Failed to discard",
+      description: (e as Error)?.message || "Unknown error",
+      color: "red",
+      icon: "i-heroicons-exclamation-triangle",
+    });
+  }
+}
 
 async function handleUploadSuccess(isFirstImage: boolean) {
   if (isElectron.value) {
@@ -162,8 +174,7 @@ async function handleUploadSuccess(isFirstImage: boolean) {
       icon: "i-heroicons-check",
       color: "green",
     });
-    // Navigate back to the observation
-    await navigateTo(backbuttonUrl.value);
+    window.close();
   } else {
     // For web, navigate back to observation
     toast.add({
@@ -171,7 +182,8 @@ async function handleUploadSuccess(isFirstImage: boolean) {
       icon: "i-heroicons-check",
       color: "green",
     });
-    await navigateTo(backbuttonUrl.value);
+    const electronParam = isElectron.value ? "?electron=1" : "";
+    await navigateTo(`/projects/${project.value?.id}/observations/${observation.value?.id}${electronParam}`);
   }
 }
 </script>
