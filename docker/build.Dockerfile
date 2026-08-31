@@ -17,8 +17,20 @@ ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV}
 
 # Load .env as secret, source it so all vars are exported for yarn build
+# RUN --mount=type=secret,id=env,target=/run/secrets/.env \
+#     set -a && . /run/secrets/.env && set +a && \
+#     yarn build
+
+# improved command that respects more advanced .env values
 RUN --mount=type=secret,id=env,target=/run/secrets/.env \
-    set -a && . /run/secrets/.env && set +a && \
+    while IFS= read -r line || [ -n "$line" ]; do \
+      line="${line%$'\r'}"; \
+      case "$line" in ''|\#*) continue ;; esac; \
+      case "$line" in export\ *) line="${line#export }" ;; esac; \
+      key="${line%%=*}"; \
+      value="${line#*=}"; \
+      export "$key=$value"; \
+    done < /run/secrets/.env && \
     yarn build
 
 FROM scratch AS export
