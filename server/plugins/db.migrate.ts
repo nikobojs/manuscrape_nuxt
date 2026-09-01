@@ -15,7 +15,7 @@ export default defineNitroPlugin(async () => {
     await sql`SELECT pg_advisory_lock(727447)`;
     const db = drizzle(sql);
     await migrate(db, {
-      migrationsFolder: "server/drizzle/migrations",
+      migrationsFolder: "./server/drizzle/migrations",
       migrationsTable: "__drizzle_migrations",
     });
     console.info("> migrations ok");
