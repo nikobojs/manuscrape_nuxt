@@ -81,9 +81,6 @@ export default defineNuxtConfig({
     scheduledTasks: {
       "*/5 * * * *": ["invitations:cleanup"],
     },
-    externals: {
-      inline: ["jsonwebtoken"],
-    },
   },
 
   vite: {
