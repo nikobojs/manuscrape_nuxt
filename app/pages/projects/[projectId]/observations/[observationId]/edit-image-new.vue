@@ -31,7 +31,6 @@
 </template>
 
 <script lang="ts" setup>
-const { deleteObservation } = await import("#imports");
 const { ensureLoggedIn, ensureUserFetched } = await useAuth();
 await useUser();
 await ensureUserFetched(); // this is apparently required for this page to work correctly in electron
@@ -157,6 +156,7 @@ async function handleDiscard() {
       window.close();
     }
   } catch (e) {
+    report("error", e as Error);
     toast.add({
       title: "Failed to discard",
       description: (e as Error)?.message || "Unknown error",
@@ -182,8 +182,7 @@ async function handleUploadSuccess(isFirstImage: boolean) {
       icon: "i-heroicons-check",
       color: "green",
     });
-    const electronParam = isElectron.value ? "?electron=1" : "";
-    await navigateTo(`/projects/${project.value?.id}/observations/${observation.value?.id}${electronParam}`);
+    await navigateTo(`/projects/${project.value?.id}/observations/${observation.value?.id}`);
   }
 }
 </script>
