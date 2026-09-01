@@ -35,7 +35,8 @@ export function buildForm(fields: ProjectFieldResponse[]): {
   const inputs: CMSInput[] = [];
   const imageInputs: CMSInput[] = [];
 
-  for (const field of fields) {
+  const sortedFields = sortFieldsByIndex(fields);
+  for (const field of sortedFields) {
     const useSimpleInput = Object.keys(inputTypes).includes(field.type);
     const typ = field.type;
 
@@ -151,7 +152,7 @@ export function getCustomFieldChoices(
   }
 }
 
-export function sortFieldsByIndex(fields: SmallProjectField[]) {
+export function sortFieldsByIndex<T extends { index: number }>(fields: T[]) {
   return [...fields].sort((a, b) => (a.index > b.index ? 1 : -1));
 }
 
