@@ -167,22 +167,14 @@ async function handleDiscard() {
 }
 
 async function handleUploadSuccess(isFirstImage: boolean) {
-  if (isElectron.value) {
-    // For Electron, just close the window after successful upload
-    toast.add({
-      title: "Image uploaded successfully",
-      icon: "i-heroicons-check",
-      color: "green",
-    });
-    window.close();
-  } else {
-    // For web, navigate back to observation
-    toast.add({
-      title: "Image uploaded successfully",
-      icon: "i-heroicons-check",
-      color: "green",
-    });
-    await navigateTo(`/projects/${project.value?.id}/observations/${observation.value?.id}`);
-  }
+  toast.add({
+    title: "Image uploaded successfully",
+    icon: "i-heroicons-check",
+    color: "green",
+  });
+  const electronParam = isElectron.value ? "?electron=1" : "";
+  await navigateTo(
+    `/projects/${project.value?.id}/observations/${observation.value?.id}${electronParam}`,
+  );
 }
 </script>
