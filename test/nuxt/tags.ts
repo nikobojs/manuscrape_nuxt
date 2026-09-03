@@ -203,12 +203,6 @@ describe("Observation tags", () => {
       });
       expect(patchRes.status).toBe(200);
 
-      // publish and lock observation
-      await patchObservation(token, projectId, obs[0]!.id, {
-        isDraft: true,
-      });
-      expect(patchRes.status).toBe(200);
-
       // verify tag is present on observation
       let allObsResponse = await getObservations(token, projectId);
       let allObsJson = await allObsResponse.json();
@@ -233,7 +227,7 @@ describe("Observation tags", () => {
       // remove multiple tags from observation
       patchRes = await patchObservation(token, projectId, obs[0]!.id, {
         tags: {
-          disconnect: [{ id: createdTag1.id }, { id: createdTag1.id }],
+          disconnect: [{ id: createdTag1.id }, { id: createdTag2.id }],
         },
       });
       expect(patchRes.status).toBe(200);

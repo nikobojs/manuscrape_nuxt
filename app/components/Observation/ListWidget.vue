@@ -52,9 +52,9 @@
       <template #createdAt-data="{ row }">
         <span>{{ prettyDate(row.createdAt) }}</span>
       </template>
-        <template #user-data="{ row }">
-          <span>{{ row.user?.name || row.user?.email || "Deleted user" }}</span>
-        </template>
+      <template #user-data="{ row }">
+        <span>{{ row.user?.name || row.user?.email || "Deleted user" }}</span>
+      </template>
       <template #isDraft-data="{ row }">
         <span>{{ row.isDraft ? "Yes" : "No" }}</span>
       </template>
