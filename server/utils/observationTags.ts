@@ -28,6 +28,25 @@ export async function getObservationTagsInProject(projectId: number) {
   });
 }
 
+export async function getObservationTagsByObservationIds(
+  observationIds: number[],
+) {
+  const res = await db
+    .select({
+      id: tags.id,
+      createdById: tags.createdById,
+      name: tags.name,
+      observationId: observationTags.observationId,
+    })
+    .from(observationTags)
+    .innerJoin(tags, eq(observationTags.tagId, tags.id))
+    .where(inArray(observationTags.observationId, observationIds));
+  if (!res) return {};
+
+  const tagMap = Object.groupBy(res, (x) => x.observationId + "");
+  return tagMap;
+}
+
 export async function getObservationTagByTagName(
   tagName: string,
   projectId: number,

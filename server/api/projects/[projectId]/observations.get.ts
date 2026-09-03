@@ -135,18 +135,9 @@ export default safeResponseHandler(async (event) => {
     take,
   );
 
-  // deprecated but working prisma query
-  // const result = await db.observation.findMany({
-  //   take,
-  //   skip,
-  //   where: whereStatement,
-  //   select: observationColumns,
-  //   orderBy: orderByStatement,
-  // });
-
   // return the data!
   return {
-    observations: result.map((obs) => extractTagsFromObservation(obs)),
+    observations: result,
     total,
     totalDraft,
   };

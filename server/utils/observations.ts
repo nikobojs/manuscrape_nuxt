@@ -1,6 +1,5 @@
 import { and, eq, gte, inArray, lte, SQL } from "drizzle-orm";
 import {
-  fileUploads,
   imageUploads,
   observations,
   observationTags,
@@ -10,7 +9,7 @@ import {
 import { getFileUploadsByObservationIds } from "./fileUploads";
 import { getImageUploadsByObservationIds } from "./imageUploads";
 import { getUsersByIds } from "./users";
-import { getObservationTagsByProjectIds } from "./observationTags";
+import { getObservationTagsByObservationIds } from "./observationTags";
 
 type ObservationSelect = Partial<
   Record<keyof typeof observations.$inferSelect, boolean>
@@ -65,9 +64,6 @@ export async function getFullObservationsByProjectId(
   const userIds = fullObservations
     .map((o) => o.userId)
     .filter((id) => id !== null);
-  const projectIds = Array.from(
-    new Set(fullObservations.map((o) => o.projectId)),
-  );
 
   const fileUploadsRes = await getFileUploadsByObservationIds(resultIds, {
     id: true,
@@ -93,24 +89,24 @@ export async function getFullObservationsByProjectId(
     name: true,
     samlOrganizationName: true,
   });
-  const tagsRes = await getObservationTagsByProjectIds(projectIds);
+  const tagsMap = await getObservationTagsByObservationIds(resultIds);
 
   const fileUploadMap = Object.groupBy(fileUploadsRes, (f) => f.observationId);
   const observationImageMap = Object.groupBy(
     imageUploadsRes,
     (i) => i.observationId,
   );
-  const projectTagsMap = Object.groupBy(tagsRes, (i) => i.projectId);
 
   const results: FullObservation[] = [];
   for (const o of fullObservations) {
+    const obsTags = tagsMap[o.id + ""];
     const result: FullObservation = {
       ...o,
       data: o.data as Record<string, any>,
       fileUploads: fileUploadMap[o.id] || [],
       images: observationImageMap[o.id] || [],
       user: relatedUsersRes?.find((u) => u.id === o.userId) || null,
-      tags: (projectTagsMap[o.projectId] || []).map((t) => ({
+      tags: (obsTags || []).map((t) => ({
         id: t.id,
         name: t.name,
       })),
