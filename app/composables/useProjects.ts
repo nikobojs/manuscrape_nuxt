@@ -173,6 +173,19 @@ export const useProjects = async (params?: RouteParams | undefined) => {
     });
   };
 
+  const updateParameterIndexes = async (
+    projectId: number,
+    fieldIndexes: { id: number; index: number }[],
+  ) => {
+    return fetch(`/api/projects/${projectId}/fields/reorder`, {
+      method: "PATCH",
+      body: JSON.stringify({ fieldIndexes }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  };
+
   const isOwner = computed(
     () => project.value?.id && hasRoles(project.value.id, ["OWNER"]),
   );
@@ -212,5 +225,6 @@ export const useProjects = async (params?: RouteParams | undefined) => {
     removeCollaborator,
     updateParameter,
     moveParameter,
+    updateParameterIndexes,
   };
 };

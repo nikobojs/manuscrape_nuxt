@@ -16,7 +16,8 @@
           }
         "
       />
-      <ProjectParametersWidget
+      <div class="col-span-2">
+        <ProjectParametersWidget
         :project="project"
         :on-project-updated="
           () => {
@@ -24,6 +25,7 @@
           }
         "
       />
+      </div>
     </div>
     <div class="mt-6">
       <CollaboratorWidget v-if="isOwner" :project="project" />

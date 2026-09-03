@@ -1,5 +1,5 @@
 <template>
-  <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e] h-full">
+  <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e]">
     <template #header>
       <div class="h-4 flex justify-between relative">
         <CardHeader>Parameters</CardHeader>
@@ -19,29 +19,46 @@
     <div
       class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6 max-h-[460px] overflow-y-auto"
     >
-      <div
-        v-for="field in sortedFields"
-        class="flex flex-col gap-y-1.5 p-3 border-b border-slate-800"
+      <draggable
+        v-model="sortedFields"
+        item-key="id"
+        handle=".drag-handle"
+        @end="handleDragEnd"
+        class="flex flex-col"
       >
-        <div class="flex items-center justify-between">
-          <UBadge size="xs" variant="solid" color="white" class="text-xs">
-            {{ getFieldLabel(field.type) }}
-          </UBadge>
-          <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end' }">
-            <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
-            </UButton>
-            <template #panel="{ close }">
-              <UVerticalNavigation
-                :links="generateParameterSettings(field, sortedFields, close)"
-              />
-            </template>
-          </UPopover>
-        </div>
-        <div class="text-sm">
-          <span v-if="field.required" class="text-red-500">*</span>
-          {{ field.label }}
-        </div>
-      </div>
+        <template #item="{ element: field, index: idx }">
+          <div
+            class="flex flex-col gap-y-1.5 p-3 border-slate-800"
+            :class="{'border-b': idx < (sortedFields.length-1)}"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex gap-2 items-center">
+                <div class="drag-handle cursor-grab flex items-center group py-3 -my-1 px-1" v-if="isOwner">
+                  <UIcon name="i-mdi-drag-vertical" class="text-2xl text-gray-400 transition-colors group-hover:text-gray-200" />
+                </div>
+                <div class="flex flex-col gap-y-1.5">
+                  <div class="text-sm font-semibold">
+                    {{ field.label }}
+                    <span v-if="field.required" class="text-red-500">*</span>
+                  </div>
+                  <div class="text-sm text-gray-300">
+                    {{ getFieldLabel(field.type) }}
+                  </div>
+                </div>
+              </div>
+              <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end' }">
+                <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
+                </UButton>
+                <template #panel="{ close }">
+                  <UVerticalNavigation
+                    :links="generateParameterSettings(field, sortedFields, close)"
+                  />
+                </template>
+              </UPopover>
+            </div>
+          </div>
+        </template>
+      </draggable>
     </div>
   </UCard>
 
@@ -154,6 +171,7 @@
 <script setup lang="ts">
 import { isMultipleChoice } from "#imports";
 import InputImportant from "~/components/InputImportant.vue";
+import draggable from 'vuedraggable';
 
 const openConfirmDeleteParamModal = ref(false);
 const openModifyChoicesModal = ref(false);
@@ -168,6 +186,7 @@ const {
   isOwner,
   updateParameter,
   moveParameter,
+  updateParameterIndexes,
 } = await useProjects(params);
 const { report } = useSentry();
 
@@ -182,7 +201,11 @@ const props = defineProps({
   onProjectUpdated: requireFunctionProp<() => void | Promise<void>>(),
 });
 
-const sortedFields = computed(() => sortFieldsByIndex(props.project.fields));
+const sortedFields = ref<ProjectFieldResponse[]>(sortFieldsByIndex(props.project.fields));
+
+watch(() => props.project.fields, (newFields) => {
+  sortedFields.value = sortFieldsByIndex(newFields);
+}, { deep: true });
 
 async function handleUpdateParameterName(newName: string) {
   if (!selectedParameter.value?.id) {
@@ -325,6 +348,38 @@ function handleMoveParameter(
     });
 }
 
+function handleDragEnd() {
+  if (!isOwner.value) return;
+  
+  const newIndexes = sortedFields.value.map((field, index) => ({
+    id: field.id,
+    index: index
+  }));
+  
+  updateParameterIndexes(props.project.id, newIndexes)
+    .then(async (res) => {
+      if (res.status === 204) {
+        toast.add({
+          title: "Parameters reordered",
+          icon: "i-heroicons-check",
+          color: "green",
+        });
+        props.onProjectUpdated();
+      } else {
+        const json = await res.json();
+        throw new Error(getErrMsg(json));
+      }
+    })
+    .catch((err: Error) => {
+      toast.add({
+        title: err.message,
+        icon: "i-heroicons-exclamation-triangle",
+        color: "red",
+      });
+      props.onProjectUpdated();
+    });
+}
+
 async function handleCreateParameter(field: NewProjectField) {
   const newField: NewProjectField = {
     label: field.label,
@@ -392,5 +447,14 @@ async function handleDeleteParameter() {
         color: "red",
       });
     });
-}
+  }
 </script>
+
+<style scoped>
+.drag-handle {
+  cursor: grab;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+</style>
