@@ -41,8 +41,17 @@ export async function updateProjectFieldIndexes(
 ) {
   const sortedExisting = enforceCorrectIndexes(fields);
 
-  // update indexes for existing fields
+  // update indexes for existing fields using transaction to avoid unique constraint
   await db.transaction(async (tx) => {
+    // First, set all fields to unique temporary indexes to avoid conflicts
+    for (let i = 0; i < sortedExisting.length; i++) {
+      await tx
+        .update(projectFields)
+        .set({ index: -1000 - i }) // Use unique negative indexes
+        .where(eq(projectFields.id, sortedExisting[i].id));
+    }
+    
+    // Then update all fields with their final indexes
     for (const field of sortedExisting) {
       await tx
         .update(projectFields)
