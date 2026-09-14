@@ -47,8 +47,8 @@ const allowedMimeTypes = [
 const config = useRuntimeConfig();
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
   const observation = await getObservationById(observationId, {

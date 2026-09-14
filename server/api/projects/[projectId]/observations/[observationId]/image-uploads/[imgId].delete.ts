@@ -1,10 +1,9 @@
-import { getImageUploadById } from "~~/server/utils/imageUploads";
 import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const { user } = await requireUserFromSession(event);
   const params = event.context.params;
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, user);
   const projectId = parseIntParam(params?.projectId);
   const observationId = parseIntParam(params?.observationId);
   const imageUploadId = parseIntParam(params?.imgId);

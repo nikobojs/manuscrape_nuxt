@@ -24,360 +24,377 @@ import type {
 } from "~~/server/utils/prisma";
 import { ExportProjectSchema } from "~~/shared/schemas/ExportProject";
 import { projectFields } from "~~/server/drizzle/schema";
-import { AuthSource } from "./auth-source";
 
-declare global {
-  interface CurrentUser extends Omit<User, "tags"> {
-    authSource: AuthSource;
-    projectAccess: ExtendedProjectAccess[];
-  }
+export interface CurrentUser extends Omit<User, "tags"> {
+  authSource: AuthSource;
+  projectAccess: ExtendedProjectAccess[];
+}
 
-  interface ExtendedProjectAccess extends Omit<ProjectAccess, "userId"> {
-    project: SmallProject;
-  }
+export interface ExtendedProjectAccess extends Omit<ProjectAccess, "userId"> {
+  project: SmallProject;
+}
 
-  type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
+export type FileUploadResponse = Omit<Omit<FileUpload, "filePath">, "isS3">;
 
-  interface FullObservation {
+export interface FullObservation {
+  id: number;
+  images: ImageUpload[];
+  fileUploads: Omit<FileUploadResponse, "observationId">[];
+  user: {
+    email: string | null;
+    name: string | null;
+    samlOrganizationName: string | null;
     id: number;
-    images: ImageUpload[];
-    fileUploads: Omit<FileUploadResponse, "observationId">[];
-    user: {
-      email: string | null;
-      name: string | null;
-      samlOrganizationName: string | null;
-      id: number;
-    } | null;
-    data: Record<string, any> | null;
-    tags: { name: string; id: number }[];
-    uploadInProgress: boolean;
-    isDraft: boolean;
-    userId: number | null;
-    projectId: number;
-    updatedAt: Date | string;
-    createdAt: Date | string;
-  }
+  } | null;
+  data: Record<string, any> | null;
+  tags: { name: string; id: number }[];
+  uploadInProgress: boolean;
+  isDraft: boolean;
+  userId: number | null;
+  projectId: number;
+  updatedAt: Date | string;
+  createdAt: Date | string;
+}
 
-  type ImageUpload = {
-    id: number;
-    createdAt: Date;
-    observationId: number;
-    projectFieldId: number;
-    mimetype: string;
-    originalName: string;
-  };
+export type ImageUpload = {
+  id: number;
+  createdAt: Date;
+  observationId: number;
+  projectFieldId: number;
+  mimetype: string;
+  originalName: string;
+};
 
-  type User = {
+export type User = {
+  id: number;
+  email: string | null;
+  name: string;
+  samlOrganizationName: string | null;
+  createdAt: Date | string;
+};
+
+export type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
+
+export type FullProjectExport = {
+  id: number;
+  createdAt: Date;
+  projectId: number;
+  mimetype: string;
+  type: ExportType;
+  observationsCount: number;
+  startDate: Date | null;
+  endDate: Date | null;
+  status: ExportStatus;
+  userId: number;
+  user: {
     id: number;
     email: string | null;
-    name: string;
-    samlOrganizationName: string | null;
-    createdAt: Date | string;
+    name: string | null;
+  } | null;
+};
+
+export interface DynamicFieldsResponse {
+  dynamicFields: FullDynamicProjectField[];
+}
+
+export interface ProjectExportsResponse {
+  projectExports: {
+    page: FullProjectExport[];
+    generating: FullProjectExport[];
+    total: number;
   };
+  storageUsage: number;
+  storageLimit: number;
+}
 
-  type FullDynamicProjectField = Omit<DynamicProjectField, "projectId">;
+export type ExportMeta = {
+  filePath: string;
+  isS3: boolean;
+  mimetype: string;
+  observationsCount: number;
+  size: number;
+};
 
-  type FullProjectExport = {
-    id: number;
-    createdAt: Date;
-    projectId: number;
-    mimetype: string;
-    type: ExportType;
-    observationsCount: number;
-    startDate: Date | null;
-    endDate: Date | null;
-    status: ExportStatus;
-    userId: number;
-    user: {
-      id: number;
-      email: string | null;
-      name: string | null;
-    } | null;
-  };
+export interface ProjectFieldResponse extends Omit<
+  SmallProjectField,
+  "projectId"
+> {}
 
-  interface DynamicFieldsResponse {
-    dynamicFields: FullDynamicProjectField[];
-  }
+export interface FullProject extends Project {
+  id: number;
+  name: string;
+  createdAt: string | Date;
+  authorCanDelockObservations: boolean;
+  ownerCanDelockObservations: boolean;
+  contributorsCanReadAllObservations: boolean;
+  contributorsCanExport: boolean;
+  fields: SmallProjectField[];
+  dynamicFields: Omit<DynamicProjectField, "projectId">[];
+  observations: Observation[];
+  tags: Tag[];
+  observationCount: number;
+}
 
-  interface ProjectExportsResponse {
-    projectExports: {
-      page: FullProjectExport[];
-      generating: FullProjectExport[];
-      total: number;
-    };
-    storageUsage: number;
-    storageLimit: number;
-  }
+export interface FullImage extends Omit<
+  Omit<Omit<ImageUpload, "filePath">, "isS3">,
+  "observationId"
+> {}
 
-  type ExportMeta = {
-    filePath: string;
-    isS3: boolean;
-    mimetype: string;
-    observationsCount: number;
-    size: number;
-  };
+export type NewDynamicField = {
+  label: string;
+  field0Id: number;
+  field1Id: number;
+  operator: FieldOperator;
+};
 
-  interface ProjectFieldResponse extends Omit<SmallProjectField, "projectId"> {}
+export interface CMSInputProps {
+  type: string;
+  name: string;
+  placeholder: string;
+  step?: number;
+}
 
-  interface FullProject extends Project {
-    id: number;
-    name: string;
-    createdAt: string | Date;
-    authorCanDelockObservations: boolean;
-    ownerCanDelockObservations: boolean;
-    contributorsCanReadAllObservations: boolean;
-    contributorsCanExport: boolean;
-    fields: SmallProjectField[];
-    dynamicFields: Omit<DynamicProjectField, "projectId">[];
-    observations: Observation[];
-    tags: Tag[];
-    observationCount: number;
-  }
+export interface CMSCheckboxProps {
+  type: "checkbox";
+  name: string;
+  label: string;
+  checked: boolean;
+}
 
-  interface FullImage extends Omit<
-    Omit<Omit<ImageUpload, "filePath">, "isS3">,
-    "observationId"
-  > {}
+export interface CMSTextAreaProps {
+  name: string;
+}
 
-  type NewDynamicField = {
-    label: string;
-    field0Id: number;
-    field1Id: number;
-    operator: FieldOperator;
-  };
+export interface CMSMultipleChoiceProps {
+  name: string;
+  choices: string[];
+}
 
-  interface CMSInputProps {
-    type: string;
-    name: string;
-    placeholder: string;
-    step?: number;
-  }
+export interface CMSImageProps {
+  label: string;
+}
 
-  interface CMSCheckboxProps {
-    type: "checkbox";
-    name: string;
-    label: string;
-    checked: boolean;
-  }
+export interface CMSImagesProps {
+  label: string;
+}
 
-  interface CMSTextAreaProps {
-    name: string;
-  }
+export interface CMSInput {
+  field: NewProjectField & { id: number };
+  props:
+    | CMSInputProps
+    | CMSCheckboxProps
+    | CMSMultipleChoiceProps
+    | CMSTextAreaProps
+    | CMSImageProps
+    | CMSImagesProps;
+}
 
-  interface CMSMultipleChoiceProps {
-    name: string;
-    choices: string[];
-  }
-
-  interface CMSImageProps {
-    label: string;
-  }
-
-  interface CMSImagesProps {
-    label: string;
-  }
-
-  interface CMSInput {
-    field: NewProjectField & { id: number };
-    props:
-      | CMSInputProps
-      | CMSCheckboxProps
-      | CMSMultipleChoiceProps
-      | CMSTextAreaProps
-      | CMSImageProps
-      | CMSImagesProps;
-  }
-
+declare global {
   interface Window {
     electronAPI?: any;
   }
-
-  interface TokenResponse {
-    token: string;
-  }
-
-  interface IScrollshotSettingInput {
-    label: string;
-    help: string;
-    type: "number" | "float";
-    name: string;
-    step?: number;
-  }
-
-  interface Breadcrumb {
-    url: string;
-    text: string;
-  }
-
-  type Square = [x: number, y: number, w: number, h: number];
-  type SquareWithZoom = {
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-    h: number;
-  };
-
-  type ImageChangeType = "text" | "line" | "box";
-  type ImageChange = {
-    id: number;
-    type: ImageChangeType;
-    applied: boolean;
-    component: TextBox | Box | Line;
-  };
-  type ImageChanges = ImageChange[];
-
-  type ImageEditorComponent = SquareWithZoom & {
-    id: number;
-  };
-
-  type Box = ImageEditorComponent & {
-    fillColor: string;
-  };
-
-  type Line = ImageEditorComponent & {
-    color: string;
-    width: number;
-  };
-
-  type TextBox = {
-    id: number;
-    text: string;
-    position: [number, number];
-    zoom: number;
-    size: number;
-    color: string;
-    bgcolor: string | undefined;
-    minWidth: number;
-    minHeight: number;
-  };
-
-  interface QueryParamOptions<T> {
-    name: string;
-    event: H3Event;
-    defaultValue?: T;
-    parse: (value: string) => T;
-    validate: (parsed: T) => boolean;
-    required?: boolean;
-  }
-
-  // interface IProjectAccess {
-  //   role: string;
-  //   project: {
-  //     id: number;
-  //   };
-  // }
-
-  type NewProjectFieldDraft = Omit<Omit<NewProjectField, "type">, "index"> & {
-    type: FieldType | undefined;
-  };
-
-  interface DropDownConfig {
-    choices: string[];
-  }
-
-  type NewProjectBody = InferType<typeof NewProjectSchema>;
-  type NewProjectField = InferType<typeof NewProjectFieldSchema>;
-  type SignInBody = InferType<typeof SignInRequestSchema>;
-  type SignUpBody = InferType<typeof SignUpRequestSchema>;
-  type DynamicFieldsConfig = {
-    [operator in FieldOperator]: {
-      pairs: Array<[FieldType, FieldType]>;
-    };
-  };
-
-  type Collaborator = {
-    createdAt: Date | string;
-    role: string;
-    nameInProject: string;
-    user_id: number;
-    project_id: number;
-    user_email: string | null;
-    user_name: string | null;
-  };
-
-  type Tag = {
-    id: number;
-    name: string;
-    projectId: number;
-    createdById: number | null;
-    project: { id: number; name: string }; // pick relevant project fields
-    observations: Array<{ id: number; data: string }>; // pick relevant observation fields
-    createdBy: { id: number; email: string } | null;
-  };
-
-  interface ObservationFilterConfigs {
-    [key: string]: ObservationFilterConfig;
-  }
-
-  interface ObservationFilterConfig {
-    label: string;
-    filter: "drafts" | "published" | "all";
-    ownership: "me" | "everyone";
-  }
-
-  type ExportType = (typeof exportTypeEnum.enumValues)[number];
-  type ExportStatus = (typeof exportStatusEnum.enumValues)[number];
-  type FieldOperator = (typeof fieldOperatorEnum.enumValues)[number];
-  type ProjectRole = (typeof projectRoleEnum.enumValues)[number];
-  type FieldType = (typeof fieldTypeEnum.enumValues)[number];
-  type ExportProjectParams = {
-    startDate: Date;
-    endDate: Date;
-    exportType: ExportType;
-    includeTags: Boolean;
-  };
-
-  type ExportProjectPayload = InferType<typeof ExportProjectSchema>;
-
-  type Transaction = PgTransaction<
-    PostgresJsQueryResultHKT,
-    typeof schema,
-    ExtractTablesWithRelations<typeof schema>
-  >;
-
-  type FullObservation = Pick<
-    typeof observations.$inferSelect,
-    | "id"
-    | "createdAt"
-    | "data"
-    | "isDraft"
-    | "projectId"
-    | "updatedAt"
-    | "uploadInProgress"
-    | "userId"
-  >;
-
-  type SmallProjectField = Pick<
-    typeof projectFields.$inferSelect,
-    | "choices"
-    | "createdAt"
-    | "id"
-    | "index"
-    | "label"
-    | "projectId"
-    | "required"
-    | "type"
-  >;
-
-  type FullDynamicProjectField = Pick<
-    typeof dynamicProjectFields.$inferSelect,
-    | "id"
-    | "field0Id"
-    | "field1Id"
-    | "createdAt"
-    | "operator"
-    | "label"
-    | "projectId"
-  >;
-
-  type SmallProject = Omit<FullProject, "observations" | "tags"> & {
-    tags: { id: number; name: string }[];
-  };
-
-  type GetObservationsResponse = {
-    observations: FullObservation[];
-    total: number;
-    totalDraft: number;
-  };
 }
+
+export interface IScrollshotSettingInput {
+  label: string;
+  help: string;
+  type: "number" | "float";
+  name: string;
+  step?: number;
+}
+
+export interface Breadcrumb {
+  url: string;
+  text: string;
+}
+
+export type Square = [x: number, y: number, w: number, h: number];
+export type SquareWithZoom = {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+};
+
+export type ImageChangeType = "text" | "line" | "box";
+export type ImageChange = {
+  id: number;
+  type: ImageChangeType;
+  applied: boolean;
+  component: TextBox | Box | Line;
+};
+export type ImageChanges = ImageChange[];
+
+export type ImageEditorComponent = SquareWithZoom & {
+  id: number;
+};
+
+export type Box = ImageEditorComponent & {
+  fillColor: string;
+};
+
+export type Line = ImageEditorComponent & {
+  color: string;
+  width: number;
+};
+
+export type TextBox = {
+  id: number;
+  text: string;
+  position: [number, number];
+  zoom: number;
+  size: number;
+  color: string;
+  bgcolor: string | undefined;
+  minWidth: number;
+  minHeight: number;
+};
+
+export interface QueryParamOptions<T> {
+  name: string;
+  event: H3Event;
+  defaultValue?: T;
+  parse: (value: string) => T;
+  validate: (parsed: T) => boolean;
+  required?: boolean;
+}
+
+export enum AuthSource {
+  PASSWORD = "PASSWORD",
+  SAML = "SAML",
+}
+
+// export interface IProjectAccess {
+//   role: string;
+//   project: {
+//     id: number;
+//   };
+// }
+
+export type NewProjectFieldDraft = Omit<
+  Omit<NewProjectField, "type">,
+  "index"
+> & {
+  type: FieldType | undefined;
+};
+
+export interface DropDownConfig {
+  choices: string[];
+}
+
+export type NewProjectBody = InferType<typeof NewProjectSchema>;
+export type NewProjectField = InferType<typeof NewProjectFieldSchema>;
+export type SignInBody = InferType<typeof SignInRequestSchema>;
+export type SignUpBody = InferType<typeof SignUpRequestSchema>;
+export type DynamicFieldsConfigT = {
+  [operator in FieldOperator]: {
+    pairs: Array<[FieldType, FieldType]>;
+  };
+};
+
+export type Collaborator = {
+  createdAt: Date | string;
+  role: string;
+  nameInProject: string;
+  user_id: number;
+  project_id: number;
+  user_email: string | null;
+  user_name: string | null;
+};
+
+export type Tag = {
+  id: number;
+  name: string;
+  projectId: number;
+  createdById: number | null;
+  project: { id: number; name: string }; // pick relevant project fields
+  observations: Array<{ id: number; data: string }>; // pick relevant observation fields
+  createdBy: { id: number; email: string } | null;
+};
+
+export interface ObservationFilterConfigs {
+  [key: string]: ObservationFilterConfig;
+}
+
+export interface ObservationFilterConfig {
+  label: string;
+  filter: "drafts" | "published" | "all";
+  ownership: "me" | "everyone";
+}
+
+export type ExportType = (typeof exportTypeEnum.enumValues)[number];
+export type ExportStatus = (typeof exportStatusEnum.enumValues)[number];
+export type FieldOperator = (typeof fieldOperatorEnum.enumValues)[number];
+export type ProjectRole = (typeof projectRoleEnum.enumValues)[number];
+export type FieldType = (typeof fieldTypeEnum.enumValues)[number];
+export type ExportProjectParams = {
+  startDate: Date;
+  endDate: Date;
+  exportType: ExportType;
+  includeTags: Boolean;
+};
+
+export type ExportProjectPayload = InferType<typeof ExportProjectSchema>;
+
+export type Transaction = PgTransaction<
+  PostgresJsQueryResultHKT,
+  typeof schema,
+  ExtractTablesWithRelations<typeof schema>
+>;
+
+export type FullObservation = Pick<
+  typeof observations.$inferSelect,
+  | "id"
+  | "createdAt"
+  | "data"
+  | "isDraft"
+  | "projectId"
+  | "updatedAt"
+  | "uploadInProgress"
+  | "userId"
+>;
+
+export type SmallProjectField = Pick<
+  typeof projectFields.$inferSelect,
+  | "choices"
+  | "createdAt"
+  | "id"
+  | "index"
+  | "label"
+  | "projectId"
+  | "required"
+  | "type"
+>;
+
+export type FullDynamicProjectField = Pick<
+  typeof dynamicProjectFields.$inferSelect,
+  | "id"
+  | "field0Id"
+  | "field1Id"
+  | "createdAt"
+  | "operator"
+  | "label"
+  | "projectId"
+>;
+
+export type SmallProject = Omit<FullProject, "observations" | "tags"> & {
+  tags: { id: number; name: string }[];
+};
+
+export type GetObservationsResponse = {
+  observations: FullObservation[];
+  total: number;
+  totalDraft: number;
+};
+
+export interface TokenUserData {
+  id: number;
+  email: string | null;
+  name: string;
+  authSource?: string;
+}
+
+export type SAMLSessionData = {
+  saml: { nameID: string; sessionIndex: string; inResponseTo: string };
+};

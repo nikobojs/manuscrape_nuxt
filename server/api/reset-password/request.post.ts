@@ -1,10 +1,5 @@
 import yup from "yup";
 import { captureException } from "@sentry/node";
-import {
-  createResetPasswordToken,
-  generateResetPasswordToken,
-  userCanRequestPasswordResetToken,
-} from "~~/server/utils/resetPasswordTokens";
 
 const bodySchema = yup
   .object({

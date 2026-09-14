@@ -1,6 +1,6 @@
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);

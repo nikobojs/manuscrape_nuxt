@@ -1,238 +1,170 @@
-import jwt from "jsonwebtoken";
 import type { H3Event, EventHandlerRequest } from "h3";
-import type { CookieOptions } from "nuxt/app";
 import { getRequestBeginTime, parseIntParam } from "./request";
 import { captureException } from "@sentry/node";
+import { getHeader, createError, getRouterParams } from "h3";
+import { getObservationById } from "./observations";
+import { getFullUserById } from "./users";
+import jwt from "jsonwebtoken";
+const { sign, verify } = jwt;
 
-const config = useRuntimeConfig();
-type SAMLSessionData = {
-  saml: { nameID: string; sessionIndex: string; inResponseTo: string };
-};
-
-export function updateAuthCookie(
-  event: H3Event<EventHandlerRequest>,
-  token: string | null, // set to null if log out
-  expiresAt?: Date | undefined,
-): void {
-  if (!token) {
-    token = "";
-    expiresAt = new Date(0);
-  }
-
-  const flags: CookieOptions = {
-    expires: expiresAt,
-    httpOnly: true,
-    domain: config.cookieDomain,
-    sameSite: "lax",
-    secure: config.cookieSecure,
-    path: "/",
-  };
-
-  setCookie(event, "authcookie", token, flags);
-}
-
-export function resetAuthCookie(event: H3Event<EventHandlerRequest>) {
-  // return deleteCookie(event, "authcookie");
-  console.log('resetting auth cookie', event.method, event.path)
-  return updateAuthCookie(event, null);
-}
-
-export async function logoutUser(
-  event: H3Event<EventHandlerRequest>,
-  user: {
-    authSource: AuthSource.PASSWORD | AuthSource.SAML;
-    email: string | null;
-  },
-) {
+/**
+ * Get user from session, falling back to JWT token in Authorization header (if enabled)
+ * This allows tests to use JWT tokens while production uses cookie sessions
+ */
+export async function getUserFromSession(
+  event: H3Event,
+): Promise<TokenUserData | null> {
   const config = useRuntimeConfig();
 
-  // define relayState / log out final redirect url
-  const relayState = encodeURIComponent(
-    config.public.baseUrl + "/login?sign_out=1",
-  );
+  // first, try to get user from cookie session (nuxt-auth-utils auto-import)
+  try {
+    const session = await getUserSession(event);
+    if (session.user) {
+      return session.user as TokenUserData;
+    }
+  } catch (_e) {
+    // session might not exist, that's fine - we'll try token auth
+    // console.debug("Session check failed, trying token auth:", e);
+  }
 
-  const session = await useSession<SAMLSessionData>(event, {
-    password: config.saml.sessionSecret,
-  });
+  // Fallback: Check for JWT token in Authorization header for tests
+  if (config.vitest || config.tokenApiEnabled) {
+    if (!config.vitest) console.warn("Using tokens meant for testing only");
+    try {
+      const authHeader = getHeader(event, "Authorization");
+      if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
+        if (token) {
+          const tokenSecret = config.tokenSecret;
+          if (!tokenSecret) {
+            throw new Error("TOKEN_SECRET is not configured");
+          }
 
-  const samlNameId = session.data?.saml?.nameID as string | undefined;
-  const sessionIndex = session.data?.saml?.sessionIndex as string | undefined;
+          const userData = verify(token, tokenSecret) as TokenUserData;
+          if (userData && userData.id) {
+            return userData;
+          } else {
+            console.error("userData looks wrong");
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Token verification failed, error below");
+      console.error(e);
+    }
+  }
 
-  // clear app server session no matter what
-  await session.clear();
+  return null;
+}
 
-  console.log("Logging out the following user:", user);
-  // ensure user has authSource
-  if (!user.authSource) {
-    const errMsg = "Unable to logout, passed user has no `auth_source`";
-    console.error(errMsg, { user });
-    captureException(errMsg);
+export async function requireUserFromSession(
+  event: H3Event,
+): Promise<{ user: TokenUserData; loggedInAt: number }> {
+  const user = await getUserFromSession(event);
+  if (!user) {
     throw createError({
-      statusCode: 500,
-      statusMessage: errMsg,
+      statusCode: 401,
+      statusMessage: "Unauthorized",
     });
   }
 
-  // always clear auth
-  resetAuthCookie(event);
-  event.context.user = null;
-
-  if (user.authSource === "PASSWORD") {
-    // if auth source is LOCAL (email/password), just delete the cookies and move on
-    console.log("[LOGOUT] Resetting the auth cookie for user", user);
-    return {};
-  } else if (user.authSource === "SAML") {
-    // TODO: extract as fn + move saml logout logic into server/util/saml.ts
-    // if auth source is SAML, delete the cookies AND sign out of the SAML IdP
-    const samlStrategy = getSamlStrategy();
-
-    // log error if samlStrategy._saml is not defined
-    if (!samlStrategy?._saml) {
-      const err = new Error(
-        "[SAML] Logout: User auth source is SAML but saml strategy is not initialized correctly",
-      );
-      console.error(err);
-      captureException(err);
-      throw createError({
-        message: err.message,
-        status: 500,
-      });
-    }
-
-    if (!config.saml?.identifierFormat) {
-      const err = new Error(
-        "[SAML] Logout: User auth source is SAML but saml identifier format is undefined",
-      );
-      console.error(err);
-      captureException(err);
-      throw createError({
-        message: err.message,
-        status: 500,
-      });
-    }
-
-    if (!samlNameId) {
-      const err = new Error(
-        "[SAML] Logout: User auth source is SAML but has no samlNameId",
-      );
-      console.error(err);
-      captureException(err);
-      throw createError({
-        message: err.message,
-        status: 500,
-      });
-    }
-
-    if (!sessionIndex) {
-      const err = new Error(
-        "[SAML] Logout: User auth source is SAML but sessionIndex is nodefined",
-      );
-      console.error(err);
-      captureException(err);
-      throw createError({
-        message: err.message,
-        status: 500,
-      });
-    }
-
-    // log out for real if using saml
-    if (samlStrategy._saml && config?.saml?.identifierFormat) {
-      try {
-        const logoutRequestXml =
-          await samlStrategy!._saml?._generateLogoutRequest({
-            nameID: samlNameId,
-            nameIDFormat: config?.saml?.identifierFormat,
-            sessionIndex: sessionIndex,
-          });
-
-        // NOTE: this returns 500 schema could not be validated on the first logout request
-        // const patchedXml = logoutRequestXml.replace(
-        //   /<samlp:LogoutRequest([^>]*)>/,
-        //   `<samlp:LogoutRequest$1 InResponseTo="${inResponseTo}">`,
-        // );
-
-        // base64-encode WITHOUT deflation (POST binding requirement)
-        // const samlRequest = Buffer.from(patchedXml, "utf8").toString("base64");
-        const samlRequest = Buffer.from(logoutRequestXml, "utf8").toString(
-          "base64",
-        );
-
-        // return the request the client should do from their device
-        return {
-          logoutUrl: config?.saml?.logoutUrl,
-          SAMLRequest: samlRequest,
-          RelayState: relayState,
-        };
-      } catch (e) {
-        console.error(
-          "[SAML] Unable to get logout url from saml identity provider",
-          {
-            user,
-          },
-        );
-        console.error(e);
-        captureException(e);
-      }
-    } else {
-      const errMsg =
-        '[SAML] Some arguments was missing during saml logout - error is logged above this line"';
-      captureException(errMsg);
-      console.error(errMsg);
-    }
-  } else {
-    const errMsg = `[LOGOUT] The AuthSource '${user.authSource}' is not recognized!`;
-    captureException(errMsg);
-    console.error(errMsg);
-  }
+  return {
+    user: user,
+    loggedInAt: Date.now(),
+  };
 }
 
+/**
+ * Create a JWT token for a user (used for tests only)
+ */
+export function createTokenForUser(user: TokenUserData): string {
+  const config = useRuntimeConfig();
+  const tokenSecret = config.tokenSecret;
+  if (!tokenSecret) {
+    throw new Error("TOKEN_SECRET is not configured for JWT token generation");
+  }
+
+  return sign(
+    {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      authSource: user.authSource,
+    },
+    tokenSecret,
+    { expiresIn: "180d" }, // Match the session lifetime
+  );
+}
+
+/**
+ * Authorize a user by setting their session
+ */
 export async function authorize(
   event: H3Event,
   user: User,
   samlSession: SAMLSessionData["saml"] | null,
-): Promise<{ token: string }> {
-  const expires = new Date(new Date().setDate(new Date().getDate() + 365));
-  event.context.user = user;
-  const token = jwt.sign({ id: user.id }, config.tokenSecret);
+): Promise<{ success: boolean; token?: string }> {
+  // Convert user to session data format expected by nuxt-auth-utils
+  const sessionData = {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      authSource: (user as any).authSource,
+    } as CurrentUser,
+    // Include SAML session data if present
+    ...(samlSession ? { saml: samlSession } : {}),
+  };
+  await setUserSession(event, sessionData);
 
-  updateAuthCookie(event, token, expires);
-
-  // if logging in using saml, add samlSession data to server-side session
-  if (samlSession) {
-    console.log("Adding saml session data", { samlSession });
-    // add data to session
-    const config = useRuntimeConfig();
-    const session = await useSession<SAMLSessionData>(event, {
-      password: config.saml.sessionSecret,
+  // Generate JWT token for test compatibility - tests can use Authorization headers
+  // This ensures that tests can simulate different users with different tokens
+  let token: string | undefined;
+  try {
+    token = createTokenForUser({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      authSource: (user as any).authSource,
     });
-    await session.update({ saml: samlSession });
-  } else {
-    console.log("No saml data provided, no session created");
+    console.debug(
+      "Generated JWT token for user",
+      user.id,
+      "for test compatibility",
+    );
+  } catch (e) {
+    console.error(
+      "Could not generate JWT token (TOKEN_SECRET not configured):",
+      e,
+    );
+    captureException(e);
+    setResponseStatus(event, 500);
+    return { success: false };
   }
 
-  return { token };
+  return { success: true, token };
 }
 
-export async function requireUser(
+/**
+ * Get current user from session - wrapper around requireUserSession
+ */
+export async function getCurrentUser(
   event: H3Event<EventHandlerRequest>,
 ): Promise<User> {
-  if (!event.context.user?.id) {
-    throw createError({
-      statusMessage: "Invalid auth token value",
-      statusCode: 401,
-    });
-  }
+  const session = await requireUserSession(event);
+  return session.user as User;
+}
 
-  // EXPERIMENT: remove this weird block of code
-  // if (!event.context.user?.email) {
-  //   // TODO: why is email not kept between requests?
-  //   console.warn(
-  //     "refetching user as only id missing in H3Event context (FIXME)",
-  //   );
-  //   const user = await getFullUserById(event.context.user.id);
-  //   event.context.user = user;
-  // }
-  return event.context.user as User;
+// Backward compatibility alias for existing API endpoints
+export const requireUser = getCurrentUser;
+
+/**
+ * Logout user by clearing their session
+ */
+export async function logoutUser(event: H3Event, user: any): Promise<any> {
+  // Clear the session
+  await clearUserSession(event);
+  return { success: true };
 }
 
 export async function ensureObservationOwnership(
@@ -249,14 +181,14 @@ export async function ensureObservationOwnership(
 
 export async function ensureURLResourceAccess(
   event: H3Event<EventHandlerRequest>,
-  user: CurrentUser,
+  user: CurrentUser | User | TokenUserData,
   allowedRoles: ProjectRole[] = ["OWNER", "INVITED"],
 ): Promise<void> {
   // return early if user is not logged in
   if (!user) {
     const err = createError({
       statusCode: 403,
-      statusMessage: "User does not exist",
+      statusMessage: "User does not exist awiduyawdiuyawdiuy",
     });
     captureException(err);
     throw err;
@@ -265,15 +197,24 @@ export async function ensureURLResourceAccess(
   const params = getRouterParams(event);
   let projectIdInt: undefined | number;
   let contributorsCanReadAllObservations = false;
+  let role: ProjectRole = "INVITED"; // TODO: fix this weird default
+
+  // If user doesn't have projectAccess, we need to fetch the full user with project access
+  let fullUser: CurrentUser;
+  if ("projectAccess" in user && Array.isArray(user.projectAccess)) {
+    fullUser = user as CurrentUser;
+  } else {
+    // Fetch full user with project access
+    fullUser = (await getFullUserById(user.id)) as CurrentUser;
+  }
 
   // validate params.projectId if it exists
-  let role: ProjectRole = "INVITED"; // TODO: fix this weird default
   if (typeof params?.projectId === "string") {
     // ensure projectId is parsed to integer
     projectIdInt = parseIntParam(params.projectId);
 
     // validate params.projectId against projectAccess.projectId and projectAccess.role
-    const projectAccess = user.projectAccess.find(({ project, role }) => {
+    const projectAccess = fullUser.projectAccess.find(({ project, role }) => {
       return project.id === projectIdInt && allowedRoles.includes(role);
     });
 
@@ -315,7 +256,7 @@ export async function ensureURLResourceAccess(
     const isOwner = role === "OWNER";
     if (
       !isOwner &&
-      user.id !== observation.userId &&
+      fullUser.id !== observation.userId &&
       !contributorsCanReadAllObservations
     ) {
       throw createError({
@@ -330,8 +271,12 @@ export async function ensureURLResourceAccess(
 export async function delayedResponse(
   event: H3Event,
   response: Record<string, any> | (() => Record<string, any>),
-  responseTimeMs: number = config.authResponseTime,
+  responseTimeMs?: number | undefined,
 ): Promise<Record<string, any>> {
+  const config = useRuntimeConfig();
+  if (typeof responseTimeMs !== "number" || isNaN(responseTimeMs)) {
+    responseTimeMs = config.authResponseTime;
+  }
   const startTime = getRequestBeginTime(event);
   const alreadyTookMs = Date.now() - startTime;
 
@@ -358,8 +303,12 @@ export async function delayedError(
   statusCode: number,
   statusMessage: string,
   _report: boolean = false,
-  responseTimeMs: number = config.authResponseTime,
+  responseTimeMs?: number | undefined,
 ) {
+  const config = useRuntimeConfig();
+  if (typeof responseTimeMs !== "number" || isNaN(responseTimeMs)) {
+    responseTimeMs = config.authResponseTime;
+  }
   captureException(new Error(statusMessage));
   return await delayedResponse(
     event,

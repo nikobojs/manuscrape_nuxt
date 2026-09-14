@@ -1,11 +1,4 @@
 import * as yup from "yup";
-import { FieldTypeValues } from "#shared/utils/observationFields";
-import { createProjectAccess } from "../utils/projectAccess";
-import { createProject } from "../utils/project";
-import {
-  createProjectFields,
-  updateProjectFieldIndexes,
-} from "../utils/projectFields";
 
 export const NewProjectFieldSchema = yup
   .object({
@@ -26,7 +19,7 @@ export const NewProjectSchema = yup
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
+  const { user: _user } = await requireUserFromSession(event);
 
   const body = await readBody(event);
   const newProject = await NewProjectSchema.validate(body);
@@ -55,6 +48,7 @@ export default safeResponseHandler(async (event) => {
       statusCode: 400,
     });
   }
+  const user = await getFullUserById(_user.id);
   const createdProject = await createProject({
     name: newProject.name,
     authorId: user.id,

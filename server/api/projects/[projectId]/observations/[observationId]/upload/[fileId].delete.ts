@@ -1,12 +1,7 @@
-import {
-  deleteFileUpload,
-  getFileUploadById,
-} from "~~/server/utils/fileUploads";
-
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
+  const { user } = await requireUserFromSession(event);
   const params = event.context.params;
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, user);
   const observationId = parseIntParam(params?.observationId);
   const fileId = parseIntParam(params?.fileId);
 

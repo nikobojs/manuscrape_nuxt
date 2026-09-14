@@ -1,13 +1,8 @@
 import { numberBetween } from "#shared/utils/validate";
-import {
-  getProjectExportsByProjectId,
-  getProjectExportsGenerating,
-  getProjectExportsPaginated,
-} from "~~/server/utils/projectExports";
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);

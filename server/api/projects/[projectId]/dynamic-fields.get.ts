@@ -1,8 +1,6 @@
-import { getDynamicFieldsByProjectIds } from "~~/server/utils/dynamicFields";
-
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
   const projectId = parseIntParam(event.context.params?.projectId);
 
   const dynamicFields = await getDynamicFieldsByProjectIds([projectId], {

@@ -1,9 +1,4 @@
-import {
-  getImageUploadById,
-  getImageUploadByObsAndField,
-} from "~~/server/utils/imageUploads";
 import * as yup from "yup";
-import { requireProjectFieldById } from "~~/server/utils/projectFields";
 import { captureException } from "@sentry/node";
 
 const queryDto = yup
@@ -13,12 +8,12 @@ const queryDto = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user);
   const params = event.context.params;
   const _query = getQuery(event);
   const query = await queryDto.validate(_query);
   const projectFieldId = parseIntParam(query.projectFieldId);
-  await ensureURLResourceAccess(event, event.context.user);
   const observationId = parseIntParam(params?.observationId);
   const imageUploadId = parseIntParam(params?.imgId);
 

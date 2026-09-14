@@ -102,7 +102,7 @@ export function useImageEditor(
       imageUploadId.value = newImgUploadId;
     }
     const v = Date.now();
-    console.log("LAST RELOAD WAS", lastReload.value, "AND IS NOW", v);
+    // console.log("LAST RELOAD WAS", lastReload.value, "AND IS NOW", v);
     lastReload.value = v;
     loadImage();
   }

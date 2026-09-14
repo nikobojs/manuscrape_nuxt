@@ -96,7 +96,7 @@
 </template>
 
 <script lang="ts" setup>
-import { formatMb } from "#imports";
+// import { formatMb } from "#imports";
 
 const props = defineProps({
   observation: {

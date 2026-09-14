@@ -111,7 +111,6 @@ const selectedProject = computed<FullProject | undefined>(() => {
 
 async function onProjectChange(_project: FullProject) {
   if (_project && _project.id !== selectedProjectId.value) {
-    console.log("header navigating to project!", _project);
     await navigateTo(`/projects/${_project.id}`, { external: true });
   }
 }
@@ -128,10 +127,12 @@ function getUserLabel(user?: CurrentUser) {
   else return "Undefined user";
 }
 
-const settingsItems: DropdownItem[][] = [
+const userLabel = computed(() => getUserLabel(user.value));
+
+const settingsItems = computed<DropdownItem[][]>(() => [
   [
     {
-      label: getUserLabel(user.value),
+      label: userLabel.value,
       disabled: true,
       slot: "email",
       class: "contents",
@@ -151,5 +152,5 @@ const settingsItems: DropdownItem[][] = [
       },
     },
   ],
-];
+]);
 </script>

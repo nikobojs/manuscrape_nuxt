@@ -12,6 +12,7 @@ import {
   getObservations,
   testObservations,
   patchProject,
+  countExportedObservations,
 } from "./helpers";
 
 describe("Observations", () => {
@@ -246,7 +247,7 @@ describe("Observations", () => {
         });
         expect(inviteRes.status).toBe(202);
 
-        // create observation and publish it
+        // create observation
         const createObsRes0 = await createObservation(tokenB, project.id);
         expect(createObsRes0.status).toBe(201);
         const createObsJson0 = await createObsRes0.json();
@@ -293,6 +294,89 @@ describe("Observations", () => {
         expect(observationJson.observations.length).toBe(
           testObservations.length + 1,
         );
+      }, otherEmail);
+    });
+  });
+
+  test("user can fetch observation count endpoint", async () => {
+    await withTempProject(async (user, project, observations, token) => {
+      expect(observations.length).greaterThan(0);
+      const countRes = await countExportedObservations(token, project.id, {
+        includeTags: true,
+        startDate: "1970-01-01",
+        endDate: "3333-09-01",
+        type: "NVIVO",
+      });
+      expect(countRes.status).toBe(200);
+      const json = await countRes.json();
+      expect(Object.keys(json)).toContain("observationCount");
+      expect(Object.keys(json)).toContain("imageCount");
+      expect(Object.keys(json)).toContain("uploadsCount");
+      expect(json["observationCount"]).toEqual(observations.length);
+    });
+  });
+
+  test("uninvited user cannot fetch observation count", async () => {
+    const otherEmail = freshEmail();
+    await withTempProject(async (_user, project, observations, tokenA) => {
+      await withTempUser(async (_userB, tokenB) => {
+        expect(observations.length).greaterThan(0);
+        const countResA = await countExportedObservations(tokenA, project.id, {
+          includeTags: true,
+          startDate: "1970-01-01",
+          endDate: "3333-09-01",
+          type: "NVIVO",
+        });
+        const countResB = await countExportedObservations(tokenB, project.id, {
+          includeTags: true,
+          startDate: "1970-01-01",
+          endDate: "3333-09-01",
+          type: "NVIVO",
+        });
+        expect(countResA.status).toBe(200);
+        expect(countResB.status).toBe(403);
+        const jsonA = await countResA.json();
+        const jsonB = await countResB.json();
+        expect(Object.keys(jsonA)).toContain("observationCount");
+        expect(Object.keys(jsonA)).toContain("imageCount");
+        expect(Object.keys(jsonA)).toContain("uploadsCount");
+        expect(jsonA["observationCount"]).toEqual(observations.length);
+      }, otherEmail);
+    });
+  });
+
+  test("invited user can fetch observation count", async () => {
+    const otherEmail = freshEmail();
+    await withTempProject(async (_user, project, observations, tokenA) => {
+      await withTempUser(async (_userB, tokenB) => {
+        const inviteRes = await inviteToProject(tokenA, project.id, {
+          email: otherEmail,
+        });
+        expect(inviteRes.status).toBe(202);
+        const countResA = await countExportedObservations(tokenA, project.id, {
+          includeTags: true,
+          startDate: "1970-01-01",
+          endDate: "3333-09-01",
+          type: "NVIVO",
+        });
+        const countResB = await countExportedObservations(tokenB, project.id, {
+          includeTags: true,
+          startDate: "1970-01-01",
+          endDate: "3333-09-01",
+          type: "NVIVO",
+        });
+        expect(countResA.status).toBe(200);
+        expect(countResB.status).toBe(200);
+        const jsonA = await countResA.json();
+        const jsonB = await countResB.json();
+        expect(Object.keys(jsonA)).toContain("observationCount");
+        expect(Object.keys(jsonA)).toContain("imageCount");
+        expect(Object.keys(jsonA)).toContain("uploadsCount");
+        expect(jsonA["observationCount"]).toEqual(observations.length);
+        expect(Object.keys(jsonB)).toContain("observationCount");
+        expect(Object.keys(jsonB)).toContain("imageCount");
+        expect(Object.keys(jsonB)).toContain("uploadsCount");
+        expect(jsonB["observationCount"]).toEqual(observations.length);
       }, otherEmail);
     });
   });

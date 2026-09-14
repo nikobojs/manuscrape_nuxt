@@ -1,7 +1,5 @@
 import * as yup from "yup";
 import type { NuxtError } from "nuxt/app";
-import { getSmallProjects } from "~~/server/utils/project";
-import { createDynamicFields } from "~~/server/utils/dynamicFields";
 
 export const DuplicateProjectSchema = yup
   .object({
@@ -10,8 +8,8 @@ export const DuplicateProjectSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user: _user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, _user, [
     "OWNER",
     "INVITED",
   ]);
@@ -23,6 +21,7 @@ export default safeResponseHandler(async (event) => {
   const body = await readBody(event);
   let { name: newName } = await DuplicateProjectSchema.validate(body);
   newName = newName.trim();
+  const user = await getFullUserById(_user.id)
 
   // get source project we want to duplicate from
   const [sourceProject] = await getSmallProjects([projectId]);

@@ -193,7 +193,6 @@ async function handleSubmitProject() {
       toast.add({
         title: "Project was created successfully.",
       });
-      console.log("closing...");
       props.onClose();
       // navigate to project
       await navigateTo(`/projects/${res.id}`);

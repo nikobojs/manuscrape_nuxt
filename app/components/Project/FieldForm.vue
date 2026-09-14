@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { isMultipleChoice } from "#imports";
+// import { isMultipleChoice } from "#imports";
 
 const _defaultChoices = ref<string[]>([]);
 

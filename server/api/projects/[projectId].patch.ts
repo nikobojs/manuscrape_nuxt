@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import { updateProject } from "~~/server/utils/project";
 
 export const PatchProjectFieldSchema = yup
   .object({
@@ -11,8 +10,8 @@ export const PatchProjectFieldSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);

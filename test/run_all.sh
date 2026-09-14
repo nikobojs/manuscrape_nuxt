@@ -9,6 +9,7 @@ yarn install
 . .env
 
 export LOG_HTTP_REQUESTS=false
+export VITEST=true
 
 echo "> dropping existing database $TEST_DATABASE_URL.."
 eval "$PG_PSQL $PG_DATABASE_ADMIN_URL -c \"DROP DATABASE $TEST_DATABASE_NAME\"" | true;

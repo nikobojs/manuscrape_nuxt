@@ -1,10 +1,4 @@
 import yup from "yup";
-import {
-  getResetPasswordTokenByTokenHash,
-  hashResetPasswordToken,
-  useResetPasswordToken,
-} from "~~/server/utils/resetPasswordTokens";
-import { updateUserPassword } from "~~/server/utils/users";
 
 const querySchema = yup
   .object({

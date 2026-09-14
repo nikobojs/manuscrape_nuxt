@@ -28,14 +28,19 @@ export const useUser = async () => {
           projectAccess.value = res.projectAccess || [];
         } else if (context.response.status === 401) {
           resetUserState();
-          await navigateTo("/login", { replace: true });
+          // Don't use navigateTo on server side - let client handle redirects
+          if (process.client) {
+            await navigateTo("/login", { replace: true });
+          }
         }
       },
       onResponseError: async (context) => {
-        loading.value = false;
         if (context.response.status === 401) {
           resetUserState();
-          await navigateTo("/login", { replace: true });
+          // Don't use navigateTo on server side - let client handle redirects
+          if (process.client) {
+            await navigateTo("/login", { replace: true });
+          }
         }
       },
     });

@@ -1,20 +1,8 @@
-import {
-  ensureExportHasData,
-  type ExportSettings,
-} from "~~/server/utils/projectExports";
-import {
-  createEmptyProjectExport,
-  generateProjectExport,
-  finishedProjectExport,
-  exportErrored,
-} from "~~/server/utils/export";
-import { generateFilename } from "~~/server/utils/export/helpers";
-import { searchObservationIds } from "~~/server/utils/observations";
 import { ExportProjectSchema } from "#shared/schemas/ExportProject";
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);

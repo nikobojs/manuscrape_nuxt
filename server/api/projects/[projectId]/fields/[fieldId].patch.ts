@@ -4,13 +4,6 @@ import {
   isMultipleChoice,
   serializeChoices,
 } from "#shared/utils/observationFields";
-import {
-  getProjectFieldById,
-  getProjectFieldsByProjectIds,
-  renameFieldLabelInObservations,
-  updateProjectField,
-  updateProjectFieldIndexes,
-} from "~~/server/utils/projectFields";
 
 export const PatchProjectFieldSchema = yup
   .object({
@@ -24,8 +17,8 @@ export const PatchProjectFieldSchema = yup
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
 
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);

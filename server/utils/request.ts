@@ -1,40 +1,28 @@
 import type { H3Event } from "h3";
 
+// NOTE: urls beginning with /api are not handled here.
 export function isOpenUrl(event: H3Event): boolean {
-  const openPostUrls = [
-    "/api/user",
-    "/api/auth",
-    "/api/token_auth",
-    "/api/auth/saml/logout",
-    "/api/reset-password/reset",
-    "/api/reset-password/request",
-    "/api/auth/saml/callback",
-    "/api/auth/saml/logout",
-  ];
-  const openGetUrls = [
-    "/user/new",
-    "/forgot-password",
-    "/api/auth/saml/metadata",
-  ];
+  if (event.path.startsWith("/api")) {
+    console.warn(
+      "isOpenUrl was called on an /api route, they are meant to handle themselves. Returning true.",
+    );
+    return true;
+  }
+  const openGetUrls = ["/user/new", "/forgot-password"];
   const openGetUrlsStartWith = [
-    "/api/_nuxt",
     "/_nuxt",
     "/__nuxt",
     "/login",
-    "/api/auth/saml/login",
     "/user/new?",
     "/reset-password",
-    "/api/reset-password",
   ];
-  const isPostRequest = event.node.req.method === "POST";
   const isGetRequest = event.node.req.method === "GET";
   const isOpenUrl =
-    (isGetRequest &&
-      (openGetUrls.includes(event.path) ||
-        !!openGetUrlsStartWith.find((startWith) =>
-          event.path.startsWith(startWith),
-        ))) ||
-    (isPostRequest && openPostUrls.includes(event.path));
+    isGetRequest &&
+    (openGetUrls.includes(event.path) ||
+      !!openGetUrlsStartWith.find((startWith) =>
+        event.path.startsWith(startWith),
+      ));
   return isOpenUrl;
 }
 

@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import { expect } from "vitest";
-import { fetch } from "@nuxt/test-utils";
+import { fetch as _fetch } from "@nuxt/test-utils";
 import { daysInFuture } from "../../shared/utils/datetime";
 import { db as _db } from "../../server/utils/drizzle";
 import {
@@ -26,11 +26,14 @@ const contentTypeJson = {
 };
 
 const authHeader = (token: string): HeadersInit => ({
-  Authentication: token,
+  Authorization: `Bearer ${token}`,
 });
 
+const testBaseUrl = "";
+console.log("> using test base url:", testBaseUrl);
+
 export async function login(json: any): Promise<Response> {
-  const res = await fetch("/api/auth", {
+  const res = await _fetch(`${testBaseUrl}/api/auth`, {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
@@ -41,20 +44,21 @@ export async function login(json: any): Promise<Response> {
 }
 
 export async function signup(json: any): Promise<Response> {
-  const res = await fetch("/api/user", {
+  const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
       ...contentTypeJson,
     },
   });
+  // console.log("SIGNUP RES IS::::::", res);
   return res;
 }
 
 export async function requestResetPasswordEmail(
   email: string,
 ): Promise<Response> {
-  const res = await fetch("/api/reset-password/request", {
+  const res = await _fetch(`${testBaseUrl}/api/reset-password/request`, {
     method: "POST",
     body: JSON.stringify({ email }),
     headers: {
@@ -68,7 +72,7 @@ export async function resetPassword(
   token: string,
   newPassword: string,
 ): Promise<Response> {
-  const res = await fetch("/api/reset-password/reset", {
+  const res = await _fetch(`${testBaseUrl}/api/reset-password/reset`, {
     method: "POST",
     body: JSON.stringify({ token, password: newPassword }),
     headers: {
@@ -84,14 +88,17 @@ export async function patchField(
   fieldId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/fields/${fieldId}`, {
-    method: "PATCH",
-    body: JSON.stringify(json),
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/fields/${fieldId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -100,7 +107,7 @@ export async function createField(
   projectId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/fields`, {
+  const res = await _fetch(`${testBaseUrl}/api/projects/${projectId}/fields`, {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
@@ -116,13 +123,16 @@ export async function deleteField(
   projectId: string | number,
   fieldId: string | number,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/fields/${fieldId}`, {
-    method: "DELETE",
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/fields/${fieldId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -132,14 +142,17 @@ export async function moveField(
   fieldId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/fields/${fieldId}/move`, {
-    method: "PATCH",
-    body: JSON.stringify(json),
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/fields/${fieldId}/move`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -148,8 +161,8 @@ export async function removeCollaborator(
   projectId: string | number,
   userId: string | number,
 ): Promise<Response> {
-  const res = await fetch(
-    `/api/projects/${projectId}/collaborators/${userId}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/collaborators/${userId}`,
     {
       method: "DELETE",
       headers: {
@@ -166,7 +179,7 @@ export async function getProject(
   id: string | number,
 ): Promise<Response> {
   const headers: HeadersInit = token ? authHeader(token) : {};
-  const res = await fetch("/api/projects/" + id, {
+  const res = await _fetch(`${testBaseUrl}/api/projects/` + id, {
     method: "GET",
     headers,
   });
@@ -177,7 +190,7 @@ export async function createProject(
   token: string,
   json: any,
 ): Promise<Response> {
-  const res = await fetch("/api/projects", {
+  const res = await _fetch(`${testBaseUrl}/api/projects`, {
     method: "POST",
     body: JSON.stringify(json),
     headers: {
@@ -193,7 +206,7 @@ export async function patchProject(
   projectId: number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch("/api/projects/" + projectId, {
+  const res = await _fetch(`${testBaseUrl}/api/projects/` + projectId, {
     method: "PATCH",
     body: JSON.stringify(json),
     headers: {
@@ -209,14 +222,17 @@ export async function duplicateProject(
   projectId: number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/duplicate`, {
-    method: "POST",
-    body: JSON.stringify(json),
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/duplicate`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -224,13 +240,33 @@ export async function createObservation(
   token: string,
   projectId: string | number,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/observations`, {
-    method: "POST",
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations`,
+    {
+      method: "POST",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
+  return res;
+}
+
+export async function countExportedObservations(
+  token: string,
+  projectId: string | number,
+  query: Record<string, any>,
+): Promise<Response> {
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/count?${new URLSearchParams(query)}`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
+    },
+  );
   return res;
 }
 
@@ -239,14 +275,17 @@ export async function createDynamicField(
   projectId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/dynamic-fields`, {
-    method: "POST",
-    body: JSON.stringify(json),
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/dynamic-fields`,
+    {
+      method: "POST",
+      body: JSON.stringify(json),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -256,8 +295,8 @@ export async function patchObservation(
   observationId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(
-    `/api/projects/${projectId}/observations/${observationId}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/${observationId}`,
     {
       method: "PATCH",
       body: JSON.stringify(json),
@@ -294,8 +333,8 @@ export async function uploadImageToObservation(
 ): Promise<Response> {
   const formData = new FormData();
   formData.append("file", imageFile);
-  const res = await fetch(
-    `/api/projects/${projectId}/observations/${obsId}/image-uploads?projectFieldId=${fieldId}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/${obsId}/image-uploads?projectFieldId=${fieldId}`,
     {
       method: "PUT",
       body: formData,
@@ -313,8 +352,8 @@ export async function getObservationImage(
   imageUploadId: number,
   fieldId: number,
 ) {
-  const res = await fetch(
-    `/api/projects/${projectId}/observations/${obsId}/image-uploads/${imageUploadId}?projectFieldId=${fieldId}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/${obsId}/image-uploads/${imageUploadId}?projectFieldId=${fieldId}`,
     {
       method: "GET",
       headers: authHeader(token),
@@ -330,8 +369,8 @@ export async function patchCollaborator(
   collaboratorId: string | number,
   json: any,
 ): Promise<Response> {
-  const res = await fetch(
-    `/api/projects/${projectId}/collaborators/${collaboratorId}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/collaborators/${collaboratorId}`,
     {
       method: "PATCH",
       body: JSON.stringify(json),
@@ -345,7 +384,7 @@ export async function patchCollaborator(
 }
 
 export async function getMe(token: string): Promise<Response> {
-  const res = await fetch("/api/user", {
+  const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "GET",
     headers: {
       ...authHeader(token),
@@ -359,18 +398,21 @@ export async function getObservations(
   token: string,
   projectId: number | string,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/observations`, {
-    method: "GET",
-    headers: {
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
     },
-  });
+  );
 
   return res;
 }
 
 export async function deleteUser(token: string, body: any): Promise<Response> {
-  const res = await fetch("/api/user", {
+  const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "DELETE",
     body: JSON.stringify(body),
     headers: {
@@ -387,18 +429,21 @@ export async function deleteObservation(
   projectId: number,
   obsId: number,
 ): Promise<Response> {
-  const res = await fetch(`/api/projects/${projectId}/observations/${obsId}`, {
-    method: "DELETE",
-    headers: {
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/${obsId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...authHeader(token),
+      },
     },
-  });
+  );
 
   return res;
 }
 
 export async function openProjectPage(token: string, projectId: number) {
-  const res = await fetch(`/projects/${projectId}`, {
+  const res = await _fetch(`${testBaseUrl}/projects/${projectId}`, {
     headers: {
       ...authHeader(token),
     },
@@ -408,17 +453,18 @@ export async function openProjectPage(token: string, projectId: number) {
 }
 
 export async function openLoginPage(): Promise<Response> {
-  const res = await fetch("/login");
+  const res = await _fetch(`${testBaseUrl}/login`);
   return res;
 }
 
 export async function openSignUpPage(): Promise<Response> {
-  const res = await fetch("/user/new");
+  const res = await _fetch(`${testBaseUrl}/user/new`);
   return res;
 }
 
 export async function openIndexPage(): Promise<Response> {
-  const res = await fetch("/", { redirect: "manual" });
+  console.log("TEST BASE URL:", testBaseUrl);
+  const res = await _fetch(`${testBaseUrl}/`, { redirect: "manual" });
   return res;
 }
 
@@ -428,7 +474,7 @@ export async function expectRedirect(res: Response, to: string): Promise<void> {
 }
 
 export async function createTag(token: string, projectId: number, body: any) {
-  const res = await fetch(`/api/projects/${projectId}/tags/`, {
+  const res = await _fetch(`${testBaseUrl}/api/projects/${projectId}/tags/`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
@@ -440,7 +486,7 @@ export async function createTag(token: string, projectId: number, body: any) {
 }
 
 export async function getTagsInProject(token: string, projectId: number) {
-  const res = await fetch(`/api/projects/${projectId}/tags/`, {
+  const res = await _fetch(`${testBaseUrl}/api/projects/${projectId}/tags/`, {
     method: "GET",
     headers: {
       ...contentTypeJson,
@@ -451,7 +497,7 @@ export async function getTagsInProject(token: string, projectId: number) {
 }
 
 export async function updateUserProfile(token: string, body: any) {
-  const res = await fetch(`/api/user`, {
+  const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "PUT",
     headers: {
       ...contentTypeJson,
@@ -467,13 +513,16 @@ export async function deleteTag(
   tagId: number,
   projectId: number,
 ) {
-  const res = await fetch(`/api/projects/${projectId}/tags/${tagId}`, {
-    method: "DELETE",
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/tags/${tagId}`,
+    {
+      method: "DELETE",
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -482,14 +531,17 @@ export async function inviteToProject(
   projectId: number,
   body: any,
 ) {
-  const res = await fetch(`/api/projects/${projectId}/collaborators/`, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      ...contentTypeJson,
-      ...authHeader(token),
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/collaborators/`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        ...contentTypeJson,
+        ...authHeader(token),
+      },
     },
-  });
+  );
   return res;
 }
 
@@ -498,8 +550,8 @@ export async function exportProject(
   projectId: number,
   query: any,
 ) {
-  const res = await fetch(
-    `/api/projects/${projectId}/exports?${new URLSearchParams(query)}`,
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/exports?${new URLSearchParams(query)}`,
     {
       method: "POST",
       body: JSON.stringify({}),
@@ -522,8 +574,8 @@ export async function getExports(
     take: take.toString(),
     skip: skip.toString(),
   });
-  const url = `/api/projects/${projectId}/exports?${q}`;
-  const res = await fetch(url, {
+  const url = `${testBaseUrl}/api/projects/${projectId}/exports?${q}`;
+  const res = await _fetch(url, {
     method: "GET",
     headers: {
       ...authHeader(token),
@@ -645,7 +697,7 @@ export async function withTempUser(
   const json = await signupRes.json();
   expect(json).toHaveProperty("token");
 
-  // fetch the current user, and save user id into variable 'userId'
+  // _fetch the current user, and save user id into variable 'userId'
   const userRes = await getMe(json.token);
   expect(userRes.status).toBe(200);
   const user = (await userRes.json()) as CurrentUser;
@@ -726,7 +778,7 @@ export async function withTempProject(
     expect(observationsJson.observations.length).toBe(testObservations.length);
     observations = observationsJson.observations;
   }
-  // fetch the current user, and check the project is available
+  // _fetch the current user, and check the project is available
   const userRes = await getMe(json.token);
   expect(userRes.status).toBe(200);
   const user = await userRes.json();

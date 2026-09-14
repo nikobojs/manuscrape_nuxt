@@ -1,9 +1,4 @@
 import * as yup from "yup";
-import {
-  getProjectAccess,
-  patchProjectAccess,
-} from "~~/server/utils/projectAccess";
-
 const PatchCollaboratorBody = yup
   .object({
     nameInProject: yup.string(),
@@ -12,8 +7,8 @@ const PatchCollaboratorBody = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
-  await requireUser(event);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
   const body = await readBody(event);

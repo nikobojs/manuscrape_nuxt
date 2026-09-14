@@ -1,8 +1,6 @@
-import { getCollaboratorsInProjects } from "~~/server/utils/collaborators";
-
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
-  const user = await requireUser(event);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
   const projectId = parseIntParam(event.context.params?.projectId);
   const allowedRoles: ProjectRole[] = ["OWNER"];
 

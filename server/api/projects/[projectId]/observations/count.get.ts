@@ -2,11 +2,11 @@ import { ExportProjectSchema } from "#shared/schemas/ExportProject";
 
 export default safeResponseHandler(async (event) => {
   // require login
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user);
 
   const projectId = parseIntParam(event.context.params?.projectId);
-  await ensureProjectAccess(event.context.user.id, projectId);
+  await ensureProjectAccess(user.id, projectId);
 
   const queryParams = getQuery(event);
 

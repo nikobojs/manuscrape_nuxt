@@ -17,7 +17,8 @@ export const updateUserSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  const { id, email, name } = await requireUser(event);
+  const { user } = await requireUserFromSession(event);
+  const { id, email, name } = user;
   const body = await readBody(event);
   const parsedBody = await updateUserSchema.validate(body);
   await updateUserProfile(id, parsedBody.email, parsedBody.name);

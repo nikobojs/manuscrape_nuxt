@@ -1,13 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import * as yup from "yup";
 import { observations, observationTags } from "~~/server/drizzle/schema";
-import {
-  findObservationTagsInArray,
-  getObservationById,
-  setObservationDraft,
-} from "~~/server/utils/observations";
-import { getProjectById } from "~~/server/utils/project";
-import { getProjectAccess } from "~~/server/utils/projectAccess";
 
 const patchObservationSchema = yup
   .object({
@@ -30,11 +23,11 @@ const patchObservationSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
+  const { user } = await requireUserFromSession(event);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);
-  await ensureURLResourceAccess(event, event.context.user);
+  await ensureURLResourceAccess(event, user);
 
   const body = await readBody(event);
   let patch = await patchObservationSchema.validate(body);

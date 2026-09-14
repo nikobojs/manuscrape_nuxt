@@ -66,7 +66,7 @@ export async function sendMail(to: string, subject: string, html: string) {
   const config = useRuntimeConfig();
   const debug = process.env.NODE_ENV !== "production";
 
-  if (process.env.VITEST === "true") {
+  if (config.vitest) {
     console.log("not sending mail, because VITEST is true");
     return;
   }

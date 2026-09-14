@@ -1,10 +1,5 @@
 import * as yup from "yup";
 import { daysInFuture } from "#shared/utils/datetime";
-import { getUserByEmail } from "~~/server/utils/users";
-import {
-  createProjectInvitation,
-  getProjectInvitationByEmail,
-} from "~~/server/utils/projectInvitations";
 
 const AddCollaboratorSchema = yup
   .object({
@@ -13,10 +8,10 @@ const AddCollaboratorSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
   const body = await readBody(event);
   const config = useRuntimeConfig();
-  const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const allowedRoles: ProjectRole[] = ["OWNER"];
   let parsed: { email: string };

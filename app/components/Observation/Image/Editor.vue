@@ -378,7 +378,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EditorMode, ZOOM_STEP } from "#imports";
+// import type { EditorMode, ZOOM_STEP } from "#imports";
 
 const props = defineProps({
   observation: requireObservationProp,

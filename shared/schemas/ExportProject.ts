@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import type { ExportType } from "../types";
 
 export const ExportProjectSchema = yup
   .object({

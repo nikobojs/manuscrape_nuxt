@@ -1,6 +1,7 @@
 import { compare } from "bcryptjs";
 import * as yup from "yup";
 
+
 export const DeleteUserSchema = yup
   .object({
     password: yup.string().typeError("Password is not valid"),
@@ -8,7 +9,8 @@ export const DeleteUserSchema = yup
   .required();
 
 export default safeResponseHandler(async (event) => {
-  const { id: userId } = await requireUser(event);
+  const { user: _user } = await requireUserFromSession(event);
+  const { id: userId } = _user;
 
   // parse body
   const body = await readBody(event);
@@ -58,7 +60,7 @@ export default safeResponseHandler(async (event) => {
 
   // logout, user is deleted, right?
   event.context.user = undefined;
-  resetAuthCookie(event);
+  await clearUserSession(event);
 
   // return 204 No content
   setResponseStatus(event, 204);

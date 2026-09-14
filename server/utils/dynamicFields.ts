@@ -27,7 +27,7 @@ export const NewDynamicFieldSchema = yup
   })
   .required();
 
-export const DynamicFieldsConfig: DynamicFieldsConfig = {
+export const DynamicFieldsConfig: DynamicFieldsConfigT = {
   DIFF: {
     pairs: [
       ["DATE", "DATE"],

@@ -2,13 +2,12 @@ import { numberBetween } from "#shared/utils/validate";
 import { extractTagsFromObservation } from "#shared/utils/extractTagsFromObservation";
 import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { observations, users } from "~~/server/drizzle/schema";
-import { getFullObservationsByProjectId } from "~~/server/utils/observations";
 import { captureException } from "@sentry/node";
 
 export default safeResponseHandler(async (event) => {
   // require login
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user);
 
   // fetch project access object from db
   const projectId = parseIntParam(event.context.params?.projectId);
@@ -16,7 +15,7 @@ export default safeResponseHandler(async (event) => {
 
   // require access to project
   if (!projectAccess) {
-    const errMsg = `User ${user.id} requested access to observations they don't have access to`;
+    const errMsg = `User ${user?.id} requested access to observations they don't have access to`;
     captureException(errMsg);
     throw createError({
       statusCode: 403,
@@ -91,8 +90,8 @@ export default safeResponseHandler(async (event) => {
     ownership === "me" ||
     (!isOwner && !project?.contributorsCanReadAllObservations)
   ) {
-    // whereStatement.userId = event.context.user.id;
-    whereAnd.push(eq(observations.userId, event.context.user.id));
+    // whereStatement.userId = user.id;
+    whereAnd.push(eq(observations.userId, user.id));
   }
 
   // set published/drafts/all filter in where statement

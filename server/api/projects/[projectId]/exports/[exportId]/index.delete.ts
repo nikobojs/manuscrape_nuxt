@@ -1,9 +1,7 @@
-import { deleteProjectExport } from "~~/server/utils/projectExports";
-
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);

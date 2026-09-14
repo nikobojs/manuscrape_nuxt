@@ -1,14 +1,9 @@
 import { captureException } from "@sentry/node";
-import {
-  createDynamicFields,
-  findDuplicateDynamicField,
-  getProjectFieldsInDynamicField,
-} from "~~/server/utils/dynamicFields";
 
 export default safeResponseHandler(async (event) => {
   // ensure user is logged in and is owner on project
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, ["OWNER"]);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER"]);
 
   // get parameters and body
   const body = await readBody(event);

@@ -1,9 +1,7 @@
-import { addUserToTags } from "~~/server/utils/observationTags";
-
 export default safeResponseHandler(async (event) => {
   // Require login
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user);
 
   // Parse projectId
   const projectId = parseIntParam(event.context.params?.projectId);

@@ -1,14 +1,9 @@
-import {
-  deleteProjectAccess,
-  getProjectAccess,
-} from "~~/server/utils/projectAccess";
-
 export default safeResponseHandler(async (event) => {
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);
-  const user = await requireUser(event);
   const projectId = parseIntParam(event.context.params?.projectId);
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
 

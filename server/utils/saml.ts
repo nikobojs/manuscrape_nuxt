@@ -1,7 +1,6 @@
 import { Strategy } from "passport-saml";
 import type { H3Event } from "h3";
 import type { Profile } from "passport-saml";
-import { AuthSource } from "#shared/types/auth-source";
 import { and, eq } from "drizzle-orm";
 import { users } from "~~/server/drizzle/schema";
 import { createSamlUser } from "~~/server/utils/users";
@@ -115,7 +114,7 @@ export async function authorizeOrCreateUserSAML(
       },
       where: and(
         eq(users.samlIdentifier, parsedProfile.samlIdentifier),
-        eq(users.authSource, AuthSource.SAML),
+        eq(users.authSource, "SAML"),
       ),
     });
 

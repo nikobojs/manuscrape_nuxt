@@ -117,22 +117,20 @@ const state = ref({
 });
 
 const errorMessage = ref("");
+const router = useRouter();
+const { user, signUp, refreshUser } = await useAuth();
+
+// Redirect to projects if user becomes logged in
+watch(() => user.value, (newUser) => {
+  if (newUser) {
+    router.push("/projects");
+  }
+}, { immediate: true });
 
 const form = ref();
 const loading = ref(false);
 
-const { signUp, user, refreshUser } = await useAuth();
-
 const {isElectron}=useDevice();
-
-await callOnce(async () => {
-  await refreshUser();
-});
-await callOnce(async () => {
-  if (user.value) {
-    await navigateTo("/projects");
-  }
-});
 
 function validate(state: any): FormError[] {
   const errors = [] as FormError[];
@@ -150,7 +148,7 @@ async function submit() {
   await form.value!.validate();
   loading.value = true;
   await signUp(state.value.email, state.value.password, state.value.name)
-    .then(() => {
+    .then(async () => {
       if (isElectron.value) {
         if (window.electronAPI) {
           window.electronAPI.signupSuccess(
@@ -163,7 +161,8 @@ async function submit() {
           console.warn('window.electronAPI not available in Electron environment');
         }
       } else {
-        window.location.href = "/";
+        // Just trigger a user refresh - the watch will handle redirect
+        await refreshUser();
       }
     })
     .catch((err) => {

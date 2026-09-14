@@ -13,12 +13,12 @@ export default defineEventHandler(async (event) => {
 
   if (samlStrategy?._saml && samlResponse) {
     try {
-      resetAuthCookie(event);
+      await clearUserSession(event);
       await session.clear();
       return sendRedirect(event, relayState || "/");
     } catch (e) {
       console.error("LogoutResponse validation failed:", e);
-      resetAuthCookie(event); // Clear anyway
+      await clearUserSession(event); // Clear anyway
       await session.clear();
       return sendRedirect(event, "/");
     }
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     captureException(errMsg);
   }
 
-  resetAuthCookie(event);
+  await clearUserSession(event);
   await session.clear();
   return sendRedirect(event, "/");
 });

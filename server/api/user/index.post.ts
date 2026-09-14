@@ -77,11 +77,20 @@ export default safeResponseHandler(async (event) => {
     await deleteProjectInvitations(invitationIds);
   }
 
-  // authorize user
-  const { token } = await authorize(event, user, null);
+  // authorize user (creates session and gets token for tests)
+  const authResult = await authorize(event, user, null);
 
-  // return delayed response
+  // return delayed response with token for test compatibility
   setResponseStatus(event, 201);
-  const res = await delayedResponse(event, { id: user.id, token });
+  const res = await delayedResponse(event, { 
+    id: user.id, 
+    success: true,
+    token: authResult.token,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    }
+  });
   return res;
 });

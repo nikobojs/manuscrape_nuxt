@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
   sourcemap: true,
-  modules: ["@nuxt/ui"],
+  modules: ["@nuxt/ui", "nuxt-auth-utils"],
 
   typescript: {
     strict: true,
@@ -36,7 +36,9 @@ export default defineNuxtConfig({
       sentryEnv: process.env.SENTRY_ENV || "development",
     },
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? "10"),
-    tokenSecret: process.env.TOKEN_SECRET,
+    tokenSecret: process.env.TOKEN_SECRET, // NOTE: this is deprecated but allows older clients to work
+    tokenApiEnabled:
+      process.env.TOKEN_API_ENABLED?.trim()?.toLowerCase?.() == "true", // NOTE: this is deprecated but allows older clients to work
     cookieDomain: process.env.COOKIE_DOMAIN,
     cookieSecure: process.env.COOKIE_SECURE?.toLowerCase() === "true",
     fileUploadPath: process.env.FILE_UPLOAD_PATH || "",
@@ -56,6 +58,17 @@ export default defineNuxtConfig({
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
     manuscrapeClientVersionRequirement: ">=1.0.11",
+    session: {
+      password: process.env.NUXT_SESSION_PASSWORD || "",
+      maxAge: 60 * 60 * 24 * 180, // 180 days
+      name: "manuscrape-session",
+      cookie: {
+        sameSite: "lax",
+        secure: process.env.COOKIE_SECURE?.toLowerCase() === "true",
+        domain: process.env.COOKIE_DOMAIN,
+        path: "/",
+      },
+    },
     saml: {
       identifierSecret: process.env.SAML_IDENTIFIER_SECRET || "",
       sessionSecret: process.env.SAML_SESSION_SECRET || "",
@@ -68,6 +81,7 @@ export default defineNuxtConfig({
       logoutUrl: process.env.SAML_LOGOUT_URL || "",
       cert: process.env.SAML_IDP_CERT_PATH,
     },
+    vitest: process.env.VITEST?.trim()?.toLowerCase?.() == "true",
   },
 
   colorMode: {
@@ -97,5 +111,5 @@ export default defineNuxtConfig({
     },
   },
 
-  compatibilityDate: "2025-03-13",
+  compatibilityDate: "2026-09-01",
 });

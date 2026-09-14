@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { observationFilterMenuItems } from "#imports";
+// import { observationFilterMenuItems } from "#imports";
 
 const error = ref(null);
 const loading = ref(false);

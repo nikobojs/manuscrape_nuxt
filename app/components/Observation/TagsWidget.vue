@@ -72,8 +72,6 @@ const props = defineProps({
   onTagCreated: requireFunctionProp<() => Promise<void>>(),
 });
 
-console.log("tags on observation:", props.tagsOnObservation);
-
 const toast = useToast();
 const openCreateNewTagModal = ref(false);
 const newTagName = ref("");

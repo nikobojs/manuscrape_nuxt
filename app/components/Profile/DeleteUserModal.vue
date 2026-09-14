@@ -33,14 +33,14 @@ const props = defineProps({
 
 const password = ref("");
 const toast = useToast();
-const { deleteUser } = await useAuth();
+const { deleteUserAccount } = await useAuth();
 const { refreshUser } = await useUser();
 const errorMsg = ref<null | string>(null);
 
 async function onDeleteUserConfirm() {
   try {
     props.onClose();
-    await deleteUser(password.value);
+    await deleteUserAccount(password.value);
     toast.add({
       title: "Success",
       description: "Your user was successfully deleted",

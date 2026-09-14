@@ -1,18 +1,13 @@
 import * as yup from "yup";
-import {
-  createObservationTag,
-  getObservationTagByTagName,
-} from "~~/server/utils/observationTags";
 
 export default safeResponseHandler(async (event) => {
-  await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user, [
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, [
     "OWNER",
     "INVITED",
   ]);
 
   const projectId = parseIntParam(event.context.params?.projectId);
-  const userId = event.context.user.id;
 
   const NewTagSchema = yup.object({
     name: yup.string().trim().min(1).max(100).required(),
@@ -29,7 +24,7 @@ export default safeResponseHandler(async (event) => {
     });
   }
 
-  const created = await createObservationTag(newTag.name, projectId, userId);
+  const created = await createObservationTag(newTag.name, projectId, user.id);
 
   setResponseStatus(event, 201);
   return { tag: created };

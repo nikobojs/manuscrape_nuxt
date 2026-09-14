@@ -1,6 +1,5 @@
-import { readBody, createError } from "h3";
+import { readBody, createError, sendRedirect } from "h3";
 import type { H3Event } from "h3";
-import { authorizeOrCreateUserSAML } from "~~/server/utils/saml";
 
 export default defineEventHandler(async (event: H3Event) => {
   const body = await readBody(event);
@@ -15,5 +14,9 @@ export default defineEventHandler(async (event: H3Event) => {
     });
   }
 
-  return authorizeOrCreateUserSAML(event, samlResponse);
+  await authorizeOrCreateUserSAML(event, samlResponse);
+  
+  // Redirect to root path after successful SAML authentication
+  // The middleware will handle redirect to /projects or /login
+  return sendRedirect(event, "/", 302);
 });

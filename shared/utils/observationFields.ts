@@ -1,4 +1,5 @@
 import { captureException } from "@sentry/vue";
+import type { FieldType } from "../types";
 
 export const FieldTypeValues: Array<FieldType> = [
   "AUTOCOMPLETE",

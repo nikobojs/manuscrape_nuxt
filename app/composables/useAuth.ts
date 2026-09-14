@@ -4,7 +4,7 @@ export const useAuth = async () => {
   const { user, refreshUser, hasFetched } = await useUser();
 
   const login = async (email: string, password: string) => {
-    return $fetch<TokenResponse>("/api/auth", {
+    return $fetch<{ success: boolean }>("/api/auth", {
       method: "POST",
       body: JSON.stringify({ email, password }),
       headers: {
@@ -85,7 +85,7 @@ export const useAuth = async () => {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    return $fetch<TokenResponse>("/api/user", {
+    return $fetch<{ user: CurrentUser }>("/api/user", {
       method: "POST",
       body: JSON.stringify({ email, password, name }),
       headers: {
@@ -108,7 +108,7 @@ export const useAuth = async () => {
     }
   };
 
-  const deleteUser = async (password: string) => {
+  const deleteUserAccount = async (password: string) => {
     const res = await $fetch("/api/user", {
       method: "DELETE",
       body: JSON.stringify({ password }),
@@ -120,7 +120,7 @@ export const useAuth = async () => {
   };
 
   return {
-    deleteUser,
+    deleteUserAccount,
     ensureLoggedIn,
     ensureUserFetched,
     hasFetched,

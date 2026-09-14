@@ -92,20 +92,43 @@
 </template>
 
 <script lang="ts" setup>
-// import { getErrMsg } from '~/utils/getErrMsg';
+import { getErrMsg } from "~/utils/getErrMsg";
 
 const error = ref("");
 const { login, user, refreshUser } = await useAuth();
 // await ensureUserFetched();
 const route = useRoute();
+const router = useRouter();
 const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
 const passwordInput = ref();
 const emailInput = ref();
+
+// Redirect to projects if user becomes logged in
+watch(
+  () => user.value,
+  (u) => {
+    if (u) {
+      const fromQuery = route.query.redirect_to as string | undefined;
+      let redirectTo = "/projects";
+      if (
+        fromQuery &&
+        fromQuery.startsWith("/") &&
+        !fromQuery.startsWith("//") &&
+        !fromQuery.includes("http")
+      ) {
+        redirectTo = fromQuery;
+      }
+      router.push(redirectTo);
+    }
+  },
+  { immediate: true },
+);
+
 const loginWithSaml = () => {
   window.location.href = "/api/auth/saml/login";
 };
-const {isElectron}=useDevice();
+const { isElectron } = useDevice();
 
 async function handleLogin() {
   const em = emailInput.value?.input?.value;
@@ -128,29 +151,32 @@ async function handleLogin() {
 
   setTimeout(() => {
     // at this point it is safe to assume that the values are truthy
-     login(em, pw)
-       .then(async (res) => {
-         if (isElectron.value) {
-           if (window.electronAPI) {
-             window.electronAPI.loginSuccess(
-               () => {},
-               (err: any) => {
-                 error.value = typeof err === "string" ? err : getErrMsg(err);
-               }
-             );
-           } else {
-             console.warn('window.electronAPI not available in Electron environment');
-           }
-         } else {
-           if (res?.token) {
-             window.location.href = "/";
-           }
-         }
+    login(em, pw)
+      .then(async (res) => {
+        if (isElectron.value) {
+          if (window.electronAPI) {
+            window.electronAPI.loginSuccess(
+              () => {},
+              (err: any) => {
+                error.value = typeof err === "string" ? err : getErrMsg(err);
+              },
+            );
+          } else {
+            console.warn(
+              "window.electronAPI not available in Electron environment",
+            );
+          }
+        } else {
+          // For web, just refresh user state - the watch will handle redirect
+          await refreshUser();
+        }
       })
       .catch((err) => {
         error.value = getErrMsg(err);
       })
-      .finally(() => (loading.value = false));
+      .finally(() => {
+        loading.value = false;
+      });
   }, 200);
 }
 

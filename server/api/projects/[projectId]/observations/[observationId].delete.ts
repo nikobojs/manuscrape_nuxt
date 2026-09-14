@@ -1,10 +1,10 @@
 import { captureException } from "@sentry/node";
-import { getFileUploadsByObservationId } from "~~/server/utils/fileUploads";
 import { deleteObservation } from "~~/server/utils/observations";
+import { getCurrentUser } from "~~/server/utils/authorize";
 
 export default safeResponseHandler(async (event) => {
-  const user = await requireUser(event);
-  await ensureURLResourceAccess(event, event.context.user);
+  const { user } = await requireUserFromSession(event);
+  await ensureURLResourceAccess(event, user, ["OWNER", "INVITED"]);
   const params = event.context.params;
   const observationId = parseIntParam(params?.observationId);
   const projectId = parseIntParam(params?.projectId);
