@@ -339,7 +339,7 @@ const template: Record<TemplateName, NewProjectField[]> = {
       choices: [
         "Drug sales",
         "Nicotine sales",
-        "Stoken goods",
+        "Stolen goods",
         "Bullying",
         "Thread(s)",
         "Recruitment",
