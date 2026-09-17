@@ -4,8 +4,7 @@ import { captureException } from "@sentry/node";
 import { getHeader, createError, getRouterParams } from "h3";
 import { getObservationById } from "./observations";
 import { getFullUserById } from "./users";
-import jwt from "jsonwebtoken";
-const { sign, verify } = jwt;
+import { SignJWT, jwtVerify } from "jose";
 
 /**
  * Get user from session, falling back to JWT token in Authorization header (if enabled)
@@ -40,9 +39,12 @@ export async function getUserFromSession(
             throw new Error("TOKEN_SECRET is not configured");
           }
 
-          const userData = verify(token, tokenSecret) as TokenUserData;
+          const { payload: userData } = await jwtVerify(
+            token,
+            new TextEncoder().encode(tokenSecret),
+          );
           if (userData && userData.id) {
-            return userData;
+            return userData as unknown as TokenUserData;
           } else {
             console.error("userData looks wrong");
           }
@@ -77,23 +79,22 @@ export async function requireUserFromSession(
 /**
  * Create a JWT token for a user (used for tests only)
  */
-export function createTokenForUser(user: TokenUserData): string {
+export async function createTokenForUser(user: TokenUserData): Promise<string> {
   const config = useRuntimeConfig();
   const tokenSecret = config.tokenSecret;
   if (!tokenSecret) {
     throw new Error("TOKEN_SECRET is not configured for JWT token generation");
   }
 
-  return sign(
-    {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      authSource: user.authSource,
-    },
-    tokenSecret,
-    { expiresIn: "180d" }, // Match the session lifetime
-  );
+  return await new SignJWT({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    authSource: user.authSource,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("180d")
+    .sign(new TextEncoder().encode(tokenSecret));
 }
 
 /**
@@ -123,7 +124,7 @@ export async function authorize(
   if (config.tokenApiEnabled) {
     let token: string | undefined;
     try {
-      token = createTokenForUser({
+      token = await createTokenForUser({
         id: user.id,
         email: user.email,
         name: user.name,
