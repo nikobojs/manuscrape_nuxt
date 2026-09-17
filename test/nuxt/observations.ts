@@ -10,6 +10,7 @@ import {
   createObservation,
   patchObservation,
   getObservations,
+  getAdjacentObservations,
   testObservations,
   patchProject,
   countExportedObservations,
@@ -378,6 +379,156 @@ describe("Observations", () => {
         expect(Object.keys(jsonB)).toContain("uploadsCount");
         expect(jsonB["observationCount"]).toEqual(observations.length);
       }, otherEmail);
+    });
+  });
+
+  test("adjacent endpoint returns prev and next observation IDs", async () => {
+    await withTempProject(async (_user, project, observations, token) => {
+      // withTempProject creates 3 observations. Sort them by id to know the order.
+      const sortedObs = [...observations].sort((a, b) => a.id - b.id);
+      const oldest = sortedObs[0]!;
+      const middle = sortedObs[1]!;
+      const newest = sortedObs[2]!;
+
+      // Middle observation: should have prev (older) and next (newer)
+      const middleRes = await getAdjacentObservations(token, project.id, middle.id);
+      expect(middleRes.status).toBe(200);
+      const middleJson = await middleRes.json();
+      expect(middleJson.prevId).toBe(oldest.id);
+      expect(middleJson.nextId).toBe(newest.id);
+
+      // Oldest observation: should have next but no prev
+      const oldestRes = await getAdjacentObservations(token, project.id, oldest.id);
+      expect(oldestRes.status).toBe(200);
+      const oldestJson = await oldestRes.json();
+      expect(oldestJson.prevId).toBeNull();
+      expect(oldestJson.nextId).toBe(middle.id);
+
+      // Newest observation: should have prev but no next
+      const newestRes = await getAdjacentObservations(token, project.id, newest.id);
+      expect(newestRes.status).toBe(200);
+      const newestJson = await newestRes.json();
+      expect(newestJson.prevId).toBe(middle.id);
+      expect(newestJson.nextId).toBeNull();
+    });
+  });
+
+  test("adjacent endpoint works with a single observation", async () => {
+    await withTempProject(
+      async (_user, project, _observations, token) => {
+        // create a single observation
+        const createRes = await createObservation(token, project.id);
+        expect(createRes.status).toBe(201);
+        const obs = await createRes.json();
+
+        const res = await getAdjacentObservations(token, project.id, obs.id);
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json.prevId).toBeNull();
+        expect(json.nextId).toBeNull();
+      },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      false, // don't create the default test observations
+    );
+  });
+
+  test("adjacent endpoint returns 403 for non-existent observation", async () => {
+    await withTempProject(async (_user, project, _observations, token) => {
+      const res = await getAdjacentObservations(token, project.id, 999999);
+      expect(res.status).toBe(403);
+    });
+  });
+
+  test("unauthenticated user cannot access adjacent endpoint", async () => {
+    await withTempProject(async (_user, project, observations, _token) => {
+      const res = await getAdjacentObservations("", project.id, observations[0]!.id);
+      expect(res.status).toBe(401);
+    });
+  });
+
+  test("adjacent endpoint respects project boundaries", async () => {
+    // Create two projects, each with observations.
+    // Observations in project A should not appear as adjacent in project B.
+    await withTempProject(async (_userA, projectA, observationsA, tokenA) => {
+      await withTempProject(async (_userB, projectB, observationsB, _tokenB) => {
+        // Get adjacent for an observation in project B
+        const resB = await getAdjacentObservations(
+          tokenA,
+          projectB.id,
+          observationsB[0]!.id,
+        );
+        // User A doesn't have access to project B -> 403
+        expect(resB.status).toBe(403);
+      });
+    });
+  });
+
+  test("adjacent endpoint respects ownership filter for contributors", async () => {
+    const otherEmail = freshEmail();
+    await withTempProject(async (_user, project, observations, token) => {
+      // project has contributorsCanReadAllObservations = false by default
+      expect(project.contributorsCanReadAllObservations).toBe(false);
+
+      await withTempUser(async (_userB, tokenB) => {
+        const inviteRes = await inviteToProject(token, project.id, {
+          email: otherEmail,
+        });
+        expect(inviteRes.status).toBe(202);
+
+        // Contributor B creates their own observation
+        const createRes = await createObservation(tokenB, project.id);
+        expect(createRes.status).toBe(201);
+        const obsB = await createRes.json();
+
+        // As contributor B, fetching adjacent for their own observation:
+        // should not see the owner's observations (ownership filter)
+        const res = await getAdjacentObservations(tokenB, project.id, obsB.id);
+        expect(res.status).toBe(200);
+        const json = await res.json();
+        expect(json.prevId).toBeNull();
+        expect(json.nextId).toBeNull();
+
+        // As owner, fetching adjacent for the owner's newest observation:
+        // owner sees all observations, so nextId should point to B's observation
+        const sortedObs = [...observations].sort((a, b) => a.id - b.id);
+        const newestOwnerObs = sortedObs[sortedObs.length - 1]!;
+        const ownerRes = await getAdjacentObservations(
+          token,
+          project.id,
+          newestOwnerObs.id,
+        );
+        expect(ownerRes.status).toBe(200);
+        const ownerJson = await ownerRes.json();
+        expect(ownerJson.nextId).toBe(obsB.id);
+      }, otherEmail);
+    });
+  });
+
+  test("adjacent endpoint updates after creating new observations", async () => {
+    await withTempProject(async (_user, project, observations, token) => {
+      const sortedObs = [...observations].sort((a, b) => a.id - b.id);
+      const newest = sortedObs[sortedObs.length - 1]!;
+
+      // Before creating: newest observation has no next
+      const beforeRes = await getAdjacentObservations(token, project.id, newest.id);
+      expect(beforeRes.status).toBe(200);
+      const beforeJson = await beforeRes.json();
+      expect(beforeJson.nextId).toBeNull();
+
+      // Create a new observation (will have a higher ID)
+      const createRes = await createObservation(token, project.id);
+      expect(createRes.status).toBe(201);
+      const newObs = await createRes.json();
+      expect(newObs.id).toBeGreaterThan(newest.id);
+
+      // After creating: newest observation now has next pointing to the new one
+      const afterRes = await getAdjacentObservations(token, project.id, newest.id);
+      expect(afterRes.status).toBe(200);
+      const afterJson = await afterRes.json();
+      expect(afterJson.nextId).toBe(newObs.id);
     });
   });
 });

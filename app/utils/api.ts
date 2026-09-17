@@ -163,6 +163,22 @@ export async function patchObservation(
   return res;
 }
 
+export async function fetchAdjacentObservations(
+  projectId: number,
+  observationId: number,
+): Promise<{ prevId: number | null; nextId: number | null }> {
+  return $fetch<{ prevId: number | null; nextId: number | null }>(
+    `/api/projects/${projectId}/observations/${observationId}/adjacent`,
+    {
+      credentials: "include",
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+}
+
 export async function deleteObservation(projectId: number, obsId: number) {
   const res = await $fetch(`/api/projects/${projectId}/observations/${obsId}`, {
     method: "DELETE",
