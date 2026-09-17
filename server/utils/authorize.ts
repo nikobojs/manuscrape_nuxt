@@ -104,6 +104,8 @@ export async function authorize(
   user: User,
   samlSession: SAMLSessionData["saml"] | null,
 ): Promise<{ success: boolean; token?: string }> {
+  const config = useRuntimeConfig();
+
   // Convert user to session data format expected by nuxt-auth-utils
   const sessionData = {
     user: {
@@ -117,32 +119,34 @@ export async function authorize(
   };
   await setUserSession(event, sessionData);
 
-  // Generate JWT token for test compatibility - tests can use Authorization headers
-  // This ensures that tests can simulate different users with different tokens
-  let token: string | undefined;
-  try {
-    token = createTokenForUser({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      authSource: (user as any).authSource,
-    });
-    console.debug(
-      "Generated JWT token for user",
-      user.id,
-      "for test compatibility",
-    );
-  } catch (e) {
-    console.error(
-      "Could not generate JWT token (TOKEN_SECRET not configured):",
-      e,
-    );
-    captureException(e);
-    setResponseStatus(event, 500);
-    return { success: false };
+  // generate token if token api is enabled, and return it to the user
+  if (config.tokenApiEnabled) {
+    let token: string | undefined;
+    try {
+      token = createTokenForUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        authSource: (user as any).authSource,
+      });
+      console.debug(
+        "Generated JWT token for user",
+        user.id,
+        "for test compatibility",
+      );
+    } catch (e) {
+      console.error(
+        "Could not generate JWT token (TOKEN_SECRET not configured):",
+        e,
+      );
+      captureException(e);
+      setResponseStatus(event, 500);
+      return { success: false };
+    }
+    return { success: true, token };
+  } else {
+    return { success: true };
   }
-
-  return { success: true, token };
 }
 
 /**

@@ -38,7 +38,8 @@ export default defineNuxtConfig({
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? "10"),
     tokenSecret: process.env.TOKEN_SECRET, // NOTE: this is deprecated but allows older clients to work
     tokenApiEnabled:
-      process.env.TOKEN_API_ENABLED?.trim()?.toLowerCase?.() == "true", // NOTE: this is deprecated but allows older clients to work
+      process.env.TOKEN_API_ENABLED?.trim()?.toLowerCase?.() == "true" &&
+      !!process.env.TOKEN_SECRET, // NOTE: this is deprecated but allows older clients to work
     cookieDomain: process.env.COOKIE_DOMAIN,
     cookieSecure: process.env.COOKIE_SECURE?.toLowerCase() === "true",
     fileUploadPath: process.env.FILE_UPLOAD_PATH || "",

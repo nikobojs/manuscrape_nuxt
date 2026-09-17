@@ -6,6 +6,8 @@ dotenv.config();
 // TODO: or use full .env.test setup
 let dbUrl = process.env.TEST_DATABASE_URL;
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+process.env.TOKEN_API_ENABLED = "true";
+process.env.TOKEN_SECRET = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 if (!dbUrl) {
   console.log(process.env);
