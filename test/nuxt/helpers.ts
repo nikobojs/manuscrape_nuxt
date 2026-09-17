@@ -411,6 +411,24 @@ export async function getObservations(
   return res;
 }
 
+export async function getAdjacentObservations(
+  token: string,
+  projectId: number | string,
+  observationId: number | string,
+): Promise<Response> {
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/observations/${observationId}/adjacent`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
+    },
+  );
+
+  return res;
+}
+
 export async function deleteUser(token: string, body: any): Promise<Response> {
   const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "DELETE",

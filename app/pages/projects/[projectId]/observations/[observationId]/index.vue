@@ -13,26 +13,51 @@
       Go to project
     </BackButton>
     <BackButton v-else :href="'/'"> Go back </BackButton>
-    <div class="mb-6 flex justify-between items-center">
-      <h2 class="text-3xl flex gap-x-4">
-        {{ header }}
-        <span
-          v-if="!isLocked"
-          class="text-blue-400 i-heroicons-lock-open block"
-        ></span>
-        <span
-          v-else
-          class="text-green-400 i-heroicons-lock-closed block"
-        ></span>
-      </h2>
+    <div class="mb-6 grid grid-cols-3 items-center">
+      <div class="flex items-center gap-x-4">
+        <h2 class="text-3xl flex gap-x-4">
+          {{ header }}
+          <span
+            v-if="!isLocked"
+            class="text-blue-400 i-heroicons-lock-open block"
+          ></span>
+          <span
+            v-else
+            class="text-green-400 i-heroicons-lock-closed block"
+          ></span>
+        </h2>
+      </div>
+      <div class="flex justify-center gap-2">
+        <UButton
+          icon="i-mdi-chevron-left"
+          variant="ghost"
+          color="gray"
+          size="sm"
+          :disabled="!adjacent.prevId"
+          @click="navigateToAdjacent(adjacent.prevId!)"
+        >
+          Prev
+        </UButton>
+        <UButton
+          trailing-icon="i-mdi-chevron-right"
+          variant="ghost"
+          color="gray"
+          size="sm"
+          :disabled="!adjacent.nextId"
+          @click="navigateToAdjacent(adjacent.nextId!)"
+        >
+          Next
+        </UButton>
+      </div>
       <ObservationMetaText
-        class="text-right"
+        class="text-right justify-self-end"
         v-if="observation"
         :observation="observation"
       />
     </div>
     <ObservationFormContainer
       v-if="observation && project"
+      :key="observation.id"
       :project="project"
       :observation="observation"
       :onObservationPublished="onObservationPublished"
@@ -61,6 +86,10 @@ if (typeof project.value?.id !== "number") {
 }
 
 const observation = ref<FullObservation | null>(null);
+const adjacent = ref<{ prevId: number | null; nextId: number | null }>({
+  prevId: null,
+  nextId: null,
+});
 const { isElectron } = useDevice();
 
 const isLocked = computed(
@@ -121,6 +150,35 @@ async function refreshObservation() {
   }
   observation.value = obs;
 }
+
+async function fetchAdjacent() {
+  const projId = requireNumber(project.value?.id);
+  const obsId = requireNumber(params?.observationId);
+  try {
+    adjacent.value = await fetchAdjacentObservations(projId, obsId);
+  } catch (e) {
+    console.error("Failed to fetch adjacent observations", e);
+  }
+}
+
+function navigateToAdjacent(obsId: number) {
+  const electronParam = isElectron.value ? "?electron=1" : "";
+  navigateTo(
+    `/projects/${project.value?.id}/observations/${obsId}${electronParam}`,
+  );
+}
+
+async function onRouteParamChange() {
+  await refreshObservation();
+  await fetchAdjacent();
+}
+
+watch(
+  () => params?.observationId,
+  async () => {
+    await onRouteParamChange();
+  },
+);
 
 function metadataIsDone(data: any): boolean {
   if (!project.value?.fields) return false;
@@ -205,5 +263,6 @@ async function onFileDeleted() {
 
 onMounted(async () => {
   await refreshObservation();
+  await fetchAdjacent();
 });
 </script>
