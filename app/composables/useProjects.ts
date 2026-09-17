@@ -37,8 +37,9 @@ export const useProjects = async (params?: RouteParams | undefined) => {
     projectId: number,
     patch: {
       name?: string;
-      ownerCanDelockObservations: boolean;
-      authorCanDelockObservations: boolean;
+      description?: string;
+      ownerCanDelockObservations?: boolean;
+      authorCanDelockObservations?: boolean;
     },
   ): Promise<Response> => {
     return fetch(`/api/projects/${projectId}`, {

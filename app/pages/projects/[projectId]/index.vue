@@ -3,8 +3,17 @@
     <BackButton href="/projects"> Go to projects </BackButton>
   </UContainer>
   <UContainer v-if="project">
-    <div class="text-2xl">
-      {{ project.name }}
+    <div class="flex items-center gap-2">
+      <div class="text-2xl">
+        {{ project.name }}
+      </div>
+      <UButton
+        variant="ghost"
+        color="gray"
+        icon="i-mdi-information-outline"
+        @click="openDescriptionModal = true"
+        class="h-6 w-6"
+      />
     </div>
     <div class="mt-6 grid grid-cols-7 gap-x-6">
       <ObservationListWidget
@@ -48,17 +57,29 @@
         <ProjectTagsWidget :project="project" />
       </div>
     </div>
+    
+    <ProjectDescriptionModal
+      :open="openDescriptionModal"
+      :project="project"
+      :isOwner="!!isOwner"
+      :onClose="() => openDescriptionModal = false"
+      :onSave="saveDescription"
+    />
   </UContainer>
 </template>
 
 <script lang="ts" setup>
+import ProjectDescriptionModal from "~/components/Project/DescriptionModal.vue";
+
 const { ensureLoggedIn } = await useAuth();
 const { refreshUser } = await useUser();
 await ensureLoggedIn();
 const { params } = useRoute();
-const { project, isOwner } = await useProjects(params);
+const { project, isOwner, patchProject } = await useProjects(params);
 const toast = useToast();
 
+const openDescriptionModal = ref(false);
+ 
 if (!project.value) {
   toast.add({
     title: "Access denied",
@@ -70,7 +91,32 @@ if (!project.value) {
 }
 const { refreshObservations } = await useObservations(project, undefined);
 const nuxtApp = useNuxtApp();
-
+ 
+async function saveDescription(description: string) {
+  if (!project.value?.id) return;
+  
+  try {
+    const response = await patchProject(project.value.id, { description });
+    if (response.ok) {
+      toast.add({
+        title: "Description updated",
+        icon: "i-heroicons-check",
+        color: "green",
+      });
+      openDescriptionModal.value = false;
+    } else {
+      throw new Error("Failed to update description");
+    }
+  } catch (error) {
+    toast.add({
+      title: "Failed to update description",
+      description: error instanceof Error ? error.message : "Unknown error",
+      color: "red",
+      icon: "i-heroicons-exclamation-triangle",
+    });
+  }
+}
+ 
 onMounted(() => {
   const isSSr = nuxtApp.isHydrating && nuxtApp.payload.serverRendered;
   if (!isSSr) {

@@ -123,6 +123,7 @@ export interface ProjectFieldResponse extends Omit<
 export interface FullProject extends Project {
   id: number;
   name: string;
+  description: string | null;
   createdAt: string | Date;
   authorCanDelockObservations: boolean;
   ownerCanDelockObservations: boolean;
@@ -380,6 +381,7 @@ export type FullDynamicProjectField = Pick<
 
 export type SmallProject = Omit<FullProject, "observations" | "tags"> & {
   tags: { id: number; name: string }[];
+  description: string | null;
 };
 
 export type GetObservationsResponse = {
