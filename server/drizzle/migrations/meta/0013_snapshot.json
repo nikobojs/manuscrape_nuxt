@@ -1,6 +1,6 @@
 {
-  "id": "29a06992-073f-13a5-97a2-e2b766ab4e76",
-  "prevId": "39a06992-083f-47a5-97c2-e2b796ab4e76",
+  "id": "d26478b8-3a0a-4709-98e2-343410c39c69",
+  "prevId": "29a06992-073f-13a5-97a2-e2b766ab4e76",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -87,8 +87,12 @@
           "name": "DynamicProjectField_project_id_Project_id_fk",
           "tableFrom": "DynamicProjectField",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
@@ -96,8 +100,12 @@
           "name": "DynamicProjectField_field0_id_ProjectField_id_fk",
           "tableFrom": "DynamicProjectField",
           "tableTo": "ProjectField",
-          "columnsFrom": ["field0_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "field0_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -105,8 +113,12 @@
           "name": "DynamicProjectField_field1_id_ProjectField_id_fk",
           "tableFrom": "DynamicProjectField",
           "tableTo": "ProjectField",
-          "columnsFrom": ["field1_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "field1_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -172,8 +184,12 @@
           "name": "FileUpload_observation_id_Observation_id_fk",
           "tableFrom": "FileUpload",
           "tableTo": "Observation",
-          "columnsFrom": ["observation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "observation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -183,7 +199,9 @@
         "FileUpload_file_path_unique": {
           "name": "FileUpload_file_path_unique",
           "nullsNotDistinct": false,
-          "columns": ["file_path"]
+          "columns": [
+            "file_path"
+          ]
         }
       },
       "policies": {},
@@ -251,8 +269,12 @@
           "name": "ImageUpload_project_field_id_ProjectField_id_fk",
           "tableFrom": "ImageUpload",
           "tableTo": "ProjectField",
-          "columnsFrom": ["project_field_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_field_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -260,8 +282,12 @@
           "name": "ImageUpload_observation_id_Observation_id_fk",
           "tableFrom": "ImageUpload",
           "tableTo": "Observation",
-          "columnsFrom": ["observation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "observation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -271,7 +297,9 @@
         "ImageUpload_file_path_unique": {
           "name": "ImageUpload_file_path_unique",
           "nullsNotDistinct": false,
-          "columns": ["file_path"]
+          "columns": [
+            "file_path"
+          ]
         }
       },
       "policies": {},
@@ -314,8 +342,12 @@
           "name": "ObservationTag_observation_id_Observation_id_fk",
           "tableFrom": "ObservationTag",
           "tableTo": "Observation",
-          "columnsFrom": ["observation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "observation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -323,8 +355,12 @@
           "name": "ObservationTag_tag_id_Tag_id_fk",
           "tableFrom": "ObservationTag",
           "tableTo": "Tag",
-          "columnsFrom": ["tag_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -332,8 +368,12 @@
           "name": "ObservationTag_created_by_id_User_id_fk",
           "tableFrom": "ObservationTag",
           "tableTo": "User",
-          "columnsFrom": ["created_by_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -341,7 +381,10 @@
       "compositePrimaryKeys": {
         "ObservationTag_observation_id_tag_id_pk": {
           "name": "ObservationTag_observation_id_tag_id_pk",
-          "columns": ["observation_id", "tag_id"]
+          "columns": [
+            "observation_id",
+            "tag_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -413,8 +456,12 @@
           "name": "Observation_project_id_Project_id_fk",
           "tableFrom": "Observation",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -422,8 +469,12 @@
           "name": "Observation_user_id_User_id_fk",
           "tableFrom": "Observation",
           "tableTo": "User",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -478,8 +529,12 @@
           "name": "ProjectAccess_user_id_User_id_fk",
           "tableFrom": "ProjectAccess",
           "tableTo": "User",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -487,8 +542,12 @@
           "name": "ProjectAccess_project_id_Project_id_fk",
           "tableFrom": "ProjectAccess",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -496,7 +555,10 @@
       "compositePrimaryKeys": {
         "ProjectAccess_project_id_user_id_pk": {
           "name": "ProjectAccess_project_id_user_id_pk",
-          "columns": ["project_id", "user_id"]
+          "columns": [
+            "project_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -603,8 +665,12 @@
           "name": "ProjectExport_user_id_User_id_fk",
           "tableFrom": "ProjectExport",
           "tableTo": "User",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -612,8 +678,12 @@
           "name": "ProjectExport_project_id_Project_id_fk",
           "tableFrom": "ProjectExport",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -623,7 +693,9 @@
         "ProjectExport_file_path_unique": {
           "name": "ProjectExport_file_path_unique",
           "nullsNotDistinct": false,
-          "columns": ["file_path"]
+          "columns": [
+            "file_path"
+          ]
         }
       },
       "policies": {},
@@ -735,8 +807,12 @@
           "name": "ProjectField_project_id_Project_id_fk",
           "tableFrom": "ProjectField",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -795,8 +871,12 @@
           "name": "ProjectInvitation_inviter_id_User_id_fk",
           "tableFrom": "ProjectInvitation",
           "tableTo": "User",
-          "columnsFrom": ["inviter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -804,8 +884,12 @@
           "name": "ProjectInvitation_project_id_Project_id_fk",
           "tableFrom": "ProjectInvitation",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -831,6 +915,12 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -887,8 +977,12 @@
           "name": "Project_author_id_User_id_fk",
           "tableFrom": "Project",
           "tableTo": "User",
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -965,8 +1059,12 @@
           "name": "ResetPasswordToken_user_id_User_id_fk",
           "tableFrom": "ResetPasswordToken",
           "tableTo": "User",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1034,8 +1132,12 @@
           "name": "Tag_project_id_Project_id_fk",
           "tableFrom": "Tag",
           "tableTo": "Project",
-          "columnsFrom": ["project_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1043,8 +1145,12 @@
           "name": "Tag_created_by_id_User_id_fk",
           "tableFrom": "Tag",
           "tableTo": "User",
-          "columnsFrom": ["created_by_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1065,13 +1171,6 @@
           "primaryKey": true,
           "notNull": true
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'Anonymous'"
-        },
         "email": {
           "name": "email",
           "type": "varchar(255)",
@@ -1083,6 +1182,13 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Anonymous'"
         },
         "created_at": {
           "name": "created_at",
@@ -1130,22 +1236,37 @@
     "public.auth_source": {
       "name": "auth_source",
       "schema": "public",
-      "values": ["SAML", "PASSWORD"]
+      "values": [
+        "SAML",
+        "PASSWORD"
+      ]
     },
     "public.export_status": {
       "name": "export_status",
       "schema": "public",
-      "values": ["QUEUED", "GENERATING", "DONE", "ERRORED"]
+      "values": [
+        "QUEUED",
+        "GENERATING",
+        "DONE",
+        "ERRORED"
+      ]
     },
     "public.export_type": {
       "name": "export_type",
       "schema": "public",
-      "values": ["NVIVO", "UPLOADS", "MEDIA"]
+      "values": [
+        "NVIVO",
+        "UPLOADS",
+        "MEDIA"
+      ]
     },
     "public.field_operator": {
       "name": "field_operator",
       "schema": "public",
-      "values": ["DIFF", "SUM"]
+      "values": [
+        "DIFF",
+        "SUM"
+      ]
     },
     "public.field_type": {
       "name": "field_type",
@@ -1169,7 +1290,10 @@
     "public.project_role": {
       "name": "project_role",
       "schema": "public",
-      "values": ["OWNER", "INVITED"]
+      "values": [
+        "OWNER",
+        "INVITED"
+      ]
     }
   },
   "schemas": {},

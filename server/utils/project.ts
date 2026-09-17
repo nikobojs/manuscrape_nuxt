@@ -64,6 +64,7 @@ export async function getSmallProjects(
       createdAt: projects.createdAt,
       storageLimit: projects.storageLimit,
       name: projects.name,
+      description: projects.description,
       authorCanDelockObservations: projects.authorCanDelockObservations,
       ownerCanDelockObservations: projects.ownerCanDelockObservations,
       contributorsCanReadAllObservations:

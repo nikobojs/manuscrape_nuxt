@@ -84,6 +84,7 @@ export const users = pgTable("User", {
 export const projects = pgTable("Project", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   authorId: integer("author_id").references(() => users.id, {
     onDelete: "set null",
