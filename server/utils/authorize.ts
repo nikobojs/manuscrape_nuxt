@@ -29,7 +29,9 @@ export async function getUserFromSession(
   // Fallback: Check for JWT token in Authorization header if token api enabled or testing
   if (config.vitest || config.tokenApiEnabled) {
     try {
-      const authHeader = getHeader(event, "Authorization");
+      const newAuthHeader = getHeader(event, "Authorization");
+      const olderAuthHeader = getHeader(event, "Authentication");
+      const authHeader = newAuthHeader || olderAuthHeader;
       if (authHeader) {
         const token = authHeader.replace("Bearer ", "");
         if (token) {
