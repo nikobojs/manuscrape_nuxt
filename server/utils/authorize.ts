@@ -26,9 +26,8 @@ export async function getUserFromSession(
     // console.debug("Session check failed, trying token auth:", e);
   }
 
-  // Fallback: Check for JWT token in Authorization header for tests
+  // Fallback: Check for JWT token in Authorization header if token api enabled or testing
   if (config.vitest || config.tokenApiEnabled) {
-    if (!config.vitest) console.warn("Using tokens meant for testing only");
     try {
       const authHeader = getHeader(event, "Authorization");
       if (authHeader) {
