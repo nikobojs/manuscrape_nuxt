@@ -1,20 +1,16 @@
-import { compare } from "bcryptjs";
 import * as yup from "yup";
+import { jwtVerify } from "jose";
 
 // NOTE: this endpoint only exists to support backward
 //       compatability with the old manuscrape clients
 // - This file is to be deleted when newer native clients have been releases,
 //   along with full deprecation of the current token authorization
-export const SignInRequestSchema = yup
+const TokenSignInRequestSchema = yup
   .object({
-    email: yup
+    token: yup
       .string()
-      .required("Email is required")
-      .typeError("Email is not valid"),
-    password: yup
-      .string()
-      .required("Password is required")
-      .typeError("Password is not valid"),
+      .required("Token is required")
+      .typeError("Token is not valid"),
   })
   .required();
 
@@ -29,16 +25,43 @@ export default safeResponseHandler(async (event) => {
 
   // read body and initiate parsed body
   const body = await readBody(event);
-  let parsed: SignInBody | undefined;
+  let parsed;
   // validate with yup and save to variable 'parsed'
   try {
-    parsed = await SignInRequestSchema.validate(body);
+    parsed = await TokenSignInRequestSchema.validate(body);
   } catch (e: any) {
     const msg = e?.message || "Missing required body parameters";
     return await delayedError(event, 400, msg, true);
   }
+
+  let userId: number | undefined = undefined;
+  try {
+    const tokenSecret = config.tokenSecret;
+    if (!tokenSecret) {
+      throw new Error("TOKEN_SECRET is not configured");
+    }
+
+    const { payload: userData } = await jwtVerify(
+      parsed.token,
+      new TextEncoder().encode(tokenSecret),
+    );
+
+    if (userData && userData.id) {
+      userId = userData.id as number;
+    } else {
+      console.error("userData looks wrong");
+    }
+  } catch (e) {
+    console.error("Token verification failed, error below");
+    console.error(e);
+  }
+
+  if (!userId) {
+    return await delayedError(event, 400, "Invalid token", true);
+  }
+
   // fetch user from db with email from request body
-  const user = await getUserByEmail(parsed.email, {
+  const user = await getUserById(userId, {
     id: true,
     email: true,
     name: true,
@@ -58,11 +81,6 @@ export default safeResponseHandler(async (event) => {
       400,
       "User does not have a password. Only password users can use the token API",
     );
-  }
-  // handle if password mismatch
-  const passwordOk = await compare(parsed.password, user.password);
-  if (!passwordOk) {
-    return await delayedError(event, 403, "Wrong password");
   }
 
   // create session and get token for tests
