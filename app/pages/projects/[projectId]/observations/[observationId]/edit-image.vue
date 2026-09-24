@@ -17,9 +17,10 @@
 </template>
 
 <script lang="ts" setup>
-const { ensureLoggedIn } = await useAuth();
-await useUser();
-await ensureLoggedIn();
+definePageMeta({ middleware: "auth" });
+
+const { ensureUserFetched } = await useAuth();
+await ensureUserFetched();
 const { params } = useRoute();
 const { isElectron } = useDevice();
 const { project } = await useProjects(params);

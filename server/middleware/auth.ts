@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       event.context.user = session.user;
       // console.log("User logged in!!!");
     } catch (e) {
-      const url = "/login?redirect_to=" + event.path;
+      const url = "/login?redirect_to=" + encodeURIComponent(event.path);
       return sendRedirect(event, url, 302);
     }
   }

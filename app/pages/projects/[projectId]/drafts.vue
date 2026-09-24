@@ -16,10 +16,10 @@
 </template>
 
 <script lang="ts" setup>
-const { ensureLoggedIn, ensureUserFetched } = await useAuth();
-await useUser();
+definePageMeta({ middleware: "auth" });
+
+const { ensureUserFetched } = await useAuth();
 await ensureUserFetched(); // this is apparently required for this page to work correctly in electron
-await ensureLoggedIn();
 const { params } = useRoute();
 const { project } = await useProjects(params);
 const toast = useToast();

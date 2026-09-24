@@ -1,7 +1,7 @@
 import { captureException } from "@sentry/vue";
 
 export const useAuth = async () => {
-  const { user, refreshUser, hasFetched } = await useUser();
+  const { user, refreshUser, hasFetched, resetUserState } = await useUser();
 
   const login = async (email: string, password: string) => {
     return $fetch<{ success: boolean }>("/api/auth", {
@@ -47,41 +47,25 @@ export const useAuth = async () => {
   }
 
   const signOut = async () => {
-    await $fetch("/api/auth", {
-      method: "DELETE",
-      onResponse: async (ctx) => {
-        if (ctx.response.status === 200) {
-          const j = ctx.response._data;
-          console.log("[Logout]: this is logout response data: ", j);
-          if (j?.logoutUrl) {
-            await samlSignout(j.logoutUrl, j);
-            // await navigateTo(j.logoutUrl, { external: true });
-          } else {
-            await navigateTo("/login?sign_out=1");
-          }
-        } else {
-          console.error("Unable to log out - response error");
-          const errMsg =
-            ctx?.error?.message ||
-            ctx?.response?._data?.message ||
-            "Unknown error";
-          console.error(errMsg);
-          captureException(errMsg);
-          await navigateTo("/login?sign_out=1");
-        }
-      },
-      onResponseError: async (ctx) => {
-        console.error("Unable to log out - response error");
-        const errMsg =
-          ctx?.error?.message ||
-          ctx?.response?._data?.message ||
-          "Unknown error";
-        console.error(errMsg);
-        captureException(errMsg);
-        await navigateTo("/login?sign_out=1");
-      },
-    });
-    user.value = undefined;
+    let res: any;
+    try {
+      res = await $fetch("/api/auth", { method: "DELETE" });
+    } catch (err: any) {
+      // Log out locally even if the server call failed
+      console.error("Unable to log out - response error", err);
+      captureException(err);
+    }
+
+    // Clear the app auth state BEFORE navigating, so that route middleware
+    // (auth/guest) sees the logged-out state instead of bouncing us
+    // straight back to /projects.
+    resetUserState();
+
+    if (res?.logoutUrl) {
+      await samlSignout(res.logoutUrl, res);
+    } else {
+      await navigateTo("/login?sign_out=1", { replace: true });
+    }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -94,17 +78,13 @@ export const useAuth = async () => {
     });
   };
 
-  const ensureLoggedIn = async () => {
-    if (!user.value) {
-      await navigateTo("/login", { redirectCode: 302 });
-    }
-  };
-
   const ensureUserFetched = async () => {
-    if (!hasFetched.value) {
-      hasFetched.value = true;
-      const res = await refreshUser();
-      return res;
+    hasFetched.value = true;
+    if (!user.value) {
+      // dedupe: "defer" joins a /api/user fetch that is already in flight
+      // (e.g. the one started by the Header) instead of cancelling and
+      // restarting it
+      await refreshUser({ dedupe: "defer" });
     }
   };
 
@@ -121,7 +101,6 @@ export const useAuth = async () => {
 
   return {
     deleteUserAccount,
-    ensureLoggedIn,
     ensureUserFetched,
     hasFetched,
     login,

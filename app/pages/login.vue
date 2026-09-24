@@ -93,37 +93,31 @@
 
 <script lang="ts" setup>
 import { getErrMsg } from "~/utils/getErrMsg";
+import { captureException } from "@sentry/vue";
+
+definePageMeta({ middleware: "guest" });
 
 const error = ref("");
 const { login, user, refreshUser } = await useAuth();
-// await ensureUserFetched();
 const route = useRoute();
-const router = useRouter();
 const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
 const passwordInput = ref();
 const emailInput = ref();
 
-// Redirect to projects if user becomes logged in
-watch(
-  () => user.value,
-  (u) => {
-    if (u) {
-      const fromQuery = route.query.redirect_to as string | undefined;
-      let redirectTo = "/projects";
-      if (
-        fromQuery &&
-        fromQuery.startsWith("/") &&
-        !fromQuery.startsWith("//") &&
-        !fromQuery.includes("http")
-      ) {
-        redirectTo = fromQuery;
-      }
-      router.push(redirectTo);
-    }
-  },
-  { immediate: true },
-);
+// Where to send the user after a successful login
+function getRedirectTo(): string {
+  const fromQuery = route.query.redirect_to as string | undefined;
+  if (
+    fromQuery &&
+    fromQuery.startsWith("/") &&
+    !fromQuery.startsWith("//") &&
+    !fromQuery.includes("http")
+  ) {
+    return fromQuery;
+  }
+  return "/projects";
+}
 
 const loginWithSaml = () => {
   window.location.href = "/api/auth/saml/login";
@@ -167,8 +161,14 @@ async function handleLogin() {
             );
           }
         } else {
-          // For web, just refresh user state - the watch will handle redirect
           await refreshUser();
+          if (user.value) {
+            await navigateTo(getRedirectTo());
+          } else {
+              const msg = "Logged in, but the session could not be verified. Please try logging in again.";
+              error.value = msg;
+              captureException(new Error(msg));
+          }
         }
       })
       .catch((err) => {

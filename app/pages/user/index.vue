@@ -10,9 +10,10 @@
 </template>
 
 <script lang="ts" setup>
-const { ensureLoggedIn, ensureUserFetched } = await useAuth();
+definePageMeta({ middleware: "auth" });
+
+const { ensureUserFetched } = await useAuth();
 const { user } = await useUser();
 await ensureUserFetched(); // this is apparently required for this page to work correctly in electron
-await ensureLoggedIn();
 const { isElectron } = useDevice();
 </script>

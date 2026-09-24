@@ -1,5 +1,10 @@
+// The shared user state. Kept in one place so that middleware (see
+// isAuthenticated) reads the exact same state that useUser populates.
+export const useCurrentUser = () =>
+  useState<CurrentUser | undefined>("user", () => undefined);
+
 export const useUser = async () => {
-  const user = useState<CurrentUser | undefined>("user", () => undefined);
+  const user = useCurrentUser();
   const projects = useState<FullProject[]>("projects", () => []);
   const hasFetched = useState<boolean>("hasFetched", () => !!user.value);
   const projectAccess = useState<ExtendedProjectAccess[]>(
@@ -62,6 +67,7 @@ export const useUser = async () => {
   function resetUserState() {
     user.value = undefined;
     projects.value = [];
+    projectAccess.value = [];
   }
 
   return {

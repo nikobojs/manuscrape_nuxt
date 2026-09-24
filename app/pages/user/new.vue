@@ -109,6 +109,9 @@
 <script lang="ts" setup>
 import type { FormError } from "#ui/types";
 import { getErrMsg } from "~/utils/getErrMsg";
+import { captureException } from "@sentry/vue";
+
+definePageMeta({ middleware: "guest" });
 
 const state = ref({
   name: "",
@@ -117,15 +120,7 @@ const state = ref({
 });
 
 const errorMessage = ref("");
-const router = useRouter();
 const { user, signUp, refreshUser } = await useAuth();
-
-// Redirect to projects if user becomes logged in
-watch(() => user.value, (newUser) => {
-  if (newUser) {
-    router.push("/projects");
-  }
-}, { immediate: true });
 
 const form = ref();
 const loading = ref(false);
@@ -161,8 +156,15 @@ async function submit() {
           console.warn('window.electronAPI not available in Electron environment');
         }
       } else {
-        // Just trigger a user refresh - the watch will handle redirect
+        // Verify the session and go to the projects overview
         await refreshUser();
+        if (user.value) {
+          await navigateTo("/projects");
+        } else {
+          const msg = "Account created, but the session could not be verified. Please log in.";
+          errorMessage.value = msg;
+          captureException(new Error(msg));
+        }
       }
     })
     .catch((err) => {

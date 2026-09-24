@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-const { ensureLoggedIn } = await useAuth();
-await useUser();
-await ensureLoggedIn();
+definePageMeta({ middleware: "auth" });
+const { ensureUserFetched } = await useAuth();
+await ensureUserFetched();
 </script>

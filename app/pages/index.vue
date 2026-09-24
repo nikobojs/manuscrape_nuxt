@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 // Redirect logic handled by route middleware
 definePageMeta({
-  middleware: ['redirect-auth']
+  middleware: ["home"],
 });
 </script>
 

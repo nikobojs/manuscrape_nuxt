@@ -71,15 +71,16 @@
 <script lang="ts" setup>
 import ProjectDescriptionModal from "~/components/Project/DescriptionModal.vue";
 
-const { ensureLoggedIn } = await useAuth();
-const { refreshUser } = await useUser();
-await ensureLoggedIn();
+definePageMeta({ middleware: "auth" });
+
+const { ensureUserFetched, refreshUser } = await useAuth();
+await ensureUserFetched();
 const { params } = useRoute();
 const { project, isOwner, patchProject } = await useProjects(params);
 const toast = useToast();
 
 const openDescriptionModal = ref(false);
- 
+
 if (!project.value) {
   toast.add({
     title: "Access denied",
