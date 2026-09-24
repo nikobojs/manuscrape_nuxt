@@ -29,16 +29,14 @@ export async function getMailer(
     name: "codecoll.eu",
     host: config.smtpHost,
     port: port,
-    tls: {
-      host: config.smtpHost,
-      servername: config.smtpTlsHost,
-      rejectUnauthorized: true,
-      minVersion: "TLSv1.3",
-      port: port,
-    },
+    secure: config.smtpSecure,
     requireTLS: false,
-    ignoreTLS: true,
-    secure: true,
+    ignoreTLS: !config.smtpSecure,
+    tls: {
+      servername: config.smtpTlsHost,
+      rejectUnauthorized: config.smtpVerifyTls,
+      minVersion: "TLSv1.3",
+    },
     auth: {
       type: "login",
       user: config.smtpUser,

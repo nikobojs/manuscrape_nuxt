@@ -50,6 +50,8 @@ export default defineNuxtConfig({
     s3BucketName: process.env.S3_BUCKET_NAME || "",
     smtpHost: process.env.SMTP_HOST,
     smtpTlsHost: process.env.SMTP_HOST_TLS,
+    smtpSecure: process.env.SMTP_SECURE?.toLowerCase() !== "false",
+    smtpVerifyTls: process.env.SMTP_TLS_VERIFY?.toLowerCase() !== "false",
     smtpUser: process.env.SMTP_USER,
     smtpPass: process.env.SMTP_PASS,
     smtpFrom: process.env.SMTP_FROM,
