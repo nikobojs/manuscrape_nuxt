@@ -153,13 +153,6 @@ export const projectFields = pgTable(
   ],
 );
 
-export const projectFieldsRelations = relations(projectFields, ({ one }) => ({
-  project: one(projects, {
-    fields: [projectFields.projectId],
-    references: [projects.id],
-  }),
-}));
-
 export const dynamicProjectFields = pgTable(
   "DynamicProjectField",
   {
@@ -296,6 +289,13 @@ export const projectExports = pgTable("ProjectExport", {
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
 });
+
+export const projectFieldsRelations = relations(projectFields, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectFields.projectId],
+    references: [projects.id],
+  }),
+}));
 
 export const usersRelations = relations(users, ({ many }) => ({
   ownedProjects: many(projects, { relationName: "author" }),

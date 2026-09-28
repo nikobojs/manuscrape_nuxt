@@ -481,7 +481,6 @@ export async function openSignUpPage(): Promise<Response> {
 }
 
 export async function openIndexPage(): Promise<Response> {
-  console.log("TEST BASE URL:", testBaseUrl);
   const res = await _fetch(`${testBaseUrl}/`, { redirect: "manual" });
   return res;
 }
@@ -832,7 +831,6 @@ export async function withTempImageProject(
 
 export async function removeStuff() {
   try {
-    console.log("begin delete all data from db..");
     await db.transaction(async (tx) => {
       await tx.delete(tags);
       await tx.delete(projectAccesses);
@@ -848,7 +846,7 @@ export async function removeStuff() {
       await tx.delete(projects);
       await tx.delete(users);
     });
-    console.log("done delete all");
+    // console.log("deleted all tables in database");
   } catch (e) {
     console.error(e);
     throw e;
