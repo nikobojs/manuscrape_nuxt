@@ -1,11 +1,5 @@
-import * as yup from "yup";
 import type { NuxtError } from "nuxt/app";
-
-export const DuplicateProjectSchema = yup
-  .object({
-    name: yup.string().required(),
-  })
-  .required();
+import { DuplicateProjectSchema } from "#shared/schemas/DuplicateProject";
 
 export default safeResponseHandler(async (event) => {
   const { user: _user } = await requireUserFromSession(event);

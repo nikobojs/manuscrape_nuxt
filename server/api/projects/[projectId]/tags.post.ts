@@ -1,4 +1,4 @@
-import * as yup from "yup";
+import { NewTagSchema } from "#shared/schemas/NewTag";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
@@ -8,10 +8,6 @@ export default safeResponseHandler(async (event) => {
   ]);
 
   const projectId = parseIntParam(event.context.params?.projectId);
-
-  const NewTagSchema = yup.object({
-    name: yup.string().trim().min(1).max(100).required(),
-  });
 
   const body = await readBody(event);
   const newTag = await NewTagSchema.validate(body);

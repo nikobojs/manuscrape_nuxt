@@ -1,19 +1,4 @@
-import yup from "yup";
-
-const querySchema = yup
-  .object({
-    password: yup
-      .string()
-      .required("Password is required")
-      .typeError("Password is not valid")
-      .min(3),
-    token: yup
-      .string()
-      .required("Token is required")
-      .typeError("Token is not valid")
-      .min(3),
-  })
-  .required("Email is not defined");
+import { ResetPasswordSchema } from "#shared/schemas/ResetPassword";
 export default safeResponseHandler(async (event) => {
   const config = useRuntimeConfig();
   // retrieve validated query with email
@@ -21,7 +6,7 @@ export default safeResponseHandler(async (event) => {
   let password = "";
   try {
     const bodyRaw = await readBody(event);
-    const body = await querySchema.validate(bodyRaw);
+    const body = await ResetPasswordSchema.validate(bodyRaw);
     token = body.token;
     password = body.password;
   } catch (e: any) {

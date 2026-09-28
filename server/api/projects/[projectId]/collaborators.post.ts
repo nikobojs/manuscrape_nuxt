@@ -1,11 +1,5 @@
-import * as yup from "yup";
 import { daysInFuture } from "#shared/utils/datetime";
-
-const AddCollaboratorSchema = yup
-  .object({
-    email: yup.string().required(),
-  })
-  .required();
+import { AddCollaboratorSchema } from "#shared/schemas/AddCollaborator";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);

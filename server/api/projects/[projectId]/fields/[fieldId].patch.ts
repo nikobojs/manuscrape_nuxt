@@ -1,19 +1,9 @@
 import { captureException } from "@sentry/node";
-import * as yup from "yup";
 import {
   isMultipleChoice,
   serializeChoices,
 } from "#shared/utils/observationFields";
-
-export const PatchProjectFieldSchema = yup
-  .object({
-    label: yup.string(),
-    required: yup.boolean(),
-    // choices: yup.array().of(yup.string().required()).optional(),
-    choices: yup.array(yup.string().required()),
-    index: yup.number(),
-  })
-  .required();
+import { PatchProjectFieldSchema } from "#shared/schemas/PatchProjectField";
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok

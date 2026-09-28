@@ -1,14 +1,5 @@
-import yup from "yup";
 import { captureException } from "@sentry/node";
-
-const bodySchema = yup
-  .object({
-    email: yup
-      .string()
-      .required("Email is required")
-      .typeError("Email is not valid"),
-  })
-  .required("Email is not defined");
+import { ResetPasswordRequestSchema } from "#shared/schemas/ResetPasswordRequest";
 
 export default safeResponseHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -16,7 +7,7 @@ export default safeResponseHandler(async (event) => {
   let email = "";
   try {
     const rawBody = await readBody(event);
-    const body = await bodySchema.validate(rawBody);
+    const body = await ResetPasswordRequestSchema.validate(rawBody);
     email = body.email;
   } catch (e: any) {
     const errMsg = e?.message;

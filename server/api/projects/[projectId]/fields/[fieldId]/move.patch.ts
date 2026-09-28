@@ -1,11 +1,5 @@
 import { captureException } from "@sentry/node";
-import * as yup from "yup";
-
-export const MoveProjectFieldSchema = yup
-  .object({
-    up: yup.boolean().required(),
-  })
-  .required();
+import { MoveProjectFieldSchema } from "#shared/schemas/MoveProjectField";
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok

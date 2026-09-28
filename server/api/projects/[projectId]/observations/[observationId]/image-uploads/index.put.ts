@@ -1,23 +1,17 @@
 import { captureException } from "@sentry/node";
 import formidable from "formidable";
-import * as yup from "yup";
 import * as fs from "node:fs";
+import { ImageUploadQuerySchema } from "#shared/schemas/ImageUploadQuery";
 
 const allowedMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
 const config = useRuntimeConfig();
-
-const queryDto = yup
-  .object({
-    projectFieldId: yup.string().required(),
-  })
-  .required();
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
   await ensureURLResourceAccess(event, user);
   const params = event.context.params;
   const _query = getQuery(event);
-  const query = await queryDto.validate(_query);
+  const query = await ImageUploadQuerySchema.validate(_query);
   const projectFieldId = parseIntParam(query.projectFieldId);
   const observationId = parseIntParam(params?.observationId);
 

@@ -1,26 +1,12 @@
-import * as yup from "yup";
 import { emailChangedTemplate } from "~~/server/utils/mails/templates/email-changed";
 import { captureException } from "@sentry/node";
-
-export const updateUserSchema = yup
-  .object({
-    email: yup
-      .string()
-      .required("Email is required")
-      .typeError("Email is not valid")
-      .nullable(),
-    name: yup
-      .string()
-      .required("Full name is required")
-      .typeError("Full name is not valid"),
-  })
-  .required();
+import { UpdateUserSchema } from "#shared/schemas/UpdateUser";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
   const { id, email, name } = user;
   const body = await readBody(event);
-  const parsedBody = await updateUserSchema.validate(body);
+  const parsedBody = await UpdateUserSchema.validate(body);
   await updateUserProfile(id, parsedBody.email, parsedBody.name);
   if (body.email !== email) {
     // TODO: send email was changed warning

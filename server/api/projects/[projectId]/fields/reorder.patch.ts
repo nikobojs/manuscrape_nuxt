@@ -1,18 +1,5 @@
 import { captureException } from "@sentry/node";
-import * as yup from "yup";
-
-const ReorderProjectFieldsSchema = yup
-  .object({
-    fieldIndexes: yup
-      .array(
-        yup.object({
-          id: yup.number().required(),
-          index: yup.number().required(),
-        })
-      )
-      .required(),
-  })
-  .required();
+import { ReorderProjectFieldsSchema } from "#shared/schemas/ReorderProjectFields";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);

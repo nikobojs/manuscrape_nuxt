@@ -1,12 +1,5 @@
 import { compare } from "bcryptjs";
-import * as yup from "yup";
-
-
-export const DeleteUserSchema = yup
-  .object({
-    password: yup.string().typeError("Password is not valid"),
-  })
-  .required();
+import { DeleteUserSchema } from "#shared/schemas/DeleteUser";
 
 export default safeResponseHandler(async (event) => {
   const { user: _user } = await requireUserFromSession(event);

@@ -1,14 +1,4 @@
-import * as yup from "yup";
-
-export const PatchProjectFieldSchema = yup
-  .object({
-    name: yup.string().optional(),
-    description: yup.string().optional(),
-    canDelockObservations: yup.boolean().optional(),
-    ownerCanPatchObservations: yup.boolean().optional(),
-    contributorsCanReadAllObservations: yup.boolean().optional(),
-  })
-  .required();
+import { PatchProjectSchema } from "#shared/schemas/PatchProject";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
@@ -17,7 +7,7 @@ export default safeResponseHandler(async (event) => {
   // get integer parameters
   const projectId = parseIntParam(event.context.params?.projectId);
   const body = await readBody(event);
-  const patch = await PatchProjectFieldSchema.validate(body);
+  const patch = await PatchProjectSchema.validate(body);
   await updateProject(projectId, patch);
   setResponseStatus(event, 204);
 });

@@ -1,10 +1,4 @@
-import * as yup from "yup";
-const PatchCollaboratorBody = yup
-  .object({
-    nameInProject: yup.string(),
-    role: yup.string(),
-  })
-  .required();
+import { PatchCollaboratorSchema } from "#shared/schemas/PatchCollaborator";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
@@ -13,7 +7,7 @@ export default safeResponseHandler(async (event) => {
   const collaboratorId = parseIntParam(event.context.params?.collaboratorId);
   const body = await readBody(event);
 
-  const { nameInProject, role } = await PatchCollaboratorBody.validate(body);
+  const { nameInProject, role } = await PatchCollaboratorSchema.validate(body);
   const patch: any = {};
 
   // validate role in body and set in patch

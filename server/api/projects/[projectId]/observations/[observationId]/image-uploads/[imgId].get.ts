@@ -1,18 +1,12 @@
-import * as yup from "yup";
 import { captureException } from "@sentry/node";
-
-const queryDto = yup
-  .object({
-    projectFieldId: yup.string().required(),
-  })
-  .required();
+import { ImageUploadQuerySchema } from "#shared/schemas/ImageUploadQuery";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
   await ensureURLResourceAccess(event, user);
   const params = event.context.params;
   const _query = getQuery(event);
-  const query = await queryDto.validate(_query);
+  const query = await ImageUploadQuerySchema.validate(_query);
   const projectFieldId = parseIntParam(query.projectFieldId);
   const observationId = parseIntParam(params?.observationId);
   const imageUploadId = parseIntParam(params?.imgId);

@@ -1,26 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
-import * as yup from "yup";
 import { observations, observationTags } from "~~/server/drizzle/schema";
-
-const patchObservationSchema = yup
-  .object({
-    isDraft: yup.bool().optional(),
-    data: yup.object().optional(),
-    tags: yup
-      .object()
-      .shape({
-        connect: yup
-          .array()
-          .of(yup.object({ id: yup.number().required() }))
-          .optional(),
-        disconnect: yup
-          .array()
-          .of(yup.object({ id: yup.number().required() }))
-          .optional(),
-      })
-      .optional(),
-  })
-  .required();
+import { PatchObservationSchema } from "#shared/schemas/PatchObservation";
 
 export default safeResponseHandler(async (event) => {
   const { user } = await requireUserFromSession(event);
@@ -30,7 +10,7 @@ export default safeResponseHandler(async (event) => {
   await ensureURLResourceAccess(event, user);
 
   const body = await readBody(event);
-  let patch = await patchObservationSchema.validate(body);
+  let patch = await PatchObservationSchema.validate(body);
   patch = removeKeysByUndefinedValue(patch);
 
   // fetch existing observation
