@@ -1,20 +1,5 @@
 import { compare } from "bcryptjs";
-import * as yup from "yup";
-
-export const SignInRequestSchema = yup
-  .object({
-    // email: yup.string().required('Email is required'),
-    // password: yup.string().required('Password is required'),
-    email: yup
-      .string()
-      .required("Email is required")
-      .typeError("Email is not valid"),
-    password: yup
-      .string()
-      .required("Password is required")
-      .typeError("Password is not valid"),
-  })
-  .required();
+import { SignInRequestSchema } from "#shared/schemas/SignInRequest";
 
 export default safeResponseHandler(async (event) => {
   // read body and initiate parsed body

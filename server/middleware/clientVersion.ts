@@ -1,12 +1,13 @@
-import * as semver from 'semver';
+import * as semver from "semver";
 
 export default defineEventHandler(async (event) => {
-  const versionRequirement = useRuntimeConfig().manuscrapeClientVersionRequirement;
-  const userAgent = event.context.requestUserAgent;
+  const versionRequirement =
+    useRuntimeConfig().manuscrapeClientVersionRequirement;
+  const userAgent = (event.context.requestUserAgent || "").trim();
   if (!userAgent) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'User-agent cannot be empty',
+      statusMessage: "User-agent cannot be empty",
     });
   }
 
@@ -16,7 +17,10 @@ export default defineEventHandler(async (event) => {
   if (manuClient) {
     const manuVersion = versionRegex.exec(manuClient[0]);
     if (manuVersion?.[0]) {
-      const versionIsSupported = semver.satisfies(manuVersion[0], versionRequirement);
+      const versionIsSupported = semver.satisfies(
+        manuVersion[0],
+        versionRequirement,
+      );
       if (!versionIsSupported) {
         throw createError({
           statusCode: 426,

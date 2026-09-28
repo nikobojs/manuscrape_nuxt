@@ -1,4 +1,4 @@
-import { NewProjectFieldSchema } from "../../projects.post";
+import { NewProjectFieldSchema } from "#shared/schemas/NewProject";
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {

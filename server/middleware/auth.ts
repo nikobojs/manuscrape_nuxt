@@ -1,8 +1,3 @@
-import { defineEventHandler, sendRedirect } from "h3"; // this is not required in any other files than this one for unknown Nuxt-related type/build problems in major version 4
-import { getUserFromSession, requireUserFromSession } from "../utils/authorize";
-import { isOpenUrl } from "../utils/request";
-import { captureException } from "@sentry/node";
-
 export default defineEventHandler(async (event) => {
   const apiUrl = event.path.toString().startsWith("/api");
   // api takes care of their own auth

@@ -1,21 +1,4 @@
-import * as yup from "yup";
-
-export const NewProjectFieldSchema = yup
-  .object({
-    label: yup.string().required(),
-    type: yup.mixed<FieldType>().required().oneOf(FieldTypeValues).required(),
-    required: yup.boolean().required(),
-    choices: yup.array().of(yup.string().required()).optional(),
-    index: yup.number().required(),
-  })
-  .required();
-
-export const NewProjectSchema = yup
-  .object({
-    name: yup.string().required(),
-    fields: yup.array().of(NewProjectFieldSchema).required(),
-  })
-  .required();
+import { NewProjectSchema } from "#shared/schemas/NewProject";
 
 // TODO: prettify code
 export default safeResponseHandler(async (event) => {
