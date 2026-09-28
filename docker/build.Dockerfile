@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # NOTE: the comment below is deprecated
 # NOTE: this command can be used to create a build:
