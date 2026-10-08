@@ -51,6 +51,20 @@ if (typeof route.params.projectId !== "string" || !route.params.projectId) {
 
 const observation = ref<FullObservation | null>(null);
 
+// true while the observation has no content at all (no images, files, tags
+// or filled-in data) — only such empty drafts may be deleted when
+// discarding; anything with pre-existing content must stay untouched
+let observationIsEmpty = true;
+
+function observationHasContent(obs: FullObservation): boolean {
+  return (
+    (obs.images?.length ?? 0) > 0 ||
+    (obs.fileUploads?.length ?? 0) > 0 ||
+    (obs.tags?.length ?? 0) > 0 ||
+    (!!obs.data && Object.keys(obs.data).length > 0)
+  );
+}
+
 async function refreshObservation() {
   if (import.meta.server || !route.params?.projectId) return;
   if (!project.value) throw new Error("Project is not defined");
@@ -65,6 +79,7 @@ async function refreshObservation() {
     });
   } else {
     observation.value = obs;
+    observationIsEmpty = !observationHasContent(obs);
   }
 }
 
@@ -151,9 +166,17 @@ async function handleDiscard() {
     return;
   }
   try {
-    await deleteObservation(project.value.id, observation.value.id);
+    // only delete the observation when it is a completely empty draft —
+    // drafts with any content (images, files, tags, data) must survive
+    if (observationIsEmpty) {
+      await deleteObservation(project.value.id, observation.value.id);
+    }
     if (isElectron.value) {
       window.close();
+    } else if (!observationIsEmpty) {
+      await navigateTo(
+        `/projects/${project.value.id}/observations/${observation.value.id}`,
+      );
     }
   } catch (e) {
     report("error", e as Error);
