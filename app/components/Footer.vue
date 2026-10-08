@@ -1,7 +1,10 @@
 <template>
   <footer>
     <ClientOnly>
-      <UContainer class="pb-8 pt-12 text-xs text-gray-500">
+      <UContainer
+        class="text-xs text-gray-500"
+        :class="isElectron ? 'pt-2 pb-4' : 'pb-8 pt-12'"
+      >
         {{ versionsString }}
       </UContainer>
     </ClientOnly>
@@ -10,7 +13,7 @@
 
 <script setup lang="ts">
   const { version } = useRuntimeConfig().public;
-  const { electronVersion } = await useDevice();
+  const { electronVersion, isElectron } = await useDevice();
 
   const versionsString = computed<string>(() => {
     const v = electronVersion.value;
