@@ -21,6 +21,10 @@ describe("Users updating their profiles", () => {
 
       for (const { email, name } of invalidProfiles) {
         const res = await updateUserProfile(token, { name, email });
+        const json = await res.json();
+        if (res.status !== 400) {
+          expect(json).toBe(false);
+        }
         expect(res.status).toBe(400);
       }
     });
