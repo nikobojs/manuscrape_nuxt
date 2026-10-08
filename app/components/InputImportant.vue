@@ -5,6 +5,7 @@
         <UInput
           v-model="draftValue"
           :placeholder="placeholder || 'Insert value'"
+          @keydown.enter="save"
         />
       </div>
       <div v-else>
@@ -45,10 +46,14 @@ function toggleEdit() {
   if (!editing.value) {
     editing.value = true;
   } else {
-    // saving
-    emit("edit", draftValue.value);
-    editing.value = false;
+    save();
   }
+}
+
+function save() {
+  if (!editing.value) return;
+  emit("edit", draftValue.value);
+  editing.value = false;
 }
 
 // when value changes, update draftValue
