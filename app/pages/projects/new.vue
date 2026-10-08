@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mt-9 xl:mt-16">
+  <UContainer :class="isElectron ? 'mt-3' : 'mt-9 xl:mt-16'">
     <ProjectCreateWidget :onClose="onClose" />
   </UContainer>
 </template>
