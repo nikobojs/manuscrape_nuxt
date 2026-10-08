@@ -22,7 +22,7 @@
                     inputsWithImage.length === 1 &&
                     inputsWithImage[0]!.field.type !== "IMAGE_MULTIPLE"
                       ? "Replace image"
-                      : "Take another"
+                      : "Add next shot to this observation"
                   }}
                   <UIcon class="text-lg" name="mdi:image-size-select-large" />
                 </UButton>
