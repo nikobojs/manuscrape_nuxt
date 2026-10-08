@@ -38,6 +38,7 @@
     "drizzle-kit": "^0.31.8",
     "nodemailer": "^8.0.7",
     "nuxt": "^4.2.2",
+    "nuxt-umami": "3.2.1",
     "pm2": "^6.0.14",
     "sass": "^1.85.1",
     "typescript": "^5.8.2",

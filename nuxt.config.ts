@@ -1,10 +1,24 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from "./package.json";
 
+const umamiHost = process.env.NUXT_UMAMI_HOST;
+const umamiId = process.env.NUXT_UMAMI_ID;
+const umamiEnabled = !!(
+  process.env.NUXT_UMAMI_ENABLED === "true" &&
+  umamiHost &&
+  umamiId
+);
+
+if (umamiEnabled) {
+  console.info("> using umami host:", umamiHost);
+} else {
+  console.info("> not using umami integration (missing env)");
+}
+
 export default defineNuxtConfig({
   devtools: { enabled: false },
   sourcemap: true,
-  modules: ["@nuxt/ui", "nuxt-auth-utils"],
+  modules: ["@nuxt/ui", "nuxt-auth-utils", "nuxt-umami"],
 
   typescript: {
     strict: true,
@@ -85,6 +99,18 @@ export default defineNuxtConfig({
       cert: process.env.SAML_IDP_CERT_PATH,
     },
     vitest: process.env.VITEST?.trim()?.toLowerCase?.() == "true",
+    umami: {
+      id: umamiId,
+      host: umamiHost,
+      autoTrack: umamiEnabled,
+      enabled: !!umamiHost && umamiEnabled,
+      logErrors: true,
+      ignoreLocalhost: false,
+      domains: process.env.NUXT_UMAMI_DOMAIN
+        ? [process.env.NUXT_UMAMI_DOMAIN as string]
+        : null, // allow all domains by default
+      proxy: "cloak",
+    },
   },
 
   colorMode: {
