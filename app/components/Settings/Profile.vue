@@ -44,11 +44,25 @@ const { user, refreshUser } = await useUser();
 const openDeleteModal = ref(false);
 
 async function onNameEdit(name: string) {
-  await updateProfile(name, user.value?.email || null);
+  const previousName = user.value?.name;
+  if (user.value) user.value.name = name; // optimistic — reverts below on failure
+  try {
+    await updateProfile(name, user.value?.email || null);
+  } catch (err) {
+    if (user.value && previousName) user.value.name = previousName;
+    throw err;
+  }
   await refreshUser();
 }
 async function onEmailEdit(email: string) {
-  await updateProfile(user.value?.name || "Anonymous", email);
+  const previousEmail = user.value?.email || null;
+  if (user.value) user.value.email = email; // optimistic — reverts below on failure
+  try {
+    await updateProfile(user.value?.name || "Anonymous", email);
+  } catch (err) {
+    if (user.value) user.value.email = previousEmail;
+    throw err;
+  }
   await refreshUser();
 }
 </script>
