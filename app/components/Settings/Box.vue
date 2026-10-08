@@ -19,7 +19,9 @@
     }"
   >
     <template #header>
-      <CardHeader>{{ title }}</CardHeader>
+      <div class="flex min-h-[40px] items-center border-b border-gray-200 pb-3 dark:border-slate-700">
+        <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">{{ title }}</h2>
+      </div>
     </template>
     <p class="mb-6 max-w-lg">{{ help }}</p>
     <slot />
