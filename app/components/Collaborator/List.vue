@@ -4,7 +4,9 @@
       {{ row.user_name || "Deleted user" }}
     </template>
     <template #role-data="{ row }">
-      {{ row.role }}
+      <UBadge variant="outline" color="gray">{{
+        row.role.toLowerCase().capitalize()
+      }}</UBadge>
     </template>
     <template #nameInProject-data="{ row }">
       <span class="flex items-start gap-x-2">
@@ -59,28 +61,28 @@ const toast = useToast();
 const { refreshUser } = await useUser();
 const { removeCollaborator } = await useProjects(params);
 
-  const columns = [
-    {
-      label: "Name",
-      key: "name",
-    },
-    {
-      label: "Role",
-      key: "role",
-    },
-    {
-      label: "Alias",
-      key: "nameInProject",
-    },
-    {
-      label: "Permission created at",
-      key: "createdAt",
-    },
-    {
-      label: "",
-      key: "actions",
-    },
-  ];
+const columns = [
+  {
+    label: "Name",
+    key: "name",
+  },
+  {
+    label: "Role",
+    key: "role",
+  },
+  {
+    label: "Alias",
+    key: "nameInProject",
+  },
+  {
+    label: "Permission created at",
+    key: "createdAt",
+  },
+  {
+    label: "",
+    key: "actions",
+  },
+];
 
 function handleRemoveCollaborator(collaborator: Collaborator) {
   // TODO: create nice confirm box

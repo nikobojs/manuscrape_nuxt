@@ -8,9 +8,12 @@
             <template #text>
               <p class="mb-3 whitespace-normal break-words">
                 If invited email is already registered on manuscrape, they will
-                recieve access right away. If not, they will get access once
-                they sign up on manuscrape. In that case, the invitation expire
-                after one week.
+                receive access instantly.
+              </p>
+              <p class="mb-3 whitespace-normal break-words">
+                If not, they will get access once they sign up on manuscrape
+                with that email. In that case, the invitation expire after one
+                week.
               </p>
               <p class="whitespace-normal break-words">
                 Manuscrape stores invitations by using one-way encryption on the
