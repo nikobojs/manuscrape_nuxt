@@ -37,7 +37,10 @@
           </UButton>
         </div>
       </div>
-      <label class="mb-3 block" v-if="multiple || images.length === 0">
+      <label
+        class="mb-3 block"
+        v-if="editable && (multiple || images.length === 0)"
+      >
         <UInput
           ref="fileInput"
           class="hidden"
