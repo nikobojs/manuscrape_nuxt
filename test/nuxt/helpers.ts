@@ -1,6 +1,8 @@
 import * as fs from "node:fs";
 import { expect } from "vitest";
 import { fetch as _fetch } from "@nuxt/test-utils";
+import { solveChallenge } from "altcha-lib";
+import { deriveKey } from "altcha-lib/algorithms/sha";
 import { daysInFuture } from "../../shared/utils/datetime";
 import { db as _db } from "../../server/utils/drizzle";
 import {
@@ -43,10 +45,23 @@ export async function login(json: any): Promise<Response> {
   return res;
 }
 
+// solves an altcha captcha challenge the same way the browser widget does,
+// so tests can sign up against the captcha-protected endpoint
+export async function getCaptchaPayload(): Promise<string> {
+  const res = await _fetch(`${testBaseUrl}/api/captcha/challenge`);
+  const challenge = await res.json();
+  const solution = await solveChallenge({ challenge, deriveKey });
+  if (!solution) {
+    throw new Error("Could not solve the captcha challenge in test setup");
+  }
+  return btoa(JSON.stringify({ challenge, solution }));
+}
+
 export async function signup(json: any): Promise<Response> {
+  const captcha = await getCaptchaPayload();
   const res = await _fetch(`${testBaseUrl}/api/user`, {
     method: "POST",
-    body: JSON.stringify(json),
+    body: JSON.stringify({ ...json, captcha }),
     headers: {
       ...contentTypeJson,
     },

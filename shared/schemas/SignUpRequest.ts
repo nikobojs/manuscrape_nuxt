@@ -11,5 +11,9 @@ export const SignUpRequestSchema = yup
       .required("Password is required")
       .typeError("Password is not valid"),
     name: yup.string().optional().typeError("Full name is not valid"),
+    captcha: yup
+      .string()
+      .required("Captcha is required")
+      .typeError("Captcha is not valid"),
   })
   .required();

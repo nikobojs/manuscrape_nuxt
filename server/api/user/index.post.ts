@@ -15,6 +15,12 @@ export default safeResponseHandler(async (event) => {
     return await delayedError(event, 400, msg, true);
   }
 
+  // ensure the request solved a captcha challenge
+  const captcha = await verifyCaptcha(parsed.captcha);
+  if (captcha.error || !captcha.verification?.verified) {
+    return await delayedError(event, 400, "Captcha verification failed", true);
+  }
+
   // ensure user isn't already created
   const existingUser = await getUserByEmail(parsed.email, { id: true });
   if (existingUser) {

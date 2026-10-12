@@ -8,7 +8,7 @@
         <CardHeader>Create dynamic field</CardHeader>
       </template>
       <div class="relative z-50">
-        <UForm ref="form" :validate="validate" :state="state" @submit="submit">
+        <UForm :validate="validate" :state="state" @submit="submit">
           <div class="grid grid-cols-2 gap-x-3 mb-3">
             <UFormGroup name="label" label="Label">
               <UInput placeholder="Enter field label" v-model="state.label" required />
@@ -66,7 +66,6 @@ const handleClose = () => {
 };
 
 const { createDynamicField, operators } = await useDynamicFields(props.project.id);
-const form = ref();
 const error = ref<FormError | null>(null);
 
 const initialState = {
@@ -101,15 +100,6 @@ async function validate(state: any) {
 }
 
 async function submit() {
-  try {
-    await form.value!.validate();
-  } catch (e) {
-    console.error(e);
-    // Do nothing as library takes care of errors
-    // NOTE: this is to avoid uncaught rejected promises
-    return;
-  }
-
   try {
     await createDynamicField(props.project.id, state as any);
     handleClose();

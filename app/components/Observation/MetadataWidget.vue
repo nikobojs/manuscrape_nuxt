@@ -14,7 +14,6 @@
     <ClientOnly>
       <UForm
         v-show="!loading"
-        ref="form"
         :validate="validate"
         :state="state"
         @submit="submit"
@@ -276,7 +275,6 @@ const emit = defineEmits<{
   "revert:data": [];
 }>();
 
-const form = ref();
 const sortedFields = computed(() =>
   sortFieldsByIndex(props.project.fields).filter(
     (pf) => !["IMAGE_SINGLE", "IMAGE_MULTIPLE"].includes(pf.type),
@@ -340,16 +338,6 @@ function getMultipleChoiceAddOptions(field: {
 }
 
 async function submit() {
-  try {
-    console.log("validating form...");
-    await form.value!.validate();
-  } catch (e) {
-    console.warn(e);
-    // Do nothing as library takes care of errors
-    // NOTE: this is to avoid uncaught rejected promises
-    return;
-  }
-
   const _res = await patchObservation(props.project.id, props.observation.id, {
     data: state.value,
   });

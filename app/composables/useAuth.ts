@@ -68,10 +68,15 @@ export const useAuth = async () => {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    captcha: string,
+  ) => {
     return $fetch<{ user: CurrentUser }>("/api/user", {
       method: "POST",
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, captcha }),
       headers: {
         "Content-Type": "application/json",
       },

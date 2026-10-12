@@ -34,7 +34,7 @@
         <form @submit.prevent="handleLogin">
           <label for="email-input"> Email </label>
           <UInput
-            ref="emailInput"
+            v-model="email"
             type="email"
             name="email"
             class="input"
@@ -47,7 +47,7 @@
 
           <label for="password-input"> Password </label>
           <UInput
-            ref="passwordInput"
+            v-model="password"
             type="password"
             name="password"
             class="input"
@@ -102,8 +102,8 @@ const { login, user, refreshUser } = await useAuth();
 const route = useRoute();
 const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
-const passwordInput = ref();
-const emailInput = ref();
+const email = ref("");
+const password = ref("");
 
 // Where to send the user after a successful login
 function getRedirectTo(): string {
@@ -125,8 +125,8 @@ const loginWithSaml = () => {
 const { isElectron } = useDevice();
 
 async function handleLogin() {
-  const em = emailInput.value?.input?.value;
-  const pw = passwordInput.value?.input?.value;
+  const em = email.value;
+  const pw = password.value;
 
   // ensure email and password is defined
   if (!em) {

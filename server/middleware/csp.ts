@@ -8,13 +8,13 @@ export default defineEventHandler((event) => {
     setHeader(
       event,
       "Content-Security-Policy",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${bugReportOrigin};`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${bugReportOrigin}; worker-src 'self' blob:;`,
     );
   } else {
     setHeader(
       event,
       "Content-Security-Policy",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval';",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:;",
     );
   }
   setHeader(event, "Cross-Origin-Embedder-Policy", "require-corp");

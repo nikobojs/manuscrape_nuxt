@@ -25,6 +25,12 @@ export default defineNuxtConfig({
     typeCheck: false,
   },
 
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag: string) => tag === "altcha-widget",
+    },
+  },
+
   app: {
     head: {
       charset: "utf-8",
@@ -72,6 +78,7 @@ export default defineNuxtConfig({
     smtpPort: process.env.SMTP_PORT,
     authResponseTime: 120,
     invitationSalt: process.env.INVITATION_SALT || "saltyFreciousTrembleCat42",
+    captchaHmacSecret: process.env.CAPTCHA_HMAC_SECRET || "devOnlyInsecureCaptchaHmacSecret",
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
     manuscrapeClientVersionRequirement: ">=1.0.17",

@@ -31,7 +31,6 @@
       @submit="submit"
       :validate="validate"
       :state="state"
-      ref="form"
     >
       <UFormGroup label="Full Name" name="name">
         <template #label>
@@ -87,7 +86,7 @@
       ></span>
 
       <UButton
-        :disabled="loading"
+        :disabled="loading || showCaptchaModal"
         :loading="loading"
         type="submit"
         class="mt-5"
@@ -103,6 +102,26 @@
         I already have an account
       </ULink>
     </UForm>
+
+    <!-- the captcha runs in a modal because the sign-up page is shown in
+         the Electron app, where the window has a fixed size -->
+    <UModal v-model="showCaptchaModal">
+      <UCard :ui="{ body: { padding: 'p-4 sm:p-4' } }">
+        <template #header>
+          <CardHeader>Human verification</CardHeader>
+        </template>
+
+        <p class="text-sm mb-3 text-gray-500 dark:text-gray-400">
+          Verifying that you are human. This happens automatically and should
+          only take a moment...
+        </p>
+        <altcha-widget
+          challenge="/api/captcha/challenge"
+          theme="auto"
+          @statechange="onCaptchaStateChange"
+        />
+      </UCard>
+    </UModal>
   </UContainer>
 </template>
 
@@ -122,8 +141,18 @@ const state = ref({
 const errorMessage = ref("");
 const { user, signUp, refreshUser } = await useAuth();
 
-const form = ref();
 const loading = ref(false);
+const showCaptchaModal = ref(false);
+
+function onCaptchaStateChange(ev: Event) {
+  const detail = (ev as CustomEvent<{ payload?: string; state?: string }>)
+    .detail;
+  // the widget solved the challenge - close the modal and sign up
+  if (detail?.state === "verified" && detail.payload) {
+    showCaptchaModal.value = false;
+    doSignUp(detail.payload);
+  }
+}
 
 const {isElectron}=useDevice();
 
@@ -140,9 +169,19 @@ function validate(state: any): FormError[] {
 }
 
 async function submit() {
-  await form.value!.validate();
+  // UForm has validated the fields by the time this runs.
+  // Captcha verification happens in the modal that opens here.
+  showCaptchaModal.value = true;
+}
+
+async function doSignUp(captcha: string) {
   loading.value = true;
-  await signUp(state.value.email, state.value.password, state.value.name)
+  await signUp(
+    state.value.email,
+    state.value.password,
+    state.value.name,
+    captcha,
+  )
     .then(async () => {
       if (isElectron.value) {
         if (window.electronAPI) {
