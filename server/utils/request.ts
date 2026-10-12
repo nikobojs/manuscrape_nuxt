@@ -8,7 +8,7 @@ export function isOpenUrl(event: H3Event): boolean {
     );
     return true;
   }
-  const openGetUrls = ["/user/new", "/forgot-password"];
+  const openGetUrls = ["/user/new", "/forgot-password", "/health"];
   const openGetUrlsStartWith = [
     "/_nuxt",
     "/__nuxt",
