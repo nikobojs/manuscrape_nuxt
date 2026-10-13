@@ -20,6 +20,14 @@ export default defineNuxtConfig({
   sourcemap: true,
   modules: ["@nuxt/ui", "nuxt-auth-utils", "nuxt-umami"],
 
+  // The app is dark-only: do not install @nuxtjs/color-mode (which
+  // @nuxt/ui would otherwise register, including its inline head script).
+  // The static "dark" class on <html> below keeps the tailwind `dark:`
+  // variants (darkMode: "class") active unconditionally.
+  ui: {
+    colorMode: false,
+  },
+
   typescript: {
     strict: true,
     typeCheck: false,
@@ -40,7 +48,7 @@ export default defineNuxtConfig({
         class: "h-full dark:bg-gray-950 bg-gray-950 p-0 m-0",
       },
       htmlAttrs: {
-        class: "h-full m-0 p-0",
+        class: "h-full m-0 p-0 dark",
       },
     },
   },
@@ -118,10 +126,6 @@ export default defineNuxtConfig({
         : null, // allow all domains by default
       proxy: "cloak",
     },
-  },
-
-  colorMode: {
-    preference: "dark",
   },
 
   nitro: {
