@@ -86,10 +86,11 @@ export default defineNuxtConfig({
     smtpPort: process.env.SMTP_PORT,
     authResponseTime: 120,
     invitationSalt: process.env.INVITATION_SALT || "saltyFreciousTrembleCat42",
-    captchaHmacSecret: process.env.CAPTCHA_HMAC_SECRET || "devOnlyInsecureCaptchaHmacSecret",
+    captchaHmacSecret:
+      process.env.CAPTCHA_HMAC_SECRET || "devOnlyInsecureCaptchaHmacSecret",
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
-    manuscrapeClientVersionRequirement: ">=1.0.17",
+    manuscrapeClientVersionRequirement: ">=1.0.19",
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || "",
       maxAge: 60 * 60 * 24 * 180, // 180 days
