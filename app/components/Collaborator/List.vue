@@ -4,9 +4,7 @@
       {{ row.user_name || "Deleted user" }}
     </template>
     <template #role-data="{ row }">
-      <UBadge variant="outline" color="gray">{{
-        row.role.toLowerCase().capitalize()
-      }}</UBadge>
+      <UBadge variant="outline" color="gray">{{ row.role }}</UBadge>
     </template>
     <template #nameInProject-data="{ row }">
       <span class="flex items-start gap-x-2">
