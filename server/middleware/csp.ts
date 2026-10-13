@@ -1,11 +1,22 @@
-import { buildCsp } from "../utils/csp";
-
-// Base CSP for every response (API, static files, HTML). For rendered HTML
-// pages, the plugin in server/plugins/csp.ts replaces this header with one
-// that additionally allows the inline scripts actually present in the
-// document.
 export default defineEventHandler((event) => {
-  setHeader(event, "Content-Security-Policy", buildCsp());
+  const config = useRuntimeConfig().public;
+  const sentryDsn = config.sentryDsn;
+  if (sentryDsn) {
+    const sentryUrl = new URL(sentryDsn);
+    const u = new URL(sentryUrl);
+    const bugReportOrigin = u.origin;
+    setHeader(
+      event,
+      "Content-Security-Policy",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${bugReportOrigin}; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self';`,
+    );
+  } else {
+    setHeader(
+      event,
+      "Content-Security-Policy",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self';",
+    );
+  }
   setHeader(event, "Cross-Origin-Embedder-Policy", "require-corp");
   setHeader(event, "Cross-Origin-Opener-Policy", "same-origin");
   setHeader(event, "Cross-Origin-Resource-Policy", "cross-origin");
