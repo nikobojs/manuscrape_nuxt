@@ -8,18 +8,14 @@ export function isOpenUrl(event: H3Event): boolean {
     );
     return true;
   }
-  const openGetUrls = [
-    "/user/new",
-    "/forgot-password",
-    "/health",
-    "/deprecated-client",
-  ];
+  const openGetUrls = ["/user/new", "/forgot-password", "/health"];
   const openGetUrlsStartWith = [
     "/_nuxt",
     "/__nuxt",
     "/login",
     "/user/new?",
     "/reset-password",
+    "/deprecated-client",
   ];
   const isGetRequest = event.node.req.method === "GET";
   const isOpenUrl =
