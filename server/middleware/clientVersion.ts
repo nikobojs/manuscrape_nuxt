@@ -1,4 +1,43 @@
 import * as semver from "semver";
+import type { H3Event } from "h3";
+
+// The page shown to outdated clients instead of a plain nitro error page.
+const DEPRECATED_CLIENT_PATH = "/deprecated-client";
+
+function handleDeprecatedClient(event: H3Event, versionRequirement: string) {
+  // The page itself must stay reachable, otherwise we would redirect forever.
+  if (event.path.startsWith(DEPRECATED_CLIENT_PATH)) {
+    return;
+  }
+
+  const isApiUrl = event.path.startsWith("/api");
+  const isGetRequest = event.node.req.method === "GET";
+  const acceptsHtml =
+    (getRequestHeader(event, "accept") || "").includes("text/html");
+
+  if (!isApiUrl && isGetRequest) {
+    // Page navigations get redirected to the download page.
+    if (acceptsHtml) {
+      // Show the plain version instead of the full semver range.
+      const requiredVersion =
+        /\d{1,2}\.\d{1,2}\.\d{1,2}/.exec(versionRequirement)?.[0] ??
+        versionRequirement;
+      return sendRedirect(
+        event,
+        `${DEPRECATED_CLIENT_PATH}?required=${encodeURIComponent(requiredVersion)}`,
+        302,
+      );
+    }
+    // Other GET requests (scripts, styles, images) pass through so the
+    // deprecated-client page renders with styling.
+    return;
+  }
+
+  throw createError({
+    statusCode: 426,
+    statusMessage: `Your ManuScrape client is too old.`,
+  });
+}
 
 export default defineEventHandler(async (event) => {
   const versionRequirement =
@@ -22,10 +61,7 @@ export default defineEventHandler(async (event) => {
         versionRequirement,
       );
       if (!versionIsSupported) {
-        throw createError({
-          statusCode: 426,
-          statusMessage: `Your ManuScrape client is too old.`,
-        });
+        handleDeprecatedClient(event, versionRequirement);
       }
     }
   }

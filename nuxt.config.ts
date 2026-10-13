@@ -62,6 +62,12 @@ export default defineNuxtConfig({
       maxFileSize: 100 * 1000 * 1000,
       sentryDsn: process.env.SENTRY_DSN || "",
       sentryEnv: process.env.SENTRY_ENV || "development",
+      clientDownloadWindows:
+        process.env.NUXT_PUBLIC_CLIENT_DOWNLOAD_WINDOWS || "",
+      clientDownloadMacIntel:
+        process.env.NUXT_PUBLIC_CLIENT_DOWNLOAD_MAC_INTEL || "",
+      clientDownloadMacApple:
+        process.env.NUXT_PUBLIC_CLIENT_DOWNLOAD_MAC_APPLE || "",
     },
     saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS ?? "10"),
     tokenSecret: process.env.TOKEN_SECRET, // NOTE: this is deprecated but allows older clients to work
