@@ -28,6 +28,19 @@ export default defineNuxtConfig({
     colorMode: false,
   },
 
+  umami: {
+    id: umamiId,
+    host: umamiHost,
+    autoTrack: umamiEnabled,
+    enabled: !!umamiHost && umamiEnabled,
+    logErrors: true,
+    ignoreLocalhost: false,
+    domains: process.env.NUXT_UMAMI_DOMAIN
+      ? [process.env.NUXT_UMAMI_DOMAIN as string]
+      : null, // allow all domains by default
+    proxy: "cloak",
+  },
+
   typescript: {
     strict: true,
     typeCheck: false,
@@ -121,18 +134,6 @@ export default defineNuxtConfig({
       cert: process.env.SAML_IDP_CERT_PATH,
     },
     vitest: process.env.VITEST?.trim()?.toLowerCase?.() == "true",
-    umami: {
-      id: umamiId,
-      host: umamiHost,
-      autoTrack: umamiEnabled,
-      enabled: !!umamiHost && umamiEnabled,
-      logErrors: true,
-      ignoreLocalhost: false,
-      domains: process.env.NUXT_UMAMI_DOMAIN
-        ? [process.env.NUXT_UMAMI_DOMAIN as string]
-        : null, // allow all domains by default
-      proxy: "cloak",
-    },
   },
 
   nitro: {
