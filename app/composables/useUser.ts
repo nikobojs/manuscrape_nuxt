@@ -32,20 +32,13 @@ export const useUser = async () => {
             .sort(sortById);
           projectAccess.value = res.projectAccess || [];
         } else if (context.response.status === 401) {
+          // no navigation here - route middleware handles redirects
           resetUserState();
-          // Don't use navigateTo on server side - let client handle redirects
-          if (process.client) {
-            await navigateTo("/login", { replace: true });
-          }
         }
       },
       onResponseError: async (context) => {
         if (context.response.status === 401) {
           resetUserState();
-          // Don't use navigateTo on server side - let client handle redirects
-          if (process.client) {
-            await navigateTo("/login", { replace: true });
-          }
         }
       },
     });

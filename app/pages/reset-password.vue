@@ -58,7 +58,7 @@
           >
             Save new password
           </UButton>
-          <UButton class="mt-5" color="gray" :disabled="loading" to="/login">
+          <UButton class="mt-5" color="gray" :disabled="loading" @click="goToLogin">
             Go to login page
           </UButton>
         </div>
@@ -86,6 +86,10 @@ function onLogoClick() {
   navigateTo("/");
 }
 
+async function goToLogin() {
+  await navigateTo("/login");
+}
+
 function resetInputs() {
   pw0.value = "";
   pw1.value = "";
@@ -100,14 +104,13 @@ async function resetPassword() {
   error.value = "";
   loading.value = true;
   try {
-    await postPasswordReset(token, pw0.value).then(() => {
-      toast.add({
-        title: "Password was reset successfully",
-        color: "green",
-        icon: "i-heroicons-check",
-      });
-      navigateTo("/login");
+    await postPasswordReset(token, pw0.value);
+    toast.add({
+      title: "Password was reset successfully",
+      color: "green",
+      icon: "i-heroicons-check",
     });
+    await navigateTo("/login", { replace: true });
   } catch (e: any) {
     const errMsg = e?.message || e + "" || "Unknown reason, will be reported";
     error.value = errMsg;
