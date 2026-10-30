@@ -141,14 +141,47 @@ function requiredImagesUploaded(): boolean {
 async function refreshObservation() {
   const projId = requireNumber(project.value?.id);
   const obsId = requireNumber(params?.observationId);
-  const obs = await fetchObservationById(projId, obsId);
-  if (!obs) {
-    throw createError({
-      message: "Observation does not exist",
-      status: 404,
+  try {
+    const obs = await fetchObservationById(projId, obsId);
+    if (!obs) {
+      throw createError({
+        message: "Observation does not exist",
+        status: 404,
+      });
+    }
+    observation.value = obs;
+  } catch (e: any) {
+    // the observation genuinely does not exist, show the error page
+    if (e?.statusCode === 404) {
+      throw e;
+    }
+    // the server answered with an error: show its message as-is. also report it
+    if (e?.response || e?.statusCode) {
+      const { report } = useSentry();
+      report("error", e);
+      toast.add({
+        title: "Could not load the observation",
+        description: getErrMsg(e),
+        icon: "i-heroicons-exclamation-triangle",
+        color: "red",
+      });
+      return;
+    }
+    // no response at all / client-side network failure
+    toast.add({
+      title: "Could not load the observation",
+      description:
+        "The request never reached the server. Check your connection and try again.",
+      icon: "i-heroicons-exclamation-triangle",
+      color: "red",
+      actions: [
+        {
+          label: "Try again",
+          click: () => void refreshObservation(),
+        },
+      ],
     });
   }
-  observation.value = obs;
 }
 
 async function fetchAdjacent() {

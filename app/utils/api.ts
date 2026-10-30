@@ -12,6 +12,8 @@ export async function fetchObservationById(
     {
       credentials: "include",
       method: "GET",
+      retry: 2,
+      retryDelay: 500,
       headers: {
         "Content-Type": "application/json",
       },
@@ -149,6 +151,8 @@ export async function fetchAdjacentObservations(
     {
       credentials: "include",
       method: "GET",
+      retry: 2,
+      retryDelay: 500,
       headers: {
         "Content-Type": "application/json",
       },

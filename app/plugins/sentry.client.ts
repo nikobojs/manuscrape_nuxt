@@ -25,6 +25,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     ],
     tracesSampleRate: 1.0,
     attachProps: true,
+    beforeSend(event, hint) {
+      // fetch failures with no response (safari "Load failed", chrome
+      // "Failed to fetch") are client-side network issues, not app bugs.
+      // tag them so they can be filtered out in sentry.
+      const err: any = hint.originalException;
+      const msg = String(err?.message || '');
+      if (msg.includes('<no response>') || msg.includes('Load failed') || msg.includes('Failed to fetch')) {
+        event.tags = { ...event.tags, clientNetworkError: 'true' };
+      }
+      return event;
+    },
   });
 
   console.info('initialized sentry client-side plugin');
