@@ -6,6 +6,17 @@
       base: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
     }"
   >
+    <div class="flex justify-end">
+      <!-- NOTE: gives keyboard users a way to close the modal and gives the
+        focus trap a focusable element (otherwise headlessui warns on open) -->
+      <UButton
+        icon="i-heroicons-x-mark"
+        color="gray"
+        variant="ghost"
+        aria-label="Close image viewer"
+        @click="closeObservationImage"
+      />
+    </div>
     <div v-for="src in imageSrcs">
       <img :src="src" />
     </div>
