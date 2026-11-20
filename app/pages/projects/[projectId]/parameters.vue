@@ -12,19 +12,19 @@
       <ProjectParametersWidget
         v-if="project"
         :project="project"
-        :on-project-updated="refreshUser"
+        :on-project-updated="onProjectUpdated"
       />
     </div>
   </UContainer>
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ middleware: "auth" });
+definePageMeta({ middleware: ["auth", "electron"] });
 
 const { ensureUserFetched, refreshUser } = await useAuth();
 await ensureUserFetched();
-const { isElectron } = useDevice();
 const { params } = useRoute();
+const { isElectron } = useDevice();
 const { project } = await useProjects(params);
 const toast = useToast();
 
@@ -36,5 +36,12 @@ if (!project.value) {
     icon: "i-heroicons-exclamation-triangle",
   });
   navigateTo("/");
+}
+
+async function onProjectUpdated() {
+  await refreshUser();
+  if (isElectron && project.value?.id) {
+    window.electronAPI?.projectUpdated?.(project.value?.id);
+  }
 }
 </script>
