@@ -78,6 +78,15 @@ export const generateProjectUploadsExport = async (
   for (const upload of obsFiles) {
     if (!upload?.filePath) continue;
 
+    // count files per observation in loop order, so names are deterministic
+    if (!(upload.observationId in obsFileCounts)) {
+      obsFileCounts[upload.observationId] = 0;
+    } else {
+      obsFileCounts[upload.observationId]!++;
+    }
+    // add upload counter (there might be more for each observation)
+    const count = `.${obsFileCounts[upload.observationId]}`;
+
     // add filedownload as promise to downloads[]
     const download = getUpload(upload.filePath, upload.isS3).then(
       ({ readable, s3 }) => {
@@ -85,15 +94,6 @@ export const generateProjectUploadsExport = async (
         let filenameDotSplit = upload.originalName.split(".").reverse();
         let fileEnding = "";
         if (filenameDotSplit.length > 1) fileEnding = "." + filenameDotSplit[0];
-
-        // add new file counter for observation if necessary
-        if (!(upload.observationId in obsFileCounts)) {
-          obsFileCounts[upload.observationId] = 0;
-        } else {
-          obsFileCounts[upload.observationId]!++;
-        }
-        // add upload counter (there might be more for each observation)
-        const count = `.${obsFileCounts[upload.observationId]}`;
 
         // clean up open sockets just in case
         readable.on("end", () => {

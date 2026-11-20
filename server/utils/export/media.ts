@@ -60,10 +60,18 @@ export const generateProjectMediaExport = async (
   archive.pipe(passThrough);
 
   // loop through all observation image and download each one of them
+  // count images per observation+field, so IMAGE_MULTIPLE entries get unique names
+  const imageCounts: Record<string, number> = {};
   for (let i = 0; i < obsImgs.length; i++) {
     const image = obsImgs[i]!;
     const id = image.observationId;
     if (!image?.filePath) continue;
+
+    // first image per observation+field keeps the original name, extras get a counter
+    const key = `${id}.${image.projectFieldId}`;
+    const count = imageCounts[key] || 0;
+    imageCounts[key] = count + 1;
+    const suffix = count > 0 ? `.${count}` : "";
 
     // create single file download promise
     const download = getUpload(image.filePath, image.isS3).then(
@@ -82,7 +90,7 @@ export const generateProjectMediaExport = async (
         });
 
         // initialize download stream from s3 directly into zip file
-        let name = id + "." + image.projectFieldId + fileEnding;
+        let name = id + "." + image.projectFieldId + suffix + fileEnding;
         archive.append(readable, { name });
       },
     );

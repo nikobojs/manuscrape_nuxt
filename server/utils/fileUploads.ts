@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, asc } from "drizzle-orm";
 import { fileUploads } from "../drizzle/schema";
 
 type FileUploadInsert = Omit<
@@ -46,6 +46,8 @@ export function getFileUploadsByObservationIds<
   return db.query.fileUploads.findMany({
     columns: select,
     where: inArray(fileUploads.observationId, observationIds),
+    // stable order, so exports name multiple files per observation predictably
+    orderBy: [asc(fileUploads.observationId), asc(fileUploads.id)],
   });
 }
 

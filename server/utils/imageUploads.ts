@@ -1,4 +1,4 @@
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, asc } from "drizzle-orm";
 import sharp from "sharp";
 import { imageUploads } from "../drizzle/schema";
 import { captureException } from "@sentry/node";
@@ -51,6 +51,8 @@ export function getImageUploadsByObservationIds<
   return db.query.imageUploads.findMany({
     columns: select,
     where: inArray(imageUploads.observationId, observationIds),
+    // stable order, so exports name multiple images per field predictably
+    orderBy: [asc(imageUploads.observationId), asc(imageUploads.id)],
   });
 }
 
