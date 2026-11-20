@@ -1,5 +1,5 @@
 <template>
-  <header class="py-2 bg-slate-800 shadow-lg" v-show="user">
+  <header class="py-2 bg-slate-800 shadow-lg" v-show="user && !isGuestPage">
     <UContainer>
       <div class="flex justify-between items-center">
         <div
@@ -88,6 +88,13 @@ const { user, hasFetched } = await useUser();
 const { params } = useRoute();
 const { getProjectById } = await useProjects(params);
 const route = useRoute();
+// guest pages (login, signup, etc.) never show the navbar
+const isGuestPage = computed(() => {
+  const middleware = route.meta.middleware;
+  return Array.isArray(middleware)
+    ? middleware.includes("guest")
+    : middleware === "guest";
+});
 const selectedProjectIdStr = computed(
   () => route.params?.["projectId"] as string,
 );

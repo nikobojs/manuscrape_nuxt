@@ -139,41 +139,35 @@ async function handleLogin() {
   // begin loading state
   loading.value = true;
 
-  setTimeout(() => {
-    // at this point it is safe to assume that the values are truthy
-    login(em, pw)
-      .then(async (res) => {
-        if (isElectron.value) {
-          if (window.electronAPI) {
-            window.electronAPI.loginSuccess(
-              () => {},
-              (err: any) => {
-                error.value = typeof err === "string" ? err : getErrMsg(err);
-              },
-            );
-          } else {
-            console.warn(
-              "window.electronAPI not available in Electron environment",
-            );
-          }
-        } else {
-          await refreshUser();
-          if (user.value) {
-            await navigateTo(getRedirectTo());
-          } else {
-              const msg = "Logged in, but the session could not be verified. Please try logging in again.";
-              error.value = msg;
-              captureException(new Error(msg));
-          }
-        }
-      })
-      .catch((err) => {
-        error.value = getErrMsg(err);
-      })
-      .finally(() => {
-        loading.value = false;
-      });
-  }, 200);
+  try {
+    await login(em, pw);
+
+    if (isElectron.value) {
+      if (window.electronAPI) {
+        window.electronAPI.loginSuccess(() => {}, (err: any) => {
+          error.value = typeof err === "string" ? err : getErrMsg(err);
+        });
+      } else {
+        console.warn(
+          "window.electronAPI not available in Electron environment",
+        );
+      }
+    } else {
+      await refreshUser();
+      if (user.value) {
+        await navigateTo(getRedirectTo());
+      } else {
+        const msg =
+          "Logged in, but the session could not be verified. Please try logging in again.";
+        error.value = msg;
+        captureException(new Error(msg));
+      }
+    }
+  } catch (err) {
+    error.value = getErrMsg(err);
+  } finally {
+    loading.value = false;
+  }
 }
 
 function onLogoClick() {
