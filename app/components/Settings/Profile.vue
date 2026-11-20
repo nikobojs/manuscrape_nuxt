@@ -3,8 +3,8 @@
     title="User Management"
     help="All settings and actions regarding your personal ManuScrape account. For any questions, please contact the server administrator."
   >
-    <div v-if="user" class="max-w-sm">
-      <div class="grid grid-cols-2 gap-y-1 mb-5">
+    <div v-if="user" class="sm:max-w-sm">
+      <div class="grid grid-cols-1 items-center sm:grid-cols-2 gap-y-1 mb-2">
         <span class="text-gray-500">Email:</span>
         <InputImportant
           :value="user.email || '-'"
@@ -24,11 +24,14 @@
           "
         />
         <span class="text-gray-500">Created at:</span>
-        <span>{{ prettyDate(user.createdAt) }}</span>
+        <p class="py-1">{{ prettyDate(user.createdAt) }}</p>
+        <span class="text-gray-500">Danger zone:</span>
+        <div class="py-1.5">
+          <UButton color="red" @click="() => (openDeleteModal = true)">
+            Delete user
+          </UButton>
+        </div>
       </div>
-      <UButton color="red" @click="() => (openDeleteModal = true)"
-        >Delete user</UButton
-      >
     </div>
     <ProfileDeleteUserModal
       :open="openDeleteModal"

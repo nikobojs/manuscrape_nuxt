@@ -17,6 +17,8 @@
         variant="ghost"
         class="h-8 w-8 p-1 flex justify-center items-center rounded-full"
         square
+        :disabled="disabled"
+        :loading="loading"
         :color="editing ? 'green' : 'gray'"
         @click="toggleEdit"
       >
@@ -35,6 +37,16 @@ const props = defineProps({
   value: {
     type: String,
     required: true,
+  },
+  disabled: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  loading: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 });
 const value = computed(() => props.value);

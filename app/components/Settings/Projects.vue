@@ -21,14 +21,21 @@
           variant="soft"
         />
       </div>
-      <UCard class="max-w-sm" v-if="project">
-        <form @submit.prevent="saveSettings" class="grid grid-cols-1 gap-y-2">
+      <UCard class="sm:min-w-md max-w-lg w-full" v-if="project">
+        <form @submit.prevent="saveSwitches" class="grid grid-cols-1 gap-y-3">
           <div class="flex justify-between items-baseline">
-            <label for="project-id">Project name:</label>
-            <UInput
-              id="project-name"
-              v-model="projectName"
-              :disabled="loading || !isOwner"
+            <label for="project-id" class="whitespace-nowrap"
+              >Project name:</label
+            >
+            <InputImportant
+              :loading="loading"
+              :disabled="!isOwner"
+              :value="projectName || ''"
+              @edit="
+                (name: string) => {
+                  saveName(name);
+                }
+              "
             />
           </div>
           <div class="flex justify-between items-baseline">
@@ -82,8 +89,8 @@
 <script lang="ts" setup>
 const { ensureUserFetched } = await useAuth();
 await ensureUserFetched();
-const { hasRoles } = await useUser();
-const { patchProject } = await useProjects();
+const { hasRoles, refreshUser } = await useUser();
+const { patchProject, getProjectById } = await useProjects();
 const project = ref<FullProject | null>(null);
 const { report } = useSentry();
 
@@ -116,14 +123,9 @@ watch(contributorsCanReadAllObservations, (n, o) => {
   }
 });
 
-async function saveSettings() {
+async function saveSwitches() {
   error.value = "";
   loading.value = false;
-
-  if (!project.value) {
-    error.value = "You need to pick a project";
-    return;
-  }
 
   const patch = {
     authorCanDelockObservations: authorCanDelockObservations.value,
@@ -132,11 +134,30 @@ async function saveSettings() {
       contributorsCanReadAllObservations.value,
     contributorsCanExport:
       contributorsCanExport.value && contributorsCanReadAllObservations.value,
-    name: projectName.value,
+    // name: projectName.value,
   };
 
+  await updateProject(project.value?.id, patch);
+}
+
+async function saveName(name: string) {
+  error.value = "";
+  loading.value = false;
+
+  await updateProject(project.value?.id, { name });
+}
+
+async function updateProject(
+  projectId: number | undefined,
+  patch: Record<string, any>,
+) {
+  if (typeof projectId !== "number" || !isFinite(projectId)) {
+    error.value = "You need to pick a project";
+    return;
+  }
+
   try {
-    const res = await patchProject(project.value.id, patch);
+    const res = await patchProject(projectId, patch);
     if (res.status !== 204) {
       const errMsg = `patchProject api response returned ${res.status}`;
       console.error(errMsg);
@@ -147,6 +168,13 @@ async function saveSettings() {
       });
       report("error", errMsg);
     } else {
+      await refreshUser();
+      const newProject = getProjectById(projectId);
+      if (newProject) {
+        setProject(newProject);
+      } else {
+        console.warn("Unable to find new project!");
+      }
       toast.add({
         title: "Project settings updated successfully",
         color: "green",

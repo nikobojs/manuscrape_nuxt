@@ -1,11 +1,16 @@
 <template>
-  <UContainer v-if="!isElectron">
-    <h2 class="text-3xl mb-8">Settings</h2>
+  <UContainer>
+    <h2
+      class="text-3xl"
+      :class="{ 'mt-6 mb-3': isElectron, 'mb-8 mt-6': !isElectron }"
+    >
+      Settings
+    </h2>
   </UContainer>
-  <UContainer :class="`grid gap-8${isElectron ? ' -mt-8' : ''}`">
-    <SettingsScrollshot v-if="isElectron" />
-    <SettingsProjects v-if="user?.projectAccess.length" />
+  <UContainer :class="`grid gap-8`">
     <SettingsProfile />
+    <SettingsProjects v-if="user?.projectAccess.length" />
+    <SettingsScrollshot v-if="isElectron" />
   </UContainer>
 </template>
 
