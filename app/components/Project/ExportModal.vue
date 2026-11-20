@@ -1,5 +1,9 @@
 <template>
-  <UModal v-bind:model-value="open" v-on:close="onClose">
+  <UModal
+    :open="open"
+    @update:open="(value) => { if (!value) emit('close') }"
+  >
+    <template #content>
     <UCard>
       <template #header>
         <CardHeader>Create new project export</CardHeader>
@@ -31,28 +35,28 @@
         </div>
         <div class="flex flex-col gap-y-3">
           <label class="">Observations to include:</label>
-          <URadio
-            v-for="option in filterTypeOptions"
-            v-bind="option"
+          <URadioGroup
             v-model="filterType"
+            :items="filterTypeOptions"
+            variant="card"
           />
         </div>
         <div class="flex flex-col gap-y-3" v-if="exportType == 'NVIVO'">
           <label class="">Should tags be included:</label>
-          <URadio
-            v-for="option in includeTagsOptions"
-            v-bind="option"
+          <URadioGroup
             v-model="tagOption"
+            :items="includeTagsOptions"
+            variant="card"
           />
         </div>
       </div>
       <div class="mt-3" v-if="filterType === 'RANGE'">
-        <UPopover :popper="{ placement: 'bottom-start' }">
+        <UPopover :content="{ side: 'bottom', align: 'start' }">
           <div class="flex items-center justify-between gap-x-3">
             <UButton
               icon="i-heroicons-calendar-days-20-solid"
               variant="soft"
-              color="blue"
+              color="info"
             >
               {{
                 `${format(selectedDateRange.start, "d MMM, yyyy")} -
@@ -61,7 +65,7 @@
             </UButton>
           </div>
 
-          <template #panel="{ close }">
+          <template #content="{ close }">
             <div class="flex gap-2">
               <!-- durations presets -->
               <div class="hidden sm:flex flex-col py-4">
@@ -70,12 +74,12 @@
                   :key="index"
                   :label="range.label"
                   variant="link"
-                  color="blue"
+                  color="info"
                   :class="{
-                    'bg-gray-100 dark:bg-gray-800': isDurationPresetSelected(
+                    'bg-gray-800': isDurationPresetSelected(
                       range.duration,
                     ),
-                    'hover:bg-gray-50 dark:hover:bg-gray-800/50':
+                    'hover:bg-gray-800/50':
                       isDurationPresetSelected(range.duration),
                   }"
                   truncate
@@ -128,6 +132,7 @@
         </div>
       </div>
     </UCard>
+    </template>
   </UModal>
 </template>
 
@@ -136,6 +141,10 @@ const props = defineProps({
   ...requireModalProps,
   project: requireProjectProp,
 });
+
+const emit = defineEmits<{
+  close: [];
+}>();
 import { captureException } from "@sentry/vue";
 import { sub, format, isSameDay, type Duration } from "date-fns";
 
@@ -281,6 +290,6 @@ async function submitExport(): Promise<void> {
   };
 
   await generateExport(config);
-  props.onClose();
+  emit('close');
 }
 </script>

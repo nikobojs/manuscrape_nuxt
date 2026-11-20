@@ -138,12 +138,12 @@ export const useProjectExports = async (projectId: number) => {
       if (updatedProjectExport?.status === "DONE") {
         toast.add({
           title: `Export generation finished successfully`,
-          color: "green",
+          color: "success",
           icon: "i-heroicons-check",
           actions: [
             {
               label: "Download",
-              click: () => {
+              onClick: () => {
                 window.open();
                 const link = document.createElement("a");
                 link.href = `/api/projects/${updatedProjectExport.projectId}/exports/${updatedProjectExport.id}/download`;
@@ -158,7 +158,7 @@ export const useProjectExports = async (projectId: number) => {
           title: `Could not generate the export :(`,
           description:
             "Please reach out on Github or Discord if this error persists.",
-          color: "red",
+          color: "error",
           icon: "i-heroicons-exclamation-triangle",
         });
       } else {
@@ -168,7 +168,7 @@ export const useProjectExports = async (projectId: number) => {
           title: errMsg,
           description:
             "Please reach out on Github or Discord if this error persists.",
-          color: "red",
+          color: "error",
           icon: "i-heroicons-exclamation-triangle",
         });
       }
@@ -230,14 +230,14 @@ export const useProjectExports = async (projectId: number) => {
             title: "Export generation error",
             description: msg,
             icon: "i-heroicons-exclamation-triangle",
-            color: "red",
+            color: "error",
           });
         } catch (e) {
           toast.add({
             title: "Export generation error",
             description: msg,
             icon: "i-heroicons-exclamation-triangle",
-            color: "red",
+            color: "error",
           });
         }
       } else {
@@ -245,7 +245,7 @@ export const useProjectExports = async (projectId: number) => {
           title: "Export generation started...",
           description: "It will soon be available for download.",
           icon: "i-heroicons-information-circle",
-          color: "blue",
+          color: "info",
         });
         await refresh();
       }

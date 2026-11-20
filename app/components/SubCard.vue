@@ -2,9 +2,8 @@
   <UCard
     class="h-full"
     :ui="{
-      background:
-        'bg-gray-800 dark:bg-gray-800 border-slate-500 border shadow-lg',
-      body: { base: 'h-full' },
+      root: 'bg-gray-800 border-slate-500 border shadow-lg',
+      body: 'h-full',
     }"
   >
     <div class="relative h-full flex flex-col gap-16 xl:gap-18">

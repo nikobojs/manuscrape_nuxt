@@ -4,8 +4,8 @@
       <div class="flex items-center justify-between w-full">
         <CardHeader>
           Collaborators
-          <UTooltip class="ml-2" :ui="{ base: 'p-2 text-xs' }">
-            <template #text>
+          <UTooltip class="ml-2" :ui="{ content: 'p-2 text-xs' }">
+            <template #content>
               <p class="mb-3 whitespace-normal break-words">
                 If invited email is already registered on manuscrape, they will
                 receive access instantly.
@@ -31,7 +31,7 @@
       <UInput type="email" v-model="email" placeholder="Enter email" />
       <UButton
         variant="outline"
-        color="blue"
+        color="info"
         icon="i-heroicons-user-plus"
         :disabled="!validEmail"
         @click="onSubmit"
@@ -48,7 +48,7 @@
   <CollaboratorAliasModal
     v-if="activeCollaborator"
     :open="openAliasModal"
-    :on-close="onAliasModalClose"
+    @close="onAliasModalClose"
     :project="project"
     :collaborator="activeCollaborator"
   />
@@ -112,7 +112,7 @@ async function onSubmit() {
   if (!validEmail.value) {
     toast.add({
       title: "Invalid email",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;
@@ -129,7 +129,7 @@ async function onSubmit() {
         toast.add({
           title: "Success!",
           description: msg,
-          color: "green",
+          color: "success",
         });
 
         await collaboratorsRefresh();
@@ -143,7 +143,7 @@ async function onSubmit() {
       toast.add({
         title: "Error",
         description: msg,
-        color: "red",
+        color: "error",
         icon: "i-heroicons-exclamation-triangle",
       });
     });

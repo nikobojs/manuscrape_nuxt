@@ -9,7 +9,7 @@
       </div>
       <UButton
         variant="ghost"
-        color="gray"
+        color="neutral"
         icon="i-mdi-information-outline"
         @click="openDescriptionModal = true"
         class="h-6 w-6"
@@ -62,8 +62,8 @@
       :open="openDescriptionModal"
       :project="project"
       :isOwner="!!isOwner"
-      :onClose="() => openDescriptionModal = false"
-      :onSave="saveDescription"
+      @close="() => openDescriptionModal = false"
+      @save="saveDescription"
     />
   </UContainer>
 </template>
@@ -85,7 +85,7 @@ if (!project.value) {
   toast.add({
     title: "Access denied",
     description: "You don't have access to this project",
-    color: "yellow",
+    color: "warning",
     icon: "i-heroicons-exclamation-triangle",
   });
   navigateTo("/");
@@ -102,7 +102,7 @@ async function saveDescription(description: string) {
       toast.add({
         title: "Description updated",
         icon: "i-heroicons-check",
-        color: "green",
+        color: "success",
       });
       openDescriptionModal.value = false;
     } else {
@@ -112,7 +112,7 @@ async function saveDescription(description: string) {
     toast.add({
       title: "Failed to update description",
       description: error instanceof Error ? error.message : "Unknown error",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
   }

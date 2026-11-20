@@ -4,10 +4,7 @@
       class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
       @click="onLogoClick"
     >
-      <span class="dark:hidden">
-        <img src="/logo/manuscrape-logo-dark.svg" alt="manuscrape logo dark" />
-      </span>
-      <span class="hidden dark:block">
+      <span>
         <img
           src="/logo/manuscrape-logo-light.svg"
           alt="manuscrape logo light"
@@ -58,7 +55,7 @@
           >
             Save new password
           </UButton>
-          <UButton class="mt-5" color="gray" :disabled="loading" @click="goToLogin">
+          <UButton class="mt-5" color="neutral" :disabled="loading" @click="goToLogin">
             Go to login page
           </UButton>
         </div>
@@ -107,7 +104,7 @@ async function resetPassword() {
     await postPasswordReset(token, pw0.value);
     toast.add({
       title: "Password was reset successfully",
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
     await navigateTo("/login", { replace: true });
@@ -117,7 +114,7 @@ async function resetPassword() {
     toast.add({
       title: "Unable to reset password",
       description: errMsg,
-      color: "red",
+      color: "error",
     });
   } finally {
     loading.value = false;

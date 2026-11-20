@@ -1,6 +1,6 @@
-import archiver from "archiver";
+import type { ArchiverOptions } from "archiver";
 
-export const archiverOptions: archiver.ArchiverOptions = {
+export const archiverOptions: ArchiverOptions = {
   zlib: {
     level: 1,
     memLevel: 9,

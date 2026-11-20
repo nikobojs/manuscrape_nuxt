@@ -1,11 +1,12 @@
 <template>
   <UModal
-    v-bind:model-value="open"
-    v-on:close="onClose"
+    :open="open"
+    @update:open="(value) => { if (!value) emit('close') }"
     :ui="{
-      width: 'sm:max-w-lg',
+      content: 'sm:max-w-lg',
     }"
   >
+    <template #content>
     <UCard>
       <template #header>
         <div class="flex justify-between items-center w-full">
@@ -13,7 +14,7 @@
           <UButton
             v-if="isOwner && !isEditing"
             variant="ghost"
-            color="gray"
+            color="neutral"
             icon="i-mdi-pencil-outline"
             class="-mr-2"
             @click="startEditing"
@@ -50,7 +51,7 @@
         <div class="flex justify-end gap-3 w-full">
           <UButton
             v-if="isEditing"
-            color="gray"
+            color="neutral"
             variant="outline"
             @click="cancelEditing"
           >
@@ -58,18 +59,19 @@
           </UButton>
           <UButton
             v-if="isEditing"
-            color="blue"
+            color="info"
             :disabled="editedDescription === (project.description || '')"
             @click="saveDescription"
           >
             Save
           </UButton>
-          <UButton v-if="!isEditing" color="gray" variant="outline" @click="onClose">
+          <UButton v-if="!isEditing" color="neutral" variant="outline" @click="emit('close')">
             Close
           </UButton>
         </div>
       </template>
     </UCard>
+    </template>
   </UModal>
 </template>
 
@@ -87,15 +89,12 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  onClose: {
-    type: Function as PropType<() => void>,
-    required: true,
-  },
-  onSave: {
-    type: Function as PropType<(description: string) => Promise<void>>,
-    required: true,
-  },
 });
+
+const emit = defineEmits<{
+  close: [];
+  save: [description: string];
+}>();
 
 const isEditing = ref(false);
 const editedDescription = ref(props.project.description || "");
@@ -114,7 +113,7 @@ function cancelEditing() {
 }
 
 async function saveDescription() {
-  await props.onSave(editedDescription.value);
+  emit('save', editedDescription.value);
   isEditing.value = false;
 }
 </script>

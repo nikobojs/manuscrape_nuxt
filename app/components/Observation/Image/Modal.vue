@@ -1,25 +1,27 @@
 <template>
   <UModal
-    v-model="props.open"
-    @close="closeObservationImage"
+    :open="open"
+    @update:open="(value) => { if (!value) emit('close') }"
     :ui="{
-      base: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
+      content: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
     }"
   >
+    <template #content>
     <div class="flex justify-end">
       <!-- NOTE: gives keyboard users a way to close the modal and gives the
         focus trap a focusable element (otherwise headlessui warns on open) -->
       <UButton
         icon="i-heroicons-x-mark"
-        color="gray"
+        color="neutral"
         variant="ghost"
         aria-label="Close image viewer"
-        @click="closeObservationImage"
+        @click="emit('close')"
       />
     </div>
     <div v-for="src in imageSrcs">
       <img :src="src" />
     </div>
+    </template>
   </UModal>
 </template>
 
@@ -31,9 +33,9 @@ const props = defineProps({
   lastUpdate: Date as PropType<Date>,
 });
 
-function closeObservationImage() {
-  props.onClose?.();
-}
+const emit = defineEmits<{
+  close: [];
+}>();
 
 const imageSrcs = computed(() =>
   (props.observation?.images || []).map((img) => {

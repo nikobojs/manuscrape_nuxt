@@ -1,6 +1,6 @@
 <template>
   <USelectMenu
-    :options="options"
+    :items="options"
     v-model="field"
   />
 </template>

@@ -220,7 +220,7 @@
     <div class="flex gap-x-3 justify-center mt-12 mb-9">
       <UButton
         variant="outline"
-        color="blue"
+        color="info"
         @click="() => (isEventSubStep = false)"
         v-if="isEventSubStep"
       >
@@ -228,7 +228,7 @@
       </UButton>
       <UButton
         variant="outline"
-        color="blue"
+        color="info"
         @click="() => emit('close', true)"
         v-if="!isEventSubStep"
       >
@@ -237,7 +237,7 @@
       <UButton
         v-if="cancelable"
         variant="outline"
-        color="gray"
+        color="neutral"
         @click="() => emit('close', false)"
       >
         Cancel

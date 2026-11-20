@@ -5,52 +5,51 @@
         <CardHeader>Projects</CardHeader>
         <div class="flex items-right gap-x-6">
           <USelect
-            color="blue"
+            color="info"
             class="cursor-pointer hover:bg-gray-800 transition-colors"
-            :options="projects"
-            option-attribute="name"
-            value-attribute="id"
+            :items="projects.map((p) => ({ label: p.name, value: p.id }))"
             placeholder="Open project..."
             @update:model-value="
-              (id: string) => {
+              (id: string | number) => {
                 navigateTo(`/projects/${id}`);
               }
             "
           />
           <UButton
-            class="transition-colors"
+            class="transition-colors whitespace-nowrap"
             icon="i-heroicons-plus"
-            color="blue"
+            color="info"
             @click="() => (openCreateProjectModal = true)"
-            >Create project</UButton
           >
+            Create project
+          </UButton>
         </div>
       </div>
     </template>
     <UTable
       :columns="columns"
-      :rows="projects"
-      :sort="{ column: 'createdAt', direction: 'desc' }"
+      :data="projects"
+      :sorting="[{ id: 'createdAt', desc: true }]"
     >
-      <template #createdAt-data="{ row }: { row: FullProject }">
-        {{ prettyDate(row.createdAt) }}
+      <template #createdAt-cell="{ row }">
+        {{ prettyDate(row.original.createdAt) }}
       </template>
-      <template #name-data="{ row }">
+      <template #name-cell="{ row }">
         <ULink
-          :to="`/projects/${row.id}${isElectron ? '?electron=1' : ''}`"
+          :to="`/projects/${row.original.id}${isElectron ? '?electron=1' : ''}`"
           class="hover:underline py-2 px-2 -ml-2"
         >
-          {{ row.name }}
+          {{ row.original.name }}
         </ULink>
       </template>
-      <template #fields-data="{ row }">
+      <template #fields-cell="{ row }">
         <div class="flex align-middle gap-x-2">
-          <p>{{ row.fields.length }}</p>
+          <p>{{ row.original.fields.length }}</p>
           <UTooltip>
-            <template #text>
+            <template #content>
               <p
                 class="max-w-xs break-words whitespace-normal"
-                v-for="txt in fieldsTooltips(row)"
+                v-for="txt in fieldsTooltips(row.original)"
               >
                 {{ txt }}
               </p>
@@ -59,14 +58,14 @@
           </UTooltip>
         </div>
       </template>
-      <template #observationCount-data="{ row }">
-        {{ row.observationCount }}
+      <template #observationCount-cell="{ row }">
+        {{ row.original.observationCount }}
       </template>
-      <template #actions-data="{ row }">
+      <template #actions-cell="{ row }">
         <div class="flex gap-x-3">
           <UTooltip text="Open project in same tab">
             <NuxtLink
-              :href="`/projects/${row.id}${isElectron ? '?electron=1' : ''}`"
+              :href="`/projects/${row.original.id}${isElectron ? '?electron=1' : ''}`"
             >
               <UIcon
                 class="text-lg"
@@ -76,7 +75,7 @@
           </UTooltip>
           <UTooltip text="Duplicate project without copying observations">
             <div
-              @click="beginDuplicateProject(row)"
+              @click="beginDuplicateProject(row.original)"
               class="hover:cursor-pointer"
             >
               <UIcon class="text-lg" name="i-mdi-content-duplicate" />
@@ -88,22 +87,23 @@
   </UCard>
   <ProjectFormModal
     :open="openCreateProjectModal"
-    :on-close="() => (openCreateProjectModal = false)"
+    @close="() => (openCreateProjectModal = false)"
   />
   <ProjectDuplicationModal
     :open="openDuplicateProjectModal"
-    :on-close="
+    @close="
       () => {
         openDuplicateProjectModal = false;
         projectClicked = undefined;
       }
     "
     :project="projectClicked"
-    :on-project-duplicated="onProjectDuplicated"
+    @project-duplicated="onProjectDuplicated"
   />
 </template>
 
 <script setup lang="ts">
+import type { TableColumn } from "#ui/types";
 const { params } = useRoute();
 const { refreshUser } = await useUser();
 const { projects } = await useProjects(params);
@@ -112,30 +112,26 @@ const toast = useToast();
 const openCreateProjectModal = ref(false);
 const openDuplicateProjectModal = ref(false);
 const projectClicked = ref<FullProject | undefined>(undefined);
-const columns = [
+const columns: TableColumn<FullProject>[] = [
   {
-    key: "name",
-    label: "Name",
-    sortable: true,
+    accessorKey: "name",
+    header: "Name",
   },
   {
-    key: "createdAt",
-    label: "Created at",
-    direction: "desc" as "desc" | "asc",
-    sortable: true,
+    accessorKey: "createdAt",
+    header: "Created at",
   },
   {
-    key: "fields",
-    label: "Parameters",
+    accessorKey: "fields",
+    header: "Parameters",
   },
   {
-    key: "observationCount",
-    label: "Total observations",
-    sortable: true,
+    accessorKey: "observationCount",
+    header: "Total observations",
   },
   {
-    key: "actions",
-    label: "",
+    accessorKey: "actions",
+    header: "",
   },
 ];
 
@@ -153,7 +149,7 @@ function beginDuplicateProject(project: FullProject): void {
 async function onProjectDuplicated(newProject: FullProject): Promise<void> {
   toast.add({
     title: "Project duplicated successfully",
-    color: "green",
+    color: "success",
     icon: "i-heroicons-check",
   });
   openDuplicateProjectModal.value = false;

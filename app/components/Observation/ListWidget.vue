@@ -5,7 +5,7 @@
         <div class="flex gap-3">
           <CardHeader>Observations</CardHeader>
           <UBadge variant="soft">{{ totalObservations }} total</UBadge>
-          <UBadge color="yellow" variant="soft">
+          <UBadge color="warning" variant="soft">
             {{ totalDraftObservations }} draft
           </UBadge>
         </div>
@@ -14,9 +14,8 @@
           <div class="w-56">
             <USelectMenu
               variant="outline"
-              :options="observationFilterMenuItems"
+              :items="observationFilterMenuItems"
               v-model="filterOption"
-              option-attribute="label"
             />
           </div>
           <UButton
@@ -32,40 +31,37 @@
       </div>
     </template>
     <UTable
-      v-model:sort="sort"
-      :empty-state="{
-        icon: 'i-heroicons-circle-stack-20-solid',
-        label: 'No observations',
-      }"
-      :rows="observations"
+      v-model:sorting="sorting"
+      empty="No observations"
+      :data="observations"
       :columns="columns"
       v-if="props.project"
     >
-      <template #id-data="{ row }">
+      <template #id-cell="{ row }">
         <NuxtLink
-          :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
+          :href="`/projects/${row.original.projectId}/observations/${row.original.id}${isElectron ? '?electron=1' : ''}`"
         >
           <span class="text-gray-600 pr-1 inline-block">#</span>
-          <span class="font-semibold">{{ row.id }}</span>
+          <span class="font-semibold">{{ row.original.id }}</span>
         </NuxtLink>
       </template>
-      <template #createdAt-data="{ row }">
-        <span>{{ prettyDate(row.createdAt) }}</span>
+      <template #createdAt-cell="{ row }">
+        <span>{{ prettyDate(row.original.createdAt) }}</span>
       </template>
-      <template #user-data="{ row }">
-        <span>{{ row.user?.name || row.user?.email || "Deleted user" }}</span>
+      <template #user-cell="{ row }">
+        <span>{{ row.original.user?.name || row.original.user?.email || "Deleted user" }}</span>
       </template>
-      <template #isDraft-data="{ row }">
-        <span>{{ row.isDraft ? "Yes" : "No" }}</span>
+      <template #isDraft-cell="{ row }">
+        <span>{{ row.original.isDraft ? "Yes" : "No" }}</span>
       </template>
-      <template #tags-data="{ row }">
-        <ObservationTagListOverflow :tags="row.tags" />
+      <template #tags-cell="{ row }">
+        <ObservationTagListOverflow :tags="row.original.tags" />
       </template>
-      <template #actions-data="{ row }">
+      <template #actions-cell="{ row }">
         <div class="w-full justify-end flex gap-x-3">
           <div
-            v-if="row.images?.length"
-            @click="() => openObservationImages(row)"
+            v-if="row.original.images?.length"
+            @click="() => openObservationImages(row.original)"
           >
             <UIcon
               name="i-heroicons-photo"
@@ -73,7 +69,7 @@
             />
           </div>
           <NuxtLink
-            :href="`/projects/${row.projectId}/observations/${row.id}${isElectron ? '?electron=1' : ''}`"
+            :href="`/projects/${row.original.projectId}/observations/${row.original.id}${isElectron ? '?electron=1' : ''}`"
           >
             <UIcon
               name="i-heroicons-arrow-top-right-on-square"
@@ -81,8 +77,8 @@
             />
           </NuxtLink>
           <div
-            @click="() => beginDeleteObservation(row)"
-            v-if="observationIsDeletable(row, user, props.project)"
+            @click="() => beginDeleteObservation(row.original)"
+            v-if="observationIsDeletable(row.original as FullObservation, user, props.project)"
           >
             <UIcon
               name="i-heroicons-trash"
@@ -95,7 +91,7 @@
     <div class="flex w-full mt-4 -mb-7 justify-center">
       <UPagination
         v-if="totalPages > 1"
-        v-model="page"
+        v-model:page="page"
         :total="totalObservations"
         :max="8"
         :page-count="pageSize"
@@ -108,11 +104,12 @@
     :open="openImageDialog"
     :observation="selectedObservation"
     :project="project"
-    :on-close="() => (openImageDialog = false)"
+    @close="() => (openImageDialog = false)"
   />
 </template>
 
 <script lang="ts" setup>
+import type { TableColumn } from "#ui/types";
 // import { observationFilterMenuItems } from "#imports";
 
 const error = ref(null);
@@ -151,6 +148,17 @@ const sort = ref({
   direction: orderByDirection.value,
 });
 
+// tanstack sorting state, kept in sync with the sort ref above
+const sorting = computed({
+  get: () => [{ id: sort.value.column, desc: sort.value.direction === "desc" }],
+  set: (value: { id: string; desc: boolean }[]) => {
+    sort.value = {
+      column: value[0]?.id ?? sort.value.column,
+      direction: value[0]?.desc ? "desc" : "asc",
+    };
+  },
+});
+
 // update useObservation's state when sorting properties are changed by table interactions
 watch(
   sort,
@@ -187,37 +195,31 @@ function addObservationClick() {
     });
 }
 
-const columns = [
+const columns: TableColumn<any>[] = [
   {
-    label: "ID",
-    sortable: true,
-    key: "id",
+    header: "ID",
+    accessorKey: "id",
   },
   {
-    label: "Created at",
-    sortable: true,
-    key: "createdAt",
+    header: "Created at",
+    accessorKey: "createdAt",
   },
   {
-    label: "Submitted by",
-    sortable: true,
-    key: "user",
+    header: "Submitted by",
+    accessorKey: "user",
   },
   {
-    label: "Draft",
-    sortable: false,
-    key: "isDraft",
+    header: "Draft",
+    accessorKey: "isDraft",
   },
   {
-    label: "Tags",
-    key: "tags",
-    sortable: false,
+    header: "Tags",
+    accessorKey: "tags",
   },
   {
-    label: "",
-    sortable: false,
-    key: "actions",
-    class: "text-right",
+    header: "",
+    accessorKey: "actions",
+    meta: { class: { td: "text-right" } },
   },
 ];
 
@@ -236,24 +238,24 @@ async function beginDeleteObservation(row: any) {
       title: "An internal error just happened :(",
       description:
         "The error was reported anonymously without including any third-parties.",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
   } else {
     // TODO: create nice confirm box
     const res = confirm(
-      `Are you sure you want to delete observation #${row.id}?`,
+      `Are you sure you want to delete observation #${row.original.id}?`,
     );
     if (!res) {
       return;
     }
 
     try {
-      await deleteObservation(props.project.id, row.id);
+      await deleteObservation(props.project.id, row.original.id);
 
       toast.add({
         title: "Observation was deleted",
-        color: "green",
+        color: "success",
         icon: "i-heroicons-check",
       });
 
@@ -265,7 +267,7 @@ async function beginDeleteObservation(row: any) {
       toast.add({
         title: "Observation was NOT deleted",
         description: msg,
-        color: "red",
+        color: "error",
         icon: "i-heroicons-exclamation-triangle",
       });
     }

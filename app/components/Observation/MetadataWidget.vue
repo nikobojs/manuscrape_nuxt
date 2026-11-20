@@ -36,7 +36,7 @@
 
           <div class="flex flex-col gap-4">
             <div v-if="hasUnsaved && observation.isDraft">
-              <UAlert color="teal" variant="soft" title="Heads up!">
+              <UAlert color="info" variant="soft" title="Heads up!">
                 <template #description>
                   <div>
                     <p>
@@ -49,7 +49,7 @@
                   <div class="flex justify-end w-full">
                     <UButton
                       variant="soft"
-                      color="white"
+                      color="neutral"
                       icon="i-mdi-trash-outline"
                       @click="revertDraftChanges"
                       >Revert changes</UButton
@@ -62,7 +62,7 @@
               v-show="state && inputs.length > 0"
               v-for="{ props, field } in inputs"
             >
-              <UFormGroup :name="field.label" :label="`${field.label}:`">
+              <UFormField :name="field.label" :label="`${field.label}:`">
                 <div class="inline-block">
                   <UCheckbox
                     v-if="
@@ -93,24 +93,11 @@
                     @input="(asd: Event) => fourDigitYear(asd)"
                   />
                   <div v-else-if="field.type === 'CHOICE'">
-                    <div
-                      class="flex items-center gap-2"
-                      v-for="choice in field.choices"
-                    >
-                      <URadio
-                        :id="`radio-${choice}`"
-                        :key="choice"
-                        v-model="state[field.label]"
-                        :name="field.label"
-                        :value="choice"
-                        :disabled="!!$props.disabled"
-                      />
-                      <label
-                        :for="`radio-${choice}`"
-                        v-if="state[field.label]"
-                        >{{ choice }}</label
-                      >
-                    </div>
+                    <URadioGroup
+                      v-model="state[field.label]"
+                      :items="(field.choices || []).map((choice) => ({ label: choice, value: choice }))"
+                      :disabled="!!$props.disabled"
+                    />
                   </div>
                   <div
                     v-else-if="field.type === 'AUTOCOMPLETE'"
@@ -118,16 +105,15 @@
                   >
                     <USelectMenu
                       class="min-w-[200px]"
-                      :options="field.choices"
+                      :items="field.choices"
                       v-model="state[field.label]"
                       :placeholder="
                         field.required ? 'Select option' : 'None chosen'
                       "
                       :disabled="!!$props.disabled"
-                      :popper="{
-                        adaptive: false,
-                        offsetDistance: -3,
-                        placement: 'bottom-start',
+                      :content="{
+                        side: 'bottom',
+                        align: 'start',
                       }"
                     />
                     <div
@@ -143,26 +129,25 @@
                   >
                     <USelectMenu
                       class="min-w-[200px]"
-                      :options="field.choices"
+                      :items="field.choices"
                       v-model="state[field.label]"
                       :placeholder="
                         field.required ? 'Select or type option' : 'None chosen'
                       "
                       creatable
-                      searchable
-                      :searchable-placeholder="
-                        field.required
+                      :search-input="{
+                        placeholder: field.required
                           ? 'Search or write custom text...'
-                          : 'None chosen'
-                      "
+                          : 'None chosen',
+                      }"
                       :disabled="!!$props.disabled"
                     >
-                      <template #option-create="{ option }">
+                      <template #create-item-label="{ item }">
                         <span class="flex-shrink-0 text-gray-400 text-xs"
                           >Custom:</span
                         >
                         <span>
-                          {{ option?.label || option }}
+                          {{ item }}
                         </span>
                       </template>
                     </USelectMenu>
@@ -180,7 +165,7 @@
                     <USelectMenu
                       :name="field.label"
                       class="min-w-[200px]"
-                      :options="
+                      :items="
                         getMultipleChoiceAddOptions({
                           choices: field.choices,
                           label: field.label,
@@ -193,20 +178,19 @@
                           : 'Nothing picked'
                       "
                       multiple
-                      searchable
                       creatable
                       by="label"
                       :disabled="!!$props.disabled"
                     >
-                      <template #option-create="{ option }">
+                      <template #create-item-label="{ item }">
                         <span class="flex-shrink-0 text-gray-400 text-xs"
                           >Custom:</span
                         >
                         <span>
-                          {{ option.label }}
+                          {{ item }}
                         </span>
                       </template>
-                      <template #label>
+                      <template #default>
                         <span v-if="state[field.label].length" class="truncate"
                           >{{ state[field.label].length }} selected</span
                         >
@@ -227,7 +211,7 @@
                     :disabled="!!$props.disabled"
                   />
                 </div>
-              </UFormGroup>
+              </UFormField>
             </div>
           </div>
 

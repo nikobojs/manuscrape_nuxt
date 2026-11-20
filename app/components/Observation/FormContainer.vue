@@ -62,7 +62,7 @@
           <UButton
             v-if="isDeletable"
             icon="i-mdi-delete-outline"
-            color="red"
+            color="error"
             variant="outline"
             @click="() => handleDiscardDraft()"
           >
@@ -72,7 +72,7 @@
         <UAlert
           variant="outline"
           icon="i-mdi-information-outline"
-          color="blue"
+          color="info"
           title="Submit and lock"
           v-if="!isDelockable"
           description="When an observation is submitted, it will be locked for future editing.
@@ -101,7 +101,7 @@
           <div class="mt-6" v-if="isDelockable">
             <UButton
               icon="i-mdi-lock-open-variant-outline"
-              color="yellow"
+              color="warning"
               variant="outline"
               @click="() => handleDelock()"
             >
@@ -111,7 +111,7 @@
           <div class="mt-6" v-if="isDeletable">
             <UButton
               icon="i-mdi-delete-outline"
-              color="red"
+              color="error"
               variant="outline"
               @click="() => handleDelete()"
             >
@@ -271,7 +271,7 @@ async function handlePublishObservation() {
     const msg = getErrMsg(e);
     toast.add({
       title: msg,
-      color: "red",
+      color: "error",
     });
   }
 }
@@ -291,7 +291,7 @@ async function handleDelock() {
     });
     toast.add({
       title: "Observation unlocked successfully",
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
     props.onDelockObservation?.();
@@ -299,7 +299,7 @@ async function handleDelock() {
     const msg = getErrMsg(e);
     toast.add({
       title: msg,
-      color: "red",
+      color: "error",
     });
   }
 }
@@ -318,7 +318,7 @@ async function handleDiscardDraft() {
   } else {
     toast.add({
       title: "Draft has been deleted",
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
     navigateTo(`/projects/${props.project.id}`);
@@ -340,7 +340,7 @@ async function handleDelete() {
   } else {
     toast.add({
       title: "Observation has been deleted permanently",
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
     navigateTo(`/projects/${props.project.id}`);

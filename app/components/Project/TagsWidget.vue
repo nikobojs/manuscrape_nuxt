@@ -7,7 +7,7 @@
             <UButton
             class="-mt-2 -mb-2"
             variant="outline"
-            color="blue"
+            color="info"
             icon="i-mdi-add"
             @click="openAddTagModal = true"
             >
@@ -16,7 +16,7 @@
             <UButton
               class="-mt-2 -mb-2"
               variant="outline"
-              color="red"
+              color="error"
               icon="i-mdi-add"
               @click="openDeleteTagsModal = true"
             >
@@ -31,7 +31,7 @@
           v-for="tag in sortedTags"
           :key="tag.id"
           variant="solid"
-          color="white"
+          color="neutral"
           class="text-xs px-2 py-1 w-fit text-nowrap"
         >
           #{{ tag.name }}
@@ -40,9 +40,10 @@
     </UCard>
   
     <UModal
-      v-model="openAddTagModal"
-      :ui="{ width: 'sm:max-w-xs max-w-xs' }"
+      v-model:open="openAddTagModal"
+      :ui="{ content: 'sm:max-w-xs max-w-xs' }"
     >
+      <template #content>
       <UCard>
         <template #header>
           <div>Create new tag</div>
@@ -57,16 +58,18 @@
         </div>
   
         <template #footer>
-          <UButton @click="handleCreateTag" color="blue">Create</UButton>
+          <UButton @click="handleCreateTag" color="info">Create</UButton>
         </template>
       </UCard>
+      </template>
     </UModal>
 
     
   
     <UModal
-      v-model="openDeleteTagsModal"
+      v-model:open="openDeleteTagsModal"
     >
+      <template #content>
       <UCard>
         <template #header>
           <div>Delete tags by clicking the trash symbol</div>
@@ -77,14 +80,14 @@
             v-for="tag in sortedTags"
             :key="tag.id"
             variant="solid"
-            color="white"
+            color="neutral"
             class="text-sm px-2 py-1 w-fit text-nowrap flex items-center gap-1"
           >
             #{{ tag.name }}
             <UButton
               icon="i-heroicons-trash"
-              size="2xs"
-              color="red"
+              size="xs"
+              color="error"
               variant="link"
               @click="handleDeleteTag(tag.id)"
             />
@@ -92,9 +95,10 @@
       </div>
   
         <template #footer>
-          <UButton @click="()=> openDeleteTagsModal = false " color="blue">Done</UButton>
+          <UButton @click="()=> openDeleteTagsModal = false " color="info">Done</UButton>
         </template>
       </UCard>
+      </template>
     </UModal>
   </template>
   
@@ -130,7 +134,7 @@
       toast.add({
         title: 'Tag created!',
         icon: 'i-heroicons-check',
-        color: 'green',
+        color: 'success',
       });
       newTagName.value = '';
       newTagError.value = '';
@@ -139,7 +143,7 @@
       toast.add({
         title: err.message,
         icon: 'i-heroicons-exclamation-triangle',
-        color: 'red',
+        color: 'error',
       });
     }
   }
@@ -151,14 +155,14 @@
           toast.add({
           title: 'Tag deleted!',
           icon: 'i-heroicons-check',
-          color: 'green',
+          color: 'success',
         });
       }
     } catch (err: any) {
       toast.add({
         title: err.message,
         icon: 'i-heroicons-exclamation-triangle',
-        color: 'red',
+        color: 'error',
       });
     }
   }

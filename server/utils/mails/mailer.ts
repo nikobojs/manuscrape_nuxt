@@ -87,8 +87,6 @@ export async function sendMail(to: string, subject: string, html: string) {
     html: html,
     //    xMailer: `Timeplat.eu v${pkg.version}`,
     from: config.smtpFrom,
-    debug: debug,
-    logger: debug,
   });
 
   if (debug) console.log("mail server response:", res);

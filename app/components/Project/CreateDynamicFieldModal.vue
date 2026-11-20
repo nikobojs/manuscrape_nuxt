@@ -1,38 +1,39 @@
 <template>
-  <UModal v-bind:model-value="open" v-on:close="onClose">
-    <UCard
-      :ui="{
-        base: '',
-      }">
+  <UModal
+    :open="open"
+    @update:open="(value) => { if (!value) handleClose() }"
+  >
+    <template #content>
+    <UCard>
       <template #header>
         <CardHeader>Create dynamic field</CardHeader>
       </template>
       <div class="relative z-50">
         <UForm :validate="validate" :state="state" @submit="submit">
           <div class="grid grid-cols-2 gap-x-3 mb-3">
-            <UFormGroup name="label" label="Label">
+            <UFormField name="label" label="Label">
               <UInput placeholder="Enter field label" v-model="state.label" required />
-            </UFormGroup>
-            <UFormGroup name="operator" label="Operation">
+            </UFormField>
+            <UFormField name="operator" label="Operation">
               <USelect
                 required
                 v-model="state.operator"
-                value-attribute="value"
-                option-attribute="label"
-                :options="Object.values(operators)" />
-            </UFormGroup>
+                value-key="value"
+                label-key="label"
+                :items="Object.values(operators)" />
+            </UFormField>
           </div>
           <div class="grid grid-cols-2 gap-x-3 mb-3">
-            <UFormGroup name="field0Id" label="Field 1" class="mb-3">
+            <UFormField name="field0Id" label="Field 1" class="mb-3">
               <ProjectFieldDropdown
                 :fields="project.fields"
                 v-model:selectedFieldId="state.field0Id" />
-            </UFormGroup>
-            <UFormGroup name="field1Id" label="Field 2">
+            </UFormField>
+            <UFormField name="field1Id" label="Field 2">
               <ProjectFieldDropdown
                 :fields="project.fields"
                 v-model:selectedFieldId="state.field1Id" />
-            </UFormGroup>
+            </UFormField>
           </div>
         </UForm>
         <span class="text-red-500" v-if="error">{{ error }}</span>
@@ -40,10 +41,11 @@
       <template #footer>
         <div class="flex gap-3 justify-end flex-wrap">
           <UButton @click="submit" variant="outline" color="primary"> Save </UButton>
-          <UButton @click="handleClose" color="gray" variant="outline"> Cancel </UButton>
+          <UButton @click="handleClose" color="neutral" variant="outline"> Cancel </UButton>
         </div>
       </template>
     </UCard>
+    </template>
   </UModal>
 </template>
 
@@ -55,6 +57,10 @@ const props = defineProps({
   ...requireModalProps,
 });
 
+const emit = defineEmits<{
+  close: [];
+}>();
+
 const resetState = () => {
   Object.assign(state, initialState);
 };
@@ -62,7 +68,7 @@ const resetState = () => {
 const handleClose = () => {
   error.value = null;
   resetState();
-  props.onClose();
+  emit('close');
 };
 
 const { createDynamicField, operators } = await useDynamicFields(props.project.id);
@@ -71,7 +77,7 @@ const error = ref<FormError | null>(null);
 const initialState = {
   field0Id: undefined as number | undefined,
   field1Id: undefined as number | undefined,
-  operator: operators[0],
+  operator: (operators[0]?.value ?? '') as string,
   label: '',
 };
 
@@ -87,13 +93,13 @@ async function validate(state: any) {
   // TODO: make sure dynamic field label is not used before
 
   if (typeof state.field0Id !== 'number') {
-    errors.push({ message: 'Select a field', path: 'field0Id' });
+    errors.push({ message: 'Select a field',  name: 'field0Id' });
   }
   if (typeof state.field1Id !== 'number') {
-    errors.push({ message: 'Select a field', path: 'field1Id' });
+    errors.push({ message: 'Select a field',  name: 'field1Id' });
   }
   if (state.label.length === 0) {
-    errors.push({ message: 'Needs to be at least 1 character', path: 'label' });
+    errors.push({ message: 'Needs to be at least 1 character',  name: 'label' });
   }
 
   return errors;

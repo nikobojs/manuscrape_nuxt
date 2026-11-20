@@ -13,7 +13,7 @@
                 <UButton
                   v-if="inputsWithImage.length > 0"
                   @click="takeAnotherScreenshot"
-                  color="white"
+                  color="neutral"
                   size="sm"
                   class="ring-slate-400 focus:ring-slate-200 hover:ring-slate-200 text-slate-300 hover:text-slate-100 transition-all"
                   variant="outline"
@@ -67,14 +67,15 @@
     </UCard>
 
     <!-- Modal for pre-upload editing (web only) -->
-    <UModal v-model="showEditorModal" fullscreen>
+    <UModal v-model:open="showEditorModal" fullscreen>
+      <template #content>
       <UCard class="w-full">
         <template #header>
           <div class="flex justify-between items-center">
             <CardHeader> Edit image before uploading </CardHeader>
             <UButton
               icon="i-heroicons-x-mark"
-              color="gray"
+              color="neutral"
               variant="ghost"
               @click="closeModal"
             />
@@ -91,6 +92,7 @@
           />
         </UContainer>
       </UCard>
+      </template>
     </UModal>
   </div>
 </template>
@@ -155,7 +157,7 @@ function takeAnotherScreenshot() {
     report("error", errMsg);
     toast.add({
       description: errMsg,
-      color: "red",
+      color: "error",
     });
   }
 }
@@ -178,13 +180,13 @@ async function onDeleteImageUpload(imgId: number) {
       title: "Image file could not be deleted",
       description: json?.message || "Unknown error",
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
   } else {
     toast.add({
       title: "Image deleted successfully",
       icon: "i-heroicons-check",
-      color: "green",
+      color: "success",
     });
     props.onSubmit?.();
   }
@@ -207,7 +209,7 @@ async function onFilePicked(
         title: "Image file is too big",
         description: "Maximum size allowed is " + formatMb(config.maxImageSize),
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
       // Reset file input
       if (fileInput.value) {
@@ -283,7 +285,7 @@ async function handleModalUploadSuccess() {
   toast.add({
     title: "Image uploaded successfully",
     icon: "i-heroicons-check",
-    color: "green",
+    color: "success",
   });
   props.onSubmit?.();
 }

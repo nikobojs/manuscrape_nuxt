@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* app is dark-only, dark class is always set on <html> */
+@custom-variant dark (&:where(.dark, .dark *));

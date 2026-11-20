@@ -4,10 +4,7 @@
       class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
       @click="onLogoClick"
     >
-      <span class="dark:hidden">
-        <img src="/logo/manuscrape-logo-dark.svg" alt="manuscrape logo dark" />
-      </span>
-      <span class="hidden dark:block">
+      <span>
         <img
           src="/logo/manuscrape-logo-light.svg"
           alt="manuscrape logo light"
@@ -47,7 +44,7 @@
           >
             Reset password
           </UButton>
-          <UButton class="mt-5" color="gray" :disabled="loading" to="/login">
+          <UButton class="mt-5" color="neutral" :disabled="loading" to="/login">
             Go to login page
           </UButton>
         </div>
@@ -82,7 +79,7 @@ async function forgotPassword() {
     await requestForgotPasswordEmail(email.value).then(() => {
       toast.add({
         title: "Email was sent successfully",
-        color: "green",
+        color: "success",
         icon: "i-heroicons-check",
       });
     });
@@ -92,7 +89,7 @@ async function forgotPassword() {
     toast.add({
       title: "Unable to request reset password email",
       description: errMsg,
-      color: "red",
+      color: "error",
     });
   } finally {
     loading.value = false;

@@ -4,10 +4,7 @@
       class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
       @click="onLogoClick"
     >
-      <span class="dark:hidden">
-        <img src="/logo/manuscrape-logo-dark.svg" alt="manuscrape logo dark" />
-      </span>
-      <span class="hidden dark:block">
+      <span>
         <img
           src="/logo/manuscrape-logo-light.svg"
           alt="manuscrape logo light"
@@ -18,7 +15,7 @@
       <div class="flex">
         <ULink
           to="/login"
-          class="text-2xl mb-8 text-slate-600 dark:text-slate-600 hover:text-green-500 hover:dark:text-green-500 hover:underline"
+          class="text-2xl mb-8 text-slate-600 hover:text-green-500 hover:underline"
         >
           Sign in
         </ULink>
@@ -32,12 +29,12 @@
       :validate="validate"
       :state="state"
     >
-      <UFormGroup label="Full Name" name="name">
+      <UFormField label="Full Name" name="name">
         <template #label>
           <div class="flex gap-1 items-center">
             <span>Full Name</span>
-            <UTooltip :ui="{base: 'p-2 text-xs'}">
-              <template #text>
+            <UTooltip :ui="{ content: 'p-2 text-xs' }">
+              <template #content>
                 <p class="whitespace-normal break-words">
                   Visible to project collaborators and on project exports
                 </p>
@@ -53,11 +50,11 @@
           placeholder="Enter full name"
           required
         />
-      </UFormGroup>
+      </UFormField>
 
       <br />
 
-      <UFormGroup label="Email" name="email">
+      <UFormField label="Email" name="email">
         <UInput
           autocomplete="off"
           v-model="state.email"
@@ -65,11 +62,11 @@
           placeholder="Enter email"
           required
         />
-      </UFormGroup>
+      </UFormField>
 
       <br />
 
-      <UFormGroup label="Password" name="password">
+      <UFormField label="Password" name="password">
         <UInput
           autocomplete="off"
           v-model="state.password"
@@ -77,7 +74,7 @@
           placeholder="Enter Password"
           required
         />
-      </UFormGroup>
+      </UFormField>
 
       <span
         class="block mt-3 text-red-500"
@@ -97,7 +94,7 @@
         to="/login"
         class="text-sm pl-3 hover:underline"
         active-class="text-primary"
-        inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
+        inactive-class="text-gray-500 hover:text-gray-200"
       >
         I already have an account
       </ULink>
@@ -105,13 +102,14 @@
 
     <!-- the captcha runs in a modal because the sign-up page is shown in
          the Electron app, where the window has a fixed size -->
-    <UModal v-model="showCaptchaModal">
-      <UCard :ui="{ body: { padding: 'p-4 sm:p-4' } }">
+    <UModal v-model:open="showCaptchaModal">
+      <template #content>
+      <UCard :ui="{ body: 'p-4 sm:p-4' }">
         <template #header>
           <CardHeader>Human verification</CardHeader>
         </template>
 
-        <p class="text-sm mb-3 text-gray-500 dark:text-gray-400">
+        <p class="text-sm mb-3 text-gray-400">
           Verifying that you are human. This happens automatically and should
           only take a moment...
         </p>
@@ -121,6 +119,7 @@
           @statechange="onCaptchaStateChange"
         />
       </UCard>
+      </template>
     </UModal>
   </UContainer>
 </template>
@@ -158,13 +157,13 @@ const {isElectron}=useDevice();
 
 function validate(state: any): FormError[] {
   const errors = [] as FormError[];
-  if (!state.name) errors.push({ path: "name", message: "Required" });
-  if (!state.email) errors.push({ path: "email", message: "Required" });
+  if (!state.name) errors.push({  name: "name", message: "Required" });
+  if (!state.email) errors.push({  name: "email", message: "Required" });
   if (state.email.split("").filter((c: string) => c == "@").length !== 1)
-    errors.push({ path: "email", message: "Should contain exactly one '@'" });
+    errors.push({  name: "email", message: "Should contain exactly one '@'" });
   if (state.email.split("").filter((c: string) => c == ".").length < 1)
-    errors.push({ path: "email", message: "Should contain at least one '.'" });
-  if (!state.password) errors.push({ path: "password", message: "Required" });
+    errors.push({  name: "email", message: "Should contain at least one '.'" });
+  if (!state.password) errors.push({  name: "password", message: "Required" });
   return errors;
 }
 

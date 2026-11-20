@@ -1,5 +1,9 @@
 <template>
-  <UModal v-bind:model-value="open" v-on:close="onClose">
+  <UModal
+    :open="open"
+    @update:open="(value) => { if (!value) emit('close') }"
+  >
+    <template #content>
     <UCard>
       <template #header>
         <CardHeader>Delete user account</CardHeader>
@@ -18,11 +22,12 @@
       />
       <div class="text-red-500 mb-4" v-if="errorMsg">{{ errorMsg }}</div>
       <div class="w-full text-right">
-        <UButton color="red" @click="onDeleteUserConfirm"
+        <UButton color="error" @click="onDeleteUserConfirm"
           >Confirm user deletion</UButton
         >
       </div>
     </UCard>
+    </template>
   </UModal>
 </template>
 
@@ -30,6 +35,10 @@
 const props = defineProps({
   ...requireModalProps,
 });
+
+const emit = defineEmits<{
+  close: [];
+}>();
 
 const password = ref("");
 const toast = useToast();
@@ -39,7 +48,7 @@ const errorMsg = ref<null | string>(null);
 
 async function onDeleteUserConfirm() {
   try {
-    props.onClose();
+    emit('close');
     await deleteUserAccount(password.value);
     toast.add({
       title: "Success",

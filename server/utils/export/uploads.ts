@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import { generateFilename } from "./helpers";
 import { canUseS3 } from "../fileUpload";
 import { SQL } from "drizzle-orm";
@@ -50,7 +50,7 @@ export const generateProjectUploadsExport = async (
     });
   }
 
-  const archive = archiver("zip", {
+  const archive = new ZipArchive({
     zlib: {
       level: 1,
       memLevel: 9,
@@ -59,11 +59,11 @@ export const generateProjectUploadsExport = async (
     highWaterMark: 2147483648, // max 2gb
   });
 
-  archive.on("error", function (err) {
+  archive.on("error", function (err: Error) {
     console.error(err);
     captureException(err);
   });
-  archive.on("warning", function (warn) {
+  archive.on("warning", function (warn: Error) {
     console.warn(warn);
   });
 

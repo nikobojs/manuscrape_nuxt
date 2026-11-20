@@ -9,33 +9,33 @@
     <UTable
       v-show="observation.fileUploads.length > 0"
       class="mt-6"
-      :rows="observation.fileUploads"
+      :data="observation.fileUploads"
       :columns="fileUploadColumns"
     >
-      <template #mimetype-data="{ row }">
+      <template #mimetype-cell="{ row }">
         <div class="w-5 h-5">
           <UIcon
-            :name="getIconByMimetype(row.mimetype).icon"
-            :class="`${getIconByMimetype(row.mimetype).class} text-xl`"
+            :name="getIconByMimetype(row.original.mimetype).icon"
+            :class="`${getIconByMimetype(row.original.mimetype).class} text-xl`"
           />
         </div>
       </template>
-      <template #originalName-data="{ row }">
+      <template #originalName-cell="{ row }">
         <NuxtLink
-          :href="`/api/projects/${project.id}/observations/${observation.id}/upload/${row.id}`"
+          :href="`/api/projects/${project.id}/observations/${observation.id}/upload/${row.original.id}`"
           target="_blank"
           class="cursor-pointer hover:text-gray-200 transition-colors"
         >
-          {{ row.originalName }}
+          {{ row.original.originalName }}
         </NuxtLink>
       </template>
-      <template #createdAt-data="{ row }">
-        {{ prettyDate(row.createdAt, true) }}
+      <template #createdAt-cell="{ row }">
+        {{ prettyDate(row.original.createdAt, true) }}
       </template>
-      <template #delete-data="{ row }">
+      <template #delete-cell="{ row }">
         <div
           class="w-5 h-5 cursor-pointer transition-opacity opacity-80 hover:opacity-100"
-          @click="handleDeleteFile(row)"
+          @click="handleDeleteFile(row.original)"
         >
           <UIcon name="i-mdi-trash-outline" :class="`text-red-600 text-xl`" />
         </div>
@@ -45,6 +45,7 @@
 </template>
 
 <script lang="ts" setup>
+import type { TableColumn } from "#ui/types";
 const props = defineProps({
   onFileUploaded: requireFunctionProp<(file: File) => Promise<void>>(),
   onFileDeleted: requireFunctionProp<() => Promise<void>>(),
@@ -57,28 +58,24 @@ const file = ref<File | undefined>();
 const toast = useToast();
 const { report } = useSentry();
 
-const fileUploadColumns = [
+const fileUploadColumns: TableColumn<any>[] = [
   {
-    label: "",
-    key: "mimetype",
-    sortable: false,
-    class: "w-5",
+    header: "",
+    accessorKey: "mimetype",
+    meta: { class: { td: "w-5" } },
   },
   {
-    label: "File name",
-    key: "originalName",
-    sortable: true,
+    header: "File name",
+    accessorKey: "originalName",
   },
   {
-    label: "Date",
-    key: "createdAt",
-    sortable: true,
+    header: "Date",
+    accessorKey: "createdAt",
   },
   {
-    label: "",
-    key: "delete",
-    sortable: false,
-    class: "w-5",
+    header: "",
+    accessorKey: "delete",
+    meta: { class: { td: "w-5" } },
   },
 ];
 
@@ -96,7 +93,7 @@ async function onFilePicked(event: any) {
       title: "File is too big",
       description: "Maximum size allowed is " + formatMb(config.maxFileSize),
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
     return;
   }
@@ -124,7 +121,7 @@ async function onFilePicked(event: any) {
           title: "File upload error",
           description: msg,
           icon: "i-heroicons-exclamation-triangle",
-          color: "red",
+          color: "error",
         });
       });
   } catch (err) {
@@ -157,7 +154,7 @@ async function handleDeleteFile(f: FileUploadResponse) {
           title: "File upload error",
           description: msg,
           icon: "i-heroicons-exclamation-triangle",
-          color: "red",
+          color: "error",
         });
       });
   } catch (err) {

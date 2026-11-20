@@ -5,11 +5,8 @@
       <div v-if="suggestedFields.length && suggested.length > 0">
         <UCard
           :ui="{
-            background: 'dark:bg-slate-800 bg-slate-800',
-            ring: 'ring-1 ring-gray-500 dark:ring-gray-700',
-            body: {
-              padding: 'pt-0 py-0 sm:p-0 sm:pb-1.5',
-            },
+            root: 'bg-slate-800 ring-1 ring-gray-700',
+            body: 'pt-0 py-0 sm:p-0 sm:pb-1.5',
           }"
         >
           <template #header>

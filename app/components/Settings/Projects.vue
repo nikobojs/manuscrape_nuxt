@@ -1,7 +1,7 @@
 <template>
   <SettingsBox
     title="Project settings"
-    help="These settings applies to the chosen project, potentially affecting all collaborators on the respective project."
+    description="These settings applies to the chosen project, potentially affecting all collaborators on the respective project."
   >
     <div>
       <p class="mb-2">Choose a project to show its settings:</p>
@@ -17,7 +17,7 @@
           class="px-2 py-1"
           icon="i-mdi-warning-outline"
           title="As a collaborator, you are not able to change these settings"
-          color="blue"
+          color="info"
           variant="soft"
         />
       </div>
@@ -40,7 +40,7 @@
           </div>
           <div class="flex justify-between items-baseline">
             <label>Author can delock observations:</label>
-            <UToggle
+            <USwitch
               id="author-can-delock"
               v-model="authorCanDelockObservations"
               :disabled="loading || !isOwner"
@@ -48,7 +48,7 @@
           </div>
           <div class="flex justify-between items-baseline">
             <label>Owner can delock observations:</label>
-            <UToggle
+            <USwitch
               id="owner-can-delock"
               v-model="ownerCanDelockObservations"
               :disabled="loading || !isOwner"
@@ -56,7 +56,7 @@
           </div>
           <div class="flex justify-between items-baseline">
             <label>Contributors can see each others' observations</label>
-            <UToggle
+            <USwitch
               id="enable-contributors-full-read-access"
               v-model="contributorsCanReadAllObservations"
               :disabled="loading || !isOwner"
@@ -64,7 +64,7 @@
           </div>
           <div class="flex justify-between items-baseline">
             <label>Contributors can read/write/delete exports</label>
-            <UToggle
+            <USwitch
               id="enable-contributors-full-read-access"
               v-model="contributorsCanExport"
               :disabled="
@@ -163,7 +163,7 @@ async function updateProject(
       console.error(errMsg);
       toast.add({
         title: "Server error :(",
-        color: "red",
+        color: "error",
         description: `We're working to fix this as soon as possible`,
       });
       report("error", errMsg);
@@ -177,7 +177,7 @@ async function updateProject(
       }
       toast.add({
         title: "Project settings updated successfully",
-        color: "green",
+        color: "success",
       });
     }
   } catch (err: any) {

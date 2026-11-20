@@ -319,6 +319,7 @@ export interface ObservationFilterConfigs {
 }
 
 export interface ObservationFilterConfig {
+  value: string;
   label: string;
   filter: "drafts" | "published" | "all";
   ownership: "me" | "everyone";

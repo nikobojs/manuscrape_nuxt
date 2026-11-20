@@ -1,6 +1,6 @@
-import { Strategy } from "passport-saml";
+import { Strategy } from "@node-saml/passport-saml";
 import type { H3Event } from "h3";
-import type { Profile } from "passport-saml";
+import type { Profile } from "@node-saml/passport-saml";
 import { and, eq } from "drizzle-orm";
 import { users } from "~~/server/drizzle/schema";
 import { createSamlUser } from "~~/server/utils/users";
@@ -28,6 +28,16 @@ function getSamlCert(): string {
   }
 }
 
+function verifyProfile(
+  profile: Profile | null | undefined,
+  done: (err: any, user?: any) => void,
+) {
+  if (!profile) {
+    return done(new Error("No profile returned from SAML provider"));
+  }
+  done(null, profile);
+}
+
 export function getSamlStrategy() {
   const config = useRuntimeConfig();
 
@@ -43,7 +53,8 @@ export function getSamlStrategy() {
       callbackUrl: config.saml.callbackUrl,
 
       // WAYF's X509 signing certificate (PEM format, no headers)
-      cert: getSamlCert(),
+      // renamed from cert to idpCert in @node-saml v5
+      idpCert: getSamlCert(),
 
       // Use configured callbackUrl instead of dynamic
       disableRequestAcsUrl: true,
@@ -65,15 +76,9 @@ export function getSamlStrategy() {
       logoutCallbackUrl: "https://localhost:3001/auth/saml/logout",
       logoutUrl: config.saml.logoutUrl,
     },
-    (
-      profile: Profile | null | undefined,
-      done: (err: any, user?: any) => void,
-    ) => {
-      if (!profile) {
-        return done(new Error("No profile returned from SAML provider"));
-      }
-      done(null, profile);
-    },
+    verifyProfile,
+    // the logout flow validates via _saml directly, keep the same verify
+    verifyProfile,
   );
 
   return samlStrategy;
@@ -150,7 +155,7 @@ export async function authorizeOrCreateUserSAML(
   }
 }
 
-// NOTE: the result type comes directly from passport-saml
+// NOTE: the result type comes directly from @node-saml/passport-saml
 function parseSamlProfile(
   result: {
     profile?: Profile | null | undefined;

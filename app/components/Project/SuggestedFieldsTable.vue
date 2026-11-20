@@ -1,31 +1,28 @@
 <template>
   <div>
     <UTable
-      :rows="suggestedFields"
-      :sort="{ column: 'index', direction: 'asc' }"
+      :data="suggestedFields"
       :columns="fieldColumns"
       :ui="{
         thead: 'hidden',
-        th: { padding: 'px-3 py-2.5' },
-        td: {
-          padding: 'px-3 py-2.5 text-xs',
-        },
-        tbody: 'divide-y divide-gray-700 dark:divide-gray-700',
+        th: 'px-3 py-2.5',
+        td: 'px-3 py-2.5 text-xs',
+        tbody: 'divide-y divide-gray-700',
       }"
     >
-      <template #label-data="{ row, index }">
+      <template #label-cell="{ row }">
         <!-- Label column -->
         <div class="flex gap-x-2 items-center min-w-[257px] relative">
           <div class="text-lg absolute -left-3 -translate-x-full">
             <UIcon
               class="text-lg"
-              color="gray"
+              color="neutral"
               name="mdi:lightbulb-alert-outline"
             />
           </div>
           <div class="flex items-center gap-x-1.5 w-full">
             <UInput
-              v-model="row.label"
+              v-model="row.original.label"
               class="w-full"
               size="xs"
               placeholder="Insert label"
@@ -34,9 +31,9 @@
               <UButton
                 square
                 variant="soft"
-                color="black"
+                color="neutral"
                 class="rounded-full flex items-center justify-center p-1"
-                @click="() => selectSuggestedParameter(row)"
+                @click="() => selectSuggestedParameter(row.original)"
               >
                 <UIcon name="mdi:check" class="text-green-500 text-lg" />
               </UButton>
@@ -44,10 +41,10 @@
             <div class="flex items-center">
               <UButton
                 square
-                color="black"
+                color="neutral"
                 variant="soft"
                 class="rounded-full flex items-center justify-center p-1"
-                @click="() => removeParameter(row)"
+                @click="() => removeParameter(row.original)"
               >
                 <UIcon name="i-mdi-close" class="text-red-500 text-lg" />
               </UButton>
@@ -55,38 +52,38 @@
           </div>
         </div>
       </template>
-      <template #field-data="{ row }">
+      <template #field-cell="{ row }">
         <div class="flex gap-2">
-          <UBadge size="xs" color="blue" variant="outline">
-            {{ getFieldLabel(row.type) }}
+          <UBadge size="xs" color="info" variant="outline">
+            {{ getFieldLabel(row.original.type) }}
           </UBadge>
         </div>
       </template>
-      <template #last-data="{ row }">
+      <template #last-cell="{ row }">
         <div class="flex items-center justify-end relative">
-          <UDropdown :items="getFieldMenu(row)" class="right-0 relative">
+          <UDropdownMenu :items="getFieldMenu(row.original)" class="right-0 relative">
             <UButton
               icon="i-mdi-dots-vertical"
               variant="link"
-              color="gray"
+              color="neutral"
               class="p-0 text-lg"
-              :ui="{ rounded: 'rounded-full' }"
+              :ui="{ base: 'rounded-full' }"
             />
-          </UDropdown>
+          </UDropdownMenu>
         </div>
       </template>
     </UTable>
     <ProjectSetupChoicesModal
       :open="openChoicesModal"
-      :onSubmit="submitNewChoices"
-      :onClose="() => (openChoicesModal = false)"
+      @submit="submitNewChoices"
+      @close="() => (openChoicesModal = false)"
       :defaultChoices="choicesOnOpen"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { DropdownItem } from "#ui/types";
+import type { DropdownMenuItem, TableColumn } from "#ui/types";
 const toast = useToast();
 const modifyingField = ref<NewProjectField | undefined>();
 const { report } = useSentry();
@@ -98,25 +95,25 @@ const emit = defineEmits<{
 const suggestedFields = defineModel<NewProjectField[]>({
   default: () => [],
 });
-const fieldColumns = [
+const fieldColumns: TableColumn<any>[] = [
   {
-    label: "",
-    key: "label",
+    header: "",
+    accessorKey: "label",
   },
   {
-    label: "",
-    key: "field",
+    header: "",
+    accessorKey: "field",
   },
   {
-    label: "",
-    key: "last",
-    class: " min-w-[42px] flex justify-start",
+    header: "",
+    accessorKey: "last",
+    meta: { class: { td: "min-w-[42px] flex justify-start" } },
   },
 ];
-function getFieldMenu(row: NewProjectField): DropdownItem[][] {
-  const fieldMenu: DropdownItem[][] = [];
-  const upDown: DropdownItem[] = [];
-  const actions: DropdownItem[] = [];
+function getFieldMenu(row: NewProjectField): DropdownMenuItem[][] {
+  const fieldMenu: DropdownMenuItem[][] = [];
+  const upDown: DropdownMenuItem[] = [];
+  const actions: DropdownMenuItem[] = [];
 
   // add modify choices option if multiple choice field
   if (row.choices?.length) {
@@ -124,7 +121,7 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
     actions.push({
       icon: "i-mdi-pencil-outline",
       label: "Modify choices",
-      click: () => {
+      onClick: () => {
         modifyChoices(row);
       },
     });
@@ -139,7 +136,7 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
     {
       icon: "i-mdi-close",
       label: "Remove",
-      click: () => {
+      onClick: () => {
         removeParameter(row);
       },
     },
@@ -177,7 +174,7 @@ function submitNewChoices(config: DropDownConfig) {
     );
     toast.add({
       title: "Unable to save the field :(",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;
@@ -192,7 +189,7 @@ function submitNewChoices(config: DropDownConfig) {
     );
     toast.add({
       title: "Unable to save the field :(",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;

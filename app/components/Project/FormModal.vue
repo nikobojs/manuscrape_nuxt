@@ -1,18 +1,14 @@
 <template>
   <UModal
-    v-bind:model-value="open"
-    v-on:close="
-      () => {
-        /* ignore event */
-      }
-    "
+    :open="open"
     :ui="{
-      background: 'bg-transparent dark:bg-transparent',
-      width: 'max-w-full sm:max-w-4xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-6xl',
-      shadow: 'shadow-none',
+      content: 'bg-transparent shadow-none max-w-full sm:max-w-4xl lg:max-w-4xl xl:max-w-6xl 2xl:max-w-6xl',
+      overlay: 'bg-transparent',
     }"
   >
-    <ProjectCreateWidget :onClose="onClose" cancelable translate-y />
+    <template #content>
+      <ProjectCreateWidget :on-close="() => emit('close')" cancelable translate-y />
+    </template>
   </UModal>
 </template>
 
@@ -20,4 +16,8 @@
 defineProps({
   ...requireModalProps,
 });
+
+const emit = defineEmits<{
+  close: [];
+}>();
 </script>

@@ -2,13 +2,7 @@
   <div>
     <UContainer class="flex flex-col">
       <div v-if="isElectron" class="w-[220px] min-h-[45px] pt-10 pb-6">
-        <span class="dark:hidden">
-          <img
-            src="/logo/manuscrape-logo-dark.svg"
-            alt="manuscrape logo dark"
-          />
-        </span>
-        <span class="hidden dark:block">
+        <span>
           <img
             src="/logo/manuscrape-logo-light.svg"
             alt="manuscrape logo light"

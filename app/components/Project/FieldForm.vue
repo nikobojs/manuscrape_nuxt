@@ -21,7 +21,7 @@
           <UButton
             icon="i-heroicons-plus"
             variant="outline"
-            color="blue"
+            color="info"
             type="button"
             @click="() => handleAddField()"
             :disabled="!newFieldIsValid"
@@ -33,8 +33,8 @@
     </div>
     <ProjectSetupChoicesModal
       :open="openDropdownModal"
-      :onSubmit="addDropdownField"
-      :onClose="() => (openDropdownModal = false)"
+      @submit="addDropdownField"
+      @close="() => (openDropdownModal = false)"
       :defaultChoices="_defaultChoices"
     />
 

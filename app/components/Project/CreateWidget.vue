@@ -1,11 +1,7 @@
 <template>
   <div
     class="flex flex-col xl:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0 relative"
-    :class="
-      isElectron
-        ? 'pt-9! pb-6'
-        : 'pt-48! pb-12 xl:pb-24 2xl:pb-48'
-    "
+    :class="isElectron ? 'pt-9! pb-6' : 'pt-48! pb-12 xl:pb-24 2xl:pb-48'"
   >
     <Transition name="fade">
       <div
@@ -41,8 +37,8 @@
           <div>
             <UButton
               variant="ghost"
-              color="gray"
-              class="flex items-center text-gray-500 dark:text-slate-500"
+              color="neutral"
+              class="flex items-center text-slate-500"
               @click="() => (templateSelected = false)"
             >
               <UIcon class="text-lg" name="mdi:arrow-left-top" />
@@ -80,10 +76,10 @@
                 <label class="flex gap-x-0.5" for="field-label-input">
                   <p>Parameters</p>
                   <UPopover>
-                    <template #panel>
+                    <template #content>
                       <UCard
                         :ui="{
-                          body: { padding: 'px-2 py-2.5 sm:p-2' },
+                          body: 'px-2 py-2.5 sm:p-2',
                         }"
                       >
                         <p class="max-w-[260px]">
@@ -112,7 +108,7 @@
                   <UButton
                     v-if="cancelable"
                     @click="onClose"
-                    color="gray"
+                    color="neutral"
                     variant="outline"
                   >
                     Cancel
@@ -185,7 +181,7 @@ async function handleSubmitProject() {
       console.error(`Unable to read 'id' from createProject api response`);
       toast.add({
         title: "Server error :(",
-        color: "red",
+        color: "error",
         description: `We're working to fix this as soon as possible`,
       });
       return;
@@ -211,7 +207,7 @@ async function handleSubmitProject() {
       getErrMsg(err) || `We're working to fix this as soon as possible`;
     toast.add({
       title: "Error when creating project",
-      color: "red",
+      color: "error",
       description: msg,
     });
   } finally {

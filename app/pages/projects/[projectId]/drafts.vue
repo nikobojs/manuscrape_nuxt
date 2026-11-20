@@ -32,7 +32,7 @@ if (!project.value) {
   toast.add({
     title: "Access denied",
     description: "You don't have access to this project",
-    color: "yellow",
+    color: "warning",
     icon: "i-heroicons-exclamation-triangle",
   });
   navigateTo("/");

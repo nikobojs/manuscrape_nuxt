@@ -1,9 +1,9 @@
 <template>
   <UModal
-    v-bind:model-value="open"
-    v-on:close="onClose"
-    prevent-close
+    :open="open"
+    :dismissible="false"
   >
+    <template #content>
     <UCard>
       <template #header>
         <CardHeader>Configure multiple choice</CardHeader>
@@ -19,7 +19,7 @@
           ref="itemNameInput"
           @keyup.enter="addOption"
         />
-        <UButton @click="addOption" variant="outline" color="blue">Add option</UButton>
+        <UButton @click="addOption" variant="outline" color="info">Add option</UButton>
       </div>
       <p class="text-sm mt-3 text-gray-600">Hint: You can decide the order of the choices using drag and drop</p>
       <div class="mt-6">
@@ -34,12 +34,10 @@
         >
           <template #item="{element}">
             <UBadge
-              color="blue"
+              color="info"
               size="lg"
-              :ui="{
-                rounded: 'rounded-full'
-              }"
-              class="hover:dark:bg-blue-300 hover:bg-blue-300 cursor-pointer"
+              :ui="{ base: 'rounded-full' }"
+              class="hover:bg-blue-300 cursor-pointer"
               @click="() => removeOption(element.id)"
             >
               {{ element.name }}
@@ -58,12 +56,13 @@
           <UButton @click="handleSubmit" variant="outline" color="primary" :disabled="options.length === 0">
             Save field
           </UButton>
-          <UButton @click="onClose" color="gray" variant="outline">
+          <UButton @click="emit('close')" color="neutral" variant="outline">
             Cancel
           </UButton>
         </div>
       </template>
     </UCard>
+    </template>
   </UModal>
 </template>
 
@@ -73,8 +72,12 @@
   const props = defineProps({
     ...requireModalProps,
     defaultChoices: requireProp<string[]>(Array),
-    onSubmit: requireFunctionProp<(config: DropDownConfig) => void>(),
   });
+
+  const emit = defineEmits<{
+    close: [];
+    submit: [config: DropDownConfig];
+  }>();
 
   const itemNameInput = ref();
   const options = ref<{id: number, name: string}[]>([]);
@@ -83,10 +86,10 @@
   const toast = useToast();
 
   function handleSubmit() {
-    // call props.onSubmit callback with the dropdown names in same order as draggable
+    // send the dropdown names in same order as draggable
     const choices = options.value.map(o => o.name);
-    props.onSubmit({ choices });
-    props.onClose();
+    emit('submit', { choices });
+    emit('close');
 
     // delay reset to avoid flickr when data resets while modal close animation runs
     setTimeout(() => {
@@ -104,7 +107,7 @@
     if (names.includes(itemName.value)) {
       toast.add({
         title: 'There is already an option with that label',
-        color: 'yellow'
+        color: 'warning'
       });
       itemNameInput.value?.input?.focus();
     } else {

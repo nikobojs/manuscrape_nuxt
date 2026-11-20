@@ -13,7 +13,7 @@
       :project="project"
       :observation="observation"
       :open="openImageDialog"
-      :on-close="() => (openImageDialog = false)"
+      @close="() => (openImageDialog = false)"
       :project-field-id="image?.projectFieldId"
       :last-update="lastUpdate"
     />

@@ -7,7 +7,7 @@
           <UButton
             class="-mt-2 -mb-2"
             variant="outline"
-            color="blue"
+            color="info"
             icon="i-mdi-add"
             @click="openCreateNewTagModal = true"
           >
@@ -24,7 +24,7 @@
         <UBadge
           v-for="tag in sortedTags"
           :key="tag.id"
-          :color="isTagSelected(tag.id) ? 'blue' : 'gray'"
+          :color="isTagSelected(tag.id) ? 'info' : 'neutral'"
           variant="solid"
           class="text-xs px-2 py-1 cursor-pointer"
           @click="toggleTag(tag.id)"
@@ -35,9 +35,10 @@
     </UCard>
 
     <UModal
-      v-model="openCreateNewTagModal"
-      :ui="{ width: 'sm:max-w-xs max-w-xs' }"
+      v-model:open="openCreateNewTagModal"
+      :ui="{ content: 'sm:max-w-xs max-w-xs' }"
     >
+      <template #content>
       <UCard>
         <template #header>
           <div>Create new tag</div>
@@ -51,9 +52,10 @@
         </div>
 
         <template #footer>
-          <UButton @click="handleCreateTag" color="blue">Create</UButton>
+          <UButton @click="handleCreateTag" color="info">Create</UButton>
         </template>
       </UCard>
+      </template>
     </UModal>
   </div>
 </template>
@@ -118,7 +120,7 @@ async function toggleTag(tagId: number) {
     toast.add({
       title: err.message,
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
   }
 }
@@ -135,7 +137,7 @@ async function handleCreateTag() {
     toast.add({
       title: "Tag created!",
       icon: "i-heroicons-check",
-      color: "green",
+      color: "success",
     });
     newTagName.value = "";
     newTagError.value = "";
@@ -145,7 +147,7 @@ async function handleCreateTag() {
     toast.add({
       title: err.message,
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
   }
 }

@@ -6,13 +6,7 @@
           class="w-[190px] min-h-[45px] pt-3 pb-2 cursor-pointer"
           @click="onLogoClick"
         >
-          <span class="dark:hidden">
-            <img
-              src="/logo/manuscrape-logo-dark.svg"
-              alt="manuscrape logo dark"
-            />
-          </span>
-          <span class="hidden dark:block">
+          <span>
             <img
               src="/logo/manuscrape-logo-light.svg"
               alt="manuscrape logo light"
@@ -33,7 +27,7 @@
               :set-project="onProjectChange"
             />
           </div>
-          <UDropdown class="flex self-center relative" :items="settingsItems">
+          <UDropdownMenu class="flex self-center relative" :items="settingsItems">
             <div class="w-9 h-9 p-1.5">
               <UIcon class="w-full h-full" name="i-heroicons-user-circle" />
             </div>
@@ -48,11 +42,11 @@
                   />
                 </div>
                 <p class="text-sm py-1.5 text-slate-400 text-left">
-                  {{ item.label }}
+                  {{ (item as { label?: string }).label }}
                 </p>
               </div>
             </template>
-          </UDropdown>
+          </UDropdownMenu>
         </nav>
 
         <nav v-if="hasFetched && !user" class="flex justify-end">
@@ -87,7 +81,7 @@ ul {
 </style>
 
 <script setup lang="ts">
-import type { DropdownItem } from "#ui/types";
+import type { DropdownMenuItem } from "#ui/types";
 const { ensureUserFetched } = await useAuth();
 await ensureUserFetched();
 const { user, hasFetched } = await useUser();
@@ -129,7 +123,7 @@ function getUserLabel(user?: CurrentUser) {
 
 const userLabel = computed(() => getUserLabel(user.value));
 
-const settingsItems = computed<DropdownItem[][]>(() => [
+const settingsItems = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: userLabel.value,
@@ -140,14 +134,14 @@ const settingsItems = computed<DropdownItem[][]>(() => [
     {
       label: "Settings",
       icon: "i-mdi-settings-outline",
-      click: () => {
+      onClick: () => {
         navigateTo("/user");
       },
     },
     {
       label: "Log out",
       icon: "i-mdi-logout",
-      click: () => {
+      onClick: () => {
         navigateTo("/logout");
       },
     },

@@ -5,13 +5,7 @@
         class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
         @click="onLogoClick"
       >
-        <span class="dark:hidden">
-          <img
-            src="/logo/manuscrape-logo-dark.svg"
-            alt="manuscrape logo dark"
-          />
-        </span>
-        <span class="hidden dark:block">
+        <span>
           <img
             src="/logo/manuscrape-logo-light.svg"
             alt="manuscrape logo light"
@@ -24,74 +18,78 @@
           <h2 class="text-2xl mb-8 px-2">/</h2>
           <ULink
             to="/user/new"
-            class="text-2xl mb-8 dark:text-slate-600 hover:dark:text-green-500 hover:text-green-500 hover:underline"
+            class="text-2xl mb-8 text-slate-600 hover:text-green-500 hover:underline"
           >
             Create account
           </ULink>
         </div>
       </div>
-      <div class="w-80">
-        <form @submit.prevent="handleLogin">
-          <label for="email-input"> Email </label>
+      <UForm
+        class="w-80"
+        @submit="handleLogin"
+        :validate="validate"
+        :state="state"
+      >
+        <UFormField label="Email" name="email">
           <UInput
-            v-model="email"
+            v-model="state.email"
             type="email"
             name="email"
-            class="input"
             placeholder="Enter email"
             id="email-input"
             autocomplete="on"
           />
+        </UFormField>
 
-          <br />
+        <br />
 
-          <label for="password-input"> Password </label>
+        <UFormField label="Password" name="password">
           <UInput
-            v-model="password"
+            v-model="state.password"
             type="password"
             name="password"
-            class="input"
             placeholder="Enter Password"
             id="password-input"
             autocomplete="on"
           />
+        </UFormField>
 
-          <span
-            class="block mt-3 text-red-500"
-            v-if="error"
-            v-text="error"
-          ></span>
-          <div class="mt-3">
-            <ULink
-              to="/forgot-password"
-              class="text-sm hover:underline"
-              active-class="text-primary"
-              inactive-class="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
-            >
-              Forgot password?
-            </ULink>
-          </div>
+        <span
+          class="block mt-3 text-red-500"
+          v-if="error"
+          v-text="error"
+        ></span>
+        <div class="mt-3">
+          <ULink
+            to="/forgot-password"
+            class="text-sm hover:underline"
+            active-class="text-primary"
+            inactive-class="text-gray-500 hover:text-gray-200"
+          >
+            Forgot password?
+          </ULink>
+        </div>
 
-          <div class="flex items-center gap-x-3 mt-5">
-            <UButton
-              class="px-6"
-              type="submit"
-              :disabled="loading"
-              :loading="loading"
-            >
-              Log in
-            </UButton>
-            <div v-if="showWayf">
-              <UButton @click="loginWithSaml">Login with WAYF</UButton>
-            </div>
+        <div class="flex items-center gap-x-3 mt-5">
+          <UButton
+            class="px-6"
+            type="submit"
+            :disabled="loading"
+            :loading="loading"
+          >
+            Log in
+          </UButton>
+          <div v-if="showWayf">
+            <UButton @click="loginWithSaml">Login with WAYF</UButton>
           </div>
-        </form>
-      </div>
+        </div>
+      </UForm>
     </UContainer>
   </div>
 </template>
 
 <script lang="ts" setup>
+import type { FormError } from "#ui/types";
 import { getErrMsg } from "~/utils/getErrMsg";
 import { captureException } from "@sentry/vue";
 
@@ -102,8 +100,17 @@ const { login, user, refreshUser } = await useAuth();
 const route = useRoute();
 const showWayf = ref(!!route.query?.wayf);
 const loading = ref(false);
-const email = ref("");
-const password = ref("");
+const state = ref({
+  email: "",
+  password: "",
+});
+
+function validate(state: any): FormError[] {
+  const errors = [] as FormError[];
+  if (!state.email) errors.push({ name: "email", message: "Required" });
+  if (!state.password) errors.push({ name: "password", message: "Required" });
+  return errors;
+}
 
 // Where to send the user after a successful login
 function getRedirectTo(): string {
@@ -124,21 +131,10 @@ const loginWithSaml = () => {
 };
 const { isElectron } = useDevice();
 
+// UForm has validated the fields by the time this runs
 async function handleLogin() {
-  const em = email.value;
-  const pw = password.value;
-
-  // ensure email and password is defined
-  if (!em) {
-    error.value = "Email required";
-    loading.value = false;
-    return;
-  }
-  if (!pw) {
-    error.value = "Password required";
-    loading.value = false;
-    return;
-  }
+  const em = state.value.email;
+  const pw = state.value.password;
 
   // begin loading state
   loading.value = true;

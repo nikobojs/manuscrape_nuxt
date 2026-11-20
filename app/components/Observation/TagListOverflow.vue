@@ -4,27 +4,27 @@
       <UBadge
         v-for="(tag, index) in visibleTags"
         :key="tag.id || tag.name"
-        :color="'blue'"
+        :color="'info'"
         size="xs"
       >
         #{{ tag.name }}
       </UBadge>
 
       <UTooltip v-if="hiddenTags.length">
-        <template #text>
+        <template #content>
           <div class="max-w-xs flex flex-wrap gap-1">
             <UBadge
               v-for="tag in hiddenTags"
               :key="tag.id || tag.name"
               size="xs"
-              color="gray"
+              color="neutral"
             >
               #{{ tag.name }}
             </UBadge>
           </div>
         </template>
 
-        <UBadge size="xs" color="gray">
+        <UBadge size="xs" color="neutral">
           +{{ hiddenTags.length }} more
         </UBadge>
       </UTooltip>

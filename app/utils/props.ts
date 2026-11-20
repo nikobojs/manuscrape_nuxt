@@ -3,9 +3,9 @@ export const requireObservationsProp = requireProp<FullObservation[]>();
 export const requireProjectProp = requireProp<FullProject>();
 export const requireCollaboratorProp = requireProp<Collaborator>();
 
+// modals are controlled with an `open` prop and emit `close` themselves
 export const requireModalProps = {
   open: requireProp<boolean>(Boolean),
-  onClose: requireProp<() => void>(Function),
 };
 export function requireFunctionProp<T extends Function>() {
   return requireProp<T>(Function);

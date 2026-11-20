@@ -20,52 +20,52 @@
     >
       <UTable
         :loading="loading"
-        :rows="projectExports"
+        :data="projectExports"
         :columns="columns"
       >
-        <template #createdAt-data="{ row }">
-          <Spinner v-if="row.status === 'GENERATING'" />
-          <span v-if="row.status !== 'GENERATING'">
-            {{ prettyDate(row.createdAt) }}
+        <template #createdAt-cell="{ row }">
+          <Spinner v-if="row.original.status === 'GENERATING'" />
+          <span v-if="row.original.status !== 'GENERATING'">
+            {{ prettyDate(row.original.createdAt) }}
           </span>
         </template>
-        <template #type-data="{ row }">
+        <template #type-cell="{ row }">
           <div class="flex items-center gap-x-2">
-            <UIcon :name="getIconByExportType(row.type)" />
+            <UIcon :name="getIconByExportType(row.original.type)" />
             <div>
-              {{ getShortLabelByExportType(row.type) }}
+              {{ getShortLabelByExportType(row.original.type) }}
             </div>
           </div>
         </template>
-        <template #startDate-data="{ row }">
-          {{ prettyDate(row.startDate) }}
+        <template #startDate-cell="{ row }">
+          {{ prettyDate(row.original.startDate) }}
         </template>
-        <template #endDate-data="{ row }">
-          {{ prettyDate(row.endDate) }}
+        <template #endDate-cell="{ row }">
+          {{ prettyDate(row.original.endDate) }}
         </template>
-        <template #size-data="{ row }">
-          <span v-if="row.status !== 'GENERATING'">
-            {{ formatKb(row.size) }}
+        <template #size-cell="{ row }">
+          <span v-if="row.original.status !== 'GENERATING'">
+            {{ formatKb(row.original.size) }}
           </span>
         </template>
-        <template #user-data="{ row }">
+        <template #user-cell="{ row }">
           <div class="">
-            {{  row.user?.name || row.user?.email || '<REMOVED>' }}
+            {{  row.original.user?.name || row.original.user?.email || '<REMOVED>' }}
           </div>
         </template>
-        <template #actions-data="{ row }">
+        <template #actions-cell="{ row }">
           <div class="flex items-center justify-end relative gap-x-3">
             <NuxtLink
-              v-if="row.status === 'DONE'"
+              v-if="row.original.status === 'DONE'"
               class="opacity-100 mt-[2px] -mb-[2px]"
               target="_blank"
-              :to="`/api/projects/${project.id}/exports/${row.id}/download`"
+              :to="`/api/projects/${project.id}/exports/${row.original.id}/download`"
             >
               <UIcon name="i-mdi-arrow-collapse-down" class="cursor-pointer text-lg" />
             </NuxtLink>
-            <Spinner class="w-[18px] !m-0" v-else-if="row.status === 'GENERATING'" />
+            <Spinner class="w-[18px] !m-0" v-else-if="row.original.status === 'GENERATING'" />
             <div
-              @click="() => handleDeleteExport(row)"
+              @click="() => handleDeleteExport(row.original)"
             >
               <UIcon
                 name="i-heroicons-trash"
@@ -76,7 +76,7 @@
         </template>
       </UTable>
       <div class="flex w-full mt-3 mb-3 justify-center">
-        <UPagination v-if="totalPages > 1" v-model="page" :total="totalExports" :max="5" :page-count="pageSize" />
+        <UPagination v-if="totalPages > 1" v-model:page="page" :total="totalExports" :max="5" :page-count="pageSize" />
       </div>
     </div>
     <div
@@ -88,12 +88,13 @@
     <ProjectExportModal
       :project="project"
       :open="openNewExportModal"
-      :on-close="() => openNewExportModal = false"
+      @close="() => openNewExportModal = false"
     />
   </UCard>
 </template>
 
 <script setup lang="ts">
+import type { TableColumn } from "#ui/types";
 
 const openNewExportModal = ref(false);
 const props = defineProps({
@@ -105,27 +106,27 @@ const getIconByExportType = (name: string) =>
 const getShortLabelByExportType = (name: string) =>
   exportTypeOptions.find(o => o.value === name)?.shortLabel || 'Unknown';
 
-const columns = [{
-  label: 'Created at',
-  key: 'createdAt',
+const columns: TableColumn<any>[] = [{
+  header: 'Created at',
+  accessorKey: 'createdAt',
 }, {
-  label: 'Type',
-  key: 'type',
+  header: 'Type',
+  accessorKey: 'type',
 }, {
-  label: 'From',
-  key: 'startDate',
+  header: 'From',
+  accessorKey: 'startDate',
 }, {
-  label: 'To',
-  key: 'endDate',
+  header: 'To',
+  accessorKey: 'endDate',
 }, {
-  label: 'Size',
-  key: 'size',
+  header: 'Size',
+  accessorKey: 'size',
 }, {
-  label: 'User',
-  key: 'user'
+  header: 'User',
+  accessorKey: 'user'
 }, {
-  label: '',
-  key: 'actions',
+  header: '',
+  accessorKey: 'actions',
 }];
 
 await useUser();
@@ -173,14 +174,14 @@ async function handleDeleteExport(projectExport: FullProjectExport) {
       await refreshProjectExports();
       toast.add({
         title: `The export file was successfully deleted`,
-        color: 'green',
+        color: 'success',
         icon: 'i-heroicons-check'
       });
     } catch (e) {
       const msg = getErrMsg(e);
       toast.add({
         title: msg,
-        color: 'red',
+        color: 'error',
       });
     }
   }

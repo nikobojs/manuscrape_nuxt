@@ -2,43 +2,42 @@
   <div>
     <UTable
       v-if="fields.length > 0"
-      :rows="fields"
-      :sort="{ column: 'index', direction: 'asc' }"
+      :data="fields"
       :columns="fieldColumns"
       :ui="{
-        th: { padding: 'px-3 py-2.5' },
-        td: { padding: 'px-3 py-2.5 text-xs' },
+        th: 'px-3 py-2.5',
+        td: 'px-3 py-2.5 text-xs',
       }"
     >
       <!-- Cceate generic field group -->
-      <template #first-data="{ row }">
+      <template #first-cell="{ row }">
         <div class="flex items-center justify-end relative text-lg">
           <div class="absolute left-2 flex items-center gap-x-2">
             <UIcon
               name="i-mdi-trash-outline"
               class="cursor-pointer text-red-500"
-              @click="() => removeParameter(row)"
+              @click="() => removeParameter(row.original)"
             />
           </div>
         </div>
       </template>
-      <template #label-data="{ row, index }">
+      <template #label-cell="{ row }">
         <!-- Label column -->
         <div class="flex gap-x-2 items-center w-[257px] relative">
           <UTooltip>
             <!-- Tool tip-->
-            <template #text>
+            <template #content>
               <div>
                 <p class="max-w-xs break-words whitespace-normal">
-                  {{ row.label }}
+                  {{ row.original.label }}
                 </p>
               </div>
             </template>
             <div class="block relative">
             <InputImportant
-              :value="row.label || '-'"
+              :value="row.original.label || '-'"
               @edit="(newName: string) => {
-                const oldName = row.label;
+                const oldName = row.original.label;
                 if (oldName !== newName) {
                   editParameterName(oldName, newName);
                 }
@@ -46,46 +45,45 @@
             />
             </div>
             <span
-              v-if="row.required"
+              v-if="row.original.required"
               class="text-red-500 text-sm ml-1 inline-block"
               >*</span
             >
           </UTooltip>
         </div>
       </template>
-      <template #field-data="{ row }">
+      <template #field-cell="{ row }">
         <div class="flex gap-2">
-          <UBadge size="xs" color="blue" variant="outline">
-            {{ getFieldLabel(row.type) }}
+          <UBadge size="xs" color="info" variant="outline">
+            {{ getFieldLabel(row.original.type) }}
           </UBadge>
         </div>
       </template>
-      <template #last-data="{ row }">
+      <template #last-cell="{ row }">
         <div class="flex items-center justify-end relative">
-          <UDropdown :items="getFieldMenu(row)" class="right-0 relative">
+          <UDropdownMenu :items="getFieldMenu(row.original)" class="right-0 relative">
             <UButton
               icon="i-mdi-dots-vertical"
               variant="link"
-              color="gray"
+              color="neutral"
               class="p-0 text-lg"
-              :ui="{ rounded: 'rounded-full' }"
+              :ui="{ base: 'rounded-full' }"
             />
-          </UDropdown>
+          </UDropdownMenu>
         </div>
       </template>
     </UTable>
     <ProjectSetupChoicesModal
       :open="openChoicesModal"
-      :onSubmit="submitNewChoices"
-      :onClose="() => (openChoicesModal = false)"
+      @submit="submitNewChoices"
+      @close="() => (openChoicesModal = false)"
       :defaultChoices="choicesOnOpen"
     />
   </div>
 </template>
 
-import { isPropertyAccessOrQualifiedName } from "typescript";
 <script setup lang="ts">
-import type { DropdownItem } from "#ui/types";
+import type { DropdownMenuItem, TableColumn } from "#ui/types";
 const toast = useToast();
 const modifyingField = ref<NewProjectField | undefined>();
 const { report } = useSentry();
@@ -98,37 +96,37 @@ const emit = defineEmits<{
   "update:fields": [NewProjectField[]];
 }>();
 const fieldsCopy = computed(() => [...props.fields]);
-const fieldColumns = [
+const fieldColumns: TableColumn<any>[] = [
   {
-    label: "",
-    key: "first",
-    class: "px-0 flex items-center min-w-[26px]",
+    header: "",
+    accessorKey: "first",
+    meta: { class: { td: "px-0 flex items-center min-w-[26px]" } },
   },
   {
-    label: "Label",
-    key: "label",
+    header: "Label",
+    accessorKey: "label",
   },
   {
-    label: "Type",
-    key: "field",
+    header: "Type",
+    accessorKey: "field",
   },
   {
-    label: "",
-    key: "last",
-    class: " min-w-[42px] flex justify-start",
+    header: "",
+    accessorKey: "last",
+    meta: { class: { td: "min-w-[42px] flex justify-start" } },
   },
 ];
-function getFieldMenu(row: NewProjectField): DropdownItem[][] {
-  const fieldMenu: DropdownItem[][] = [];
-  const upDown: DropdownItem[] = [];
-  const actions: DropdownItem[] = [];
+function getFieldMenu(row: NewProjectField): DropdownMenuItem[][] {
+  const fieldMenu: DropdownMenuItem[][] = [];
+  const upDown: DropdownMenuItem[] = [];
+  const actions: DropdownMenuItem[] = [];
 
   // add move up value if not in top
   if (row.index > 0) {
     upDown.push({
       label: "Move up",
       icon: "i-heroicons-arrow-up",
-      click: () => {
+      onClick: () => {
         moveField(row.index, -1);
       },
     });
@@ -139,7 +137,7 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
     upDown.push({
       icon: "i-heroicons-arrow-down",
       label: "Move down",
-      click: () => {
+      onClick: () => {
         moveField(row.index, 1);
       },
     });
@@ -151,14 +149,14 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
       ? {
           icon: "i-heroicons-wrench",
           label: "Make optional",
-          click: () => {
+          onClick: () => {
             row.required = false;
           },
         }
       : {
           icon: "i-heroicons-wrench",
           label: "Make required",
-          click: () => {
+          onClick: () => {
             row.required = true;
           },
         },
@@ -170,7 +168,7 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
     actions.push({
       icon: "i-mdi-pencil-outline",
       label: "Modify choices",
-      click: () => {
+      onClick: () => {
         modifyChoices(row);
       },
     });
@@ -185,7 +183,7 @@ function getFieldMenu(row: NewProjectField): DropdownItem[][] {
     {
       icon: "i-mdi-close",
       label: "Remove",
-      click: () => {
+      onClick: () => {
         removeParameter(row);
       },
     },
@@ -253,7 +251,7 @@ function submitNewChoices(config: DropDownConfig) {
     );
     toast.add({
       title: "Unable to save the field :(",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;
@@ -268,7 +266,7 @@ function submitNewChoices(config: DropDownConfig) {
     );
     toast.add({
       title: "Unable to save the field :(",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;

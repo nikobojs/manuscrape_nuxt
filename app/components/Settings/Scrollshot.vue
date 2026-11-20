@@ -1,7 +1,7 @@
 <template>
   <SettingsBox
     title="Scrollshot settings"
-    help="These settings only apply to your local device running ManuScrape and is saved encrypted on disk."
+    description="These settings only apply to your local device running ManuScrape and is saved encrypted on disk."
   >
     <form @submit.prevent="updateDeviceSettings" class="w-[100%] max-w-[340px] grid grid-cols-2 gap-y-6">
       <div v-for="(setting, index) in ScrollshotSettingInputs" class="flex flex-col gap-2">
@@ -10,8 +10,8 @@
           <label :for="`${setting.name}-input`" class="text-sm">
             {{ setting.label }}
           </label>
-          <UTooltip class="self-center" :ui="{base: 'p-2 text-xs'}">
-            <template #text>
+          <UTooltip class="self-center" :ui="{ content: 'p-2 text-xs' }">
+            <template #content>
               <p class="whitespace-normal break-words">
                 {{ setting.help }}
               </p>
@@ -32,10 +32,10 @@
         <pre class="max-w-[100%] text-xs whitespace-normal">{{ error }}</pre>
       </div>
       <div class="py-6 flex gap-4">
-        <UButton :disabled="saving" type="submit" color="green">
+        <UButton :disabled="saving" type="submit" color="success">
           {{ saving ? 'Saving...' : 'Save scrollshot settings' }}
         </UButton>
-        <UButton @click="resetToDefaults" color="gray">Reset to defaults</UButton>
+        <UButton @click="resetToDefaults" color="neutral">Reset to defaults</UButton>
       </div>
     </form>
   </SettingsBox>

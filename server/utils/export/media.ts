@@ -1,11 +1,11 @@
 import type { H3Event } from "h3";
-import archiver from "archiver";
+import { ZipArchive, type ArchiverOptions } from "archiver";
 import { generateFilename } from "./helpers";
 import { canUseS3 } from "../fileUpload";
 import { getObservations } from "../observations";
 import { SQL } from "drizzle-orm";
 
-const archiverOptions: archiver.ArchiverOptions = {
+const archiverOptions: ArchiverOptions = {
   zlib: {
     level: 1,
     memLevel: 9,
@@ -51,7 +51,7 @@ export const generateProjectMediaExport = async (
 
   // initialize archiver (zlib) and empty downloads-array
   const downloadPromises: Promise<any>[] = [];
-  const archive = archiver("zip", archiverOptions);
+  const archive = new ZipArchive(archiverOptions);
 
   // pipe to file uploads destination
   const newFilePath = generateFilename(projectId, "MEDIA");

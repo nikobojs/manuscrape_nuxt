@@ -4,8 +4,8 @@
       <div class="flex justify-between items-center h-4">
         <CardHeader>
           Dynamic fields
-          <UTooltip class="ml-2" :ui="{base: 'p-2 text-xs'}">
-            <template #text>
+          <UTooltip class="ml-2" :ui="{ content: 'p-2 text-xs' }">
+            <template #content>
               <p class="mb-3 whitespace-normal break-words">
                 Dynamic fields will "automagically" generate their value when exporting observations.
               </p>
@@ -20,7 +20,7 @@
           <UButton
             icon="i-heroicons-plus"
             variant="outline"
-            color="blue"
+            color="info"
             @click="() => openCreateDynamicFieldModal = true"
           >
             Create dynamic field
@@ -32,7 +32,7 @@
     <div>
       <UTable
         v-if="rows.length > 0"
-        :rows="rows"
+        :data="rows"
       />
       <div class="text-sm italic text-gray-400" v-else>
         No dynamic fields
@@ -44,7 +44,7 @@
     v-if="project"
     :project="project"
     :open="openCreateDynamicFieldModal"
-    :on-close="onCloseDynamicFieldModal"
+    @close="onCloseDynamicFieldModal"
   />
 </template>
 

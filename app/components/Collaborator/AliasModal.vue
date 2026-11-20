@@ -1,12 +1,12 @@
 <template>
-  <template>
-    <UModal
-      v-bind:model-value="open"
-      v-on:close="onClose"
-      :ui="{
-        base: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
-      }"
-    >
+  <UModal
+    :open="open"
+    @update:open="(value) => { if (!value) emit('close') }"
+    :ui="{
+      content: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
+    }"
+  >
+    <template #content>
       <UCard>
         <template #header>Edit collaborator alias</template>
         <div class="text-sm mb-3">
@@ -28,14 +28,14 @@
             <UButton @click="submit" variant="outline" color="primary">
               Save
             </UButton>
-            <UButton @click="onClose" color="gray" variant="outline">
+            <UButton @click="emit('close')" color="neutral" variant="outline">
               Cancel
             </UButton>
           </div>
         </template>
       </UCard>
-    </UModal>
-  </template>
+    </template>
+  </UModal>
 </template>
 
 <script lang="ts" setup>
@@ -44,6 +44,10 @@ const props = defineProps({
   ...requireModalProps,
   collaborator: requireCollaboratorProp,
 });
+
+const emit = defineEmits<{
+  close: [];
+}>();
 
 const newAlias = ref("");
 const error = ref("");
@@ -64,11 +68,11 @@ function submit() {
       await refreshUser();
       toast.add({
         title: `The alias for ${props.collaborator.user_email} was updated successfully.`,
-        color: "green",
+        color: "success",
         icon: "i-heroicons-check",
       });
 
-      props.onClose();
+      emit('close');
       setTimeout(() => {
         newAlias.value = "";
       }, 300);

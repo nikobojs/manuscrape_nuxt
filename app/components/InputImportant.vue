@@ -19,7 +19,7 @@
         square
         :disabled="disabled"
         :loading="loading"
-        :color="editing ? 'green' : 'gray'"
+        :color="editing ? 'success' : 'neutral'"
         @click="toggleEdit"
       >
         <UIcon

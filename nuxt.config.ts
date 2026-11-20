@@ -18,28 +18,36 @@ if (umamiEnabled) {
 export default defineNuxtConfig({
   devtools: { enabled: false },
   sourcemap: true,
-  modules: ["@nuxt/ui", "nuxt-auth-utils", "nuxt-umami"],
+  modules: [
+    "@nuxt/ui",
+    "nuxt-auth-utils",
+    // only load the module when umami is properly configured
+    ...(umamiEnabled ? ["nuxt-umami"] : []),
+  ],
+  css: ["~/assets/css/main.css"],
 
-  // The app is dark-only: do not install @nuxtjs/color-mode (which
-  // @nuxt/ui would otherwise register, including its inline head script).
-  // The static "dark" class on <html> below keeps the tailwind `dark:`
-  // variants (darkMode: "class") active unconditionally.
+  // the app is dark-only, so let @nuxt/ui skip its color-mode integration
   ui: {
     colorMode: false,
   },
 
-  umami: {
-    id: umamiId,
-    host: umamiHost,
-    autoTrack: umamiEnabled,
-    enabled: !!umamiHost && umamiEnabled,
-    logErrors: true,
-    ignoreLocalhost: false,
-    domains: process.env.NUXT_UMAMI_DOMAIN
-      ? [process.env.NUXT_UMAMI_DOMAIN as string]
-      : null, // allow all domains by default
-    proxy: "cloak",
-  },
+  // only pass the umami config when the module is loaded
+  ...(umamiEnabled
+    ? {
+        umami: {
+          id: umamiId,
+          host: umamiHost,
+          autoTrack: umamiEnabled,
+          enabled: !!umamiHost && umamiEnabled,
+          logErrors: true,
+          ignoreLocalhost: false,
+          domains: process.env.NUXT_UMAMI_DOMAIN
+            ? [process.env.NUXT_UMAMI_DOMAIN as string]
+            : null, // allow all domains by default
+          proxy: "cloak",
+        },
+      }
+    : {}),
 
   typescript: {
     strict: true,
@@ -58,7 +66,7 @@ export default defineNuxtConfig({
       viewport: "width=device-width, initial-scale=1",
       title: "Manuscrape",
       bodyAttrs: {
-        class: "h-full dark:bg-gray-950 bg-gray-950 p-0 m-0",
+        class: "h-full bg-gray-950 p-0 m-0",
       },
       htmlAttrs: {
         class: "h-full m-0 p-0 dark",
@@ -110,8 +118,8 @@ export default defineNuxtConfig({
     databaseType: process.env.DATABASE_TYPE || "postgres",
     enableHttpLog: process.env.LOG_HTTP_REQUESTS === "true",
     manuscrapeClientVersionRequirement: ">=1.0.19",
+    // sessions are sealed with a secret derived from NUXT_APP_SECRET (v0.6+)
     session: {
-      password: process.env.NUXT_SESSION_PASSWORD || "",
       maxAge: 60 * 60 * 24 * 180, // 180 days
       name: "manuscrape-session",
       cookie: {
@@ -149,12 +157,12 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include: [
         "date-fns",
-        "v-calendar",
         "vuedraggable",
         "@vue/devtools-core",
         "@vue/devtools-kit",
         "@sentry/vue",
         "@vueuse/core",
+        "altcha",
       ],
     },
   },

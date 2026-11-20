@@ -1,12 +1,11 @@
 <template>
   <USelectMenu
-    value-attribute="id"
-    option-attribute="label"
-    :options="projectMenu"
+    value-key="id"
+    label-key="label"
+    :items="projectMenu"
     :class="classes"
     v-model="selectedProjectId"
-    searchable
-    @change="onProjectChange"
+    @update:model-value="onProjectChange"
     placeholder="Choose project"
   >
   </USelectMenu>

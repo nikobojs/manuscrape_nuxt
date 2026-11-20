@@ -2,14 +2,11 @@
   <div>
     <USelectMenu
       v-model="model"
-      :options="fieldTypeOptions"
+      :items="fieldTypeOptions"
       placeholder="Select type"
-      valueAttribute="type"
-      optionAttribute="label"
+      value-key="value"
+      label-key="label"
     >
-      <template #label>
-        {{ chosenFieldType?.label || "Select type" }}
-      </template>
     </USelectMenu>
   </div>
 </template>
@@ -21,11 +18,11 @@ const model = defineModel<FieldType | undefined>();
 const fieldTypeOptions = Object.entries(ObservationFieldTypes).map(
   ([key, val]) => ({
     label: key,
-    type: val,
+    value: val,
   }),
 );
 
 const chosenFieldType = computed(() =>
-  fieldTypeOptions.find((o) => o.type === model.value),
+  fieldTypeOptions.find((o) => o.value === model.value),
 );
 </script>

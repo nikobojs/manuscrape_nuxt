@@ -1,12 +1,12 @@
 <template>
-  <UCard class="dark:bg-[#11151e] col-span-2 bg-[#11151e]">
+  <UCard class="bg-[#11151e] col-span-2">
     <template #header>
       <div class="h-4 flex justify-between relative">
         <CardHeader>Parameters</CardHeader>
         <UButton
           class="-mt-2 -mb-2"
           variant="outline"
-          color="blue"
+          color="info"
           icon="i-mdi-add"
           @click="openAddParamModal = true"
           v-if="isOwner"
@@ -46,12 +46,13 @@
                   </div>
                 </div>
               </div>
-              <UPopover v-if="isOwner" :popper="{ placement: 'bottom-end' }">
-                <UButton variant="link" color="gray" icon="i-mdi-dots-vertical">
+              <UPopover v-if="isOwner" :content="{ side: 'bottom', align: 'end' }">
+                <UButton variant="link" color="neutral" icon="i-mdi-dots-vertical">
                 </UButton>
-                <template #panel="{ close }">
-                  <UVerticalNavigation
-                    :links="generateParameterSettings(field, sortedFields, close)"
+                <template #content="{ close }">
+                  <UNavigationMenu
+                    orientation="vertical"
+                    :items="generateParameterSettings(field, sortedFields, close)"
                   />
                 </template>
               </UPopover>
@@ -64,13 +65,9 @@
 
   <UModal
     v-if="isOwner"
-    v-bind:model-value="openConfirmDeleteParamModal"
-    v-on:close="
-      () => {
-        openConfirmDeleteParamModal = false;
-      }
-    "
+    v-model:open="openConfirmDeleteParamModal"
   >
+    <template #content>
     <UCard>
       <template #header>
         <div>Confirm deletion of parameter</div>
@@ -87,7 +84,7 @@
         </span>
       </div>
       <UAlert
-        color="yellow"
+        color="warning"
         variant="outline"
         icon="i-heroicons-exclamation-triangle"
         title="This action will remove data!"
@@ -95,29 +92,26 @@
       />
       <template #footer>
         <div class="flex gap-x-3">
-          <UButton color="red" @click="() => handleDeleteParameter()">
+          <UButton color="error" @click="() => handleDeleteParameter()">
             I'm sure!
           </UButton>
           <UButton
             variant="outline"
-            @click="
-              () => {
-                openConfirmDeleteParamModal = false;
-              }
-            "
-            color="gray"
+            @click="openConfirmDeleteParamModal = false"
+            color="neutral"
             >Get me out of here!</UButton
           >
         </div>
       </template>
     </UCard>
+    </template>
   </UModal>
 
   <UModal
     v-if="isOwner"
-    v-bind:model-value="openModifyNameModal"
-    v-on:close="() => (openModifyNameModal = false)"
+    v-model:open="openModifyNameModal"
   >
+    <template #content>
     <UCard>
       <template #header>
         <div>Modify parameter name</div>
@@ -129,17 +123,17 @@
         />
       </div>
     </UCard>
+    </template>
   </UModal>
 
   <UModal
     v-if="isOwner"
-    v-bind:model-value="openAddParamModal"
-    v-on:close="() => (openAddParamModal = false)"
+    v-model:open="openAddParamModal"
     :ui="{
-      base: 'relative text-left rtl:text-right overflow-visible w-full flex flex-col',
-      width: 'sm:max-w-xs max-w-xs',
+      content: 'relative text-left rtl:text-right overflow-visible w-full flex flex-col sm:max-w-xs max-w-xs',
     }"
   >
+    <template #content>
     <UCard class="overflow-visible">
       <template #header>
         <div>Add new parameter</div>
@@ -158,12 +152,13 @@
         }}</span>
       </div>
     </UCard>
+    </template>
   </UModal>
 
   <ProjectSetupChoicesModal
     :open="openModifyChoicesModal"
-    :onSubmit="handleUpdateField"
-    :onClose="() => (openModifyChoicesModal = false)"
+    @submit="handleUpdateField"
+    @close="() => (openModifyChoicesModal = false)"
     :defaultChoices="deserializeChoices(selectedParameter?.choices) || []"
   />
 </template>
@@ -219,7 +214,7 @@ async function handleUpdateParameterName(newName: string) {
     toast.add({
       title: "Parameter name was successfully updated",
       icon: "i-heroicons-check",
-      color: "green",
+      color: "success",
     });
     props.onProjectUpdated();
   } catch (e: any) {
@@ -243,7 +238,7 @@ async function handleUpdateField(field: Partial<NewProjectField>) {
     toast.add({
       title: "Parameter was successfully updated",
       icon: "i-heroicons-check",
-      color: "green",
+      color: "success",
     });
     props.onProjectUpdated();
   } catch (e: any) {
@@ -264,7 +259,7 @@ function generateParameterSettings(
     settings.push({
       label: `Move up`,
       icon: "i-mdi-arrow-up",
-      click: () => {
+      onClick: () => {
         handleMoveParameter(props.project, field, true);
         closePopover();
       },
@@ -275,7 +270,7 @@ function generateParameterSettings(
     settings.push({
       label: `Move down`,
       icon: "i-mdi-arrow-down",
-      click: () => {
+      onClick: () => {
         handleMoveParameter(props.project, field, false);
         closePopover();
       },
@@ -287,7 +282,7 @@ function generateParameterSettings(
     settings.push({
       label: "Modify choices",
       icon: "i-mdi-pencil-outline",
-      click: () => {
+      onClick: () => {
         selectedParameter.value = field;
         openModifyChoicesModal.value = true;
         closePopover();
@@ -299,7 +294,7 @@ function generateParameterSettings(
   settings.push({
     label: "Modify name",
     icon: "i-mdi-pencil-outline",
-    click: () => {
+    onClick: () => {
       selectedParameter.value = field;
       openModifyNameModal.value = true;
       closePopover();
@@ -310,7 +305,7 @@ function generateParameterSettings(
   settings.push({
     label: "Delete",
     icon: "i-mdi-close",
-    click: () => {
+    onClick: () => {
       selectedParameter.value = field;
       openConfirmDeleteParamModal.value = true;
       closePopover();
@@ -331,7 +326,7 @@ function handleMoveParameter(
         toast.add({
           title: `Parameter was moved ${moveUp ? "up" : "down"}.`,
           icon: "i-heroicons-check",
-          color: "green",
+          color: "success",
         });
         props.onProjectUpdated();
       } else {
@@ -343,7 +338,7 @@ function handleMoveParameter(
       toast.add({
         title: err.message,
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
     });
 }
@@ -362,7 +357,7 @@ function handleDragEnd() {
         toast.add({
           title: "Parameters reordered",
           icon: "i-heroicons-check",
-          color: "green",
+          color: "success",
         });
         props.onProjectUpdated();
       } else {
@@ -374,7 +369,7 @@ function handleDragEnd() {
       toast.add({
         title: err.message,
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
       props.onProjectUpdated();
     });
@@ -395,7 +390,7 @@ async function handleCreateParameter(field: NewProjectField) {
         toast.add({
           title: "Parameter was successfully created!",
           icon: "i-heroicons-check",
-          color: "green",
+          color: "success",
         });
         openAddParamModal.value = false;
         props.onProjectUpdated();
@@ -414,7 +409,7 @@ async function handleCreateParameter(field: NewProjectField) {
       toast.add({
         title: err.message,
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
     });
 }
@@ -431,7 +426,7 @@ async function handleDeleteParameter() {
         toast.add({
           title: "Parameter was successfully deleted",
           icon: "i-heroicons-check",
-          color: "green",
+          color: "success",
         });
         openConfirmDeleteParamModal.value = false;
         props.onProjectUpdated();
@@ -444,7 +439,7 @@ async function handleDeleteParameter() {
       toast.add({
         title: err.message,
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
     });
   }

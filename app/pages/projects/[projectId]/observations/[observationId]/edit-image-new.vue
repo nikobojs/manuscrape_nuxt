@@ -4,7 +4,7 @@
       v-if="project && observation"
       @click="handleDiscard"
       :disabled="disableBackbutton"
-      color="red"
+      color="error"
       variant="ghost"
       class="mb-3 text-sm flex gap-x-1.5 items-center"
     >
@@ -115,14 +115,14 @@ onMounted(async () => {
       if (status === 403) {
         toast.add({
           description: "You do not have access to this observation or project",
-          color: "red",
+          color: "error",
           icon: "i-heroicons-exclamation-triangle",
         });
         return navigateTo("/");
       } else {
         toast.add({
           description: (e as any)?.message || "Unknown error",
-          color: "red",
+          color: "error",
           icon: "i-heroicons-exclamation-triangle",
         });
         return navigateTo("/");
@@ -183,7 +183,7 @@ async function handleDiscard() {
     toast.add({
       title: "Failed to discard",
       description: (e as Error)?.message || "Unknown error",
-      color: "red",
+      color: "error",
       icon: "i-heroicons-exclamation-triangle",
     });
   }
@@ -193,7 +193,7 @@ async function handleUploadSuccess(isFirstImage: boolean) {
   toast.add({
     title: "Image uploaded successfully",
     icon: "i-heroicons-check",
-    color: "green",
+    color: "success",
   });
   const electronParam = isElectron.value ? "?electron=1" : "";
   await navigateTo(

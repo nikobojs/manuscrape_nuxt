@@ -9,7 +9,6 @@
     </main>
     <Footer />
   </div>
-  <UNotifications />
 </template>
 
 <script lang="ts" setup>

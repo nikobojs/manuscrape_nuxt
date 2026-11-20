@@ -176,7 +176,7 @@ export function validateObservationForm(
 
   if (missingFields.length > 0) {
     for (const field of missingFields) {
-      errors.push({ path: field.label, message: "Field is required" });
+      errors.push({  name: field.label, message: "Field is required" });
     }
   }
 
@@ -195,7 +195,7 @@ export function validateObservationForm(
 
     // check if field is required or optional
     if (field.required && (value === null || value === undefined)) {
-      errors.push({ path: key, message: "Required" });
+      errors.push({  name: key, message: "Required" });
     }
 
     // validate numbers
@@ -203,7 +203,7 @@ export function validateObservationForm(
     if (typ == "FLOAT" || typ == "INT") {
       const valueFloat = parseFloat("" + value);
       if (isNaN(valueFloat)) {
-        errors.push({ path: key, message: "Invalid number" });
+        errors.push({  name: key, message: "Invalid number" });
       }
     }
 
@@ -211,7 +211,7 @@ export function validateObservationForm(
     if (typ == "STRING") {
       // TODO: explain why
       if (("" + value).length === 0) {
-        errors.push({ path: key, message: "Text field is required" });
+        errors.push({  name: key, message: "Text field is required" });
       }
     }
 
@@ -221,7 +221,7 @@ export function validateObservationForm(
     else if (typ == "DATE" || typ == "DATETIME") {
       const valueDate = new Date("" + value);
       if (isNaN(valueDate.getTime())) {
-        errors.push({ path: key, message: "Date field is invalid" });
+        errors.push({  name: key, message: "Date field is invalid" });
       }
     }
   }

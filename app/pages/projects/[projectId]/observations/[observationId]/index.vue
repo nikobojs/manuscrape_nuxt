@@ -31,7 +31,7 @@
         <UButton
           icon="i-mdi-chevron-left"
           variant="ghost"
-          color="gray"
+          color="neutral"
           size="sm"
           :disabled="!adjacent.prevId"
           @click="navigateToAdjacent(adjacent.prevId!)"
@@ -41,7 +41,7 @@
         <UButton
           trailing-icon="i-mdi-chevron-right"
           variant="ghost"
-          color="gray"
+          color="neutral"
           size="sm"
           :disabled="!adjacent.nextId"
           @click="navigateToAdjacent(adjacent.nextId!)"
@@ -163,7 +163,7 @@ async function refreshObservation() {
         title: "Could not load the observation",
         description: getErrMsg(e),
         icon: "i-heroicons-exclamation-triangle",
-        color: "red",
+        color: "error",
       });
       return;
     }
@@ -173,11 +173,11 @@ async function refreshObservation() {
       description:
         "The request never reached the server. Check your connection and try again.",
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
       actions: [
         {
           label: "Try again",
-          click: () => void refreshObservation(),
+          onClick: () => void refreshObservation(),
         },
       ],
     });
@@ -234,7 +234,7 @@ async function onObservationPublished() {
     toast.add({
       title: "Nice job! Observation was submitted.",
       icon: "i-heroicons-check",
-      color: "green",
+      color: "success",
     });
     await refreshObservation();
   }
@@ -244,7 +244,7 @@ async function onFormSubmit(showToast = true) {
   if (showToast) {
     toast.add({
       description: "Observation parameters was successfully saved",
-      color: "green",
+      color: "success",
       icon: "i-mdi-check",
     });
   }
@@ -263,12 +263,12 @@ async function onFileUploaded(file: File) {
         ? "Observation does not exist"
         : "Project does not exist",
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
   } else {
     toast.add({
       title: `'${file.name}' was uploaded successfully`,
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
   }
@@ -282,12 +282,12 @@ async function onFileDeleted() {
         ? "Observation does not exist"
         : "Project does not exist",
       icon: "i-heroicons-exclamation-triangle",
-      color: "red",
+      color: "error",
     });
   } else {
     toast.add({
       title: `File was deleted successfully`,
-      color: "green",
+      color: "success",
       icon: "i-heroicons-check",
     });
   }

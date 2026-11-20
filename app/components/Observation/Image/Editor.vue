@@ -10,7 +10,7 @@
             observation #{{ observation.id }}</CardHeader
           >
           <UTooltip>
-            <template #text>
+            <template #content>
               <div
                 class="flex flex-col gap-y-2 py-1 max-w-xs break-words whitespace-normal"
               >
@@ -72,8 +72,8 @@
           <UButton
             icon="i-heroicons-trash"
             :disabled="!hasPendingChanges || modeActive(EditorMode.DISABLED)"
-            color="rose"
-            @click="reset"
+            color="error"
+            @click="() => reset()"
             variant="outline"
             size="xs"
           >
@@ -106,9 +106,9 @@
           <div class="flex items-center gap-x-3">
             <!-- Button group: TEXT colors -->
             <div v-if="modeActive(EditorMode.TEXT)">
-              <UButtonGroup size="sm" orientation="horizontal">
+              <UFieldGroup size="sm" orientation="horizontal">
                 <label
-                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-s-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-s-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                   :style="{ backgroundColor: frontColor, color: 'black' }"
                 >
                   <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -121,7 +121,7 @@
                   />
                 </label>
                 <label
-                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-e-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-e-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                   :style="{ backgroundColor: backColor, color: 'white' }"
                 >
                   <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -133,13 +133,13 @@
                     v-model="backColor"
                   />
                 </label>
-              </UButtonGroup>
+              </UFieldGroup>
             </div>
 
             <!-- Button group: LINE colors -->
             <div v-if="modeActive(EditorMode.LINE)">
               <label
-                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                 :style="{ backgroundColor: frontColor, color: 'black' }"
               >
                 <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -156,7 +156,7 @@
             <!-- Button group: BOX colors -->
             <div v-if="modeActive(EditorMode.RECT)">
               <label
-                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-500 dark:disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:focus-visible:outline-primary-400 inline-flex items-center"
+                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                 :style="{ backgroundColor: backColor, color: 'white' }"
               >
                 <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -177,16 +177,15 @@
             >
               <label class="text-xs">Line width:</label>
               <USelectMenu
-                :options="lineWidths"
+                :items="lineWidths"
                 v-model="lineWidth"
-                color="gray"
+                color="neutral"
                 variant="outline"
                 size="xs"
-                value-attribute="value"
-                option-attribute="label"
+                value-key="value"
+                label-key="label"
                 class="cursor-pointer pl-3 pr-8 h-8"
               >
-                <template #label> {{ lineWidth }}px </template>
               </USelectMenu>
             </div>
 
@@ -198,7 +197,7 @@
               <!-- toggle background transparency -->
               <div class="flex flex-col items-center gap-x-2">
                 <div class="text-xs mb-1">Background</div>
-                <UToggle
+                <USwitch
                   :model-value="textDraftSolidBg"
                   @click="
                     () => {
@@ -215,7 +214,7 @@
               >
                 <!-- text draft textarea-->
                 <UTextarea
-                  class="ring-inset h-12 dark:ring-inset border-r-0 dark:border-r-0"
+                  class="ring-inset h-12 border-r-0"
                   type="text"
                   ref="textInput"
                   v-model="textDraft"
@@ -231,14 +230,14 @@
 
                 <!-- save text button-->
                 <UButton
-                  color="blue"
+                  color="info"
                   type="submit"
                   variant="outline"
                   class="saveText"
                   >Save text</UButton
                 >
                 <!-- discard text button-->
-                <UButton color="red" variant="outline" @click="resetTextDraft">
+                <UButton color="error" variant="outline" @click="resetTextDraft">
                   Discard
                 </UButton>
               </form>
@@ -263,29 +262,29 @@
           </div>
           <div class="flex gap-x-3">
             <!-- Buttons: Undo/redo buttons -->
-            <UButtonGroup>
+            <UFieldGroup>
               <UButton
                 @click="undo"
                 :disabled="undoDisabled"
-                color="blue"
+                color="info"
                 variant="outline"
                 icon="i-heroicons-arrow-uturn-left"
               ></UButton>
               <UButton
                 @click="redo"
                 :disabled="redoDisabled"
-                color="blue"
+                color="info"
                 variant="outline"
                 icon="i-heroicons-arrow-uturn-right"
               ></UButton>
-            </UButtonGroup>
+            </UFieldGroup>
 
             <!-- Buttons: all actions -->
-            <UButtonGroup size="sm" orientation="horizontal">
+            <UFieldGroup size="sm" orientation="horizontal">
               <UButton
                 v-for="[actionMode, { icon, onActionPicked }] in actionButtons"
                 :icon="icon"
-                color="blue"
+                color="info"
                 :variant="
                   modeActive(actionMode as unknown as EditorMode)
                     ? 'solid'
@@ -299,32 +298,32 @@
                 "
                 :disabled="modeActive(EditorMode.DISABLED)"
               />
-            </UButtonGroup>
+            </UFieldGroup>
 
             <!-- Button group: zoom -->
-            <UButtonGroup size="sm" orientation="horizontal">
+            <UFieldGroup size="sm" orientation="horizontal">
               <UButton
-                color="blue"
+                color="info"
                 variant="outline"
                 icon="i-heroicons-magnifying-glass-minus"
                 :disabled="modeActive(EditorMode.DISABLED)"
                 @click="() => addToZoom(-ZOOM_STEP)"
               ></UButton>
               <UButton
-                color="blue"
+                color="info"
                 variant="outline"
                 icon="i-mdi-restore"
                 :disabled="modeActive(EditorMode.DISABLED)"
                 @click="() => resetZoom()"
               ></UButton>
               <UButton
-                color="blue"
+                color="info"
                 variant="outline"
                 icon="i-heroicons-magnifying-glass-plus"
                 :disabled="modeActive(EditorMode.DISABLED)"
                 @click="() => addToZoom(ZOOM_STEP)"
               ></UButton>
-            </UButtonGroup>
+            </UFieldGroup>
           </div>
         </div>
       </div>
@@ -356,7 +355,7 @@
         >
           <svg
             aria-hidden="true"
-            class="w-14 h-14 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+            class="w-14 h-14 mr-2 text-gray-600 animate-spin fill-blue-600"
             viewBox="0 0 100 101"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -474,7 +473,7 @@ function save() {
         toast.add({
           title: "Image was saved",
           icon: "i-heroicons-check",
-          color: "green",
+          color: "success",
         });
       }
     } catch (e) {
@@ -483,7 +482,7 @@ function save() {
           title: "An error happened when saving the image",
           description: (e as Error)?.message || "Unknown error description",
           icon: "i-heroicons-exclamation-triangle",
-          color: "red",
+          color: "error",
         });
       }, 250);
     }

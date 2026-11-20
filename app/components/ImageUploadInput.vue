@@ -19,7 +19,7 @@
             class="rounded-full bg-slate-900 transition-all opacity-80 hover:opacity-100 hover:border-slate-400 border border-transparent"
             variant="soft"
             size="xs"
-            color="gray"
+            color="neutral"
             :to="`/projects/${project.id}/observations/${observation.id}/edit-image?projectFieldId=${image.projectFieldId}`"
           >
             <UIcon name="mdi:pencil" />
@@ -30,7 +30,7 @@
             class="rounded-full bg-slate-900 transition-all opacity-80 hover:opacity-100 hover:border-slate-400 border border-transparent"
             variant="soft"
             size="xs"
-            color="gray"
+            color="neutral"
             @click="() => emit('remove', image.id)"
           >
             <UIcon name="i-mdi-close" />
@@ -58,7 +58,7 @@
         />
         <div class="h-40">
           <div
-            class="w-full h-full transition-all text-primary-500 dark:text-primary-500 bg-slate-900/50 dark:bg-slate-900/50 hover:bg-slate-800 dark:hover:bg-slate-800 disabled:bg-slate-600 aria-disabled:bg-slate-500 dark:disabled:bg-slate-400 dark:aria-disabled:bg-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 dark:focus-visible:outline-slate-400 ring-0 border-primary-500/30 border border-dashed rounded-lg flex items-center justify-center cursor-pointer"
+            class="w-full h-full transition-all text-primary-500 bg-slate-900/50 hover:bg-slate-800 disabled:bg-slate-400 aria-disabled:bg-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 ring-0 border-primary-500/30 border border-dashed rounded-lg flex items-center justify-center cursor-pointer"
           >
             <div
               class="h-20 w-20 flex justify-center items-center bg-green-900/20 rounded-full"
