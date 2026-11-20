@@ -30,10 +30,10 @@
             />
             <template #content>
               <div>
-                <div class="break-words whitespace-normal">
+                <div class="wrap-break-word whitespace-normal">
                   Remove collaborator from project.
                 </div>
-                <div class="break-words whitespace-normal">
+                <div class="wrap-break-word whitespace-normal">
                   This action will <i class="italic">not</i> remove the user's
                   email from their submitted observations.
                 </div>

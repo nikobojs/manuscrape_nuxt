@@ -1,7 +1,7 @@
 <template>
   <UContainer class="flex flex-col">
     <div
-      class="w-[220px] min-h-[45px] pt-10 pb-6 cursor-pointer"
+      class="w-55 min-h-11.25 pt-10 pb-6 cursor-pointer"
       @click="onLogoClick"
     >
       <span>

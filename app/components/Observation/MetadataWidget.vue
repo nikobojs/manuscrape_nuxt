@@ -88,14 +88,19 @@
                     "
                     v-model="state[field.label]"
                     v-bind="props"
-                    class="flex-shrink"
+                    class="shrink"
                     :disabled="!!$props.disabled"
                     @input="(asd: Event) => fourDigitYear(asd)"
                   />
                   <div v-else-if="field.type === 'CHOICE'">
                     <URadioGroup
                       v-model="state[field.label]"
-                      :items="(field.choices || []).map((choice) => ({ label: choice, value: choice }))"
+                      :items="
+                        (field.choices || []).map((choice) => ({
+                          label: choice,
+                          value: choice,
+                        }))
+                      "
                       :disabled="!!$props.disabled"
                     />
                   </div>
@@ -104,7 +109,7 @@
                     class="flex flex-col items-end gap-x-2"
                   >
                     <USelectMenu
-                      class="min-w-[200px]"
+                      class="min-w-50"
                       :items="field.choices"
                       v-model="state[field.label]"
                       :placeholder="
@@ -128,7 +133,7 @@
                     class="items-end flex-col flex"
                   >
                     <USelectMenu
-                      class="min-w-[200px]"
+                      class="min-w-50"
                       :items="field.choices"
                       v-model="state[field.label]"
                       :placeholder="
@@ -143,7 +148,7 @@
                       :disabled="!!$props.disabled"
                     >
                       <template #create-item-label="{ item }">
-                        <span class="flex-shrink-0 text-gray-400 text-xs"
+                        <span class="shrink-0 text-gray-400 text-xs"
                           >Custom:</span
                         >
                         <span>
@@ -164,7 +169,7 @@
                   >
                     <USelectMenu
                       :name="field.label"
-                      class="min-w-[200px]"
+                      class="min-w-50"
                       :items="
                         getMultipleChoiceAddOptions({
                           choices: field.choices,
@@ -183,7 +188,7 @@
                       :disabled="!!$props.disabled"
                     >
                       <template #create-item-label="{ item }">
-                        <span class="flex-shrink-0 text-gray-400 text-xs"
+                        <span class="shrink-0 text-gray-400 text-xs"
                           >Custom:</span
                         >
                         <span>

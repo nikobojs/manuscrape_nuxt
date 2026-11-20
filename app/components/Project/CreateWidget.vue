@@ -82,7 +82,7 @@
                           body: 'px-2 py-2.5 sm:p-2',
                         }"
                       >
-                        <p class="max-w-[260px]">
+                        <p class="max-w-65">
                           A parameter consists of a label and a type. This can
                           be a number, multiple choice, checkbox, etc.
                         </p>

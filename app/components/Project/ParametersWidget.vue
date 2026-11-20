@@ -17,7 +17,7 @@
     </template>
 
     <div
-      class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6 max-h-[460px] overflow-y-auto"
+      class="flex flex-col -mt-6 -mb-6 -ml-6 -mr-6 max-h-115 overflow-y-auto"
     >
       <draggable
         v-model="sortedFields"
@@ -29,12 +29,18 @@
         <template #item="{ element: field, index: idx }">
           <div
             class="flex flex-col gap-y-1.5 p-3 border-slate-800"
-            :class="{'border-b': idx < (sortedFields.length-1)}"
+            :class="{ 'border-b': idx < sortedFields.length - 1 }"
           >
             <div class="flex items-start justify-between">
               <div class="flex gap-2 items-center">
-                <div class="drag-handle cursor-grab flex items-center group py-3 -my-1 px-1" v-if="isOwner">
-                  <UIcon name="i-mdi-drag-vertical" class="text-2xl text-gray-400 transition-colors group-hover:text-gray-200" />
+                <div
+                  class="drag-handle cursor-grab flex items-center group py-3 -my-1 px-1"
+                  v-if="isOwner"
+                >
+                  <UIcon
+                    name="i-mdi-drag-vertical"
+                    class="text-2xl text-gray-400 transition-colors group-hover:text-gray-200"
+                  />
                 </div>
                 <div class="flex flex-col gap-y-1.5">
                   <div class="text-sm font-semibold">
@@ -46,13 +52,22 @@
                   </div>
                 </div>
               </div>
-              <UPopover v-if="isOwner" :content="{ side: 'bottom', align: 'end' }">
-                <UButton variant="link" color="neutral" icon="i-mdi-dots-vertical">
+              <UPopover
+                v-if="isOwner"
+                :content="{ side: 'bottom', align: 'end' }"
+              >
+                <UButton
+                  variant="link"
+                  color="neutral"
+                  icon="i-mdi-dots-vertical"
+                >
                 </UButton>
                 <template #content="{ close }">
                   <UNavigationMenu
                     orientation="vertical"
-                    :items="generateParameterSettings(field, sortedFields, close)"
+                    :items="
+                      generateParameterSettings(field, sortedFields, close)
+                    "
                   />
                 </template>
               </UPopover>
@@ -63,66 +78,60 @@
     </div>
   </UCard>
 
-  <UModal
-    v-if="isOwner"
-    v-model:open="openConfirmDeleteParamModal"
-  >
+  <UModal v-if="isOwner" v-model:open="openConfirmDeleteParamModal">
     <template #content>
-    <UCard>
-      <template #header>
-        <div>Confirm deletion of parameter</div>
-      </template>
-      <div>
-        <div class="text-sm">
-          You're about to destroy observation data associated to the following
-          parameter:
-        </div>
-        <span
-          class="bg-slate-950 mb-5 mt-4 px-2 py-0.5 text-sm rounded-sm inline-block"
-        >
-          {{ selectedParameter?.label }}
-        </span>
-      </div>
-      <UAlert
-        color="warning"
-        variant="outline"
-        icon="i-heroicons-exclamation-triangle"
-        title="This action will remove data!"
-        description="All observation data will have this parameter and associated data removed permanently."
-      />
-      <template #footer>
-        <div class="flex gap-x-3">
-          <UButton color="error" @click="() => handleDeleteParameter()">
-            I'm sure!
-          </UButton>
-          <UButton
-            variant="outline"
-            @click="openConfirmDeleteParamModal = false"
-            color="neutral"
-            >Get me out of here!</UButton
+      <UCard>
+        <template #header>
+          <div>Confirm deletion of parameter</div>
+        </template>
+        <div>
+          <div class="text-sm">
+            You're about to destroy observation data associated to the following
+            parameter:
+          </div>
+          <span
+            class="bg-slate-950 mb-5 mt-4 px-2 py-0.5 text-sm rounded-sm inline-block"
           >
+            {{ selectedParameter?.label }}
+          </span>
         </div>
-      </template>
-    </UCard>
+        <UAlert
+          color="warning"
+          variant="outline"
+          icon="i-heroicons-exclamation-triangle"
+          title="This action will remove data!"
+          description="All observation data will have this parameter and associated data removed permanently."
+        />
+        <template #footer>
+          <div class="flex gap-x-3">
+            <UButton color="error" @click="() => handleDeleteParameter()">
+              I'm sure!
+            </UButton>
+            <UButton
+              variant="outline"
+              @click="openConfirmDeleteParamModal = false"
+              color="neutral"
+              >Get me out of here!</UButton
+            >
+          </div>
+        </template>
+      </UCard>
     </template>
   </UModal>
 
-  <UModal
-    v-if="isOwner"
-    v-model:open="openModifyNameModal"
-  >
+  <UModal v-if="isOwner" v-model:open="openModifyNameModal">
     <template #content>
-    <UCard>
-      <template #header>
-        <div>Modify parameter name</div>
-      </template>
-      <div class="flex flex-col gap-4">
-        <InputImportant
-          :value="selectedParameter?.label || ''"
-          @edit="handleUpdateParameterName"
-        />
-      </div>
-    </UCard>
+      <UCard>
+        <template #header>
+          <div>Modify parameter name</div>
+        </template>
+        <div class="flex flex-col gap-4">
+          <InputImportant
+            :value="selectedParameter?.label || ''"
+            @edit="handleUpdateParameterName"
+          />
+        </div>
+      </UCard>
     </template>
   </UModal>
 
@@ -130,28 +139,32 @@
     v-if="isOwner"
     v-model:open="openAddParamModal"
     :ui="{
-      content: 'relative text-left rtl:text-right overflow-visible w-full flex flex-col sm:max-w-xs max-w-xs',
+      content:
+        'relative text-left rtl:text-right overflow-visible w-full flex flex-col sm:max-w-xs max-w-xs',
     }"
   >
     <template #content>
-    <UCard class="overflow-visible">
-      <template #header>
-        <div>Add new parameter</div>
-      </template>
+      <UCard class="overflow-visible">
+        <template #header>
+          <div>Add new parameter</div>
+        </template>
 
-      <div class="flex flex-col gap-3">
-        <!-- :label="newFieldLabel"
+        <div class="flex flex-col gap-3">
+          <!-- :label="newFieldLabel"
         :field-type="newFieldType"
         :required="newFieldRequired" -->
-        <!-- :on-field-update="(field) => setFieldDraft(field)"
+          <!-- :on-field-update="(field) => setFieldDraft(field)"
         :on-error="(msg) => (newFieldError = msg)"
         :on-field-add="(field) => handleCreateParameter(field)" -->
-        <ProjectFieldForm :modelValue="[]" @add:field="handleCreateParameter" />
-        <span class="red text-xs" v-if="newFieldError">{{
-          newFieldError
-        }}</span>
-      </div>
-    </UCard>
+          <ProjectFieldForm
+            :modelValue="[]"
+            @add:field="handleCreateParameter"
+          />
+          <span class="red text-xs" v-if="newFieldError">{{
+            newFieldError
+          }}</span>
+        </div>
+      </UCard>
     </template>
   </UModal>
 
@@ -166,7 +179,7 @@
 <script setup lang="ts">
 import { isMultipleChoice } from "#imports";
 import InputImportant from "~/components/InputImportant.vue";
-import draggable from 'vuedraggable';
+import draggable from "vuedraggable";
 
 const openConfirmDeleteParamModal = ref(false);
 const openModifyChoicesModal = ref(false);
@@ -196,11 +209,17 @@ const props = defineProps({
   onProjectUpdated: requireFunctionProp<() => void | Promise<void>>(),
 });
 
-const sortedFields = ref<ProjectFieldResponse[]>(sortFieldsByIndex(props.project.fields));
+const sortedFields = ref<ProjectFieldResponse[]>(
+  sortFieldsByIndex(props.project.fields),
+);
 
-watch(() => props.project.fields, (newFields) => {
-  sortedFields.value = sortFieldsByIndex(newFields);
-}, { deep: true });
+watch(
+  () => props.project.fields,
+  (newFields) => {
+    sortedFields.value = sortFieldsByIndex(newFields);
+  },
+  { deep: true },
+);
 
 async function handleUpdateParameterName(newName: string) {
   if (!selectedParameter.value?.id) {
@@ -209,7 +228,9 @@ async function handleUpdateParameterName(newName: string) {
   }
 
   try {
-    await updateParameter(props.project.id, selectedParameter.value.id, { label: newName });
+    await updateParameter(props.project.id, selectedParameter.value.id, {
+      label: newName,
+    });
     openModifyNameModal.value = false;
     toast.add({
       title: "Parameter name was successfully updated",
@@ -345,12 +366,12 @@ function handleMoveParameter(
 
 function handleDragEnd() {
   if (!isOwner.value) return;
-  
+
   const newIndexes = sortedFields.value.map((field, index) => ({
     id: field.id,
-    index: index
+    index: index,
   }));
-  
+
   updateParameterIndexes(props.project.id, newIndexes)
     .then(async (res) => {
       if (res.status === 204) {
@@ -442,7 +463,7 @@ async function handleDeleteParameter() {
         color: "error",
       });
     });
-  }
+}
 </script>
 
 <style scoped>

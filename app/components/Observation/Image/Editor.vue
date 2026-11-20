@@ -12,7 +12,7 @@
           <UTooltip>
             <template #content>
               <div
-                class="flex flex-col gap-y-2 py-1 max-w-xs break-words whitespace-normal"
+                class="flex flex-col gap-y-2 py-1 max-w-xs wrap-break-word whitespace-normal"
               >
                 <div class="flex gap-x-2">
                   <UKbd>Q</UKbd>:
@@ -108,7 +108,7 @@
             <div v-if="modeActive(EditorMode.TEXT)">
               <UFieldGroup size="sm" orientation="horizontal">
                 <label
-                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-s-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
+                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 shrink-0 font-medium rounded-s-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                   :style="{ backgroundColor: frontColor, color: 'black' }"
                 >
                   <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -121,7 +121,7 @@
                   />
                 </label>
                 <label
-                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-e-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
+                  class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 shrink-0 font-medium rounded-e-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                   :style="{ backgroundColor: backColor, color: 'white' }"
                 >
                   <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -139,7 +139,7 @@
             <!-- Button group: LINE colors -->
             <div v-if="modeActive(EditorMode.LINE)">
               <label
-                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
+                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                 :style="{ backgroundColor: frontColor, color: 'black' }"
               >
                 <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -156,7 +156,7 @@
             <!-- Button group: BOX colors -->
             <div v-if="modeActive(EditorMode.RECT)">
               <label
-                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 flex-shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
+                class="h-8 cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 shrink-0 font-medium rounded-md gap-x-1.5 px-2.5 py-1.5 shadow-sm disabled:bg-primary-400 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-400 inline-flex items-center"
                 :style="{ backgroundColor: backColor, color: 'white' }"
               >
                 <UIcon class="-m-1 text-xl" name="i-heroicons-paint-brush" />
@@ -237,7 +237,11 @@
                   >Save text</UButton
                 >
                 <!-- discard text button-->
-                <UButton color="error" variant="outline" @click="resetTextDraft">
+                <UButton
+                  color="error"
+                  variant="outline"
+                  @click="resetTextDraft"
+                >
                   Discard
                 </UButton>
               </form>
@@ -246,7 +250,7 @@
               <div class="flex items-center gap-x-2">
                 <label class="text-xs">Size:</label>
                 <UInput
-                  class="max-w-[70px] text-size-input"
+                  class="max-w-17.5 text-size-input"
                   :style="{
                     appearance: 'textfield',
                   }"
@@ -327,7 +331,7 @@
           </div>
         </div>
       </div>
-      <div class="w-full min-h-[480px] relative transition-all">
+      <div class="w-full min-h-120 relative transition-all">
         <canvas
           v-show="!isSaving"
           ref="canvas"

@@ -48,7 +48,7 @@
           <UTooltip>
             <template #content>
               <p
-                class="max-w-xs break-words whitespace-normal"
+                class="max-w-xs wrap-break-word whitespace-normal"
                 v-for="txt in fieldsTooltips(row.original)"
               >
                 {{ txt }}

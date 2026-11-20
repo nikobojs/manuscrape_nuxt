@@ -58,7 +58,7 @@
         />
         <div class="h-40">
           <div
-            class="w-full h-full transition-all text-primary-500 bg-slate-900/50 hover:bg-slate-800 disabled:bg-slate-400 aria-disabled:bg-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 ring-0 border-primary-500/30 border border-dashed rounded-lg flex items-center justify-center cursor-pointer"
+            class="w-full h-full transition-all text-primary-500 bg-slate-900/50 hover:bg-slate-800 disabled:bg-slate-400 aria-disabled:bg-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 ring-0 border-primary-500/30 border border-dashed rounded-lg flex items-center justify-center cursor-pointer"
           >
             <div
               class="h-20 w-20 flex justify-center items-center bg-green-900/20 rounded-full"
