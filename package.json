@@ -10,6 +10,7 @@
     "dev": "nuxt dev",
     "db:generate": "yarn drizzle-kit generate",
     "db:migrate": "yarn drizzle-kit migrate",
+    "cleanup-observation-data": "tsx scripts/cleanup-observation-data.ts",
     "docker-up": "docker compose up --detach",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

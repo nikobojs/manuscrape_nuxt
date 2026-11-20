@@ -8,6 +8,7 @@ import {
   deleteField,
   moveField,
   createField,
+  getObservations,
 } from "./helpers";
 
 describe("Project fields", () => {
@@ -67,6 +68,38 @@ describe("Project fields", () => {
       )?.project as FullProject;
       expect(updatedProject).toBeTruthy();
       expect(updatedProject.fields.length).toEqual(fieldLength - 1);
+    });
+  });
+
+  test("deleting a field removes its data from observations", async () => {
+    await withTempProject(async (user, project, observations, token) => {
+      const projectId = project.id;
+
+      // find the "Text field" parameter, which test observations have data for
+      const field = project.fields.find((f) => f.label === "Text field");
+      expect(field).toBeTruthy();
+
+      // sanity: all observations have data for the field before deletion
+      for (const obs of observations) {
+        expect(obs.data).toHaveProperty("Text field");
+      }
+
+      // delete the field
+      const res = await deleteField(token, projectId, field!.id);
+      expect(res.status).toBe(204);
+
+      // refetch observations and ensure the field data was removed
+      const obsRes = await getObservations(token, projectId);
+      expect(obsRes.status).toBe(200);
+      const obsJson = await obsRes.json();
+      expect(obsJson.observations.length).toBe(observations.length);
+
+      for (const obs of obsJson.observations) {
+        // the deleted parameter's data must be gone
+        expect(obs.data).not.toHaveProperty("Text field");
+        // unrelated data must be untouched
+        expect(obs.data).toHaveProperty("Date time field");
+      }
     });
   });
 

@@ -55,6 +55,7 @@ export default safeResponseHandler(async (event) => {
   try {
     res = await deleteFiles(file.filePath, file.isS3);
   } catch (e: any) {
+    console.error(e?.message);
     throw createError({
       statusCode: 500,
       statusMessage: e.message,
@@ -62,7 +63,15 @@ export default safeResponseHandler(async (event) => {
   }
 
   // if s3 deletion went well, delete from file metadata from database
-  await deleteFileUpload(fileId);
+  try {
+    await deleteFileUpload(fileId);
+  } catch (e: any) {
+    console.error(e?.message);
+    throw createError({
+      statusCode: 500,
+      statusMessage: e.message,
+    });
+  }
 
   setResponseStatus(event, 204);
 });

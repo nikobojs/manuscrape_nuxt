@@ -44,45 +44,35 @@ export default safeResponseHandler(async (event) => {
   });
 
   // define array of affected observation id and its new 'data' value
-  const dataUpdates = affectedObservations.map((o) => {
-    if (typeof o.data !== "string" || !o.data) {
-      // capture error without telling user. Skip modifying this observation
-      // TODO: consider removing this capture as this probably happens for all empty observations
-      const err = createError({
-        statusCode: 500,
-        statusMessage:
-          "Observation has no data when modifying observations after field deletion",
-      });
-      captureException(err, { data: { affectedObservation: o } });
-      return o;
-    }
+  // note: 'data' is a jsonb column, so it is already parsed to an object
+  const dataUpdates = affectedObservations
+    .map((o) => {
+      if (!o.data || typeof o.data !== "object") {
+        // capture error without telling user. Skip modifying this observation
+        const err = createError({
+          statusCode: 500,
+          statusMessage: `Observation #${o.id} has malformed data when modifying observations after field deletion`,
+        });
+        captureException(err, { data: { affectedObservationId: o.id } });
+        return null;
+      }
 
-    // try parse observation json
-    try {
-      const data = JSON.parse(o.data);
       // if deleted field is not in data, skip
+      const data = { ...(o.data as Record<string, any>) };
       if (field.label in data) {
         // delete field data from observation data
-        delete (data as any)[field.label];
-        o.data = JSON.stringify(data);
+        delete data[field.label];
+        return { id: o.id, data };
       }
-    } catch (e) {
-      // capture error without telling user. Skip modifying this observation
-      const err = createError({
-        statusCode: 500,
-        statusMessage: `Observation #${o.id} data could not be parsed to JSON`,
-      });
-      captureException(err);
-    }
 
-    return o;
-  });
+      return null;
+    })
+    .filter((u): u is { id: number; data: Record<string, any> } => u !== null);
 
-  // update related observations and delete project
+  // update related observations and delete field
   await db.transaction(async (tx) => {
     for (const o of dataUpdates) {
-      const newData = o.data || {};
-      await updateObservationData(o.id, newData);
+      await updateObservationData(o.id, o.data);
     }
 
     await deleteProjectField(fieldId);

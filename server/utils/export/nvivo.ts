@@ -32,12 +32,12 @@ function generateObservationRow(
 
     // if label doesn't exist, it must be from some older fields that wasn't deleted correctly
     if (columnIndex === -1) {
-      const errMsg = `Label '${key}' does not exist when generating nvivo export, obsId ${obs.id}`;
+      const errMsg = `Label '${key}' does not exist when generating nvivo export, obsId ${obs.id}. Skipping this value.`;
       if (process.env.VITEST !== "true") {
         console.error(errMsg);
       }
       captureException(errMsg);
-      return;
+      continue;
     }
 
     // initialize default cell value
