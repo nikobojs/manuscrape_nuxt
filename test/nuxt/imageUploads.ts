@@ -236,7 +236,7 @@ describe("Image uploads", async () => {
       expect(typeof imgSingleField?.id).toBe("number");
 
       // add collaborator user, continue test in callback fn
-      withTempUser(async (_collaborator, collaboratorToken) => {
+      await withTempUser(async (_collaborator, collaboratorToken) => {
         // upload the image from the collaborator, expect error
         const imgUploadRes0 = await uploadImageToObservation(
           collaboratorToken,
