@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as zlib from "node:zlib";
 import { expect } from "vitest";
 import { fetch as _fetch } from "@nuxt/test-utils";
 import { solveChallenge } from "altcha-lib";
@@ -327,6 +328,12 @@ export async function patchObservation(
 export const validTestImage0 = await fs.openAsBlob("./public/cross-bg.png", {
   type: "image/png",
 });
+export const validTestImage1 = await fs.openAsBlob(
+  "./public/test-image-red.png",
+  {
+    type: "image/png",
+  },
+);
 export const invalidImages = [
   await fs.openAsBlob("./test/run_all.sh", {
     type: "image/png",
@@ -614,6 +621,63 @@ export async function getExports(
     },
   });
   return res;
+}
+
+export async function downloadExport(
+  token: string,
+  projectId: number | string,
+  exportId: number | string,
+): Promise<Response> {
+  const res = await _fetch(
+    `${testBaseUrl}/api/projects/${projectId}/exports/${exportId}/download`,
+    {
+      method: "GET",
+      headers: {
+        ...authHeader(token),
+      },
+    },
+  );
+  return res;
+}
+
+// reads all entries (name + content) of a zip buffer via its central directory
+export function readZipEntries(zip: Buffer): { name: string; data: Buffer }[] {
+  // find the end of central directory record (signature 0x06054b50)
+  const eocd = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (eocd < 0) throw new Error("not a zip file: no end of central directory");
+  const entryCount = zip.readUInt16LE(eocd + 10);
+  let offset = zip.readUInt32LE(eocd + 16);
+  const entries: { name: string; data: Buffer }[] = [];
+  for (let i = 0; i < entryCount; i++) {
+    // each central directory entry starts with signature 0x02014b50
+    if (zip.readUInt32LE(offset) !== 0x02014b50) {
+      throw new Error(`invalid central directory entry at offset ${offset}`);
+    }
+    const method = zip.readUInt16LE(offset + 10);
+    const compressedSize = zip.readUInt32LE(offset + 20);
+    const nameLength = zip.readUInt16LE(offset + 28);
+    const extraLength = zip.readUInt16LE(offset + 30);
+    const commentLength = zip.readUInt16LE(offset + 32);
+    const localOffset = zip.readUInt32LE(offset + 42);
+    const name = zip.toString("utf8", offset + 46, offset + 46 + nameLength);
+
+    // local file header: data starts after its name and extra fields
+    if (zip.readUInt32LE(localOffset) !== 0x04034b50) {
+      throw new Error(`invalid local file header at offset ${localOffset}`);
+    }
+    const localNameLength = zip.readUInt16LE(localOffset + 26);
+    const localExtraLength = zip.readUInt16LE(localOffset + 28);
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+    const raw = zip.subarray(dataStart, dataStart + compressedSize);
+
+    // method 8 is deflate, method 0 is stored
+    const data =
+      method === 8 ? zlib.inflateRawSync(raw) : Buffer.from(raw);
+
+    entries.push({ name, data });
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries;
 }
 
 export const testProject: NewProjectBody = {
