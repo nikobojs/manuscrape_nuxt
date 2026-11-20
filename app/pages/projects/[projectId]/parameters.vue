@@ -8,6 +8,15 @@
       These parameters define the shape an observation in this project. When
       changed, the formular for creating an observation will also change.
     </p>
+    <UAlert
+      v-if="project && !isOwner"
+      icon="i-heroicons-lock-closed"
+      color="warning"
+      variant="soft"
+      title="Read-only view"
+      description="Only project owners can modify parameters, since they define the shape of every observation in the project. You can review them here, but not change them."
+      class="mb-6"
+    />
     <div>
       <ProjectParametersWidget
         v-if="project"
@@ -25,7 +34,7 @@ const { ensureUserFetched, refreshUser } = await useAuth();
 await ensureUserFetched();
 const { params } = useRoute();
 const { isElectron } = useDevice();
-const { project } = await useProjects(params);
+const { project, isOwner } = await useProjects(params);
 const toast = useToast();
 
 if (!project.value) {
