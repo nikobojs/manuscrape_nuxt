@@ -4,6 +4,7 @@ import {
   serializeChoices,
 } from "#shared/utils/observationFields";
 import { PatchProjectFieldSchema } from "#shared/schemas/PatchProjectField";
+import { db } from "~~/server/utils/drizzle";
 
 export default safeResponseHandler(async (event) => {
   // ensure auth and access is ok
@@ -47,16 +48,6 @@ export default safeResponseHandler(async (event) => {
     throw err;
   }
 
-  // if modifying label/name of parameter, update all observations
-  if (patch.label && patch.label !== field.label) {
-    console.log(
-      "renaming of field detected, will rename data values in related observations",
-    );
-    await renameFieldLabelInObservations(field.label, patch.label, projectId);
-  } else {
-    console.log("Renaming of field not detected", { patch, field });
-  }
-
   // filter in patch by value if null or undefined
   const cleanedPatch = Object.entries(patch).reduce(
     (result, entry) => {
@@ -87,8 +78,18 @@ export default safeResponseHandler(async (event) => {
     throw err;
   }
 
-  // execute the update statement
-  await updateProjectField(field.id, cleanedPatch);
+  // update the field and rename its data in observations atomically
+  await db.transaction(async (tx) => {
+    if (patch.label && patch.label !== field.label) {
+      await renameFieldLabelInObservations(
+        field.label,
+        patch.label,
+        projectId,
+        tx,
+      );
+    }
+    await updateProjectField(field.id, cleanedPatch, tx);
+  });
 
   // fetch updated fields
   const fields = await getProjectFieldsByProjectIds([projectId], {

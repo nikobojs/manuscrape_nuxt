@@ -4,6 +4,9 @@ import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 import { captureException } from "@sentry/node";
 import { db } from "./drizzle";
 
+// a db transaction, used so utils can run inside or outside one
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 type ProjectFieldSelect = Partial<
   Record<keyof typeof projectFields.$inferSelect, boolean>
 >;
@@ -198,8 +201,12 @@ export function deleteProjectField(fieldId: number) {
   return db.delete(projectFields).where(eq(projectFields.id, fieldId));
 }
 
-export function updateProjectField(fieldId: number, patch: ProjectFieldPatch) {
-  return db
+export function updateProjectField(
+  fieldId: number,
+  patch: ProjectFieldPatch,
+  tx: Tx = db as unknown as Tx,
+) {
+  return tx
     .update(projectFields)
     .set(patch)
     .where(eq(projectFields.id, fieldId));
@@ -209,9 +216,10 @@ export async function renameFieldLabelInObservations(
   oldFieldName: string,
   newFieldName: string,
   projectId: number,
+  tx: Tx = db as unknown as Tx,
 ) {
   // get all observations in project (id, data)
-  const projectObs = await db.query.observations.findMany({
+  const projectObs = await tx.query.observations.findMany({
     where: eq(observations.projectId, projectId),
     columns: {
       id: true,
@@ -236,21 +244,13 @@ export async function renameFieldLabelInObservations(
     };
   });
 
-  console.log({
-    projectObs: JSON.stringify(projectObs),
-    patchObs: JSON.stringify(patchObs),
-    patchedObs: JSON.stringify(patchedObs),
-  });
-
   // do the db update if any patch objects
-  await db.transaction(async (tx) => {
-    for (let i = 0; i < patchedObs.length; i++) {
-      await tx
-        .update(observations)
-        .set({ data: patchedObs[i]!.data })
-        .where(eq(observations.id, patchedObs[i]!.id));
-    }
-  });
+  for (let i = 0; i < patchedObs.length; i++) {
+    await tx
+      .update(observations)
+      .set({ data: patchedObs[i]!.data })
+      .where(eq(observations.id, patchedObs[i]!.id));
+  }
   console.log(
     `successfully renamed parameter from ${oldFieldName} to ${newFieldName}, affecting ${patchedObs.length} observations`,
   );

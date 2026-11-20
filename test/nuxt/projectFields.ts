@@ -133,6 +133,49 @@ describe("Project fields", () => {
     });
   });
 
+  test("renaming a field renames its data in observations", async () => {
+    await withTempProject(async (user, project, observations, token) => {
+      const projectId = project.id;
+
+      // find the "Text field" parameter, which test observations have data for
+      const field = project.fields.find((f) => f.label === "Text field");
+      expect(field).toBeTruthy();
+
+      // all observations have data for the field before renaming
+      for (const obs of observations) {
+        expect(obs.data).toHaveProperty("Text field");
+      }
+
+      // rename the field
+      const newLabel = "Renamed text field";
+      const res = await patchField(token, projectId, field!.id, {
+        label: newLabel,
+      });
+      expect(res.status).toBe(204);
+
+      // refetch observations and ensure the data key was renamed
+      const obsRes = await getObservations(token, projectId);
+      expect(obsRes.status).toBe(200);
+      const obsJson = await obsRes.json();
+      expect(obsJson.observations.length).toBe(observations.length);
+
+      // map old values to observation ids, to verify values are preserved
+      const oldValueById = new Map(
+        observations.map((o) => [o.id, o.data?.["Text field"]]),
+      );
+
+      for (const obs of obsJson.observations) {
+        // the old key must be gone and the value moved to the new key
+        expect(obs.data).not.toHaveProperty("Text field");
+        expect(obs.data).toHaveProperty(newLabel);
+        // unrelated data must be untouched
+        expect(obs.data).toHaveProperty("Date time field");
+        // the renamed value must be the observation's original value
+        expect(obs.data[newLabel]).toBe(oldValueById.get(obs.id));
+      }
+    });
+  });
+
   test("collaborator gets 401 when patching field label", async () => {
     const collaboratorEmail = "collaborator-patch-field-0@codecollective.dk";
 
