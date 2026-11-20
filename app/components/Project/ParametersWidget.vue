@@ -138,10 +138,7 @@
   <UModal
     v-if="isOwner"
     v-model:open="openAddParamModal"
-    :ui="{
-      content:
-        'relative text-left rtl:text-right overflow-visible w-full flex flex-col sm:max-w-xs max-w-xs',
-    }"
+    :ui="{ content: 'sm:max-w-xs max-w-xs' }"
   >
     <template #content>
       <UCard class="overflow-visible">
