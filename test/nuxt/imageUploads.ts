@@ -5,6 +5,7 @@ import {
   uploadImageToObservation,
   getObservationImage,
   validTestImage0,
+  validTestImage1,
   invalidImages,
   patchObservation,
   withTempUser,
@@ -308,6 +309,100 @@ describe("Image uploads", async () => {
         imgSingleField.id,
       );
       expect(imgRes1.status).toBe(200);
+    });
+  });
+
+  test("editing a specific image on an IMAGE_MULTIPLE parameter replaces it", async () => {
+    await withTempImageProject(async (_user, project, _observations, token) => {
+      // create observation, get the id
+      const obsRes = await createObservation(token, project.id);
+      expect(obsRes.status).toBe(201);
+      const obsJson = await obsRes.json();
+      const obsId = obsJson?.id;
+      expect(typeof obsId).toBe("number");
+
+      // find the id of the IMAGE_MULTIPLE parameter
+      const imgMultipleField = project.fields.find(
+        (f) => f.type === "IMAGE_MULTIPLE",
+      )!;
+
+      // upload two images
+      const imgUploadRes0 = await uploadImageToObservation(
+        token,
+        project.id,
+        obsId,
+        imgMultipleField.id,
+        new File([validTestImage0], "test.png", { type: "image/png" }),
+      );
+      const imgId0 = (await imgUploadRes0.json())?.imageUploadId as number;
+      expect(imgUploadRes0.status).toBe(200);
+
+      const imgUploadRes1 = await uploadImageToObservation(
+        token,
+        project.id,
+        obsId,
+        imgMultipleField.id,
+        new File([validTestImage1], "test.png", { type: "image/png" }),
+      );
+      const imgId1 = (await imgUploadRes1.json())?.imageUploadId as number;
+      expect(imgUploadRes1.status).toBe(200);
+
+      // replace the first image by editing it (imageUploadId in query)
+      const replaceRes = await uploadImageToObservation(
+        token,
+        project.id,
+        obsId,
+        imgMultipleField.id,
+        new File([validTestImage0], "test.png", { type: "image/png" }),
+        imgId0,
+      );
+      const replaceJson = await replaceRes.json();
+      const newImgId = replaceJson?.imageUploadId as number;
+      expect(replaceRes.status).toBe(200);
+      expect(newImgId).not.toBe(imgId0);
+
+      // the replaced image is gone, the untouched one and the new one remain
+      // NOTE: the image endpoint answers 400 (not 404) when the image is missing
+      const oldRes = await getObservationImage(
+        token,
+        project.id,
+        obsId,
+        imgId0,
+        imgMultipleField.id,
+      );
+      expect(oldRes.status).not.toBe(200);
+
+      const untouchedRes = await getObservationImage(
+        token,
+        project.id,
+        obsId,
+        imgId1,
+        imgMultipleField.id,
+      );
+      expect(untouchedRes.status).toBe(200);
+
+      const newRes = await getObservationImage(
+        token,
+        project.id,
+        obsId,
+        newImgId,
+        imgMultipleField.id,
+      );
+      expect(newRes.status).toBe(200);
+
+      // replacing an image from another field is not allowed
+      const imgSingleField = project.fields.find(
+        (f) => f.type === "IMAGE_SINGLE",
+      )!;
+      const wrongFieldRes = await uploadImageToObservation(
+        token,
+        project.id,
+        obsId,
+        imgSingleField.id,
+        new File([validTestImage0], "test.png", { type: "image/png" }),
+        imgId1,
+      );
+      expect(wrongFieldRes.status).toBe(404);
     });
   });
 

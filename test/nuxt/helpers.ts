@@ -352,11 +352,13 @@ export async function uploadImageToObservation(
   obsId: number,
   fieldId: number,
   imageFile: Blob | File,
+  imageUploadId?: number,
 ): Promise<Response> {
   const formData = new FormData();
   formData.append("file", imageFile);
+  const replaceParam = imageUploadId ? `&imageUploadId=${imageUploadId}` : "";
   const res = await _fetch(
-    `${testBaseUrl}/api/projects/${projectId}/observations/${obsId}/image-uploads?projectFieldId=${fieldId}`,
+    `${testBaseUrl}/api/projects/${projectId}/observations/${obsId}/image-uploads?projectFieldId=${fieldId}${replaceParam}`,
     {
       method: "PUT",
       body: formData,

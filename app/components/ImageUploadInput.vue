@@ -20,7 +20,7 @@
             variant="soft"
             size="xs"
             color="neutral"
-            :to="`/projects/${project.id}/observations/${observation.id}/edit-image?projectFieldId=${image.projectFieldId}`"
+            :to="`/projects/${project.id}/observations/${observation.id}/edit-image?projectFieldId=${image.projectFieldId}&imageUploadId=${image.id}`"
           >
             <UIcon name="mdi:pencil" />
           </UButton>

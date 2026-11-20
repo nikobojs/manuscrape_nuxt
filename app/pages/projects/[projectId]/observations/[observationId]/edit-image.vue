@@ -12,6 +12,7 @@
       :project="project"
       :observation="observation"
       :project-field-id="projectFieldId"
+      :image-upload-id="imageUploadId"
     />
   </UContainer>
 </template>
@@ -41,6 +42,13 @@ if (
 
 const projectFieldId = ref<number>(parseInt(_projectFieldId));
 const disableBackbutton = ref(false);
+
+// optional: the specific image being edited (needed for IMAGE_MULTIPLE fields)
+const _imageUploadId = route.query?.imageUploadId;
+const imageUploadId =
+  typeof _imageUploadId === "string" && !isNaN(parseInt(_imageUploadId))
+    ? parseInt(_imageUploadId)
+    : undefined;
 
 if (typeof project.value?.id !== "number") {
   throw new Error("Project is not defined");

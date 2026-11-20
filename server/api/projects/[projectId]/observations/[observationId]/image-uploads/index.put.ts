@@ -13,6 +13,9 @@ export default safeResponseHandler(async (event) => {
   const _query = getQuery(event);
   const query = await ImageUploadQuerySchema.validate(_query);
   const projectFieldId = parseIntParam(query.projectFieldId);
+  const imageUploadId = query.imageUploadId
+    ? parseIntParam(query.imageUploadId)
+    : undefined;
   const observationId = parseIntParam(params?.observationId);
 
   const observation = await getObservationById(observationId, {
@@ -62,6 +65,36 @@ export default safeResponseHandler(async (event) => {
       filePath: true,
     },
   );
+
+  // fetch the specific image being replaced (when editing an existing one)
+  let replaceImage:
+    | {
+        id: number;
+        isS3: boolean;
+        filePath: string;
+        observationId: number;
+        projectFieldId: number;
+      }
+    | undefined;
+  if (imageUploadId) {
+    replaceImage = await getImageUploadById(imageUploadId, {
+      id: true,
+      isS3: true,
+      filePath: true,
+      observationId: true,
+      projectFieldId: true,
+    });
+    if (
+      !replaceImage ||
+      replaceImage.observationId !== observation.id ||
+      replaceImage.projectFieldId !== projectFieldId
+    ) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Image was not found on this observation",
+      });
+    }
+  }
 
   // define our fileupload helper config
   const form = formidable({
@@ -150,13 +183,16 @@ export default safeResponseHandler(async (event) => {
   const newS3Path = `observations/${observationId}/${randomStr}${extension}`;
   await uploadFile(newS3Path, buffer, canUseS3());
 
-  // remove existing image from database and s3 unless project field type is multiple images
-  if (existingImage && projectField.type !== "IMAGE_MULTIPLE") {
+  // replace the given image, or the existing single image on this parameter
+  const imageToDelete =
+    replaceImage ??
+    (projectField.type !== "IMAGE_MULTIPLE" ? existingImage : undefined);
+  if (imageToDelete) {
     // delete existing ImageUpload row
-    await deleteImageUpload(existingImage.id);
+    await deleteImageUpload(imageToDelete.id);
     try {
       // remove existing images on this observation in s3
-      await deleteFiles(existingImage.filePath, existingImage.isS3);
+      await deleteFiles(imageToDelete.filePath, imageToDelete.isS3);
     } catch (e: any) {
       // if unable to delete file, handle errors silently
       captureException(e);

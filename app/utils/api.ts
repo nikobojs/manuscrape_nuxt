@@ -71,6 +71,7 @@ export async function upsertObservationImage(
   observationId: number,
   projectFieldId: number,
   file: File,
+  imageUploadId?: number,
 ): Promise<{ imageUploadId: number; success: boolean }> {
   const form = new FormData();
   form.append("file", file);
@@ -80,6 +81,8 @@ export async function upsertObservationImage(
       {
         query: {
           projectFieldId,
+          // when given, the server replaces this image instead of adding a new one
+          ...(imageUploadId ? { imageUploadId } : {}),
         },
         method: "PUT",
         body: form,

@@ -395,17 +395,28 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  imageUploadId: {
+    type: Number,
+    required: false,
+  },
 });
 
 // For pre-upload mode, observation might not have an image yet
 const isPreUploadMode = computed(() => !!props.initialFile);
+// prefer the given image id (needed on IMAGE_MULTIPLE fields), else first image on the field
 const imageUpload = computed(() =>
-  props.observation.images.find(
-    (i) => i.projectFieldId === props.projectFieldId,
-  ),
+  props.imageUploadId
+    ? props.observation.images.find((i) => i.id === props.imageUploadId)
+    : props.observation.images.find(
+        (i) => i.projectFieldId === props.projectFieldId,
+      ),
 );
 
 const canvas = ref<HTMLCanvasElement>();
+// tracks the image being edited, so repeated saves replace the latest version
+const currentImageUploadId = ref<number | undefined>(
+  props.imageUploadId ?? imageUpload.value?.id,
+);
 const canvasContainer = ref<HTMLDivElement>();
 const textInput = ref<HTMLInputElement>();
 const frontColor = ref<string>("#ffffff");
@@ -466,6 +477,7 @@ function save() {
         props.observation.id,
         props.projectFieldId,
         file,
+        currentImageUploadId.value,
       );
 
       // For pre-upload mode, call onSubmit callback
@@ -473,6 +485,7 @@ function save() {
         await props.onSubmit(true);
       } else {
         // TODO: wait until redownload+rerender of image somehow
+        currentImageUploadId.value = res.imageUploadId;
         reloadImage(res.imageUploadId);
         toast.add({
           title: "Image was saved",
