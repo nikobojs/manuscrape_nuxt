@@ -7,12 +7,6 @@ export default defineAppConfig({
           "[@media(pointer:coarse)]:hidden px-2 py-1 h-auto text-xs font-normal truncate relative",
       },
     },
-    modal: {
-      slots: {
-        content:
-          "relative text-left rtl:text-right overflow-visible w-full flex flex-col",
-      },
-    },
     // v3 inputs are inline-flex, keep the old full-width behavior
     input: { slots: { base: "w-full" } },
     textarea: { slots: { root: "w-full" } },

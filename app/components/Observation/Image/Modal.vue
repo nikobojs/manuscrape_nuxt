@@ -2,9 +2,6 @@
   <UModal
     :open="open"
     @update:open="(value) => { if (!value) emit('close') }"
-    :ui="{
-      content: 'relative text-left rtl:text-right overflow-hidden flex flex-col',
-    }"
   >
     <template #content>
     <div class="flex justify-end">
