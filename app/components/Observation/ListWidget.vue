@@ -244,14 +244,14 @@ async function beginDeleteObservation(row: any) {
   } else {
     // TODO: create nice confirm box
     const res = confirm(
-      `Are you sure you want to delete observation #${row.original.id}?`,
+      `Are you sure you want to delete observation #${row.id}?`,
     );
     if (!res) {
       return;
     }
 
     try {
-      await deleteObservation(props.project.id, row.original.id);
+      await deleteObservation(props.project.id, row.id);
 
       toast.add({
         title: "Observation was deleted",
