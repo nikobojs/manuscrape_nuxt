@@ -3,7 +3,7 @@
     <ClientOnly>
       <UContainer
         class="text-xs text-gray-500"
-        :class="isElectron ? 'pt-2 pb-4' : 'pb-8 pt-12'"
+        :class="isElectron ? 'pt-2 pb-3' : 'pb-4.5 pt-7.5'"
       >
         {{ versionsString }}
       </UContainer>
@@ -12,15 +12,15 @@
 </template>
 
 <script setup lang="ts">
-  const { version } = useRuntimeConfig().public;
-  const { electronVersion, isElectron } = await useDevice();
+const { version } = useRuntimeConfig().public;
+const { electronVersion, isElectron } = await useDevice();
 
-  const versionsString = computed<string>(() => {
-    const v = electronVersion.value;
-    const versions = [['manuscrape_nuxt', version]];
-    if (v) {
-      versions.push(['manuscrape_electron', v]);
-    }
-    return versions.map(([name, version]) => `${name} v${version}`).join(' | ');
-  });
+const versionsString = computed<string>(() => {
+  const v = electronVersion.value;
+  const versions = [["manuscrape_nuxt", version]];
+  if (v) {
+    versions.push(["manuscrape_electron", v]);
+  }
+  return versions.map(([name, version]) => `${name} v${version}`).join(" | ");
+});
 </script>
