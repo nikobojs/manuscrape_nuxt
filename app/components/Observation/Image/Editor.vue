@@ -414,8 +414,10 @@ const imageUpload = computed(() =>
 
 const canvas = ref<HTMLCanvasElement>();
 // tracks the image being edited, so repeated saves replace the latest version
+// NOTE: a brand-new image (pre-upload mode) must not inherit an existing image id
 const currentImageUploadId = ref<number | undefined>(
-  props.imageUploadId ?? imageUpload.value?.id,
+  props.imageUploadId ??
+    (isPreUploadMode.value ? undefined : imageUpload.value?.id),
 );
 const canvasContainer = ref<HTMLDivElement>();
 const textInput = ref<HTMLInputElement>();
