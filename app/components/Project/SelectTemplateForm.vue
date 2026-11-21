@@ -217,7 +217,7 @@
       </div>
     </div>
 
-    <div class="flex gap-x-3 justify-center mt-12 mb-9">
+    <div class="flex gap-x-3 justify-center mt-8">
       <UButton
         variant="outline"
         color="info"

@@ -1,141 +1,127 @@
 <template>
-  <div
-    class="flex flex-col xl:flex-row gap-x-6 gap-y-6 bg-transparent justify-around px-0 relative"
-    :class="isElectron ? 'pt-9! pb-6' : 'pt-48! pb-12 xl:pb-24 2xl:pb-48'"
-  >
-    <Transition name="fade">
-      <div
-        v-show="!templateSelected"
-        class="lg:absolute open:z-10 lg:left-[50%] lg:-translate-x-1/2 w-full"
-        :class="{
-          'lg:top-[50%] lg:-translate-y-1/2': translateY,
-          'lg:top-0': !translateY,
-        }"
-      >
-        <ProjectSelectTemplateForm
-          :cancelable="cancelable"
-          @close="
-            (ok) => {
-              if (ok) {
-                templateSelected = true;
-              } else {
-                props.onClose();
-              }
+  <div class="flex flex-col xl:flex-row gap-x-6 gap-y-6 justify-around px-0">
+    <div v-show="!templateSelected">
+      <ProjectSelectTemplateForm
+        :cancelable="cancelable"
+        @close="
+          (ok) => {
+            if (ok) {
+              templateSelected = true;
+            } else {
+              props.onClose();
             }
-          "
-          @select:parameters="
-            (params) => {
-              suggestedFields = params;
-            }
-          "
-        />
+          }
+        "
+        @select:parameters="
+          (params) => {
+            suggestedFields = params;
+          }
+        "
+      />
+    </div>
+    <div class="w-full" v-show="templateSelected">
+      <div class="mb-3 flex justify-between">
+        <div>
+          <UButton
+            variant="ghost"
+            color="neutral"
+            class="flex items-center text-slate-500"
+            @click="() => (templateSelected = false)"
+          >
+            <UIcon class="text-lg" name="mdi:arrow-left-top" />
+            <span>Show project templates</span>
+          </UButton>
+        </div>
       </div>
-    </Transition>
-    <Transition name="fade">
-      <div class="w-full" v-show="templateSelected">
-        <div class="mb-3 flex justify-between">
-          <div>
-            <UButton
-              variant="ghost"
-              color="neutral"
-              class="flex items-center text-slate-500"
-              @click="() => (templateSelected = false)"
+
+      <div class="w-full flex flex-col xl:flex-row gap-6">
+        <form @submit.prevent="handleSubmitProject">
+          <!-- project form left UCard -->
+          <UCard class="overflow-hidden w-80 shadow-xl">
+            <template #header>
+              <CardHeader>Create project</CardHeader>
+            </template>
+
+            <div
+              class="flex gap-3 flex-col"
+              @submit.prevent="handleSubmitProject"
             >
-              <UIcon class="text-lg" name="mdi:arrow-left-top" />
-              <span>Show project templates</span>
-            </UButton>
-          </div>
-        </div>
+              <!-- project name -->
+              <label for="name-input"> Project name: </label>
+              <UInput
+                v-model="projectName"
+                placeholder="Enter project name"
+                id="name-input"
+                required
+              />
 
-        <div class="w-full flex flex-col xl:flex-row gap-6">
-          <form @submit.prevent="handleSubmitProject">
-            <!-- project form left UCard -->
-            <UCard class="overflow-hidden w-80 shadow-xl">
-              <template #header>
-                <CardHeader>Create project</CardHeader>
-              </template>
+              <!-- project draft parameters form -->
+              <p class="mt-5 text-sm text-gray-500">
+                Configure the parameters you want to fill each time you (or a
+                collaborator) adds an observation.
+              </p>
+              <label class="flex gap-x-0.5" for="field-label-input">
+                <p>Parameters</p>
+                <UPopover>
+                  <template #content>
+                    <UCard
+                      :ui="{
+                        body: 'px-2 py-2.5 sm:p-2',
+                      }"
+                    >
+                      <p class="max-w-65">
+                        A parameter consists of a label and a type. This can be
+                        a number, multiple choice, checkbox, etc.
+                      </p>
+                    </UCard>
+                  </template>
+                  <UIcon name="i-heroicons-information-circle" />
+                </UPopover>
+              </label>
 
-              <div
-                class="flex gap-3 flex-col"
-                @submit.prevent="handleSubmitProject"
-              >
-                <!-- project name -->
-                <label for="name-input"> Project name: </label>
-                <UInput
-                  v-model="projectName"
-                  placeholder="Enter project name"
-                  id="name-input"
-                  required
-                />
-
-                <!-- project draft parameters form -->
-                <p class="mt-5 text-sm text-gray-500">
-                  Configure the parameters you want to fill each time you (or a
-                  collaborator) adds an observation.
-                </p>
-                <label class="flex gap-x-0.5" for="field-label-input">
-                  <p>Parameters</p>
-                  <UPopover>
-                    <template #content>
-                      <UCard
-                        :ui="{
-                          body: 'px-2 py-2.5 sm:p-2',
-                        }"
-                      >
-                        <p class="max-w-65">
-                          A parameter consists of a label and a type. This can
-                          be a number, multiple choice, checkbox, etc.
-                        </p>
-                      </UCard>
-                    </template>
-                    <UIcon name="i-heroicons-information-circle" />
-                  </UPopover>
-                </label>
-
-                <div class="flex flex-col gap-3">
-                  <ProjectFieldForm v-model="addedFields" />
-                </div>
+              <div class="flex flex-col gap-3">
+                <ProjectFieldForm v-model="addedFields" />
               </div>
-              <template #footer>
-                <div class="flex gap-x-3 justify-start">
-                  <UButton
-                    type="submit"
-                    :loading="loading"
-                    :disabled="!newProjectIsValid"
-                  >
-                    Create project
-                  </UButton>
-                  <UButton
-                    v-if="cancelable"
-                    @click="onClose"
-                    color="neutral"
-                    variant="outline"
-                  >
-                    Cancel
-                  </UButton>
-                </div>
-              </template>
-            </UCard>
-          </form>
+            </div>
+            <template #footer>
+              <div class="flex gap-x-3 justify-start">
+                <UButton
+                  type="submit"
+                  :loading="loading"
+                  :disabled="!newProjectIsValid"
+                >
+                  Create project
+                </UButton>
+                <UButton
+                  v-if="cancelable"
+                  @click="onClose"
+                  color="neutral"
+                  variant="outline"
+                >
+                  Cancel
+                </UButton>
+              </div>
+            </template>
+          </UCard>
+        </form>
 
-          <!-- project fields right UCard -->
-          <div class="w-full">
-            <ProjectFieldList
-              :fields="addedFields"
-              :suggestedFields="suggestedFields"
-              @update:fields="
-                (fields) => {
-                  const newFields = enforceCorrectIndexes([
-                    ...fields.map((f) => toRaw(f)),
-                  ]);
-                  addedFields = newFields;
-                }
-              "
-            />
-          </div>
+        <!-- project fields right UCard -->
+        <div class="w-full">
+          <ProjectFieldList
+            :fields="addedFields"
+            :suggestedFields="suggestedFields"
+            @update:fields="
+              (fields) => {
+                const newFields = enforceCorrectIndexes([
+                  ...fields.map((f) => toRaw(f)),
+                ]);
+                addedFields = newFields;
+              }
+            "
+          />
         </div>
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
 
@@ -144,11 +130,6 @@ import { enforceCorrectIndexes } from "#shared/utils/observationFields";
 const props = defineProps({
   onClose: requireFunctionProp<() => void>(),
   cancelable: {
-    type: Boolean,
-    required: false,
-    default: () => false,
-  },
-  translateY: {
     type: Boolean,
     required: false,
     default: () => false,
@@ -215,15 +196,3 @@ async function handleSubmitProject() {
   }
 }
 </script>
-
-<style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
