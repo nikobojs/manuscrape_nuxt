@@ -16,7 +16,7 @@
         </div>
       </template>
       <div
-        class="text-[#75809f] min-h-[40px] -mt-6 flex items-center text-sm italic"
+        class="text-[#75809f] min-h-10 -mt-6 flex items-center text-sm italic"
       >
         Click tags to add or remove
       </div>
@@ -25,8 +25,8 @@
           v-for="tag in sortedTags"
           :key="tag.id"
           :color="isTagSelected(tag.id) ? 'info' : 'neutral'"
-          variant="solid"
-          class="text-xs px-2 py-1 cursor-pointer"
+          :variant="isTagSelected(tag.id) ? 'solid' : 'soft'"
+          class="text-xs px-2 py-1 cursor-pointer transition-all"
           @click="toggleTag(tag.id)"
         >
           #{{ tag.name }}
@@ -39,22 +39,22 @@
       :ui="{ content: 'sm:max-w-xs max-w-xs' }"
     >
       <template #content>
-      <UCard>
-        <template #header>
-          <div>Create new tag</div>
-        </template>
+        <UCard>
+          <template #header>
+            <div>Create new tag</div>
+          </template>
 
-        <div class="flex flex-col gap-3">
-          <UInput v-model="newTagName" placeholder="Enter tag name" />
-          <span class="text-red-500 text-xs" v-if="newTagError">{{
-            newTagError
-          }}</span>
-        </div>
+          <div class="flex flex-col gap-3">
+            <UInput v-model="newTagName" placeholder="Enter tag name" />
+            <span class="text-red-500 text-xs" v-if="newTagError">
+              {{ newTagError }}
+            </span>
+          </div>
 
-        <template #footer>
-          <UButton @click="handleCreateTag" color="info">Create</UButton>
-        </template>
-      </UCard>
+          <template #footer>
+            <UButton @click="handleCreateTag" color="info">Create</UButton>
+          </template>
+        </UCard>
       </template>
     </UModal>
   </div>
