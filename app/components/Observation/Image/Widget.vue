@@ -11,7 +11,7 @@
             >
               <div class="">
                 <UButton
-                  v-if="inputsWithImage.length > 0"
+                  v-if="inputsWithImage.length > 0 && observation.isDraft"
                   @click="takeAnotherScreenshot"
                   color="neutral"
                   size="sm"
@@ -69,29 +69,29 @@
     <!-- Modal for pre-upload editing (web only) -->
     <UModal v-model:open="showEditorModal" fullscreen>
       <template #content>
-      <UCard class="w-full">
-        <template #header>
-          <div class="flex justify-between items-center">
-            <CardHeader> Edit image before uploading </CardHeader>
-            <UButton
-              icon="i-heroicons-x-mark"
-              color="neutral"
-              variant="ghost"
-              @click="closeModal"
+        <UCard class="w-full">
+          <template #header>
+            <div class="flex justify-between items-center">
+              <CardHeader> Edit image before uploading </CardHeader>
+              <UButton
+                icon="i-heroicons-x-mark"
+                color="neutral"
+                variant="ghost"
+                @click="closeModal"
+              />
+            </div>
+          </template>
+          <UContainer>
+            <ObservationImageEditor
+              v-if="pendingFile && project && activeProjectFieldId"
+              :project="project"
+              :observation="observation"
+              :initial-file="pendingFile"
+              :project-field-id="activeProjectFieldId"
+              :on-submit="handleModalUploadSuccess"
             />
-          </div>
-        </template>
-        <UContainer>
-          <ObservationImageEditor
-            v-if="pendingFile && project && activeProjectFieldId"
-            :project="project"
-            :observation="observation"
-            :initial-file="pendingFile"
-            :project-field-id="activeProjectFieldId"
-            :on-submit="handleModalUploadSuccess"
-          />
-        </UContainer>
-      </UCard>
+          </UContainer>
+        </UCard>
       </template>
     </UModal>
   </div>
