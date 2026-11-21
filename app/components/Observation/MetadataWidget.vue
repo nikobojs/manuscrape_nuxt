@@ -103,6 +103,12 @@
                       "
                       :disabled="!!$props.disabled"
                     />
+                    <div
+                      @click="() => (state[field.label] = [])"
+                      class="mt-1.5 text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                    >
+                      reset
+                    </div>
                   </div>
                   <div
                     v-else-if="field.type === 'AUTOCOMPLETE'"
