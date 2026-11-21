@@ -12,7 +12,7 @@
           <template #header>
             <CardHeader>
               <div class="flex gap-x-1.5 items-center">
-                <UIcon class="text-xl" name="mdi:lightbulb-outline" />
+                <UIcon class="text-xl -my-1" name="mdi:lightbulb-outline" />
                 <p>Suggested parameters</p>
               </div>
             </CardHeader>

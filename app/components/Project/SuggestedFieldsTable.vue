@@ -6,13 +6,13 @@
       :ui="{
         thead: 'hidden',
         th: 'px-3 py-2.5',
-        td: 'px-3 py-2.5 text-xs',
+        td: 'px-3 py-2.5 text-sm',
         tbody: 'divide-y divide-gray-700',
       }"
     >
       <template #label-cell="{ row }">
         <!-- Label column -->
-        <div class="flex gap-x-2 items-center min-w-[257px] relative">
+        <div class="flex gap-x-2 items-center min-w-64.25 relative">
           <div class="text-lg absolute -left-3 -translate-x-full">
             <UIcon
               class="text-lg"
@@ -24,7 +24,7 @@
             <UInput
               v-model="row.original.label"
               class="w-full"
-              size="xs"
+              size="sm"
               placeholder="Insert label"
             />
             <div class="flex items-center ml-0.5">
@@ -54,14 +54,17 @@
       </template>
       <template #field-cell="{ row }">
         <div class="flex gap-2">
-          <UBadge size="xs" color="info" variant="outline">
+          <UBadge size="sm" color="info" variant="outline">
             {{ getFieldLabel(row.original.type) }}
           </UBadge>
         </div>
       </template>
       <template #last-cell="{ row }">
         <div class="flex items-center justify-end relative">
-          <UDropdownMenu :items="getFieldMenu(row.original)" class="right-0 relative">
+          <UDropdownMenu
+            :items="getFieldMenu(row.original)"
+            class="right-0 relative"
+          >
             <UButton
               icon="i-mdi-dots-vertical"
               variant="link"
