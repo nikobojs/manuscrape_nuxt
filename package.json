@@ -40,7 +40,7 @@
     "nuxt-umami": "3.2.1",
     "pm2": "^7.1.2",
     "sass": "^1.85.1",
-    "typescript": "^5.8.2",
+    "typescript": "^6.0.3",
     "vuedraggable": "^4.1.0"
   },
   "dependencies": {
@@ -68,7 +68,7 @@
     "stream-buffers": "^3.0.3",
     "tailwindcss": "^4.3.5",
     "vitest": "^5.1.1",
-    "vue-tsc": "^3.2.2",
+    "vue-tsc": "^3.3.14",
     "yup": "^1.4.0"
   }
 }
