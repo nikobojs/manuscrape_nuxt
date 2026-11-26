@@ -7,7 +7,7 @@
       </div>
     </label>
     <UTable
-      v-show="observation.fileUploads.length > 0"
+      v-if="observation.fileUploads.length > 0"
       class="mt-6"
       :data="observation.fileUploads"
       :columns="fileUploadColumns"
