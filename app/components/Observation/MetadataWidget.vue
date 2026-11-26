@@ -171,48 +171,74 @@
                   </div>
                   <div
                     v-else-if="field.type === 'MULTIPLE_CHOICE_ADD'"
-                    class="items-end flex-col flex"
+                    class="flex-col flex"
                   >
-                    <USelectMenu
-                      :name="field.label"
-                      class="min-w-50"
-                      :items="
-                        getMultipleChoiceAddOptions({
+                    <div class="w-full flex flex-col gap-y-3 mb-3">
+                      <label
+                        v-for="it in getMultipleChoiceAddOptions({
                           choices: field.choices,
                           label: field.label,
-                        })
-                      "
-                      v-model="state[field.label]"
-                      :placeholder="
-                        field.required
-                          ? 'Select options or type freely'
-                          : 'Nothing picked'
-                      "
-                      multiple
-                      creatable
-                      by="label"
-                      :disabled="!!$props.disabled"
-                    >
-                      <template #create-item-label="{ item }">
-                        <span class="shrink-0 text-gray-400 text-xs"
-                          >Custom:</span
-                        >
-                        <span>
-                          {{ item }}
-                        </span>
-                      </template>
-                      <template #default>
-                        <span v-if="state[field.label].length" class="truncate"
-                          >{{ state[field.label].length }} selected</span
-                        >
-                        <span v-else>Select multiple options</span>
-                      </template>
-                    </USelectMenu>
+                        })"
+                        :key="it"
+                        class="flex items-start gap-3"
+                      >
+                        <UCheckbox
+                          :model-value="isChoiceSelected(field.label, it)"
+                          @update:model-value="
+                            (checked: boolean | 'indeterminate') =>
+                              toggleChoice(field.label, it, checked === true)
+                          "
+                          :disabled="!!$props.disabled"
+                        />
+                        <p>{{ it }}</p>
+                      </label>
+                    </div>
+
                     <div
-                      @click="() => (state[field.label] = [])"
-                      class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                      v-if="newOptionField === field.label"
+                      class="flex gap-x-2 mb-2"
                     >
-                      reset
+                      <UInput
+                        v-model="newOptionValue"
+                        placeholder="Enter new option"
+                        size="xs"
+                        :disabled="!!$props.disabled"
+                        @keyup.enter="confirmNewOption(field)"
+                      />
+                      <UButton
+                        size="xs"
+                        variant="ghost"
+                        color="info"
+                        :disabled="!!$props.disabled || !newOptionValue.trim()"
+                        @click="confirmNewOption(field)"
+                      >
+                        Save
+                      </UButton>
+                      <UButton
+                        size="xs"
+                        variant="ghost"
+                        color="neutral"
+                        @click="cancelNewOption"
+                        class="text-gray-400"
+                      >
+                        Cancel
+                      </UButton>
+                    </div>
+
+                    <div class="flex gap-x-1.5">
+                      <div
+                        v-if="!$props.disabled"
+                        @click="() => openNewOptionInput(field.label)"
+                        class="text-primary-400 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                      >
+                        add new
+                      </div>
+                      <div
+                        @click="() => (state[field.label] = [])"
+                        class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
+                      >
+                        deselect all
+                      </div>
                     </div>
                   </div>
                   <UInput
@@ -278,6 +304,12 @@ const sortedFields = computed(() =>
 
 const state = ref({ ...(props.initialState || {}) } as any);
 
+// per-field options created via the "add new" button (MULTIPLE_CHOICE_ADD);
+// they are kept alongside the parameter's own choices for this session
+const addedOptions = ref<Record<string, string[]>>({});
+const newOptionField = ref<string | null>(null);
+const newOptionValue = ref("");
+
 const metadataDone = computed(() => validate(state.value).length === 0);
 
 onMounted(() => {
@@ -320,16 +352,55 @@ function revertDraftChanges() {
 }
 
 function getMultipleChoiceAddOptions(field: {
-  choices: string[] | undefined;
+  choices?: string[];
   label: string;
-}): {
-  label: string;
-}[] {
-  const updatedOptions: string[] = field?.choices || [];
-  const result = updatedOptions
-    .concat(getCustomFieldChoices(field, state))
-    .map((o: string) => ({ label: o }));
-  return result;
+}): string[] {
+  const custom = getCustomFieldChoices(field, state);
+  const added = addedOptions.value[field.label] || [];
+  return [...new Set([...(field.choices || []), ...custom, ...added])];
+}
+
+function getChoiceValues(fieldLabel: string): { label: string }[] {
+  const value = state.value[fieldLabel];
+  return Array.isArray(value) ? value : [];
+}
+
+function isChoiceSelected(fieldLabel: string, choice: string): boolean {
+  return getChoiceValues(fieldLabel).some((v) => v.label === choice);
+}
+
+function toggleChoice(fieldLabel: string, choice: string, checked: boolean) {
+  const current = getChoiceValues(fieldLabel);
+  state.value[fieldLabel] = checked
+    ? [...current, { label: choice }]
+    : current.filter((v) => v.label !== choice);
+}
+
+function openNewOptionInput(fieldLabel: string) {
+  newOptionField.value = fieldLabel;
+  newOptionValue.value = "";
+}
+
+function cancelNewOption() {
+  newOptionField.value = null;
+  newOptionValue.value = "";
+}
+
+function confirmNewOption(field: { choices?: string[]; label: string }) {
+  const choice = newOptionValue.value.trim();
+  if (!choice) return;
+
+  const options = getMultipleChoiceAddOptions(field);
+  if (!options.includes(choice)) {
+    addedOptions.value = {
+      ...addedOptions.value,
+      [field.label]: [...(addedOptions.value[field.label] || []), choice],
+    };
+  }
+  if (!isChoiceSelected(field.label, choice)) {
+    toggleChoice(field.label, choice, true);
+  }
+  cancelNewOption();
 }
 
 async function submit() {

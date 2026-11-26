@@ -132,7 +132,7 @@ export function getEmptyObservationData(project: FullProject) {
 // find custom user-added choices for multiple choice fields.
 // this enables adding custom choices to choices-array, which will make them render on page load
 export function getCustomFieldChoices(
-  field: { label: string; choices: string[] | undefined },
+  field: { label: string; choices?: string[] },
   state: Ref<any>,
 ): string[] {
   if (!field.label) throw new Error("Field does not have a label");
