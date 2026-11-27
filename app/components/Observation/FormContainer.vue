@@ -1,136 +1,153 @@
 <template>
-  <div
-    class="grid md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-min"
-    v-if="observation && observationForm?.inputs"
-  >
-    <div class="row-span-4">
-      <ObservationMetadataWidget
-        :project="project"
-        :has-unsaved="hasUnsavedVersion"
-        :observation="observation"
-        :onSubmit="onMetadataSubmit"
-        :disabled="isLocked"
-        :initialState="initialObservationForm"
-        :inputs="observationForm?.inputs || []"
-        :loading="!observationForm || formLoading"
-        @revert:data="
-          () => {
-            hasUnsavedVersion = false;
-          }
-        "
-        @update:data="onMetadataDraftUpdate"
-      />
-    </div>
-
-    <div class="row-span-3 flex flex-col gap-6">
-      <ObservationImageWidget
-        v-if="projectHasImageParams"
-        :project="project"
-        :observation="observation"
-        :onSubmit="onImagesChange"
-        :inputs="observationForm.imageInputs"
-        :disabled="isLocked"
-      />
-
-      <UCard
-        v-if="!isLocked || (isLocked && observation.fileUploads.length > 0)"
-      >
-        <template #header>
-          <CardHeader>Files</CardHeader>
-        </template>
-        <ObservationFileUploadForm
-          :observation="observation"
-          :project="project"
-          :on-file-uploaded="onFileUploaded"
-          :on-file-deleted="onFileDeleted"
-        />
-      </UCard>
-
-      <UCard v-if="!isLocked">
-        <template #header>
-          <CardHeader>Actions</CardHeader>
-        </template>
-        <div class="flex gap-4 mb-6">
-          <UButton
-            icon="i-heroicons-lock-closed"
-            class=""
-            :disabled="!metadataDone"
-            @click="() => handlePublishObservation()"
-          >
-            Submit and lock
-          </UButton>
-          <UButton
-            v-if="isDeletable"
-            icon="i-mdi-delete-outline"
-            color="error"
-            variant="outline"
-            @click="() => handleDiscardDraft()"
-          >
-            Delete draft
-          </UButton>
+  <!-- NIKOOOOOOOOOOOOOOOOOOOOOOOOOOOOO RESPONSIVENESSSS!!!!! -->
+  <div class="-mx-2">
+    <USplitter
+      :autoSaveId="layoutLocalStorageKey"
+      :items="gridItems"
+      :disabled="isSmallScreen"
+      :orientation="isSmallScreen ? 'vertical' : 'horizontal'"
+      class="px-2"
+      :ui="{
+        root: 'overflow-visible!',
+        panel: 'flex overflow-visible!',
+      }"
+    >
+      <template #left>
+        <div class="w-full lg:pr-2">
+          <ObservationMetadataWidget
+            :project="project"
+            :has-unsaved="hasUnsavedVersion"
+            :observation="observation"
+            :onSubmit="onMetadataSubmit"
+            :disabled="isLocked"
+            :initialState="initialObservationForm"
+            :inputs="observationForm?.inputs || []"
+            :loading="!observationForm || formLoading"
+            @revert:data="
+              () => {
+                hasUnsavedVersion = false;
+              }
+            "
+            @update:data="onMetadataDraftUpdate"
+          />
         </div>
-        <UAlert
-          variant="outline"
-          icon="i-mdi-information-outline"
-          color="info"
-          title="Submit and lock"
-          v-if="!isDelockable"
-          description="When an observation is submitted, it will be locked for future editing.
-          This includes uploading files, image editing and metadata editing."
-          :ui="{ title: 'text-sm font-bold' }"
-        />
-      </UCard>
-
-      <UCard v-else="observation">
-        <template #header>
-          <CardHeader>Details</CardHeader>
-        </template>
-        <div
-          class="grid grid-cols-2 w-full border border-gray-700 rounded-md bg-slate-950 p-3"
-        >
-          <div class="text-gray-400">ID:</div>
-          <div>#{{ observation.id }}</div>
-          <div class="text-gray-400">Created by:</div>
-          <div>{{ observation.user?.email || "Unknown" }}</div>
-          <div class="text-gray-400">Draft created at:</div>
-          <div>{{ prettyDate(observation.createdAt, true) }}</div>
-          <div class="text-gray-400">Last updated at:</div>
-          <div>{{ prettyDate(observation.updatedAt, true) }}</div>
-        </div>
-        <div class="flex gap-x-4">
-          <div class="mt-6" v-if="isDelockable">
-            <UButton
-              icon="i-mdi-lock-open-variant-outline"
-              color="warning"
-              variant="outline"
-              @click="() => handleDelock()"
-            >
-              Unlock observation
-            </UButton>
+      </template>
+      <template #right>
+        <div class="flex flex-col gap-y-6 max-lg:pt-4 lg:pl-2">
+          <div class="w-full">
+            <ObservationImageWidget
+              class="w-full"
+              v-if="projectHasImageParams"
+              :project="project"
+              :observation="observation"
+              :onSubmit="onImagesChange"
+              :inputs="observationForm.imageInputs"
+              :disabled="isLocked"
+            />
           </div>
-          <div class="mt-6" v-if="isDeletable">
-            <UButton
-              icon="i-mdi-delete-outline"
-              color="error"
+          <UCard
+            v-if="!isLocked || (isLocked && observation.fileUploads.length > 0)"
+          >
+            <template #header>
+              <CardHeader>Files</CardHeader>
+            </template>
+            <ObservationFileUploadForm
+              :observation="observation"
+              :project="project"
+              :on-file-uploaded="onFileUploaded"
+              :on-file-deleted="onFileDeleted"
+            />
+          </UCard>
+
+          <UCard v-if="!isLocked">
+            <template #header>
+              <CardHeader>Actions</CardHeader>
+            </template>
+            <div class="flex gap-4 mb-6">
+              <UButton
+                icon="i-heroicons-lock-closed"
+                class=""
+                :disabled="!metadataDone"
+                @click="() => handlePublishObservation()"
+              >
+                Submit and lock
+              </UButton>
+              <UButton
+                v-if="isDeletable"
+                icon="i-mdi-delete-outline"
+                color="error"
+                variant="outline"
+                @click="() => handleDiscardDraft()"
+              >
+                Delete draft
+              </UButton>
+            </div>
+            <UAlert
               variant="outline"
-              @click="() => handleDelete()"
+              icon="i-mdi-information-outline"
+              color="info"
+              title="Submit and lock"
+              v-if="!isDelockable"
+              description="When an observation is submitted, it will be locked for future editing.
+        This includes uploading files, image editing and metadata editing."
+              :ui="{ title: 'text-sm font-bold' }"
+            />
+          </UCard>
+
+          <UCard v-else="observation">
+            <template #header>
+              <CardHeader>Details</CardHeader>
+            </template>
+            <div
+              class="grid grid-cols-2 w-full border border-gray-700 rounded-md bg-slate-950 p-3"
             >
-              Delete observation
-            </UButton>
-          </div>
+              <div class="text-gray-400">ID:</div>
+              <div>#{{ observation.id }}</div>
+              <div class="text-gray-400">Created by:</div>
+              <div>{{ observation.user?.email || "Unknown" }}</div>
+              <div class="text-gray-400">Draft created at:</div>
+              <div>{{ prettyDate(observation.createdAt, true) }}</div>
+              <div class="text-gray-400">Last updated at:</div>
+              <div>{{ prettyDate(observation.updatedAt, true) }}</div>
+            </div>
+            <div class="flex gap-x-4">
+              <div class="mt-6" v-if="isDelockable">
+                <UButton
+                  icon="i-mdi-lock-open-variant-outline"
+                  color="warning"
+                  variant="outline"
+                  @click="() => handleDelock()"
+                >
+                  Unlock observation
+                </UButton>
+              </div>
+              <div class="mt-6" v-if="isDeletable">
+                <UButton
+                  icon="i-mdi-delete-outline"
+                  color="error"
+                  variant="outline"
+                  @click="() => handleDelete()"
+                >
+                  Delete observation
+                </UButton>
+              </div>
+            </div>
+          </UCard>
+          <ObservationTagsWidget
+            :project="project"
+            :observation-id="observation.id"
+            :tags-on-observation="tagsOnObservation"
+            :on-tag-created="onTagCreated"
+          />
         </div>
-      </UCard>
-      <ObservationTagsWidget
-        :project="project"
-        :observation-id="observation.id"
-        :tags-on-observation="tagsOnObservation"
-        :on-tag-created="onTagCreated"
-      />
-    </div>
+      </template>
+    </USplitter>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { SplitterItem } from "@nuxt/ui";
+
 const props = defineProps({
   onObservationPublished: Function as PropType<Function>,
   onFormSubmit: Function as PropType<(showToast?: boolean) => void>,
@@ -151,6 +168,7 @@ const props = defineProps({
 const tagsOnObservation = computed(() => props.observation?.tags || []);
 const imgUploaded = computed(() => props.imageUploaded);
 const formLoading = ref(true);
+const { isSmallScreen } = useDevice();
 const hasUnsavedVersion = ref(false);
 const projectHasImageParams = computed(
   () =>
@@ -169,6 +187,20 @@ const {
   updateObservationMetadataDraft,
   observationHasModifiedDraft,
 } = useMetadataDraftStore();
+
+const gridItems: SplitterItem[] = [
+  {
+    slot: "left",
+    minSize: 30,
+    defaultSize: 60,
+    class: "w-full min-w-0",
+  },
+  { slot: "right", minSize: 25, defaultSize: 40, class: "w-full min-w-0" },
+];
+
+const layoutLocalStorageKey = computed(
+  () => `observation-form-layout-project-${props.project.id}`,
+);
 
 const initialObservationForm = ref<any>(
   buildInitialForm(props.observation, props.project),

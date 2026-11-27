@@ -13,6 +13,7 @@
     </UCard>
     <ClientOnly>
       <UForm
+        class="w-full"
         v-show="!loading"
         :validate="validate"
         :state="state"
@@ -63,7 +64,7 @@
               v-for="{ props, field } in inputs"
             >
               <UFormField :name="field.label" :label="`${field.label}:`">
-                <div class="inline-block">
+                <div class="block">
                   <UCheckbox
                     v-if="
                       field.type === 'BOOLEAN' &&
@@ -79,16 +80,16 @@
                     v-model="state[field.label]"
                     v-bind="props"
                     variant="outline"
+                    :rows="6"
                     :disabled="!!$props.disabled"
                   />
                   <UInput
+                    class="w-full"
                     v-else-if="
-                      field.type === 'DATE' ||
-                      (field.type === 'DATETIME' && state[field.label])
+                      field.type === 'DATE' || field.type === 'DATETIME'
                     "
                     v-model="state[field.label]"
                     v-bind="props"
-                    class="shrink"
                     :disabled="!!$props.disabled"
                     @input="(asd: Event) => fourDigitYear(asd)"
                   />
@@ -114,19 +115,28 @@
                     v-else-if="field.type === 'AUTOCOMPLETE'"
                     class="flex flex-col items-end gap-x-2"
                   >
-                    <USelectMenu
-                      class="min-w-50"
-                      :items="field.choices"
-                      v-model="state[field.label]"
-                      :placeholder="
-                        field.required ? 'Select option' : 'None chosen'
-                      "
-                      :disabled="!!$props.disabled"
-                      :content="{
-                        side: 'bottom',
-                        align: 'start',
+                    <UTooltip
+                      :text="String(state[field.label] ?? '')"
+                      :delay-duration="200"
+                      :ui="{
+                        content: 'h-auto max-w-100 py-1.5 whitespace-normal',
+                        text: 'whitespace-normal break-words text-left',
                       }"
-                    />
+                    >
+                      <USelectMenu
+                        class="min-w-50 max-w-full"
+                        :items="field.choices"
+                        v-model="state[field.label]"
+                        :placeholder="
+                          field.required ? 'Select option' : 'None chosen'
+                        "
+                        :disabled="!!$props.disabled"
+                        :content="{
+                          side: 'bottom',
+                          align: 'start',
+                        }"
+                      />
+                    </UTooltip>
                     <div
                       @click="() => (state[field.label] = undefined)"
                       class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
@@ -138,30 +148,41 @@
                     v-else-if="field.type === 'AUTOCOMPLETE_ADD'"
                     class="items-end flex-col flex"
                   >
-                    <USelectMenu
-                      class="min-w-50"
-                      :items="field.choices"
-                      v-model="state[field.label]"
-                      :placeholder="
-                        field.required ? 'Select or type option' : 'None chosen'
-                      "
-                      creatable
-                      :search-input="{
-                        placeholder: field.required
-                          ? 'Search or write custom text...'
-                          : 'None chosen',
+                    <UTooltip
+                      :text="String(state[field.label] ?? '')"
+                      :delay-duration="200"
+                      :ui="{
+                        content: 'h-auto max-w-100 py-1.5 whitespace-normal',
+                        text: 'whitespace-normal break-words text-left',
                       }"
-                      :disabled="!!$props.disabled"
                     >
-                      <template #create-item-label="{ item }">
-                        <span class="shrink-0 text-gray-400 text-xs"
-                          >Custom:</span
-                        >
-                        <span>
-                          {{ item }}
-                        </span>
-                      </template>
-                    </USelectMenu>
+                      <USelectMenu
+                        class="min-w-50 max-w-full"
+                        :items="field.choices"
+                        v-model="state[field.label]"
+                        :placeholder="
+                          field.required
+                            ? 'Select or type option'
+                            : 'None chosen'
+                        "
+                        creatable
+                        :search-input="{
+                          placeholder: field.required
+                            ? 'Search or write custom text...'
+                            : 'None chosen',
+                        }"
+                        :disabled="!!$props.disabled"
+                      >
+                        <template #create-item-label="{ item }">
+                          <span class="shrink-0 text-gray-400 text-xs"
+                            >Custom:</span
+                          >
+                          <span>
+                            {{ item }}
+                          </span>
+                        </template>
+                      </USelectMenu>
+                    </UTooltip>
                     <div
                       @click="() => (state[field.label] = undefined)"
                       class="text-sky-500 opacity-60 hover:opacity-100 transition-all cursor-pointer text-xs"
@@ -243,6 +264,7 @@
                   </div>
                   <UInput
                     v-else
+                    class="w-full"
                     v-model="state[field.label]"
                     v-bind="props"
                     :disabled="!!$props.disabled"
@@ -252,7 +274,6 @@
             </div>
           </div>
 
-          <!-- <template #footer> -->
           <div class="-ml-6 -mr-6 my-6">
             <div class="border-b border-gray-800 w-full"></div>
           </div>
