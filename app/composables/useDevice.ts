@@ -1,3 +1,6 @@
+// Tailwind's "lg" breakpoint is 1024px; "mobile" here means anything below it.
+const LG_BREAKPOINT = 1024;
+
 // composables/useDevice.ts
 export const useDevice = () => {
   const electronVersion = ref<string | undefined>();
@@ -12,9 +15,20 @@ export const useDevice = () => {
     () => /electron/i.test(ua) || (import.meta.client && !!window.electronAPI),
   );
 
+  // true when the viewport is narrower than Tailwind's "lg" breakpoint
+  const isSmallScreen = ref(true);
+
+  if (import.meta.client) {
+    const mql = window.matchMedia(`(min-width: ${LG_BREAKPOINT}px)`);
+    isSmallScreen.value = !mql.matches;
+    const onChange = (e: MediaQueryListEvent) => (isSmallScreen.value = !e.matches);
+    mql.addEventListener("change", onChange);
+    if (getCurrentScope()) onScopeDispose(() => mql.removeEventListener("change", onChange));
+  }
+
   if (import.meta.client && window.electronAPI) {
     window.electronAPI.version((v: string) => (electronVersion.value = v));
   }
 
-  return { isElectron, electronVersion };
+  return { isElectron, electronVersion, isSmallScreen };
 };
